@@ -11,7 +11,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 import static org.assertj.core.api.Assertions.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+// Isolate the default-metadata scenario from a CI-injected deployment commit.
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "lab.source-commit=unknown")
 @ActiveProfiles("test")
 class ApiIntegrationTest {
     @LocalServerPort int port;
