@@ -1,13 +1,12 @@
-# Actual registry references from verified image publication.
-# Credentials are created only in the destination namespace.
+# Image-only GitOps input. Credentials stay in the destination namespace.
 api:
   image:
     repository: ghcr.io/devdooly/devdooly-platform-lab-api
-    digest: sha256:1c114976aeb32e3fa1c2dda84a0a27db0b390c38a6bb59e8c5ada771c340bcf4
-  sourceCommit: 820d5c398af2b1d62a0566f9184d015ab22e9f15
+    digest: sha256:aeb4c22ae93e2e34048103aab75416721c8ee11fca0fbd37b443f8e9765912a4
+  sourceCommit: cd48da4eaf0dd5ae245f7caa890c99f5ba92db17
 web:
   image:
     repository: ghcr.io/devdooly/devdooly-platform-lab-web
-    digest: sha256:e389ce9083b07c8b8fdeac334b13c1f1af9a0066fd541f46e7db78b5651b855a
+    digest: sha256:91d3a77775fd9bc0f67a76d419b2417ecb5354fe4a382f1a3133c3c6c056d063
 database:
   existingSecret: platform-lab-db
