@@ -1,0 +1,210 @@
+name: Publish Lab images
+
+on:
+  workflow_run:
+    workflows: [Validate Lab containers]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      validation_run_id:
+        description: Successful Validate Lab containers run ID for a main commit
+        required: true
+        type: string
+
+# The runner publishes with its short-lived GITHUB_TOKEN. No PAT or SSH secret.
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: lab-image-publication
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      # Build records are not part of the allowlisted publication evidence.
+      DOCKER_BUILD_RECORD_UPLOAD: 'false'
+      DOCKER_BUILD_SUMMARY: 'false'
+    steps:
+      - name: Resolve the successfully validated source
+        id: source
+        env:
+          VALIDATION_RUN_ID: ${{ github.event.workflow_run.id || inputs.validation_run_id }}
+          EVENT_SOURCE_COMMIT: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re, urllib.request
+
+          repository = os.environ['GITHUB_REPOSITORY']
+          run_id = os.environ['VALIDATION_RUN_ID']
+          if not re.fullmatch(r'[0-9]+', run_id):
+              raise SystemExit('A numeric successful validation run ID is required.')
+          # This repository is public. An unauthenticated read avoids granting
+          # actions:read merely to resolve one public validation result.
+          url = f'https://api.github.com/repos/{repository}/actions/runs/{run_id}'
+          request = urllib.request.Request(url, headers={
+              'Accept': 'application/vnd.github+json',
+              'User-Agent': 'devdooly-platform-lab-publication',
+          })
+          with urllib.request.urlopen(request, timeout=30) as response:
+              run = json.load(response)
+          valid = (
+              run.get('name') == 'Validate Lab containers'
+              and run.get('path') == '.github/workflows/lab-ci.yml'
+              and run.get('status') == 'completed'
+              and run.get('conclusion') == 'success'
+              and run.get('head_branch') == 'main'
+              and run.get('event') in ('push', 'workflow_dispatch')
+              and run.get('repository', {}).get('full_name') == repository
+              and run.get('head_repository', {}).get('full_name') == repository
+              and run.get('repository', {}).get('private') is False
+          )
+          source_commit = run.get('head_sha', '')
+          if not valid or not re.fullmatch(r'[0-9a-f]{40}', source_commit):
+              raise SystemExit('Only a successful main validation of this public repository can be published.')
+          event_source = os.environ.get('EVENT_SOURCE_COMMIT', '')
+          if event_source and event_source != source_commit:
+              raise SystemExit('The workflow event and validation run disagree on the source commit.')
+          # A fresh tag for each run attempt avoids overwriting an earlier
+          # commit-tag publication. Kubernetes still consumes the actual digest.
+          tag = f"sha-{source_commit}-r{os.environ['GITHUB_RUN_ID']}-a{os.environ['GITHUB_RUN_ATTEMPT']}"
+          images = {
+              'api_image': f'ghcr.io/{repository.lower()}-api',
+              'web_image': f'ghcr.io/{repository.lower()}-web',
+          }
+          outputs = {'commit': source_commit, 'tag': tag, 'validation_run_id': run_id, **images}
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as handle:
+              for key, value in outputs.items():
+                  handle.write(f'{key}={value}\n')
+          print(f'Validated source: {source_commit}; validation run: {run_id}')
+          PY
+
+      - name: Checkout the validated commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.source.outputs.commit }}
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Log in to GHCR with the workflow token
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish API
+        id: api
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: infra/containers/api.Dockerfile
+          platforms: linux/amd64
+          pull: true
+          push: true
+          tags: ${{ steps.source.outputs.api_image }}:${{ steps.source.outputs.tag }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ steps.source.outputs.commit }}
+            org.opencontainers.image.title=DevDooly Platform Lab API
+          provenance: mode=min
+
+      - name: Build and publish web
+        id: web
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: infra/containers/web.Dockerfile
+          platforms: linux/amd64
+          pull: true
+          push: true
+          tags: ${{ steps.source.outputs.web_image }}:${{ steps.source.outputs.tag }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ steps.source.outputs.commit }}
+            org.opencontainers.image.title=DevDooly Platform Lab web
+          provenance: mode=min
+
+      - name: Verify registry digests and write deployment inputs
+        env:
+          SOURCE_COMMIT: ${{ steps.source.outputs.commit }}
+          VALIDATION_RUN_ID: ${{ steps.source.outputs.validation_run_id }}
+          IMAGE_TAG: ${{ steps.source.outputs.tag }}
+          API_IMAGE: ${{ steps.source.outputs.api_image }}
+          API_DIGEST: ${{ steps.api.outputs.digest }}
+          WEB_IMAGE: ${{ steps.source.outputs.web_image }}
+          WEB_DIGEST: ${{ steps.web.outputs.digest }}
+        run: |
+          python3 - <<'PY'
+          import datetime, json, os, pathlib, re, subprocess
+
+          images = {}
+          for component in ('api', 'web'):
+              repository = os.environ[f'{component.upper()}_IMAGE']
+              digest = os.environ[f'{component.upper()}_DIGEST']
+              if not re.fullmatch(r'sha256:[0-9a-f]{64}', digest):
+                  raise SystemExit(f'{component}: no valid digest was returned by the publication step.')
+              reference = f'{repository}@{digest}'
+              result = subprocess.run([
+                  'docker', 'buildx', 'imagetools', 'inspect', reference,
+                  '--format', '{{json .Manifest}}',
+              ], check=True, capture_output=True, text=True, timeout=90)
+              manifest = json.loads(result.stdout)
+              if manifest.get('digest') != digest:
+                  raise SystemExit(f'{component}: the registry digest differs from the publication output.')
+              images[component] = {
+                  'repository': repository, 'tag': os.environ['IMAGE_TAG'],
+                  'digest': digest, 'reference': reference, 'platform': 'linux/amd64',
+              }
+          document = {
+              'schemaVersion': 1,
+              'sourceCommit': os.environ['SOURCE_COMMIT'],
+              'validationRunId': int(os.environ['VALIDATION_RUN_ID']),
+              'publicationRunUrl': f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}",
+              'observedAt': datetime.datetime.now(datetime.timezone.utc).isoformat().replace('+00:00', 'Z'),
+              'images': images,
+              'deploymentStatus': 'NOT_DEPLOYED_BY_THIS_WORKFLOW',
+              'anonymousPullStatus': 'NOT_CHECKED',
+          }
+          output = pathlib.Path('artifacts/publication')
+          output.mkdir(parents=True, exist_ok=True)
+          (output / 'image-manifest.json').write_text(json.dumps(document, indent=2) + '\n', encoding='utf-8')
+          values = (
+              '# Published image inputs only. Supply database.existingSecret separately.\n'
+              'api:\n  image:\n'
+              f"    repository: {images['api']['repository']}\n    digest: {images['api']['digest']}\n"
+              f"  sourceCommit: {os.environ['SOURCE_COMMIT']}\n"
+              'web:\n  image:\n'
+              f"    repository: {images['web']['repository']}\n    digest: {images['web']['digest']}\n"
+          )
+          (output / 'helm-image-values.yaml').write_text(values, encoding='utf-8')
+          summary = (
+              f"Validated source: `{document['sourceCommit']}`\n\n"
+              f"Validation run: {document['validationRunId']}\n\n"
+              + '\n'.join(f"- {name}: `{item['reference']}`" for name, item in images.items())
+              + '\n\nPublication verified. Deployment and anonymous pull have not been checked.\n'
+          )
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as handle:
+              handle.write(summary)
+          PY
+
+      - name: Upload published image references
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: lab-images-${{ steps.source.outputs.commit }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/publication/image-manifest.json
+            artifacts/publication/helm-image-values.yaml
+          if-no-files-found: error
+          retention-days: 14
