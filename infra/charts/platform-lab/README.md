@@ -2,7 +2,7 @@
 
 Spring Boot API, Nginx 정적 화면, MariaDB를 전용 namespace에 하나씩 배치하는 최소 chart입니다. Kubernetes 1.32 이상을 대상으로 하며 K3s 1.36.5 기준으로 로컬 렌더링했습니다.
 
-API/web 이미지 빌드와 MariaDB 통합 실행은 [Linux Compose CI](../../../docs/evidence/compose-ci/README.md)에서 검증했습니다. **registry 이미지 게시와 이 chart의 Kubernetes 배포·PVC 연결·Argo CD Sync는 아직 수행하지 않았습니다.** 기본 values의 이미지 repository·digest와 database.existingSecret는 의도적으로 비어 있습니다.
+API/web 이미지 빌드와 MariaDB 통합 실행은 [Linux Compose CI](../../../docs/evidence/compose-ci/README.md)에서 검증했습니다. 이후 실제 게시 digest로 미니 PC에 배포해 DB PVC Bound, 앱 Pod Ready와 Argo CD Synced/Healthy를 확인했습니다. **웹에서 API를 호출하는 HTTP 경로의 성공은 별도 검증 항목**입니다. 최신 결과와 한계는 [미니 PC 검증 기록](../../../docs/evidence/mini-pc/README.md)을 따릅니다. 기본 values의 이미지 repository·digest와 database.existingSecret는 의도적으로 비어 있습니다.
 
 ## 구성과 제약
 
@@ -52,17 +52,19 @@ Helm 경로가 다르면 HELM_BINARY에 실행 파일 경로를 지정합니다.
 ## 실제 배포 전에 필요한 값
 
 - api.image.repository·digest, web.image.repository·digest: 이 저장소 Dockerfile로 빌드하고 registry에 게시한 **앱 이미지**의 주소와 실제 sha256 digest입니다. infra/image-lock.json에 있는 Temurin·Nginx 기반 이미지 digest를 앱 digest로 대신 넣지 않습니다.
-- api.sourceCommit: 해당 앱 이미지에 대응하는 Git commit입니다. 기본값 unknown은 아직 게시된 앱 이미지가 없다는 뜻입니다.
+- api.sourceCommit: 해당 앱 이미지에 대응하는 Git commit입니다. 기본값 unknown은 해당 실행에 실제 소스 commit을 주입하지 않았다는 뜻입니다.
 - database.existingSecret: 같은 namespace에 미리 준비한 Secret 이름입니다. appPasswordKey·rootPasswordKey로 지정한 두 key가 있어야 합니다. Secret의 값은 Git이나 Helm values에 넣지 않습니다.
 - imagePullSecrets: registry가 비공개이면 같은 namespace의 기존 image pull Secret 이름을 지정합니다.
 
-실제 구성은 별도 GitOps 저장소의 환경 values에서 관리하고 Argo CD가 배포를 소유합니다. Jenkins에서 같은 앱에 helm upgrade를 추가하지 않습니다. 후속 절차는 [앱 배포 안내](../../../docs/runbooks/app-helm.md)를 따릅니다.
+실제 구성은 [ADR 0003](../../../docs/adr/0003-gitops-in-existing-repository.md)에 따라 같은 저장소의 [gitops/environments/home-lab/values.yaml](../../../gitops/environments/home-lab/values.yaml)에서 관리하고 Argo CD가 배포를 소유합니다. Jenkins에서 같은 앱에 helm upgrade를 추가하지 않습니다. 후속 절차는 [앱 배포 안내](../../../docs/runbooks/app-helm.md)를 따릅니다.
 
 ## 초기화·보존 범위
 
 Flyway와 합성 데이터 seed는 API 시작 시 실행됩니다. API replica 1과 Recreate는 이 Lab의 단일 초기화 프로세스 전제이며, 동시 최초 초기화를 해결하는 분산 잠금 구현이 아닙니다. 복제 확장 전에 migration/seed 실행을 별도로 설계해야 합니다. API 기동이 DB 초기화보다 빠르면 프로세스가 실패·재시도할 수 있습니다. probe가 DB 준비를 기다리는 init 단계나 의존성 순서를 대신하지 않습니다.
 
-DB PVC는 StatefulSet 삭제·축소 시 유지됩니다. **namespace 삭제나 PVC 직접 삭제까지 막아주지는 않습니다.** release/namespace 이름을 바꾸면 기존 claim을 자동으로 재사용하지 않습니다. 보존된 PVC에 재설치할 때는 기존 계정 비밀번호를 유지해야 하며 Secret 값만 바꾸어도 DB 계정 비밀번호가 갱신되지는 않습니다. 단일 노드 local-path는 복제·백업이 아니므로 별도 백업과 복구 검증이 필요합니다.
+DB PVC는 StatefulSet 삭제·축소 시 유지됩니다. **namespace 삭제나 PVC 직접 삭제까지 막아주지는 않습니다.** release/namespace 이름을 바꾸면 기존 claim을 자동으로 재사용하지 않습니다. 보존된 PVC에 재설치할 때는 기존 계정 비밀번호를 유지해야 하며 Secret 값만 바꾸어도 DB 계정 비밀번호가 갱신되지는 않습니다. 실제 Jenkins·DB PV의 reclaimPolicy는 Delete이므로 claim을 삭제하면 provisioner가 저장 데이터를 제거할 수 있습니다. PV는 전용 /var/lib/devdooly-platform-lab/storage 아래에 생성합니다. 단일 노드 local-path는 복제·백업이 아니므로 별도 백업과 복구 검증이 필요합니다.
+
+bootstrap이 보관한 감사 자료는 같은 호스트의 설정·네트워크 상태 기록이며 DB·PVC 데이터 백업이 아닙니다. 외부 백업·복원과 호스트 재부팅 복구는 아직 검증하지 않았습니다. 로컬 렌더링 기록, Argo 동기화·Pod readiness, 실제 HTTP 조회와 데이터 복원 결과를 각각 구분합니다.
 
 ## 공식 참고
 
