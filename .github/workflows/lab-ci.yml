@@ -1,0 +1,123 @@
+name: Validate Lab containers
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - apps/api/**
+      - apps/lab-web/**
+      - tests/**
+      - infra/containers/**
+      - infra/image-lock.json
+      - infra/scripts/prepare-local-env.py
+      - compose.yaml
+      - .dockerignore
+      - .github/workflows/lab-ci.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lab-containers-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      SOURCE_COMMIT: ${{ github.sha }}
+      COMPOSE_PROJECT_NAME: lab-ci-${{ github.run_id }}-${{ github.run_attempt }}
+      COMPOSE_FILE: compose.yaml:.local/compose-ci.yaml
+      COMPOSE_PARALLEL_LIMIT: '1'
+      LAB_BASE_URL: http://127.0.0.1:4310
+      ASTRO_TELEMETRY_DISABLED: '1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Java 21
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: apps/api/pom.xml
+
+      - name: Verify API
+        working-directory: apps/api
+        run: |
+          chmod +x mvnw
+          ./mvnw -B -ntp verify
+
+      - name: Set up Node 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.19.0
+          cache: npm
+          cache-dependency-path: apps/lab-web/package-lock.json
+
+      - name: Verify web
+        working-directory: apps/lab-web
+        run: |
+          npm ci --no-audit --no-fund
+          npm run check
+          npm test
+          npm run build
+
+      - name: Prepare isolated Compose environment
+        run: |
+          python3 infra/scripts/prepare-local-env.py
+          node tests/integration/compose-ci.mjs prepare
+
+      - name: Build container images
+        run: docker compose --env-file .local/compose.env build --pull
+
+      - name: Start MariaDB, API and web
+        run: docker compose --env-file .local/compose.env up -d --wait --wait-timeout 180
+
+      - name: Wait for API and persisted sample
+        run: node tests/integration/compose-ci.mjs wait
+
+      - name: Check actual same-origin UI and MariaDB results
+        run: |
+          node --experimental-strip-types apps/lab-web/scripts/smoke.ts http://127.0.0.1:4310/ http://127.0.0.1:4310/api
+          node tests/integration/compose-ci.mjs check before
+
+      - name: Recreate API with a new address
+        run: node tests/integration/compose-ci.mjs recreate
+
+      - name: Verify Nginx DNS refresh and persisted idempotency
+        run: |
+          node tests/integration/compose-ci.mjs wait
+          node --experimental-strip-types apps/lab-web/scripts/smoke.ts http://127.0.0.1:4310/ http://127.0.0.1:4310/api
+          node tests/integration/compose-ci.mjs check after
+
+      - name: Show container state on failure
+        if: failure()
+        run: |
+          if test -f .local/compose.env && test -f .local/compose-ci.yaml; then
+            docker compose --env-file .local/compose.env ps --all
+          fi
+
+      - name: Stop Compose services
+        if: always()
+        run: |
+          if test -f .local/compose.env && test -f .local/compose-ci.yaml; then
+            docker compose --env-file .local/compose.env down --remove-orphans --timeout 20
+          fi
+
+      - name: Upload allowlisted validation evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: lab-validation-${{ github.sha }}
+          path: |
+            apps/api/target/surefire-reports/TEST-*.xml
+            artifacts/compose-before.json
+            artifacts/compose-after.json
+          if-no-files-found: warn
+          retention-days: 7
