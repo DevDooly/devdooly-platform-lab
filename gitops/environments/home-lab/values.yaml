@@ -1,10 +1,12 @@
 # Image-only GitOps input. Credentials stay in the destination namespace.
 api:
+  replicaCount: 0
   image:
     repository: ghcr.io/devdooly/devdooly-platform-lab-api
     digest: sha256:57c7fcbaf266eda7402831df95a12d4cabfab250071a75eaf4d8d1855f1296cb
   sourceCommit: 41897dbb9d2a38537f1d06928dcd01273d64be4d
 web:
+  replicaCount: 0
   image:
     repository: ghcr.io/devdooly/devdooly-platform-lab-web
     digest: sha256:012f955d4d85178c95c09c2dfee4b4ec858b3b87a1ac5216f53e81aca9e591f8
