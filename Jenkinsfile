@@ -24,9 +24,13 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
                 script {
-                    writeFile file: 'ci-build-info.txt', text: "sourceCommit=${env.GIT_COMMIT ?: 'unknown'}\nbuildNumber=${env.BUILD_NUMBER}\n"
+                    def scmVars = checkout scm
+                    def sourceCommit = scmVars.GIT_COMMIT
+                    if (!(sourceCommit ==~ /[0-9a-f]{40}/)) {
+                        error('SCM checkout did not return a valid commit SHA')
+                    }
+                    writeFile file: 'ci-build-info.txt', text: "sourceCommit=${sourceCommit}\nbuildNumber=${env.BUILD_NUMBER}\n"
                 }
             }
         }

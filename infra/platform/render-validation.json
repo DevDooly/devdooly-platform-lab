@@ -42,7 +42,7 @@
     },
     "helmTestHookCount": 0
   },
-  "policyChecksPassed": 33,
+  "policyChecksPassed": 35,
   "checks": [
     "jenkins: services remain ClusterIP",
     "jenkins: no ingress or gateway routes",
@@ -64,6 +64,8 @@
     "Build service account disables token automount",
     "Jenkins uses the explicit 10Gi local-path PVC",
     "Pipeline JUnit and Timestamper plugins are pinned",
+    "Declarative model plugins share the pinned compatible release",
+    "Pipeline REST API is explicitly pinned for stage evidence",
     "Argo keeps local admin and disables anonymous access",
     "Argo UI exec is disabled",
     "Argo server retains TLS",

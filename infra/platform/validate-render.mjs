@@ -98,6 +98,8 @@ check('Jenkins uses the explicit 10Gi local-path PVC', pvc.spec.storageClassName
 const plugins = one(jenkins, 'ConfigMap', 'jenkins').data['plugins.txt'];
 check('Pipeline JUnit and Timestamper plugins are pinned', plugins.includes('timestamper:1.30') &&
   plugins.includes('junit:1437.v12280a_c49b_50'));
+check('Declarative model plugins share the pinned compatible release', ['pipeline-model-definition','pipeline-model-api','pipeline-model-extensions','pipeline-stage-tags-metadata'].every(name => plugins.includes(name + ':2.2293.v6e7193cec599')));
+check('Pipeline REST API is explicitly pinned for stage evidence', plugins.includes('pipeline-rest-api:2.41'));
 const argoConfig = one(argo, 'ConfigMap', 'argocd-cm').data;
 const argoParams = one(argo, 'ConfigMap', 'argocd-cmd-params-cm').data;
 check('Argo keeps local admin and disables anonymous access', argoConfig['admin.enabled'] === 'true' &&
@@ -153,7 +155,7 @@ const versions = {
     argocd:{version:'10.10.2',appVersion:'v3.5.4',repository:'https://argoproj.github.io/argo-helm',
       sha256:hash(path.join(renderDir,'charts/argo-cd-10.10.2.tgz'))},
   },
-  plugins:{timestamper:'1.30',junit:'1437.v12280a_c49b_50'},
+  plugins:Object.fromEntries([...YAML.parse(fs.readFileSync(path.join(root,'infra/platform/jenkins-values.yaml'),'utf8')).controller.installPlugins, ...YAML.parse(fs.readFileSync(path.join(root,'infra/platform/jenkins-values.yaml'),'utf8')).controller.additionalPlugins].map(plugin => { const split=plugin.indexOf(':'); return [plugin.slice(0,split),plugin.slice(split+1)]; })),
 };
 check('Downloaded Helm matches the official Windows SHA256', hash(path.join(root,
   '.local/tools/helm-4.3.0/helm-v4.3.0-windows-amd64.zip')) === versions.helm.windowsAmd64.sha256);
