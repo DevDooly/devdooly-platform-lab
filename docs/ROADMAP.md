@@ -30,7 +30,7 @@
 - [x] 입력 검증·중복·시간·실패 시나리오 확인: API 테스트 15개 통과
 - [x] Astro·React Lab 조회 화면과 로컬 API 연결: 테스트 4개·타입 검사·HTTP smoke 통과
 - [x] 공개 포트폴리오 저장소와 Pages 주소 확인
-- [ ] GitHub Actions 최초 게시 성공과 외부 화면 검증
+- [x] GitHub Actions 최초 게시 성공과 외부 화면 검증: [공개 기록](evidence/web-mvp/README.md)
 - [x] 소개·기술 경험·프로젝트 설명과 기존 TIL 연결
 - [x] 테스트 결과와 공개 가능한 샘플 결과 기록
 
@@ -44,7 +44,8 @@
 - [x] Jenkins controller executor 0, 별도 agent·테스트 pipeline 정의 작성
 - [ ] Jenkins 실제 agent Pod 기동과 pipeline 성공·실패 검증
 - [ ] Java 이미지 빌더 검증, GHCR 게시 권한과 digest 기록
-- [ ] devdooly-platform-gitops 저장소와 Helm chart·values 작성
+- [x] API·화면·MariaDB 앱 Helm chart 작성과 lint·render 검증: [근거](../infra/charts/platform-lab/ci/render-validation.json)
+- [ ] devdooly-platform-gitops 저장소와 실제 이미지·환경 values 연결
 - [ ] Jenkins 테스트·이미지 게시·GitOps 변경 PR 연결
 - [ ] Argo CD 동기화와 실제 서비스 버전 확인
 - [ ] 정상 배포·실패 차단·이전 digest 복구 검증

@@ -10,9 +10,9 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 | --- | --- | --- |
 | Spring Boot API | 합성 데이터 결과 조회, 입력 검증, DB 저장 구현 | [API 계약](docs/contracts/demo-api.md), [테스트 15개와 실제 HTTP 검증](docs/evidence/api-mvp/README.md) |
 | Astro·React 화면 | 실시간 조회, 센서·실패 필터, 차트와 샘플 표시 구현 | [화면 검증](apps/lab-web/VALIDATION.md) |
-| GitHub Pages | 프로젝트 사이트와 자동 게시 workflow 구성 | [게시 절차](docs/runbooks/pages.md), [게시 결정](docs/adr/0002-initial-public-portfolio.md) |
+| GitHub Pages | 최초 게시 성공, PC·모바일 조회 확인 | [공개 검증](docs/evidence/web-mvp/README.md), [게시 절차](docs/runbooks/pages.md), [게시 결정](docs/adr/0002-initial-public-portfolio.md) |
 | MariaDB·컨테이너 | Compose와 digest 고정 이미지 구성, 설정 파싱 통과 | [통합 실행 안내](docs/runbooks/local-compose.md). 실제 컨테이너 실행 검증은 대기 |
-| Jenkins·Argo CD·K3s | CI 정의와 설치 설정 준비 | [Jenkins](docs/runbooks/jenkins-ci.md), [플랫폼 설치](docs/runbooks/platform-install.md). 서버 설치·실행은 대기 |
+| Jenkins·Argo CD·K3s | CI 정의·설치 설정과 앱 Helm chart 준비 | [Jenkins](docs/runbooks/jenkins-ci.md), [플랫폼 설치](docs/runbooks/platform-install.md), [앱 Helm](docs/runbooks/app-helm.md). 서버 설치·실행은 대기 |
 
 개발 PC의 API 검증은 **H2 test/local-dev**로 수행했습니다. MariaDB와 미니 PC 배포 성공으로 해석하지 않습니다. 입력 12건의 기대 결과는 성공 7·실패 3·중복 2·대기 0입니다. 공개 사이트의 API가 연결되지 않으면 **합성 데이터 샘플**임을 표시하며, 실행 시각이나 배포 성공 이력을 만들어 넣지 않습니다.
 
@@ -61,6 +61,7 @@ apps/api/                 Spring Boot, JPA·Flyway, 처리·HTTP 테스트
 apps/lab-web/             Astro·React 포트폴리오와 Lab 조회 화면
 tests/scenarios/          합성 데이터의 독립 기대 결과
 infra/containers/         API·화면 이미지와 Nginx 설정
+infra/charts/             API·화면·MariaDB 앱 Helm chart
 infra/jenkins/            Kubernetes CI agent 정의
 infra/platform/           K3s·Jenkins·Argo CD 설치 설정
 infra/scripts/            읽기 전용 호스트 점검과 로컬 환경 준비

@@ -1,0 +1,61 @@
+{
+  "verifiedAt": "2026-10-11T10:46:55.102849+00:00",
+  "deployedSourceCommit": "246743bca6368c34bd41c15292877f4ed7fad413",
+  "actionsRun": {
+    "id": 38133020850,
+    "conclusion": "success",
+    "url": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38133020850"
+  },
+  "page": {
+    "url": "https://devdooly.github.io/devdooly-platform-lab/",
+    "status": 200,
+    "bytes": 28814,
+    "contentType": "text/html; charset=utf-8"
+  },
+  "assets": [
+    {
+      "url": "https://devdooly.github.io/devdooly-platform-lab/_astro/LabExplorer.DesyBcy_.js",
+      "status": 200,
+      "bytes": 22457,
+      "contentType": "application/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://devdooly.github.io/devdooly-platform-lab/_astro/client.EoSUrE1U.js",
+      "status": 200,
+      "bytes": 212848,
+      "contentType": "application/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://devdooly.github.io/devdooly-platform-lab/_astro/index.Cmj1Rjzt.css",
+      "status": 200,
+      "bytes": 28843,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "url": "https://devdooly.github.io/devdooly-platform-lab/favicon.svg",
+      "status": 200,
+      "bytes": 225,
+      "contentType": "image/svg+xml"
+    }
+  ],
+  "browserChecks": {
+    "source": "Codex in-app browser, public Pages URL",
+    "desktop": "Header, intro, project diagram and loaded Lab rendered",
+    "fallback": "Explicit live API unavailable and synthetic sample labels; timestamps unobserved",
+    "chartPoint": "sensor-a 00:02:00 UTC value 21.1 selected, pressed state changed",
+    "mobile": {
+      "requestedViewport": {
+        "width": 393,
+        "height": 852
+      },
+      "clientWidth": 378,
+      "scrollWidth": 378,
+      "failureRows": 3
+    },
+    "ciCd": "Jenkins/Argo CD/Kubernetes not connected; no deployment history claimed"
+  },
+  "limitations": [
+    "Public mini-PC API, TLS endpoint and Jenkins/Argo/K3s runtime remain unverified.",
+    "Pages uses a fixed illustrative synthetic sample, not captured production or server execution."
+  ]
+}

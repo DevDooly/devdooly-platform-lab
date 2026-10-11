@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "platform-lab.fullname" . }}-api
+  labels:
+    {{- include "platform-lab.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  replicas: {{ .Values.api.replicaCount }}
+  # Single bootstrap process. Brief downtime is accepted for this private lab.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "platform-lab.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: api
+  template:
+    metadata:
+      labels:
+        {{- include "platform-lab.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: api
+      annotations:
+        platform-lab.devdooly.dev/source-commit: {{ .Values.api.sourceCommit | quote }}
+    spec:
+      serviceAccountName: {{ include "platform-lab.fullname" . }}
+      automountServiceAccountToken: false
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: api
+          image: {{ include "platform-lab.image" .Values.api.image | quote }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          env:
+            - name: DB_URL
+              value: jdbc:mariadb://db:3306/platform_lab
+            - name: DB_USERNAME
+              value: platform_lab
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "database.existingSecret must name a pre-created Secret" .Values.database.existingSecret | quote }}
+                  key: {{ .Values.database.appPasswordKey | quote }}
+            - name: LAB_ENVIRONMENT
+              value: k3s
+            - name: SOURCE_COMMIT
+              value: {{ .Values.api.sourceCommit | quote }}
+            - name: IMAGE_DIGEST
+              value: {{ .Values.api.image.digest | quote }}
+            - name: JAVA_TOOL_OPTIONS
+              value: -XX:MaxRAMPercentage=70.0 -XX:+ExitOnOutOfMemoryError
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 7
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 100Mi

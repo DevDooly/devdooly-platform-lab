@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "platform-lab.fullname" . }}-db
+  labels:
+    {{- include "platform-lab.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+spec:
+  replicas: {{ .Values.database.replicaCount }}
+  serviceName: db
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  selector:
+    matchLabels:
+      {{- include "platform-lab.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: database
+  template:
+    metadata:
+      labels:
+        {{- include "platform-lab.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: database
+    spec:
+      serviceAccountName: {{ include "platform-lab.fullname" . }}
+      automountServiceAccountToken: false
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: 60
+      # Official entrypoint starts as root, fixes its own data directory and
+      # switches to mysql. Do not guess mysql's UID or chown existing host data.
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: mariadb
+          image: {{ include "platform-lab.image" .Values.database.image | quote }}
+          imagePullPolicy: IfNotPresent
+          args:
+            - --innodb-buffer-pool-size=268435456
+            - --max-connections=50
+            - --default-time-zone=+00:00
+          ports:
+            - name: mysql
+              containerPort: 3306
+          securityContext:
+            allowPrivilegeEscalation: false
+          env:
+            - name: MARIADB_DATABASE
+              value: platform_lab
+            - name: MARIADB_USER
+              value: platform_lab
+            - name: MARIADB_ROOT_HOST
+              value: localhost
+            - name: MARIADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "database.existingSecret must name a pre-created Secret" .Values.database.existingSecret | quote }}
+                  key: {{ .Values.database.appPasswordKey | quote }}
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.existingSecret | quote }}
+                  key: {{ .Values.database.rootPasswordKey | quote }}
+          startupProbe:
+            exec:
+              command: [healthcheck.sh, --connect, --innodb_initialized]
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 60
+          livenessProbe:
+            tcpSocket:
+              port: mysql
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+          readinessProbe:
+            exec:
+              command: [healthcheck.sh, --connect, --innodb_initialized]
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.database.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        storageClassName: {{ .Values.database.persistence.storageClass | quote }}
+        resources:
+          requests:
+            storage: {{ .Values.database.persistence.size | quote }}

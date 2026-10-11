@@ -1,0 +1,50 @@
+{
+  "verifiedAt": "2026-10-11",
+  "scope": "LOCAL_FIXTURE_HELM_RENDER_ONLY",
+  "helmVersion": "v4.3.0+gbec5b06",
+  "kubernetesVersionForRendering": "1.36.5",
+  "yamlParserVersion": "2.9.1",
+  "strictLint": "PASSED",
+  "render": "PASSED",
+  "manifestCount": 7,
+  "kinds": {
+    "ServiceAccount": 1,
+    "Service": 3,
+    "Deployment": 2,
+    "StatefulSet": 1
+  },
+  "policyChecksPassed": 15,
+  "checks": [
+    "Seven resources: one service account, three Services, two Deployments and one StatefulSet",
+    "No Secret, RBAC, ingress, gateway, cluster-scoped resources or standalone storage objects",
+    "ClusterIP only, headless db identity, api:8080 Nginx and db:3306 JDBC",
+    "No host network, PID, IPC, host port or hostPath",
+    "Single replica per workload and Recreate for the sample bootstrap API",
+    "Service account and all Pods disable Kubernetes API token automount",
+    "API and web run nonroot with read-only root, RuntimeDefault, no escalation and no capabilities",
+    "Writable /tmp is isolated in bounded emptyDir for both app containers",
+    "API startup/liveness exclude DB while readiness uses the DB-aware health group",
+    "DB startup/readiness use the official healthcheck; liveness checks only the TCP listener",
+    "All three password references use only the existing Secret and no literal value",
+    "Dedicated 10Gi local-path PVC remains on StatefulSet removal and scale-down",
+    "Every container has CPU, memory and ephemeral storage requests/limits",
+    "MariaDB image matches the repository digest lock",
+    "API/web fixture references are clearly unpublished and digest-shaped"
+  ],
+  "expectedSchemaRejectionsPassed": 6,
+  "rejectedInputs": [
+    "missing API/web images and existingSecret",
+    "missing existingSecret",
+    "mutable/invalid API digest",
+    "multiple API replicas",
+    "public ingress enabled",
+    "reuse another storage class"
+  ],
+  "renderedFixtureSha256": "e57523938f86fb48cb1aa83c60eed0df500789ae57674617a562d9ffa6ad25bf",
+  "appImagesPublished": false,
+  "containerRuntimeVerified": false,
+  "mariadbIntegrationVerified": false,
+  "kubernetesApiDryRunVerified": false,
+  "serverDeploymentVerified": false,
+  "argoSyncVerified": false
+}

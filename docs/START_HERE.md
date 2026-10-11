@@ -22,7 +22,7 @@ Jenkins·Argo CD·K3s는 미니 PC에 아직 설치하지 않았습니다. Maria
 3. 기존 서비스·포트·데이터·백업·실제 가용 자원을 확인하고 설치 경로와 복구 범위를 정합니다. 기존 설정을 먼저 백업합니다.
 4. [MariaDB·Compose](runbooks/local-compose.md)로 실제 DB 연결, 컨테이너, 재시작 멱등과 화면을 확인합니다.
 5. [플랫폼 설치](runbooks/platform-install.md)에 따라 K3s·Jenkins·Argo CD를 적용합니다. CI pipeline의 실제 agent 기동과 실패 차단을 확인합니다.
-6. 이미지 게시와 별도 GitOps 저장소를 연결하고 Helm·Argo CD로 앱을 배포합니다. Jenkins에서 같은 앱의 `helm upgrade`를 중복 실행하지 않습니다.
+6. 이미지 게시와 별도 GitOps 저장소를 연결하고 [준비한 앱 Helm chart](runbooks/app-helm.md)를 Argo CD로 배포합니다. Jenkins에서 같은 앱의 `helm upgrade`를 중복 실행하지 않습니다.
 7. 인증된 관리 경로와 공개 HTTPS를 구성하고 외부망에서 확인합니다. 실제 공개 API가 준비되면 [Pages 연결 설정](runbooks/pages.md)을 갱신합니다.
 
 서버 설치에 sudo가 필요하지만 비대화형 권한이 없다면, 사용자가 직접 확인하여 실행할 설치 파일을 준비합니다. 대화에 비밀번호를 요청하거나 전체 sudo 무암호 권한을 추가하지 않습니다.

@@ -1,0 +1,12 @@
+# LINT/RENDER ONLY. These repositories/digests and Secret do not exist.
+# Never apply this file or use it in an Argo CD Application.
+api:
+  image:
+    repository: example.invalid/lint-only/api
+    digest: sha256:1111111111111111111111111111111111111111111111111111111111111111
+web:
+  image:
+    repository: example.invalid/lint-only/web
+    digest: sha256:2222222222222222222222222222222222222222222222222222222222222222
+database:
+  existingSecret: lint-only-do-not-install

@@ -1,0 +1,62 @@
+# API/web images have NOT been built or published yet.
+# Supply real registry repositories and immutable digests before deployment.
+api:
+  replicaCount: 1
+  image:
+    repository: ""
+    digest: ""
+  sourceCommit: unknown
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+      ephemeral-storage: 128Mi
+    limits:
+      cpu: "1"
+      memory: 768Mi
+      ephemeral-storage: 512Mi
+
+web:
+  replicaCount: 1
+  image:
+    repository: ""
+    digest: ""
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+      ephemeral-storage: 32Mi
+    limits:
+      cpu: 250m
+      memory: 192Mi
+      ephemeral-storage: 128Mi
+
+database:
+  replicaCount: 1
+  image:
+    repository: mariadb
+    tag: 11.8.9
+    digest: sha256:6422478cb8e159f080fb1d8ccf65101e26fe51385787fde7d16c3b165a331f15
+  # This chart never creates a Secret. It must already exist in the namespace.
+  existingSecret: ""
+  appPasswordKey: app-password
+  rootPasswordKey: root-password
+  persistence:
+    storageClass: local-path
+    size: 10Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+      ephemeral-storage: 128Mi
+    limits:
+      cpu: "1"
+      memory: 1536Mi
+      ephemeral-storage: 1Gi
+
+# Optional references to registry credentials created outside this chart.
+imagePullSecrets: []
+
+# Deliberately unsupported during the private validation phase.
+ingress:
+  enabled: false
