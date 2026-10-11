@@ -23,7 +23,6 @@
         "replicaCount": {
           "type": "integer",
           "enum": [
-            0,
             1
           ]
         },
@@ -121,7 +120,6 @@
         "replicaCount": {
           "type": "integer",
           "enum": [
-            0,
             1
           ]
         },
