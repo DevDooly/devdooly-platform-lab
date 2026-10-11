@@ -1,0 +1,50 @@
+# Local access details, inventory output, credentials and backups
+/.local/
+**/secrets/
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+kubeconfig
+kubeconfig.*
+*.kubeconfig
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform/
+/backups/
+/runtime-data/
+
+# Java and frontend generated files
+**/target/
+**/build/
+.gradle/
+node_modules/
+.astro/
+**/dist/
+.next/
+coverage/
+*.tsbuildinfo
+
+# Editor and OS files
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+
+# Temporary output; keep curated evidence and lockfiles under version control
+*.log
+/tmp/
+/artifacts/
