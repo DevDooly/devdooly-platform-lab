@@ -12,7 +12,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 | Astro·React | 결과·실패 필터·차트, 테스트 13개, 실제 관측 기록 fallback | [화면 검증](apps/lab-web/VALIDATION.md), [관측 계약](apps/lab-web/OBSERVATION.md) |
 | GitHub Actions·GHCR | Linux 컨테이너 통합 검증 후 immutable digest 이미지 게시 | [컨테이너 근거](docs/evidence/compose-ci/README.md), [이미지 게시](docs/runbooks/image-publication.md) |
 | K3s·Helm·Argo CD | 미니 PC에서 앱 자동 동기화, Synced·Healthy, MariaDB PVC | [실제 서버 근거](docs/evidence/mini-pc/README.md), [GitOps 선언](gitops/README.md) |
-| Jenkins | Kubernetes agent에서 실제 테스트·패키징 | [빌드 근거와 한계](docs/evidence/jenkins-ci/README.md), [CI 절차](docs/runbooks/jenkins-ci.md) |
+| Jenkins·Actions 게시 gate | 같은 source SHA의 두 CI 성공 후 이미지·draft GitOps PR, 실제 테스트 실패 차단 | [연결 검증](docs/evidence/cicd-gate/README.md), [CI 절차](docs/runbooks/cicd-publication.md) |
 | 관리자 접속 | ClusterIP 관리 화면과 SSH 접속 도우미 | [접속 방법](docs/runbooks/admin-access.md) |
 | 백업과 복구 | 외부 암호화 백업·격리 DB 복원·호스트 재부팅 | [실제 검증과 한계](docs/evidence/recovery/README.md) |
 
@@ -47,18 +47,23 @@ flowchart LR
   V[방문자] --> P[GitHub Pages 포트폴리오]
   P --> O[마지막 실제 관측 기록]
   P --> T[기존 TIL]
-  C[앱 소스] --> J[Jenkins 테스트와 패키징]
-  C --> G[Actions 컨테이너 검증과 이미지 게시]
-  G --> R[GHCR immutable digest]
-  R --> D[검토한 gitops values]
-  D --> A[Argo CD와 Helm]
+  C[현재 main 소스] --> J[Jenkins 테스트와 패키징]
+  C --> G[Actions 컨테이너 검증]
+  J --> V2[같은 SHA의 두 성공 검증]
+  G --> V2
+  V2 --> R[Actions GHCR immutable digest 게시]
+  R --> D[draft GitOps PR]
+  D --> M[검토 후 main 반영]
+  M --> A[Argo CD와 Helm]
   A --> K[K3s API 웹 MariaDB]
   K --> O
 ```
 
-현재 이미지 게시자는 GitHub Actions입니다. Jenkins는 테스트와 패키징을 실행하며, 이미지 게시·GitOps 변경 PR을 Jenkins에서 자동으로 수행하는 단계는 남아 있습니다. Argo CD가 앱의 배포를 관리합니다. 동일 앱에 Jenkins의 `helm upgrade`를 중복 적용하지 않습니다.
+GitHub Actions가 유일한 이미지 게시자입니다. 현재 main의 같은 source SHA에서 Jenkins 테스트·필수 산출물과 Actions 통합 검증이 모두 성공해야 게시합니다. Jenkins는 전용 credential로 commit status만 전달합니다. Actions의 draft GitOps PR 자동 제안을 활성화했으며, 검토 후 main에 반영하면 Argo CD가 배포합니다. 자동 승인·자동 병합과 Jenkins의 `helm upgrade`는 사용하지 않습니다.
 
-기존 Docker 서비스·프록시·방화벽은 보존했습니다. K3s 기본 Traefik·ServiceLB는 사용하지 않습니다. 외부 암호화 백업, 격리 DB 복원과 호스트 재부팅 복구를 검증했습니다. K3s·Jenkins archive 전체 복원과 이전 image digest 복구는 아직 검증하지 않았습니다. Kafka·S3는 4단계, AI 개선 재현은 5단계, Iceberg·Spark·Trino는 6단계입니다.
+정상 B 배포에서 source SHA·image digest·GitOps commit·실행 이미지를 연결했습니다. 실제 JUnit 실패에서는 새 이미지·게시 artifact·GitOps PR이 생기지 않았고, 기존 B의 Deployment·Pod·전체 SQL·저장 시각·PVC와 기존 Docker 상태가 유지됐습니다. 이후 GitOps의 API/Web digest와 sourceCommit을 정상 A로 되돌려 Argo Synced·Healthy, 3개 Pod Ready와 기존 데이터·서비스 보존까지 검증했습니다. [정상·실패·복구 근거](docs/evidence/cicd-gate/README.md)를 함께 확인합니다.
+
+기존 Docker 서비스·프록시·방화벽은 보존했습니다. K3s 기본 Traefik·ServiceLB는 사용하지 않습니다. 외부 암호화 백업, 격리 DB 복원, 호스트 재부팅과 GitOps의 이전 image digest 복구를 검증했습니다. K3s·Jenkins archive 전체 복원은 아직 별도 작업입니다. 다음은 3단계 관측 공개이며 Kafka·S3는 4단계, AI 개선 재현은 5단계, Iceberg·Spark·Trino는 6단계입니다.
 
 ## 저장소 구성
 

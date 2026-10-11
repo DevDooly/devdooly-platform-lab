@@ -1,19 +1,23 @@
 # Jenkins CI 운영과 재검증
 
-2026-10-11 미니 PC의 K3s에서 실제 Jenkins Build 3을 실행했습니다. API JUnit 15개와 웹 Node 테스트 13개가 통과했고, 산출물 9개와 SCM 커밋의 일치를 확인했습니다. [실행 근거와 한계](../evidence/jenkins-ci/README.md)를 먼저 확인합니다.
+미니 PC의 K3s에서 API JUnit 15개와 웹 Node 테스트 13개, 필수 산출물과 SCM 커밋의 일치를 확인했습니다. 현재 전용 credential로 같은 source SHA의 pending·success·failure를 전달하고 Actions 이미지 게시 gate에 연결합니다. 정상 B 배포와 실제 main의 JUnit 실패 차단도 검증했습니다. [agent 실행 근거](../evidence/jenkins-ci/README.md)와 [연결 검증](../evidence/cicd-gate/README.md)을 함께 확인합니다.
 
 ## 실행하는 작업
 
 1. main의 Jenkinsfile을 읽고 checkout 반환값에서 40자리 source commit을 검증해 ci-build-info.txt에 build 번호와 함께 기록합니다. SHA가 없으면 빌드를 실패시킵니다.
-2. Java 21 container에서 apps/api의 Maven Wrapper verify를 실행합니다. Surefire XML을 성공·실패와 관계없이 JUnit 결과로 수집하며, 빈 결과를 허용하지 않습니다.
-3. Node 24 container에서 npm ci, npm run check, npm test, npm run build를 실행합니다.
-4. 모든 단계가 성공한 경우 API jar, 웹 dist, ci-build-info.txt를 archive하고 fingerprint를 기록합니다.
+2. 전용 Secret text를 필요한 단계에만 바인딩해 checkout한 정확한 SHA에 `ci/jenkins-test` pending을 전달합니다. main 이외의 branch는 이 credentialed job에서 허용하지 않습니다.
+3. Java 21 container에서 apps/api의 Maven Wrapper verify를 실행합니다. Surefire XML을 성공·실패와 관계없이 JUnit 결과로 수집하며, 빈 결과를 허용하지 않습니다.
+4. Node 24 container에서 npm ci, npm run check, npm test, npm run build와 status client의 음성 테스트를 실행합니다.
+5. 모든 단계가 성공한 경우 API jar, 웹 dist, ci-build-info.txt와 pending 전달 기록을 필수 산출물로 확인하고 archive·fingerprint를 기록합니다.
+6. 필수 산출물 보관까지 성공한 뒤 같은 SHA에 success를 전달합니다. 실패는 failure, 중단은 error로 전달하며 전달 오류를 성공으로 대신하지 않습니다.
 
 JUnit 보고서는 API 테스트만 포함합니다. 웹 테스트 수치는 Node 테스트 출력에서 별도로 확인합니다. Jenkins는 registry 게시, GitOps PR, Helm 배포를 실행하지 않습니다.
 
 ## Kubernetes agent와 권한
 
 controller의 built-in executor는 0입니다. Kubernetes cloud 전체와 default template의 agent 상한은 1이며, job에도 disableConcurrentBuilds()가 적용됩니다. 동시 요청을 실제로 보내는 실험은 아직 하지 않았습니다.
+
+수동 실행과 pollSCM 감지가 겹쳐 같은 SHA의 빌드가 순차적으로 두 번 실행되는 경우는 실제로 관측했습니다. 위 설정은 동시 실행 상한이며 중복 빌드 자체의 제거를 보장하지 않습니다. 최신 빌드의 pending이 이전 success를 대체하면 Actions의 게시 직전 확인이 차단하고, 최신 success가 전달된 뒤 다시 검증합니다.
 
 [Pod 정의](../../infra/jenkins/agent-pod.yaml)는 chart의 default template을 merge 방식으로 상속합니다. controller SA만 namespace 안에서 agent Pod를 관리하고, build에는 권한 없는 jenkins-build-agent SA를 사용합니다. 실제 Pod에서 token 자동 mount가 꺼져 있고 Docker socket이 없음을 관측했습니다.
 
@@ -56,11 +60,13 @@ chart 5.9.68의 apply_config.sh 동작을 확인했습니다. initializeOnce=tru
 
 현재는 두 보호 값을 원복한 상태입니다. 같은 교정을 무조건 반복하거나 초기화 marker/PVC/jobs를 삭제하지 않습니다. 백업 원문에는 Secret이 포함될 수 있으므로 공개 저장소에 넣지 않습니다.
 
-## 이미지 게시와 GitOps 후속 연결
+## Actions 게시와 GitOps 연결
 
-현재 이미지 게시는 GitHub Actions의 별도 publish-images workflow가 담당합니다. 이 Jenkins 작업이 이미지를 게시하거나 배포했다고 설명하지 않습니다. Jenkins로 게시를 이전하려면 해당 package의 최소 쓰기 권한과 Docker daemon을 쓰지 않는 빌드 방식을 따로 구성·검증합니다. 이미지 게시를 성공으로 대신하는 더미 단계는 추가하지 않습니다.
+GitHub Actions의 publish-images workflow가 유일한 이미지 게시자입니다. 현재 main의 같은 SHA에서 Actions 통합 검증과 Jenkins의 최신 success·예상 issuer·산출물 확인 메타데이터를 모두 요구합니다. Jenkins 전용 credential은 선택한 저장소의 Commit statuses 쓰기와 필수 Metadata 읽기 범위로 준비하며 registry·PR 쓰기 권한을 추가하지 않습니다. [ADR 0004](../adr/0004-jenkins-gated-actions-publication.md)와 [연결 절차](cicd-publication.md)를 따릅니다.
 
-GitOps 자동화는 기존 저장소의 gitops/environments/home-lab/values.yaml에서 허용된 이미지 digest만 바꾸는 PR 권한을 별도로 구성합니다. 테스트 → source commit → image digest → GitOps 변경 → Argo CD 상태 → 실제 서비스의 순서로 추적합니다. Argo가 관리하는 앱에 Jenkins가 helm upgrade를 동시에 수행하지 않습니다.
+사용자 승인으로 Actions PR 설정과 draft GitOps PR 제안을 활성화했습니다. Actions의 단기 token이 허용된 API/Web digest와 sourceCommit만 변경하고, 검토 후 main에 반영하면 Argo가 배포합니다. 자동 승인·자동 병합은 하지 않습니다. 테스트 → source commit → image digest → GitOps commit → Argo → 실제 서비스의 순서로 확인했으며 Jenkins가 helm upgrade를 중복 실행하지 않습니다.
+
+실제 main의 음성 실험에서 API 테스트 15개 중 1개가 기대 8·실제 7로 실패했습니다. 해당 SHA의 failure status와 Actions 검증 실패, 새 이미지·게시 artifact·PR 없음, 기존 B의 Deployment/Pod·전체 SQL·시각·PVC와 기존 Docker 보존을 확인했습니다. 이후 실패 변경의 두 CI 검증을 다시 통과했고 GitOps PR로 이전 정상 A를 복구해 Argo Synced·Healthy·3개 Pod Ready와 데이터·기존 서비스 보존까지 확인했습니다. 추가 이미지 게시·draft 제안은 성공했으나 적용하지 않고 닫아 최종 A 배포를 유지했습니다.
 
 untrusted fork PR에는 registry/GitOps 권한이나 관리자 자격증명을 넘기지 않습니다. webhook을 도입할 때는 서명 검증과 제한된 수신 경로를 구성합니다. 데모 API의 Jenkins/Argo/Kubernetes 상태 수집기는 운영 설치와 별도 작업이므로 수집 전에는 NOT_CONFIGURED를 유지합니다.
 
@@ -75,4 +81,4 @@ untrusted fork PR에는 registry/GitOps 권한이나 관리자 자격증명을 �
 - [Maven Wrapper bin 방식과 checksum](https://maven.apache.org/tools/wrapper/)
 - [Remote API](https://www.jenkins.io/doc/book/using/remote-access-api/) / [CSRF cookie·crumb](https://www.jenkins.io/doc/book/security/csrf-protection/)
 
-로컬 Helm strict lint와 35개 정책 검증, 실제 Jenkins agent 실행은 각각 구분해서 기록합니다. 강제 실패 빌드와 동시 요청 실험은 미검증입니다. 관리자 응답·콘솔 원문·Secret·내부 주소는 공개 근거에서 제외합니다.
+로컬 Helm strict lint와 35개 정책 검증, 실제 Jenkins agent 실행, 실제 실패 차단은 각각 구분해 기록합니다. 동시 요청 실험과 credential의 실제 만료·회전은 미검증입니다. 관리자 응답·콘솔 원문·Secret·내부 주소는 공개 근거에서 제외합니다.

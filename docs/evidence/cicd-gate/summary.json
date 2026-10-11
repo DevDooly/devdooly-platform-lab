@@ -1,48 +1,630 @@
 {
-  "schemaVersion": 1,
-  "observedAt": "2026-10-11T14:10:26.422703+00:00",
-  "status": "PREPARED_NOT_ACTIVATED",
-  "offlineTests": {
-    "pythonPassed": 67,
-    "nodePassed": 6,
-    "networkOrRealCredentialsUsed": false
-  },
-  "workflowYamlSyntax": {
-    "files": [
-      "lab-ci.yml",
-      "publish-images.yml",
-      "validate-gitops.yml"
-    ],
-    "parser": "existing web dependency yaml",
-    "uniqueKeysEnforced": true,
-    "passed": true
-  },
-  "jenkinsDeclarativeLinter": {
-    "observedAt": "2026-10-11T14:08:54.981393+00:00",
-    "jenkinsfileSha256": "4167f185de36b87ff2c9d495599068ae3059b075ca9058aea517daff46df8042",
-    "declarativeValidationPassed": true,
-    "buildTriggered": false,
-    "jobChanged": false
-  },
-  "livePublicGitHubGate": {
-    "mainSourceCommit": "a8e80b7d6f500a98d29615f3dcbc10a51cc340b0",
-    "validationRunId": 38145100877,
-    "publicationAllowed": false,
-    "reason": "JENKINS_STATUS_MISSING",
-    "registryOrClusterChanged": false
-  },
+  "schemaVersion": 2,
+  "observedAt": "2026-10-11T15:08:52.922624+00:00",
+  "status": "ACTIVE_VERIFIED",
+  "preparation": "preparation.json",
   "repositoryConfiguration": {
     "expectedStatusIssuer": "DevDooly",
-    "issuerVariableSet": true,
+    "statusCredentialId": "platform-lab-github-status",
     "defaultWorkflowPermission": "read",
-    "actionsPullRequestApprovalEnabled": false,
-    "gitopsProposalEnabled": false
+    "actionsCanCreateAndApprovePullRequests": true,
+    "explicitUserAuthorization": true,
+    "gitopsProposalEnabled": true,
+    "automaticReviewsOrMergeImplemented": false,
+    "tokenValuePublished": false,
+    "tokenExpiryOrRotationIndependentlyVerified": false
   },
-  "pending": [
-    "DEDICATED_STATUS_CREDENTIAL",
-    "REAL_MAIN_JENKINS_TO_GITHUB_STATUS",
-    "GATED_IMAGE_PUBLICATION",
-    "REAL_TEST_FAILURE_BLOCK",
-    "GITOPS_DEPLOYMENT_AND_PREVIOUS_DIGEST_RECOVERY"
+  "normal": {
+    "sourceCommit": "cd48da4eaf0dd5ae245f7caa890c99f5ba92db17",
+    "jenkins": {
+      "buildNumber": 4,
+      "building": false,
+      "result": "SUCCESS",
+      "sourceCommits": [
+        "cd48da4eaf0dd5ae245f7caa890c99f5ba92db17"
+      ],
+      "durationMilliseconds": 102548,
+      "artifactCount": 11,
+      "stages": [
+        {
+          "name": "Checkout",
+          "status": "SUCCESS"
+        },
+        {
+          "name": "Record pending CI",
+          "status": "SUCCESS"
+        },
+        {
+          "name": "Verify API",
+          "status": "SUCCESS"
+        },
+        {
+          "name": "Verify web",
+          "status": "SUCCESS"
+        },
+        {
+          "name": "Archive verified CI",
+          "status": "SUCCESS"
+        },
+        {
+          "name": "Record success CI",
+          "status": "SUCCESS"
+        }
+      ],
+      "apiTests": {
+        "totalCount": 15,
+        "failCount": 0,
+        "skipCount": 0
+      },
+      "consoleSavedPrivately": true,
+      "webTestsPassed": 13
+    },
+    "actionsValidationRunId": 38148455244,
+    "publicationRunId": 38148675074,
+    "jenkinsStatusId": 56089229212,
+    "draftPr": 2,
+    "scopeValidationRunId": 38148785003,
+    "imageAndHelmVerification": {
+      "pullRequest": 2,
+      "headCommit": "36b9679b1f6ddcd8186e835aa71da7bd609ca21b",
+      "sourceCommit": "cd48da4eaf0dd5ae245f7caa890c99f5ba92db17",
+      "scope": {
+        "scope": "GITOPS_CHANGE_SCOPE_ONLY",
+        "pullRequest": 2,
+        "baseCommit": "cd48da4eaf0dd5ae245f7caa890c99f5ba92db17",
+        "headCommit": "36b9679b1f6ddcd8186e835aa71da7bd609ca21b",
+        "changedFields": [
+          "api.image.digest",
+          "api.sourceCommit",
+          "web.image.digest"
+        ],
+        "registryContentsVerified": false,
+        "helmRenderVerified": false,
+        "deploymentVerified": false
+      },
+      "registry": {
+        "api": {
+          "indexDigest": "sha256:aeb4c22ae93e2e34048103aab75416721c8ee11fca0fbd37b443f8e9765912a4",
+          "amd64ManifestDigest": "sha256:29e87ea768e7475e1127e02695bfea5216635443da36eafc2c319d5dcfc3bcd7",
+          "configDigest": "sha256:f85699d51b903dff9dc24fb386a3071767baf15459830428aaa8483750a86173",
+          "sourceCommit": "cd48da4eaf0dd5ae245f7caa890c99f5ba92db17",
+          "anonymousReadVerified": true
+        },
+        "web": {
+          "indexDigest": "sha256:91d3a77775fd9bc0f67a76d419b2417ecb5354fe4a382f1a3133c3c6c056d063",
+          "amd64ManifestDigest": "sha256:e9445b069018f48da1cdd003806346e0484ec4c6f9062975b1c5448fb0e39065",
+          "configDigest": "sha256:89076d74735b9d468b7b3635d7113b80e612c7b7a056b2d782893014fba9cb40",
+          "sourceCommit": "cd48da4eaf0dd5ae245f7caa890c99f5ba92db17",
+          "anonymousReadVerified": true
+        }
+      },
+      "helmLintStrict": true,
+      "helmRender": true
+    },
+    "gitopsCommit": "4c81e4ac8c266c96e8bbd40dd6142c8e622c93a9"
+  },
+  "failure": {
+    "ci": {
+      "observedAt": "2026-10-11T15:05:18.397048+00:00",
+      "failureCommit": "7710a39d5d788b58ec29ec5d746085c610a35f70",
+      "changedTest": "SensorProcessorTest.fixedScenarioHasIndependentExpectedOutcomes",
+      "expected": 8,
+      "actual": 7,
+      "jenkins": {
+        "buildNumber": 6,
+        "sourceCommit": "7710a39d5d788b58ec29ec5d746085c610a35f70",
+        "result": "FAILURE",
+        "failCount": 1,
+        "totalCount": 15,
+        "statusId": 56089598137,
+        "status": "failure",
+        "issuer": "DevDooly",
+        "successStatusCount": 0,
+        "artifactCount": 0,
+        "stages": [
+          {
+            "name": "Checkout",
+            "status": "SUCCESS"
+          },
+          {
+            "name": "Record pending CI",
+            "status": "SUCCESS"
+          },
+          {
+            "name": "Verify API",
+            "status": "FAILED"
+          },
+          {
+            "name": "Verify web",
+            "status": "FAILED"
+          },
+          {
+            "name": "Archive verified CI",
+            "status": "FAILED"
+          },
+          {
+            "name": "Record success CI",
+            "status": "FAILED"
+          },
+          {
+            "name": "Declarative: Post Actions",
+            "status": "SUCCESS"
+          }
+        ],
+        "skippedStagesVerifiedFromConsole": [
+          "Verify web",
+          "Archive verified CI",
+          "Record success CI"
+        ],
+        "assertion": "\nexpected: 8\n but was: 7"
+      },
+      "actions": {
+        "runId": 38149434606,
+        "url": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38149434606",
+        "result": "failure",
+        "sourceCommit": "7710a39d5d788b58ec29ec5d746085c610a35f70",
+        "totalCount": 15,
+        "failCount": 1,
+        "assertion": "\nexpected: 8\n but was: 7"
+      },
+      "publicationRuns": [
+        {
+          "runId": 38149549126,
+          "event": "status",
+          "jobs": [
+            {
+              "name": "gate",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "propose-gitops",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "publish",
+              "conclusion": "skipped"
+            }
+          ],
+          "artifactCount": 0
+        },
+        {
+          "runId": 38149503333,
+          "event": "status",
+          "jobs": [
+            {
+              "name": "publish",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "propose-gitops",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "gate",
+              "conclusion": "skipped"
+            }
+          ],
+          "artifactCount": 0
+        },
+        {
+          "runId": 38149471075,
+          "event": "workflow_run",
+          "jobs": [
+            {
+              "name": "gate",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "publish",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "propose-gitops",
+              "conclusion": "skipped"
+            }
+          ],
+          "artifactCount": 0
+        }
+      ],
+      "registry": {
+        "api": {
+          "failedSourceTagCount": 0,
+          "completeTagListingVerified": true
+        },
+        "web": {
+          "failedSourceTagCount": 0,
+          "completeTagListingVerified": true
+        }
+      },
+      "generatedGitOpsPrCount": 0,
+      "limitation": "Both CI paths failed; Jenkins-only failure with successful Actions was not isolated."
+    },
+    "runtimeBefore": {
+      "schemaVersion": 1,
+      "kind": "failure-gate-runtime-observation",
+      "phase": "before-failure",
+      "observedAt": "2026-10-11T14:59:44.734636+00:00",
+      "passed": true,
+      "expectedMainCommit": "4c81e4ac8c266c96e8bbd40dd6142c8e622c93a9",
+      "gitopsValuesBlobSha": "08f809c80faa26830f5ac744603458ebb3095d4e",
+      "gitopsValuesSha256": "07cb1f790a214215a1012d1931cd5f908375594f9eefcda105ccf17e6fa8f13d",
+      "argoRevision": "4c81e4ac8c266c96e8bbd40dd6142c8e622c93a9",
+      "sourceCommit": "cd48da4eaf0dd5ae245f7caa890c99f5ba92db17",
+      "apiImageDigest": "sha256:aeb4c22ae93e2e34048103aab75416721c8ee11fca0fbd37b443f8e9765912a4",
+      "webImageDigest": "sha256:91d3a77775fd9bc0f67a76d419b2417ecb5354fe4a382f1a3133c3c6c056d063",
+      "labPodCount": 3,
+      "productionPvcCount": 2,
+      "existingDockerCount": 23,
+      "counts": {
+        "inputCount": 12,
+        "successCount": 7,
+        "failureCount": 3,
+        "duplicateCount": 2,
+        "pendingCount": 0
+      },
+      "checks": {
+        "exactCommitValuesBlobAndBReferencesVerified": true,
+        "argoSyncedHealthyAtAllowedRevision": true,
+        "deployedBImagesSourceAndOciVerified": true,
+        "threeLabPodsReady": true,
+        "canonicalTwelveResultsAndSqlStableDuringObservation": true,
+        "deploymentGenerationsConverged": true,
+        "existingDockerAllRunning": true
+      },
+      "ciFailureAndPublicationGateStatus": "COLLECTED_SEPARATELY_BY_OPERATOR"
+    },
+    "runtimeAfter": {
+      "schemaVersion": 1,
+      "kind": "failure-gate-runtime-observation",
+      "phase": "after-failure",
+      "observedAt": "2026-10-11T15:01:49.406854+00:00",
+      "passed": true,
+      "expectedMainCommit": "7710a39d5d788b58ec29ec5d746085c610a35f70",
+      "gitopsValuesBlobSha": "08f809c80faa26830f5ac744603458ebb3095d4e",
+      "gitopsValuesSha256": "07cb1f790a214215a1012d1931cd5f908375594f9eefcda105ccf17e6fa8f13d",
+      "argoRevision": "4c81e4ac8c266c96e8bbd40dd6142c8e622c93a9",
+      "sourceCommit": "cd48da4eaf0dd5ae245f7caa890c99f5ba92db17",
+      "apiImageDigest": "sha256:aeb4c22ae93e2e34048103aab75416721c8ee11fca0fbd37b443f8e9765912a4",
+      "webImageDigest": "sha256:91d3a77775fd9bc0f67a76d419b2417ecb5354fe4a382f1a3133c3c6c056d063",
+      "labPodCount": 3,
+      "productionPvcCount": 2,
+      "existingDockerCount": 23,
+      "counts": {
+        "inputCount": 12,
+        "successCount": 7,
+        "failureCount": 3,
+        "duplicateCount": 2,
+        "pendingCount": 0
+      },
+      "checks": {
+        "exactCommitValuesBlobAndBReferencesVerified": true,
+        "argoSyncedHealthyAtAllowedRevision": true,
+        "deployedBImagesSourceAndOciVerified": true,
+        "threeLabPodsReady": true,
+        "canonicalTwelveResultsAndSqlStableDuringObservation": true,
+        "deploymentGenerationsConverged": true,
+        "existingDockerAllRunning": true,
+        "gitopsValuesBlobUnchanged": true,
+        "gitopsValuesAllBytesUnchanged": true,
+        "expectedMainCommitAdvanced": true,
+        "deploymentUidsGenerationsTemplatesUnchanged": true,
+        "podUidsStartsImagesRestartsUnchanged": true,
+        "productionPvcUidsBindingsStorageUnchanged": true,
+        "databasePodAndMountsUnchanged": true,
+        "allSqlRowsTimestampsFlywayUnchanged": true,
+        "allPersistedApiFieldsExceptObservedAtUnchanged": true,
+        "existingDockerIdsMountsStartTimesUnchanged": true,
+        "nodesUnchanged": true,
+        "hostBootUnchanged": true,
+        "ufwUnchanged": true,
+        "apiWebImagePinsAndSourceUnchanged": true,
+        "ociRuntimeMappingsUnchanged": true
+      },
+      "ciFailureAndPublicationGateStatus": "COLLECTED_SEPARATELY_BY_OPERATOR"
+    }
+  },
+  "testRecovery": {
+    "sourceCommit": "c741bb7a3964bbc21e24576ca65050a7135fcc98",
+    "jenkins": {
+      "buildNumber": 7,
+      "building": false,
+      "result": "SUCCESS",
+      "sourceCommits": [
+        "c741bb7a3964bbc21e24576ca65050a7135fcc98"
+      ],
+      "durationMilliseconds": 91463,
+      "artifactCount": 11,
+      "stages": [
+        {
+          "name": "Checkout",
+          "status": "SUCCESS"
+        },
+        {
+          "name": "Record pending CI",
+          "status": "SUCCESS"
+        },
+        {
+          "name": "Verify API",
+          "status": "SUCCESS"
+        },
+        {
+          "name": "Verify web",
+          "status": "SUCCESS"
+        },
+        {
+          "name": "Archive verified CI",
+          "status": "SUCCESS"
+        },
+        {
+          "name": "Record success CI",
+          "status": "SUCCESS"
+        }
+      ],
+      "apiTests": {
+        "totalCount": 15,
+        "failCount": 0,
+        "skipCount": 0
+      },
+      "consoleSavedPrivately": true,
+      "webTestsPassed": 13
+    },
+    "additionalPollBuild": 8,
+    "latestStatusId": 56089730775,
+    "actionsValidationRunId": 38149626830,
+    "publicationRunId": 38149854805,
+    "draftPr": 4,
+    "draftPrClosedWithoutDeployment": true
+  },
+  "rolloutSequence": [
+    {
+      "schemaVersion": 1,
+      "phase": "baseline-a",
+      "observedAt": "2026-10-11T14:52:31.522555+00:00",
+      "passed": true,
+      "sourceCommit": "820d5c398af2b1d62a0566f9184d015ab22e9f15",
+      "gitopsRevision": "cd48da4eaf0dd5ae245f7caa890c99f5ba92db17",
+      "apiImageDigest": "sha256:1c114976aeb32e3fa1c2dda84a0a27db0b390c38a6bb59e8c5ada771c340bcf4",
+      "webImageDigest": "sha256:e389ce9083b07c8b8fdeac334b13c1f1af9a0066fd541f46e7db78b5651b855a",
+      "oci": {
+        "api": {
+          "targetDigest": "sha256:1c114976aeb32e3fa1c2dda84a0a27db0b390c38a6bb59e8c5ada771c340bcf4",
+          "targetKind": "index",
+          "amd64ManifestDigest": "sha256:9ff34bd41378331b7932e2baece96e23ce389e09d5b9e5cbff0dd65d0ec047ed",
+          "configDigest": "sha256:996a258f876cb58ccc3c7284dfaa299499148f68c54381ef2bd49a9a492e3d08",
+          "platform": "linux/amd64",
+          "sourceCommitLabel": "820d5c398af2b1d62a0566f9184d015ab22e9f15",
+          "runtimeReports": "index",
+          "criConfigMatches": true
+        },
+        "web": {
+          "targetDigest": "sha256:e389ce9083b07c8b8fdeac334b13c1f1af9a0066fd541f46e7db78b5651b855a",
+          "targetKind": "index",
+          "amd64ManifestDigest": "sha256:06b4d2f1f18ba2dfa604c7e0707d110c99f7ea60c7ce6952a46f7bd777ce67e6",
+          "configDigest": "sha256:339db15f6fac4d7a062716f882295430d1e3124be3969d945fd356f0501998c7",
+          "platform": "linux/amd64",
+          "sourceCommitLabel": "820d5c398af2b1d62a0566f9184d015ab22e9f15",
+          "runtimeReports": "index",
+          "criConfigMatches": true
+        }
+      },
+      "labPodCount": 3,
+      "productionPvcCount": 2,
+      "existingDockerCount": 23,
+      "counts": {
+        "inputCount": 12,
+        "successCount": 7,
+        "failureCount": 3,
+        "duplicateCount": 2,
+        "pendingCount": 0
+      },
+      "checks": {
+        "threeLabPodsReady": true,
+        "canonicalTwelveResults": true,
+        "persistedRunAndEventTimesPresent": true,
+        "argoSyncedHealthyAtExpectedRevision": true,
+        "apiSourceAndDigestMatch": true,
+        "podSpecsMatchPins": true,
+        "ociContentDigestsAndAmd64Relationship": true,
+        "criConfigMatchesAmd64Manifest": true,
+        "sqlStableDuringObservation": true,
+        "dockerAllRunning": true
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "phase": "deployed-b",
+      "observedAt": "2026-10-11T14:57:04.066255+00:00",
+      "passed": true,
+      "sourceCommit": "cd48da4eaf0dd5ae245f7caa890c99f5ba92db17",
+      "gitopsRevision": "4c81e4ac8c266c96e8bbd40dd6142c8e622c93a9",
+      "apiImageDigest": "sha256:aeb4c22ae93e2e34048103aab75416721c8ee11fca0fbd37b443f8e9765912a4",
+      "webImageDigest": "sha256:91d3a77775fd9bc0f67a76d419b2417ecb5354fe4a382f1a3133c3c6c056d063",
+      "oci": {
+        "api": {
+          "targetDigest": "sha256:aeb4c22ae93e2e34048103aab75416721c8ee11fca0fbd37b443f8e9765912a4",
+          "targetKind": "index",
+          "amd64ManifestDigest": "sha256:29e87ea768e7475e1127e02695bfea5216635443da36eafc2c319d5dcfc3bcd7",
+          "configDigest": "sha256:f85699d51b903dff9dc24fb386a3071767baf15459830428aaa8483750a86173",
+          "platform": "linux/amd64",
+          "sourceCommitLabel": "cd48da4eaf0dd5ae245f7caa890c99f5ba92db17",
+          "runtimeReports": "index",
+          "criConfigMatches": true
+        },
+        "web": {
+          "targetDigest": "sha256:91d3a77775fd9bc0f67a76d419b2417ecb5354fe4a382f1a3133c3c6c056d063",
+          "targetKind": "index",
+          "amd64ManifestDigest": "sha256:e9445b069018f48da1cdd003806346e0484ec4c6f9062975b1c5448fb0e39065",
+          "configDigest": "sha256:89076d74735b9d468b7b3635d7113b80e612c7b7a056b2d782893014fba9cb40",
+          "platform": "linux/amd64",
+          "sourceCommitLabel": "cd48da4eaf0dd5ae245f7caa890c99f5ba92db17",
+          "runtimeReports": "index",
+          "criConfigMatches": true
+        }
+      },
+      "labPodCount": 3,
+      "productionPvcCount": 2,
+      "existingDockerCount": 23,
+      "counts": {
+        "inputCount": 12,
+        "successCount": 7,
+        "failureCount": 3,
+        "duplicateCount": 2,
+        "pendingCount": 0
+      },
+      "checks": {
+        "threeLabPodsReady": true,
+        "canonicalTwelveResults": true,
+        "persistedRunAndEventTimesPresent": true,
+        "argoSyncedHealthyAtExpectedRevision": true,
+        "apiSourceAndDigestMatch": true,
+        "podSpecsMatchPins": true,
+        "ociContentDigestsAndAmd64Relationship": true,
+        "criConfigMatchesAmd64Manifest": true,
+        "sqlStableDuringObservation": true,
+        "dockerAllRunning": true,
+        "productionPvcUidsBindingsAndStorageUnchanged": true,
+        "databasePodImageAndMountsUnchanged": true,
+        "allSqlRowsTimestampsAndFlywayUnchanged": true,
+        "allPersistedApiFieldsExceptObservedAtUnchanged": true,
+        "existingDockerIdsMountsStartTimesUnchanged": true,
+        "hostBootUnchanged": true,
+        "nodesUnchanged": true,
+        "ufwUnchanged": true,
+        "newApiImageAndSourceObserved": true,
+        "publishedApiWebOciSourceLabelsMatch": true
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "phase": "restored-a",
+      "observedAt": "2026-10-11T15:08:52.922624+00:00",
+      "passed": true,
+      "sourceCommit": "820d5c398af2b1d62a0566f9184d015ab22e9f15",
+      "gitopsRevision": "651e5c302e269e994c00ccda2a1c347d80e1ffb9",
+      "apiImageDigest": "sha256:1c114976aeb32e3fa1c2dda84a0a27db0b390c38a6bb59e8c5ada771c340bcf4",
+      "webImageDigest": "sha256:e389ce9083b07c8b8fdeac334b13c1f1af9a0066fd541f46e7db78b5651b855a",
+      "oci": {
+        "api": {
+          "targetDigest": "sha256:1c114976aeb32e3fa1c2dda84a0a27db0b390c38a6bb59e8c5ada771c340bcf4",
+          "targetKind": "index",
+          "amd64ManifestDigest": "sha256:9ff34bd41378331b7932e2baece96e23ce389e09d5b9e5cbff0dd65d0ec047ed",
+          "configDigest": "sha256:996a258f876cb58ccc3c7284dfaa299499148f68c54381ef2bd49a9a492e3d08",
+          "platform": "linux/amd64",
+          "sourceCommitLabel": "820d5c398af2b1d62a0566f9184d015ab22e9f15",
+          "runtimeReports": "index",
+          "criConfigMatches": true
+        },
+        "web": {
+          "targetDigest": "sha256:e389ce9083b07c8b8fdeac334b13c1f1af9a0066fd541f46e7db78b5651b855a",
+          "targetKind": "index",
+          "amd64ManifestDigest": "sha256:06b4d2f1f18ba2dfa604c7e0707d110c99f7ea60c7ce6952a46f7bd777ce67e6",
+          "configDigest": "sha256:339db15f6fac4d7a062716f882295430d1e3124be3969d945fd356f0501998c7",
+          "platform": "linux/amd64",
+          "sourceCommitLabel": "820d5c398af2b1d62a0566f9184d015ab22e9f15",
+          "runtimeReports": "index",
+          "criConfigMatches": true
+        }
+      },
+      "labPodCount": 3,
+      "productionPvcCount": 2,
+      "existingDockerCount": 23,
+      "counts": {
+        "inputCount": 12,
+        "successCount": 7,
+        "failureCount": 3,
+        "duplicateCount": 2,
+        "pendingCount": 0
+      },
+      "checks": {
+        "threeLabPodsReady": true,
+        "canonicalTwelveResults": true,
+        "persistedRunAndEventTimesPresent": true,
+        "argoSyncedHealthyAtExpectedRevision": true,
+        "apiSourceAndDigestMatch": true,
+        "podSpecsMatchPins": true,
+        "ociContentDigestsAndAmd64Relationship": true,
+        "criConfigMatchesAmd64Manifest": true,
+        "sqlStableDuringObservation": true,
+        "dockerAllRunning": true,
+        "productionPvcUidsBindingsAndStorageUnchanged": true,
+        "databasePodImageAndMountsUnchanged": true,
+        "allSqlRowsTimestampsAndFlywayUnchanged": true,
+        "allPersistedApiFieldsExceptObservedAtUnchanged": true,
+        "existingDockerIdsMountsStartTimesUnchanged": true,
+        "hostBootUnchanged": true,
+        "nodesUnchanged": true,
+        "ufwUnchanged": true,
+        "originalApiWebPinsAndSourceRestored": true
+      }
+    }
+  ],
+  "rollback": {
+    "pullRequest": 3,
+    "scopeValidationRunId": 38149720183,
+    "imageAndHelmVerification": {
+      "pullRequest": 3,
+      "headCommit": "c0ac1d6da00b995c9ffdebc5cdd4487fc24999d3",
+      "sourceCommit": "820d5c398af2b1d62a0566f9184d015ab22e9f15",
+      "scope": {
+        "scope": "GITOPS_CHANGE_SCOPE_ONLY",
+        "pullRequest": 3,
+        "baseCommit": "c741bb7a3964bbc21e24576ca65050a7135fcc98",
+        "headCommit": "c0ac1d6da00b995c9ffdebc5cdd4487fc24999d3",
+        "changedFields": [
+          "api.image.digest",
+          "api.sourceCommit",
+          "web.image.digest"
+        ],
+        "registryContentsVerified": false,
+        "helmRenderVerified": false,
+        "deploymentVerified": false
+      },
+      "registry": {
+        "api": {
+          "indexDigest": "sha256:1c114976aeb32e3fa1c2dda84a0a27db0b390c38a6bb59e8c5ada771c340bcf4",
+          "amd64ManifestDigest": "sha256:9ff34bd41378331b7932e2baece96e23ce389e09d5b9e5cbff0dd65d0ec047ed",
+          "configDigest": "sha256:996a258f876cb58ccc3c7284dfaa299499148f68c54381ef2bd49a9a492e3d08",
+          "sourceCommit": "820d5c398af2b1d62a0566f9184d015ab22e9f15",
+          "anonymousReadVerified": true
+        },
+        "web": {
+          "indexDigest": "sha256:e389ce9083b07c8b8fdeac334b13c1f1af9a0066fd541f46e7db78b5651b855a",
+          "amd64ManifestDigest": "sha256:06b4d2f1f18ba2dfa604c7e0707d110c99f7ea60c7ce6952a46f7bd777ce67e6",
+          "configDigest": "sha256:339db15f6fac4d7a062716f882295430d1e3124be3969d945fd356f0501998c7",
+          "sourceCommit": "820d5c398af2b1d62a0566f9184d015ab22e9f15",
+          "anonymousReadVerified": true
+        }
+      },
+      "helmLintStrict": true,
+      "helmRender": true
+    },
+    "gitopsCommit": "651e5c302e269e994c00ccda2a1c347d80e1ffb9",
+    "restoredOriginalApiWebDigestsAndSource": true
+  },
+  "operationalObservations": [
+    {
+      "runId": 38149741229,
+      "result": "PUBLIC_METADATA_HTTP_403",
+      "published": false
+    },
+    {
+      "runId": 38149753443,
+      "result": "LATEST_JENKINS_NOT_SUCCESSFUL",
+      "reason": "Build 8 pending superseded build 7 success immediately before registry authentication",
+      "published": false
+    },
+    {
+      "runId": 38149854805,
+      "result": "SUCCESS",
+      "reason": "New build 8 success event resumed publication"
+    }
+  ],
+  "limitations": [
+    "Both CI paths failed in the negative test; successful Actions plus Jenkins-only failure was not isolated.",
+    "No continuous HTTP downtime sampling; Recreate transition outage duration was not measured.",
+    "Duplicate manual and pollSCM builds can occur; latest pending invalidates old success.",
+    "Public metadata HTTP failures withhold publication; automatic retry timer is not implemented.",
+    "K3s/Jenkins full archive restoration and off-host ciphertext to K3s integrated restoration remain unverified.",
+    "Public platform collector and real-time API are not connected yet."
   ]
 }

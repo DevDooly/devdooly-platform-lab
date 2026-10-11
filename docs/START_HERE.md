@@ -10,13 +10,16 @@ Java API·포트폴리오를 구현하고 Ubuntu 미니 PC에 K3s·Jenkins·Argo
 - Java 21·Spring Boot API 테스트 15개, Astro·React 테스트 13개
 - Linux runner의 이미지 빌드·MariaDB·API 교체·데이터 보존 검증
 - GHCR 이미지 게시와 미니 PC에서 익명 다운로드
-- Jenkins Kubernetes agent의 테스트·패키징 실행과 산출물 확인
+- Jenkins Kubernetes agent의 테스트·패키징·필수 산출물과 같은 SHA의 commit status 전달 확인
+- 현재 main의 Jenkins·Actions 성공을 함께 요구하는 단일 이미지 게시 경로와 draft GitOps PR 자동 제안
+- 정상 B 배포의 source·digest·GitOps·실행 이미지 추적과 실제 JUnit 실패의 게시·PR·배포 차단
+- GitOps 값을 이전 정상 A로 되돌려 API/Web pin·source·전체 SQL·처리 시각·PVC와 기존 Docker 보존 검증
 - 기존 저장소 `gitops/`의 digest 고정값으로 Argo CD 앱 배포
 - API·웹·DB Ready, PVC Bound, 웹을 통한 12건 처리 결과 검증
 - 공개 Pages용 실제 관측 기록 수집과 계약 검증
 - 외부 암호화 백업·격리 DB 복원·호스트 재부팅: [근거와 한계](evidence/recovery/README.md)
 
-Jenkins의 첫 빌드는 플러그인 충돌로 단계가 실행되지 않아 성공으로 인정하지 않았습니다. 교정 후 실제 단계·JUnit·산출물을 별도로 확인했습니다. 현재 이미지 게시자는 Actions이며 Jenkins의 이미지 게시·GitOps PR 자동화는 다음 작업입니다.
+Jenkins의 첫 빌드는 플러그인 충돌로 단계가 실행되지 않아 성공으로 인정하지 않았습니다. 교정 후 실제 단계·JUnit·산출물을 확인했고, 전용 status credential을 등록해 Actions 게시 gate에 연결했습니다. Actions가 유일한 이미지 게시자이며 사용자 승인으로 Actions의 PR 생성·승인 허용 설정과 draft GitOps PR 제안을 활성화했습니다. 워크플로는 PR을 자동 승인하거나 병합하지 않습니다. [정상 배포와 실패 차단](evidence/cicd-gate/README.md)을 확인합니다.
 
 ## 지금 접속하기
 
@@ -32,12 +35,12 @@ Argo CD 자체 서명 인증서는 접속 안내에 따라 서버 인증서 지�
 
 1. 초기 관리자 비밀번호 변경과 본인 관리 화면 로그인 확인
 2. 확보한 외부 백업의 추가 물리 장치 사본과 K3s·Jenkins archive 전체 복원 검토
-3. Jenkins 이미지 게시·GitOps PR 연계와 실제 실패 차단·이전 digest 복구 검증
+3. 전용 status credential의 만료·회전과 게시 산출물 보존 운영 정리
 4. 허용 필드만 수집하는 Jenkins·Argo CD collector 연결
 5. 기존 프록시·DDNS·TLS 조건을 확인한 뒤 공개 읽기 API와 외부망 검증
 6. Kafka·S3 및 AI 개선 재현을 진행 목록 순서대로 추가
 
-기존 서비스가 있으므로 재부팅·방화벽 변경·프록시 교체를 일괄 실행하지 않습니다. Windows 외부 사본의 무결성, 격리 DB 복원과 호스트 재부팅을 검증했습니다. K3s·Jenkins archive 전체 복원은 아직 별도 작업입니다. PV의 Delete 정책 때문에 PVC·namespace를 수동 삭제하면 데이터가 지워질 수 있습니다.
+CI/CD의 정상 배포·실패 차단·이전 digest 복구를 확인했으며, 다음 개발은 3단계 관측 공개입니다. 기존 서비스가 있으므로 재부팅·방화벽 변경·프록시 교체를 일괄 실행하지 않습니다. Windows 외부 사본의 무결성, 격리 DB 복원과 호스트 재부팅을 검증했습니다. K3s·Jenkins archive 전체 복원은 아직 별도 작업입니다. PV의 Delete 정책 때문에 PVC·namespace를 수동 삭제하면 데이터가 지워질 수 있습니다.
 
 ## 관련 자료
 

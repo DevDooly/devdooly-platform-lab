@@ -43,17 +43,20 @@
 - [x] 점검 결과에 맞춰 K3s와 namespace·자원 설정 구성
 - [x] Jenkins controller executor 0, 별도 agent·테스트 pipeline 정의 작성
 - [x] Jenkins 실제 Kubernetes agent·테스트·패키징 성공 확인: [근거](evidence/jenkins-ci/README.md)
-- [ ] Jenkins 실제 테스트 실패 시 게시·배포 차단을 별도 검증
+- [x] 실제 JUnit 실패·failure status·Actions 검증 실패에서 이미지·PR·배포 차단과 기존 B 보존 확인: [근거](evidence/cicd-gate/README.md)
 - [x] Actions 이미지 빌드·GHCR 게시·digest 기록과 서버 익명 다운로드
 - [x] API·화면·MariaDB 앱 Helm chart 작성과 lint·render 검증: [근거](../infra/charts/platform-lab/ci/render-validation.json)
 - [x] 기존 저장소 gitops/에 실제 image digest·환경 values·Application 연결: [결정](adr/0003-gitops-in-existing-repository.md)
-- [ ] Jenkins 테스트·이미지 게시·GitOps 변경 PR 연결
+- [x] 같은 source SHA의 Jenkins·Actions 검증 → Actions 단일 게시 → draft GitOps PR 연결: [절차](runbooks/cicd-publication.md)
 - [x] Argo CD 동기화와 실제 서비스 버전 확인
 - [x] 고정 image digest의 정상 배포와 Argo CD Synced·Healthy 확인
-- [ ] 테스트 실패 시 게시 차단·이전 digest 복구 검증
+- [x] 정상 B 배포에서 source·OCI digest·GitOps commit·실행 이미지와 데이터 보존 연결: [근거](evidence/cicd-gate/README.md)
+- [x] GitOps 값을 이전 정상 A digest·source로 복구하고 Argo Synced·Healthy, HTTP·전체 SQL·처리 시각·DB/PVC·기존 서비스 보존 검증: [근거](evidence/cicd-gate/README.md)
 - [x] 재부팅 복구와 필요한 설정·데이터의 외부 백업 확보: [실제 검증](evidence/recovery/README.md)
 
 완료 조건: 소스 commit부터 image digest, GitOps commit, 실행 버전까지 추적되고 실패·복구 결과가 남습니다.
+
+정상 A → B 배포, 실제 main의 실패 차단, GitOps A 복구를 확인했습니다. 2단계의 세 운영 시나리오를 완료했고 다음은 3단계 관측 공개입니다. token의 실제 만료·회전, 동시 요청 실험과 K3s·Jenkins archive 전체 복원은 별도 운영 후속으로 남깁니다.
 
 ## 3 외부 공개
 

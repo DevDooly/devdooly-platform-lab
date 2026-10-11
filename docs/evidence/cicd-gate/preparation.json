@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-11T14:10:26.422703+00:00",
+  "status": "PREPARED_NOT_ACTIVATED",
+  "offlineTests": {
+    "pythonPassed": 67,
+    "nodePassed": 6,
+    "networkOrRealCredentialsUsed": false
+  },
+  "workflowYamlSyntax": {
+    "files": [
+      "lab-ci.yml",
+      "publish-images.yml",
+      "validate-gitops.yml"
+    ],
+    "parser": "existing web dependency yaml",
+    "uniqueKeysEnforced": true,
+    "passed": true
+  },
+  "jenkinsDeclarativeLinter": {
+    "observedAt": "2026-10-11T14:08:54.981393+00:00",
+    "jenkinsfileSha256": "4167f185de36b87ff2c9d495599068ae3059b075ca9058aea517daff46df8042",
+    "declarativeValidationPassed": true,
+    "buildTriggered": false,
+    "jobChanged": false
+  },
+  "livePublicGitHubGate": {
+    "mainSourceCommit": "a8e80b7d6f500a98d29615f3dcbc10a51cc340b0",
+    "validationRunId": 38145100877,
+    "publicationAllowed": false,
+    "reason": "JENKINS_STATUS_MISSING",
+    "registryOrClusterChanged": false
+  },
+  "repositoryConfiguration": {
+    "expectedStatusIssuer": "DevDooly",
+    "issuerVariableSet": true,
+    "defaultWorkflowPermission": "read",
+    "actionsPullRequestApprovalEnabled": false,
+    "gitopsProposalEnabled": false
+  },
+  "pending": [
+    "DEDICATED_STATUS_CREDENTIAL",
+    "REAL_MAIN_JENKINS_TO_GITHUB_STATUS",
+    "GATED_IMAGE_PUBLICATION",
+    "REAL_TEST_FAILURE_BLOCK",
+    "GITOPS_DEPLOYMENT_AND_PREVIOUS_DIGEST_RECOVERY"
+  ]
+}

@@ -1,10 +1,10 @@
 # 0004 Jenkins 검증을 gate로 연결하고 Actions를 유일한 이미지 게시자로 유지
 
-상태: 구현 초안. 전용 credential 등록과 실제 연결 검증 전이며, 별도 branch의 draft PR로 검토한다.
+상태: 채택·운영 활성화. 전용 status credential, 같은 SHA의 Jenkins·Actions gate, 단일 Actions 게시자와 draft GitOps PR 제안을 활성화했다. 정상 B 배포·실제 JUnit 실패 차단·GitOps의 이전 정상 A digest 복구를 모두 검증했다.
 
 ## 배경
 
-Jenkins는 Kubernetes agent에서 API·웹 테스트와 패키징을 실행한다. Actions는 Linux MariaDB·Compose 검증 후 GHCR 이미지를 게시하고, Argo CD는 GitOps의 digest를 배포한다. 기존 두 CI 경로는 독립적이어서 Jenkins 실패가 Actions의 게시를 막지 못한다.
+Jenkins는 Kubernetes agent에서 API·웹 테스트와 패키징을 실행한다. Actions는 Linux MariaDB·Compose 검증 후 GHCR 이미지를 게시하고, Argo CD는 GitOps의 digest를 배포한다. 기존 두 CI 경로는 독립적이어서 Jenkins 실패가 Actions의 게시를 막지 못했다. 이를 같은 source SHA의 게시 조건으로 연결했다.
 
 Jenkins로 registry 게시까지 옮기면 별도 이미지 빌더와 장기 게시 자격 증명이 필요하다. GHCR 공식 문서는 외부 인증에 PAT classic을 안내하며, Actions 안에서는 단기 GITHUB_TOKEN을 사용하도록 권장한다. 개인 서버에 넓은 registry 권한을 추가할 이유가 작다. [GHCR 인증과 권한](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
 
@@ -17,7 +17,7 @@ Jenkins main 테스트·필수 산출물 → ci/jenkins-test status
 Actions main MariaDB·Compose 검증 → workflow run
                          ↓ 같은 SHA·현재 main·예상 issuer
                   Actions 이미지 게시와 digest 기록
-                         ↓ 선택적으로 활성화
+                         ↓ 활성화된 자동 제안
                   이미지 값만 바꾸는 draft GitOps PR
                          ↓ 검토 후 병합
                   Argo CD와 Helm 배포
@@ -40,9 +40,11 @@ Actions repository variable `JENKINS_STATUS_ISSUER=DevDooly`로 예상 발행 �
 
 GitHub와 registry를 하나의 트랜잭션으로 묶지는 않는다. 최종 확인 직후에도 상태가 바뀔 수 있고 두 이미지 중 하나만 게시되는 실패도 가능하다. 두 이미지가 검증돼야 게시 artifact를 만들며, GitOps PR 직전에도 gate를 다시 확인한다. 부분 게시를 배포 성공으로 인정하지 않는다.
 
+실제 원복 source에서 수동 실행과 pollSCM이 같은 SHA의 Jenkins 빌드를 순차적으로 두 번 만들었다. 두 번째 pending이 이전 success를 대체했을 때 registry 인증 직전 재확인이 게시를 차단했다. agent 동시 실행 상한과 build 직렬화는 동일 SHA의 중복 생성 방지가 아니다. 별도 게시 시도의 GitHub metadata HTTP 403도 실패로 유지했으며, 최신 상태를 다시 확인하는 재시도와 구분해 기록한다.
+
 ## GitOps 권한과 검증
 
-선택적 propose-gitops job은 기본적으로 꺼져 있다. `LAB_GITOPS_PR_ENABLED=true`일 때만 contents: write·pull-requests: write를 가진 단기 Actions token으로 전용 branch와 draft PR을 만든다. 자동 병합·Argo 명령·Helm 명령·SSH를 실행하지 않는다.
+현재 사용자 승인으로 Actions의 PR 생성·승인 허용 설정과 `LAB_GITOPS_PR_ENABLED=true`를 활성화했다. 저장소 기본 workflow 권한은 read이며 propose-gitops job에만 contents: write·pull-requests: write를 가진 단기 Actions token을 부여해 전용 branch와 draft PR을 만든다. 실제 제안과 검토 후 main 반영을 확인했다. 워크플로는 자동 승인·자동 병합·Argo 명령·Helm 명령·SSH를 실행하지 않는다.
 
 이미 게시 artifact가 있는 SHA는 새 workflow에서 publish와 proposal 모두 건너뛴다. 나중에 PR 기능을 켜면 새 source SHA를 두 CI로 검증해 게시하거나, 기존 실행에서 실패한 proposal job을 재실행한다. 별도 새 workflow가 과거 게시 결과를 읽어 proposal만 복구하는 기능은 구현하지 않았다.
 
@@ -54,4 +56,8 @@ GitHub와 registry를 하나의 트랜잭션으로 묶지는 않는다. 최종 �
 
 음성 테스트는 SHA·issuer·테스트 실패·미등록·실행 중 재시도·오래된 성공 fallback·중복 게시·허용 값 이외의 변경·기존 ready/auto-merge PR 재사용을 검사한다. 이 로컬 검증은 실제 credential 전달·GHCR 게시·PR 생성·이전 digest 복구 성공을 대신하지 않는다.
 
-전용 credential 등록 후 [연결·검증 절차](../runbooks/cicd-publication.md)에 따라 정상 배포, 실제 실패 차단, GitOps의 이전 digest 복구를 각각 검증한다. 완료한 항목만 진행 목록에 반영한다.
+전용 credential 등록 후 같은 source SHA의 Jenkins API 15개·웹 13개 테스트와 필수 산출물, Actions 통합 검증, GHCR 게시, draft GitOps PR, Argo의 정상 B 배포를 확인했다. Pod spec과 OCI index → linux/amd64 manifest → CRI config 관계, source revision label과 HTTP·DB 결과를 함께 검증했다.
+
+실제 main에서 기대 성공 건수를 바꾼 JUnit 음성 실험은 15개 중 1개가 기대 8·실제 7로 실패했다. 해당 SHA의 failure status와 Actions 검증 실패를 확인했고 새 이미지·게시 artifact·PR이 없었다. 실패 전후 values의 Git blob·모든 bytes, Deployment generation/template, Pod UID·시작 시각·imageID, 전체 SQL·시각·PVC와 기존 Docker는 그대로였다. 실패 변경은 원복했다. [실행 근거](../evidence/cicd-gate/README.md)와 [운영 절차](../runbooks/cicd-publication.md)를 연결한다.
+
+GitOps PR로 API/Web pin과 sourceCommit을 이전 정상 A로 되돌려 Argo Synced·Healthy와 3개 Pod Ready를 확인했다. 실제 OCI/config와 source가 A였으며 전체 SQL·Flyway·run/event 시각·PVC binding·mount, 기존 Docker 23개의 ID·mount·시작 시각, UFW·boot ID는 유지됐다. 원복 source의 추가 이미지 게시·draft 제안도 성공했지만 그 제안은 적용하지 않고 닫았으며 최종 실행 상태는 A다. 정상·실패·복구의 세 운영 시나리오를 완료했고 다음은 3단계 관측 공개다. token 만료·실제 회전과 동시 요청 실험, K3s·Jenkins archive 전체 복원은 별도 남은 범위다.

@@ -1,8 +1,8 @@
 # Platform Lab 다음 개발 계획
 
-2026년 10월 11일 기준
+2026년 10월 12일 기준
 
-Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접 확인할 수 있는 포트폴리오로 발전시킵니다. 다음 목표는 **백업과 복구, CI/CD 연결, 관측 공개**를 완성하는 것입니다. 이후 합성 데이터를 Kafka와 객체 저장소로 확장하고, AI를 활용한 코드 개선과 데이터 플랫폼 사례를 추가합니다.
+Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접 확인할 수 있는 포트폴리오로 발전시킵니다. 외부 백업·격리 DB 복원·재부팅과 CI/CD의 정상 배포·실패 차단·이전 digest 복구를 확인했습니다. 다음 목표는 **3단계 관측 공개**입니다. 이후 합성 데이터를 Kafka와 객체 저장소로 확장하고, AI를 활용한 코드 개선과 데이터 플랫폼 사례를 추가합니다.
 
 [공개 Lab](https://devdooly.github.io/devdooly-platform-lab/) · [전체 진행 목록](ROADMAP.md) · [현재 접속 안내](START_HERE.md)
 
@@ -12,11 +12,11 @@ Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접
 | --- | --- | --- |
 | Java API | 테스트 15개, MariaDB 저장, 합성 입력 12건 검증 | 메시지 수신과 재처리 |
 | 포트폴리오 | 웹 테스트 13개, Pages 게시, 미니 PC 관측 기록 표시 | 플랫폼 요약과 관측 시각 자동 갱신 |
-| Jenkins | Kubernetes agent에서 테스트·패키징, 산출물과 소스 SHA 확인 | 전용 status 권한 등록·게시 gate·실패 차단 |
-| Argo CD와 Helm | 미니 PC의 API·웹·DB 배포, Synced·Healthy 확인 | 이전 digest로 복구하는 실제 훈련 |
+| Jenkins·Actions | 같은 SHA의 두 CI 성공·게시·draft GitOps PR·정상 B 배포·실제 실패 차단 | 빌드·배포 이력 collector 연결 |
+| Argo CD와 Helm | 정상 A → B → A GitOps 복구, Synced·Healthy·데이터 보존 확인 | 공개 가능한 상태·관측 시각 수집 |
 | 운영 | 외부 암호화 백업·격리 DB 복원·호스트 재부팅, 사용자 kubectl 복구 | 초기 비밀번호 교체, 추가 장치 사본·전체 archive 복원 |
 
-현재 이미지 게시자는 GitHub Actions입니다. 공개 Lab은 마지막으로 수집한 실제 결과를 보여주며, 실시간 API·Jenkins·Argo CD 상태 수집은 아직 연결하지 않았습니다. Windows 외부 암호문은 인증·해시를 확인했고, DB는 서버의 새 논리 dump로 격리 복원했습니다. 외부 암호문을 K3s에 되돌리는 통합 복구와 K3s·Jenkins archive 전체 복원은 별도로 남아 있습니다.
+GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins status credential과 같은 source SHA의 두 CI 성공을 게시 조건으로 활성화했습니다. 사용자 승인으로 Actions PR 설정과 draft GitOps PR 자동 제안도 켰습니다. 공개 Lab은 마지막으로 수집한 실제 결과를 보여주며, 실시간 API·Jenkins·Argo CD 상태 수집은 아직 연결하지 않았습니다. Windows 외부 암호문은 인증·해시를 확인했고, DB는 서버의 새 논리 dump로 격리 복원했습니다. 외부 암호문을 K3s에 되돌리는 통합 복구와 K3s·Jenkins archive 전체 복원은 별도로 남아 있습니다.
 
 실행 근거는 [미니 PC 배포](evidence/mini-pc/README.md), [Jenkins 빌드](evidence/jenkins-ci/README.md), [후속 접속과 재기동 검증](evidence/operator-access/README.md), [관측 계약](../apps/lab-web/OBSERVATION.md)에 있습니다. 완료 항목은 실제 검증 근거와 함께 표시합니다. [백업·복원·재부팅 검증](evidence/recovery/README.md)을 추가했습니다.
 
@@ -31,7 +31,7 @@ Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접
 | 5 | AI를 활용한 Java 개선 | 실패 재현, 개선 코드, 측정 원본과 개발자의 판단 |
 | 6 | Iceberg와 Trino | 적재부터 SQL 조회·재시작까지 재현되는 데이터 흐름 |
 
-순서 1~3을 먼저 완료합니다. AI 사례의 입력·테스트 설계는 작은 별도 실험으로 병행할 수 있으며, 공개 기능과 결과는 기존 진행 목록의 5단계에 연결합니다. 날짜를 고정하기보다 각 단계의 완료 조건을 통과한 뒤 확장합니다.
+순서 1의 백업·격리 DB 복원·재부팅과 순서 2의 정상·실패·이전 digest 복구 검증을 마쳤습니다. 다음은 순서 3 관측 공개입니다. 초기 비밀번호 교체·token 회전·추가 장치 사본·전체 archive 복원은 별도 운영 후속으로 남깁니다. AI 사례의 입력·테스트 설계는 작은 실험으로 병행할 수 있으며 공개 기능과 결과는 기존 5단계에 연결합니다. 각 단계의 완료 조건을 통과한 뒤 확장합니다.
 
 ## 1 운영 기준과 복구
 
@@ -49,17 +49,19 @@ Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접
 
 ## 2 CI/CD 연결
 
-목표 흐름은 `Jenkins 테스트 + Actions 통합 검증 → Actions 이미지 게시 → digest 기록 → GitOps 변경 PR → Argo CD 배포`입니다. [ADR 0004](adr/0004-jenkins-gated-actions-publication.md)에 따라 Actions를 단일 게시자로 유지하고 동일 소스 SHA의 Jenkins 성공을 추가 조건으로 연결합니다. 현재는 전용 credential 등록 전의 초안입니다. [등록·검증 순서](runbooks/cicd-publication.md)와 [준비 검증](evidence/cicd-gate/README.md)을 구분합니다.
+현재 흐름은 `Jenkins 테스트 + Actions 통합 검증 → Actions 이미지 게시 → digest 기록 → draft GitOps PR → 검토 후 main 반영 → Argo CD 배포`입니다. [ADR 0004](adr/0004-jenkins-gated-actions-publication.md)에 따라 Actions를 단일 게시자로 유지하고 동일 source SHA의 Jenkins 성공을 추가 조건으로 연결했습니다. 전용 status credential과 Actions PR 설정을 활성화했고 정상 B 배포·실제 실패 차단·이전 정상 A 복구를 모두 검증했습니다. [운영·검증 절차](runbooks/cicd-publication.md)와 [실행 근거](evidence/cicd-gate/README.md)를 함께 확인합니다.
 
-- [ ] 호스트 Docker socket을 공유하지 않는 이미지 빌드 방식을 검토하고 agent의 실행 권한·캐시·자원 한도를 기록합니다.
-- [ ] 게시와 PR 생성 권한을 필요한 저장소·패키지 범위로 제한하고, 만료·회전·로그 마스킹을 점검합니다.
-- [ ] 테스트를 의도적으로 실패시킨 변경에서 새 이미지·GitOps PR·배포가 발생하지 않는지 확인합니다.
-- [ ] 성공한 빌드의 소스 SHA, 테스트 결과, image digest, GitOps commit, 실제 실행 버전을 연결합니다.
-- [ ] GitOps values의 digest를 이전 정상 버전으로 되돌리는 PR을 적용하고 실제 HTTP·DB 결과를 확인합니다.
+- [x] Jenkins agent에 호스트 Docker socket을 공유하지 않고, 이미지 빌드는 Actions runner에서 수행합니다. agent 권한·캐시·자원 한도를 기록했습니다.
+- [x] Jenkins 전용 status credential과 job별 Actions 권한을 분리하고, 실제 pending·success·failure 전달과 draft PR 제안을 확인했습니다.
+- [x] 실제 JUnit 실패에서 새 이미지·게시 artifact·GitOps PR이 생기지 않고 B의 values·Deployment·Pod·SQL·PVC·기존 Docker가 유지되는지 확인했습니다.
+- [x] 성공한 빌드의 source SHA, 테스트 결과, image digest, GitOps commit, 실제 실행 버전을 정상 B 배포로 연결했습니다.
+- [x] GitOps values의 API/Web digest와 sourceCommit을 이전 정상 A로 되돌리고 실제 HTTP·DB·저장 시각·PVC·기존 서비스 보존을 확인했습니다.
 
 **완료 조건:** 정상 배포 한 번, 실패 차단 한 번, 이전 버전 복구 한 번의 실제 결과를 남깁니다. 배포 상태는 Argo CD가 관리합니다. 자동 동기화가 켜진 상태의 복구는 Git의 선언 값을 되돌려 수행하며, 별도의 Argo CD rollback 명령과 혼용하지 않습니다. [Argo CD 자동 동기화와 rollback 제약](https://argo-cd.readthedocs.io/en/stable/user-guide/auto_sync/)
 
-**공개 결과:** 한 배포의 출처와 검증 결과를 따라갈 수 있는 기록입니다. 과거 Jenkins의 단계 미실행·플러그인 충돌과 출처 메타데이터 교정 경험도 설계 이유에 연결합니다.
+**공개 결과:** 정상 배포에서는 같은 source SHA의 두 CI 성공부터 digest·GitOps·실행 이미지까지 추적했습니다. 실패 실험에서는 API 테스트 15개 중 1개가 실패했고(기대 성공 8건, 실제 7건), failure status와 Actions 검증 실패를 확인했습니다. 해당 SHA의 새 게시 결과·PR이 없었으며 기존 B의 전체 SQL·처리 시각·PVC와 기존 서비스가 유지됐습니다. 실패 변경을 원복하고 GitOps PR로 A에 복구한 뒤 Synced·Healthy, 3개 Pod Ready, 기존 SQL·Flyway·시각·PVC와 기존 Docker 보존을 확인했습니다. 과거 Jenkins의 단계 미실행·플러그인 충돌과 출처 메타데이터 교정도 설계 이유에 연결합니다.
+
+원복 source의 두 CI 검증은 다시 성공했습니다. 실제로 수동 실행과 pollSCM이 같은 SHA의 Jenkins 빌드를 중복 생성했으며, 최신 pending을 확인한 Actions는 이전 success로 게시하지 않았습니다. GitHub metadata 조회 403으로 실패한 게시 시도도 별도로 남겼습니다. 최신 success 후 게시·draft 제안은 성공했고 이 추가 제안은 적용하지 않고 닫았습니다. 복구 PR의 변경 범위·A OCI·Helm 검증과 실제 A 실행·데이터 보존 검증은 모두 통과했습니다. token의 실제 만료·회전과 동시 요청 실험은 운영 후속이며 위 세 시나리오 완료와 구분합니다.
 
 ## 3 관측 공개
 
@@ -125,7 +127,7 @@ CKA 학습은 Lab과 연결합니다. context·RBAC·Service와 DNS·probe·requ
 ## 바로 다음 작업
 
 1. 외부 백업·격리 DB 복원·호스트 재부팅 검증을 완료했습니다. 초기 관리자 비밀번호 교체는 별도로 남아 있습니다.
-2. 준비한 Jenkins status credential을 등록한 뒤 게시 gate·실제 실패 차단·이전 digest 복구를 검증합니다.
+2. CI/CD의 정상 B 배포·실제 실패 차단·이전 정상 A 복구를 완료했습니다. 전용 credential의 만료·회전은 운영 후속으로 관리합니다.
 3. 공개 상태 수집의 허용 필드와 오래된 기록 표시를 구현합니다.
 4. AI 개선 예제의 작은 실패 테스트를 준비해 후속 개인 사례로 연결합니다.
 
