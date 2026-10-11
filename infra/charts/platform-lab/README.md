@@ -2,7 +2,7 @@
 
 Spring Boot API, Nginx 정적 화면, MariaDB를 전용 namespace에 하나씩 배치하는 최소 chart입니다. Kubernetes 1.32 이상을 대상으로 하며 K3s 1.36.5 기준으로 로컬 렌더링했습니다.
 
-**현재 API/web 이미지는 빌드·게시하지 않았으며 이 chart를 서버에 배포하지 않았습니다.** 기본 values의 이미지 repository·digest와 database.existingSecret는 의도적으로 비어 있습니다. MariaDB 실제 통합, 이미지 실행, PVC 연결과 Argo CD Sync도 미검증입니다.
+API/web 이미지 빌드와 MariaDB 통합 실행은 [Linux Compose CI](../../../docs/evidence/compose-ci/README.md)에서 검증했습니다. **registry 이미지 게시와 이 chart의 Kubernetes 배포·PVC 연결·Argo CD Sync는 아직 수행하지 않았습니다.** 기본 values의 이미지 repository·digest와 database.existingSecret는 의도적으로 비어 있습니다.
 
 ## 구성과 제약
 

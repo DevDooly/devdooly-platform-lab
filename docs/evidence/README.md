@@ -4,13 +4,14 @@
 
 | 기록 | 확인한 범위 |
 | --- | --- |
+| [Linux 컨테이너 통합](compose-ci/README.md) | 실제 MariaDB·Flyway·컨테이너·API 주소 변경·Nginx와 결과 보존 |
 | [API MVP](api-mvp/README.md) | Windows·Java 21, 테스트 15개, H2 실제 HTTP·DB 검증 |
 | [화면 테스트](../../apps/lab-web/VALIDATION.md) | 타입 검사·테스트 4개·정적 빌드, 로컬 API HTTP smoke |
 | [Pages 최초 공개](web-mvp/README.md) | Actions 게시 성공, 공개 문서·asset 200, PC·모바일 UI 확인 |
 | [앱 Helm 렌더링](../../infra/charts/platform-lab/ci/render-validation.json) | strict lint·7개 리소스·정책 15개·잘못된 입력 거부 6개. 실제 배포 미검증 |
 | [플랫폼 Helm 렌더링](../../infra/platform/render-validation.json) | Jenkins·Argo CD strict lint와 33개 정책 검사. 서버 실행 미검증 |
 
-미니 PC 운영, MariaDB 컨테이너, Jenkins pipeline과 Argo CD 동기화 결과는 실제 검증한 뒤 별도 기록합니다.
+미니 PC 운영, Jenkins pipeline과 Argo CD 동기화 결과는 실제 검증한 뒤 별도 기록합니다.
 
 ## 기록 양식
 

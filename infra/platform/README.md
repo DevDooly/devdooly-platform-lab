@@ -1,6 +1,6 @@
 # 미니 PC 플랫폼 설치 설정
 
-현재는 공식 차트의 로컬 렌더링을 검증하는 단계다. Ubuntu 설치, Jenkins 실행, Argo CD 동기화와 실제 CI/CD는 아직 검증하지 않았다.
+공식 차트의 로컬 렌더링을 검증했다. 미니 PC의 K3s 설치, Jenkins 실행과 Argo CD 동기화는 아직 검증하지 않았다. 앱 이미지 빌드와 MariaDB 통합은 별도의 [GitHub Actions Compose CI](../../docs/evidence/compose-ci/README.md)에서 검증했다.
 
 | 파일 | 역할 |
 | --- | --- |

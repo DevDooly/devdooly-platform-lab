@@ -26,7 +26,7 @@
 - [x] Java·Spring Boot·빌드 도구·Node·Astro 버전 선택과 고정
 - [x] 합성 데이터 schema, seed와 독립적인 기대 결과 정의
 - [x] Spring Boot 샘플 결과 조회 API, JPA·Flyway 구현과 H2 검증
-- [ ] MariaDB 실제 연결·컨테이너·재시작 검증
+- [x] Linux runner의 MariaDB 실제 연결·컨테이너·API 교체와 멱등 검증: [근거](evidence/compose-ci/README.md)
 - [x] 입력 검증·중복·시간·실패 시나리오 확인: API 테스트 15개 통과
 - [x] Astro·React Lab 조회 화면과 로컬 API 연결: 테스트 4개·타입 검사·HTTP smoke 통과
 - [x] 공개 포트폴리오 저장소와 Pages 주소 확인
@@ -36,7 +36,7 @@
 
 완료 조건: 동일 샘플의 기대 결과를 반복 검증할 수 있고, 화면에서 현재 구현 범위와 설계를 이해할 수 있습니다.
 
-근거: [API 검증](evidence/api-mvp/README.md), [화면 검증](../apps/lab-web/VALIDATION.md), [Pages 게시](runbooks/pages.md). 전체 1단계 완료는 MariaDB와 최초 공개 검증 후 판단합니다.
+근거: [API 검증](evidence/api-mvp/README.md), [화면 검증](../apps/lab-web/VALIDATION.md), [Pages 게시](runbooks/pages.md). 1단계의 로컬·임시 Linux 컨테이너와 Pages 검증을 마쳤습니다. 미니 PC 운영은 0단계 점검과 2단계 실제 설치로 이어갑니다.
 
 ## 2 K3s와 CI 및 CD
 

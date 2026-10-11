@@ -1,4 +1,4 @@
-# API/web images have NOT been built or published yet.
+# API/web images are NOT published to a registry yet; CI builds are ephemeral.
 # Supply real registry repositories and immutable digests before deployment.
 api:
   replicaCount: 1

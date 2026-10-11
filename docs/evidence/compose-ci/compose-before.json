@@ -1,0 +1,262 @@
+{
+  "capturedAt": "2026-10-11T10:56:45.763Z",
+  "sourceCommit": "52802ef60089514054728ed36f8ee417d2db72e1",
+  "phase": "before",
+  "list": {
+    "observedAt": "2026-10-11T10:56:45.272300370Z",
+    "items": [
+      {
+        "id": "synthetic-v1-seed-42",
+        "name": "합성 센서 품질 검증",
+        "status": "COMPLETED",
+        "synthetic": true,
+        "seed": 42,
+        "inputCount": 12,
+        "successCount": 7,
+        "failureCount": 3,
+        "duplicateCount": 2,
+        "pendingCount": 0,
+        "startedAt": "2026-10-11T10:56:43.779190Z",
+        "completedAt": "2026-10-11T10:56:43.781672Z"
+      }
+    ]
+  },
+  "detail": {
+    "id": "synthetic-v1-seed-42",
+    "name": "합성 센서 품질 검증",
+    "status": "COMPLETED",
+    "synthetic": true,
+    "seed": 42,
+    "inputCount": 12,
+    "successCount": 7,
+    "failureCount": 3,
+    "duplicateCount": 2,
+    "pendingCount": 0,
+    "startedAt": "2026-10-11T10:56:43.779190Z",
+    "completedAt": "2026-10-11T10:56:43.781672Z",
+    "scenario": "sensor-validation-v1",
+    "description": "회사 데이터와 무관한 고정 seed 합성 데이터. 중복 ID, 잘못된 시간, 시간 역순, 범위 오류를 검증합니다.",
+    "outcomes": [
+      {
+        "sequence": 1,
+        "eventId": "evt-001",
+        "sensorId": "sensor-a",
+        "eventTime": "2026-01-01T00:00:00Z",
+        "value": 21.5,
+        "status": "SUCCESS",
+        "reason": "ACCEPTED"
+      },
+      {
+        "sequence": 2,
+        "eventId": "evt-002",
+        "sensorId": "sensor-b",
+        "eventTime": "2026-01-01T00:00:00Z",
+        "value": 25.9,
+        "status": "SUCCESS",
+        "reason": "ACCEPTED"
+      },
+      {
+        "sequence": 3,
+        "eventId": "evt-003",
+        "sensorId": "sensor-a",
+        "eventTime": "2026-01-01T00:01:00Z",
+        "value": 20.4,
+        "status": "SUCCESS",
+        "reason": "ACCEPTED"
+      },
+      {
+        "sequence": 4,
+        "eventId": "evt-003",
+        "sensorId": "sensor-a",
+        "eventTime": "2026-01-01T00:01:00Z",
+        "value": 30,
+        "status": "DUPLICATE",
+        "reason": "DUPLICATE_EVENT_ID"
+      },
+      {
+        "sequence": 5,
+        "eventId": "evt-004",
+        "sensorId": "sensor-a",
+        "eventTime": "not-a-timestamp",
+        "value": 30,
+        "status": "FAILED",
+        "reason": "INVALID_TIMESTAMP"
+      },
+      {
+        "sequence": 6,
+        "eventId": "evt-005",
+        "sensorId": "sensor-a",
+        "eventTime": "2026-01-01T00:00:30Z",
+        "value": 30,
+        "status": "FAILED",
+        "reason": "OUT_OF_ORDER"
+      },
+      {
+        "sequence": 7,
+        "eventId": "evt-006",
+        "sensorId": "sensor-b",
+        "eventTime": "2026-01-01T00:01:00Z",
+        "value": 120,
+        "status": "FAILED",
+        "reason": "OUT_OF_RANGE"
+      },
+      {
+        "sequence": 8,
+        "eventId": "evt-007",
+        "sensorId": "sensor-b",
+        "eventTime": "2026-01-01T00:01:00Z",
+        "value": 28.9,
+        "status": "SUCCESS",
+        "reason": "ACCEPTED"
+      },
+      {
+        "sequence": 9,
+        "eventId": "evt-008",
+        "sensorId": "sensor-a",
+        "eventTime": "2026-01-01T00:02:00Z",
+        "value": 21.1,
+        "status": "SUCCESS",
+        "reason": "ACCEPTED"
+      },
+      {
+        "sequence": 10,
+        "eventId": "evt-009",
+        "sensorId": "sensor-b",
+        "eventTime": "2026-01-01T00:02:00Z",
+        "value": 25.6,
+        "status": "SUCCESS",
+        "reason": "ACCEPTED"
+      },
+      {
+        "sequence": 11,
+        "eventId": "evt-001",
+        "sensorId": "sensor-a",
+        "eventTime": "2026-01-01T00:00:00Z",
+        "value": 30,
+        "status": "DUPLICATE",
+        "reason": "DUPLICATE_EVENT_ID"
+      },
+      {
+        "sequence": 12,
+        "eventId": "evt-010",
+        "sensorId": "sensor-a",
+        "eventTime": "2026-01-01T00:03:00Z",
+        "value": 20.3,
+        "status": "SUCCESS",
+        "reason": "ACCEPTED"
+      }
+    ],
+    "series": [
+      {
+        "eventTime": "2026-01-01T00:00:00Z",
+        "value": 21.5,
+        "sensorId": "sensor-a"
+      },
+      {
+        "eventTime": "2026-01-01T00:00:00Z",
+        "value": 25.9,
+        "sensorId": "sensor-b"
+      },
+      {
+        "eventTime": "2026-01-01T00:01:00Z",
+        "value": 20.4,
+        "sensorId": "sensor-a"
+      },
+      {
+        "eventTime": "2026-01-01T00:01:00Z",
+        "value": 28.9,
+        "sensorId": "sensor-b"
+      },
+      {
+        "eventTime": "2026-01-01T00:02:00Z",
+        "value": 21.1,
+        "sensorId": "sensor-a"
+      },
+      {
+        "eventTime": "2026-01-01T00:02:00Z",
+        "value": 25.6,
+        "sensorId": "sensor-b"
+      },
+      {
+        "eventTime": "2026-01-01T00:03:00Z",
+        "value": 20.3,
+        "sensorId": "sensor-a"
+      }
+    ],
+    "failureReasons": [
+      {
+        "count": 1,
+        "reason": "INVALID_TIMESTAMP"
+      },
+      {
+        "count": 1,
+        "reason": "OUT_OF_ORDER"
+      },
+      {
+        "count": 1,
+        "reason": "OUT_OF_RANGE"
+      }
+    ],
+    "observedAt": "2026-10-11T10:56:45.279127700Z"
+  },
+  "summary": {
+    "status": "UP",
+    "environment": "compose",
+    "sourceCommit": "52802ef60089514054728ed36f8ee417d2db72e1",
+    "service": "devdooly-platform-lab-api",
+    "synthetic": true,
+    "publicExecutionEnabled": false,
+    "components": [
+      {
+        "name": "API",
+        "detail": "Spring Boot 조회 API",
+        "status": "RUNNING"
+      },
+      {
+        "name": "DATABASE",
+        "detail": "MariaDB",
+        "status": "RUNNING"
+      },
+      {
+        "name": "JENKINS",
+        "detail": "실제 CI 연결 전",
+        "status": "NOT_CONFIGURED"
+      },
+      {
+        "name": "ARGO_CD",
+        "detail": "실제 CD 연결 전",
+        "status": "NOT_CONFIGURED"
+      },
+      {
+        "name": "KUBERNETES",
+        "detail": "서버 구성 전",
+        "status": "NOT_CONFIGURED"
+      },
+      {
+        "name": "KAFKA",
+        "detail": "4단계",
+        "status": "PLANNED"
+      },
+      {
+        "name": "S3",
+        "detail": "4단계",
+        "status": "PLANNED"
+      }
+    ],
+    "observedAt": "2026-10-11T10:56:45.273604711Z"
+  },
+  "releases": {
+    "observedAt": "2026-10-11T10:56:45.270409424Z",
+    "items": [
+      {
+        "service": "api",
+        "version": "0.1.0",
+        "sourceCommit": "52802ef60089514054728ed36f8ee417d2db72e1",
+        "imageDigest": null,
+        "deploymentStatus": "RUNTIME_ONLY",
+        "startedAt": "2026-10-11T10:56:42.757107656Z"
+      }
+    ]
+  },
+  "publicPostStatus": 405
+}

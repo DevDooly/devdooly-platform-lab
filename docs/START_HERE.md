@@ -10,10 +10,11 @@
 - 조회 API, JPA·Flyway, H2의 실제 HTTP·DB 통합 검증: 테스트 15개 통과
 - Astro 7.3.8·React 19.3.0 화면, 타입 검사와 테스트 4개 및 정적 빌드 통과
 - 실제 API proxy를 통한 화면 HTTP smoke 통과
-- GitHub Pages 프로젝트 사이트와 게시 workflow 구성
-- MariaDB Compose·컨테이너 정의와 Jenkins CI·플랫폼 설치 설정 준비
+- GitHub Pages 프로젝트 사이트 최초 게시와 PC·모바일 화면 검증
+- Linux runner에서 이미지 빌드·MariaDB 연결·API 재생성·데이터 보존 검증
+- Jenkins CI 정의·K3s/Jenkins/Argo CD 설치 설정·앱 Helm chart 준비
 
-Jenkins·Argo CD·K3s는 미니 PC에 아직 설치하지 않았습니다. MariaDB 실제 실행과 이미지 빌드도 아직 검증하지 않았습니다. 공개 Pages의 정적 샘플을 실제 서버 실행 기록으로 표시하지 않습니다.
+Jenkins·Argo CD·K3s는 미니 PC에 아직 설치하지 않았습니다. MariaDB·이미지 빌드·Nginx DNS 갱신은 [임시 Linux runner](evidence/compose-ci/README.md)에서 검증했습니다. 미니 PC에서는 별도로 확인해야 합니다. 공개 Pages의 정적 샘플을 실제 서버 실행 기록으로 표시하지 않습니다.
 
 ## 미니 PC에서 다음으로 진행할 순서
 

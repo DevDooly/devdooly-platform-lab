@@ -2,7 +2,7 @@
 
 2026년 10월 11일 · 김선홍 DevDooly
 
-진행 현황: GitHub 저장소를 연결하고 Java API·Astro/React 화면 MVP와 배포 설정을 구현했다. 로컬 API 검증은 H2이며 테스트 15개, 화면 테스트 4개와 실제 API HTTP smoke를 통과했다. MariaDB 컨테이너와 미니 PC 운영 검증은 대기 중이다. 서버 SSH 지문 확인·공개키 등록 후 읽기 전용 점검부터 진행한다. 공개 홈은 프로젝트 Pages `https://devdooly.github.io/devdooly-platform-lab/`로 정했다. 실제 호스트 주소는 Git에서 제외되는 `.local/host.md`에서 관리한다. 현재 완료 항목과 검증 한계는 [진행 목록](ROADMAP.md)에 기록한다.
+진행 현황: GitHub 저장소를 연결하고 Java API·Astro/React 화면 MVP와 배포 설정을 구현했다. 로컬 API 검증은 H2이며 테스트 15개, 화면 테스트 4개와 실제 API HTTP smoke를 통과했다. MariaDB 컨테이너·Nginx DNS 갱신·처리 결과 보존은 임시 Linux runner에서 검증했고, 미니 PC 운영 검증은 대기 중이다. 서버 SSH 지문 확인·공개키 등록 후 읽기 전용 점검부터 진행한다. 공개 홈은 프로젝트 Pages `https://devdooly.github.io/devdooly-platform-lab/`로 정했다. 실제 호스트 주소는 Git에서 제외되는 `.local/host.md`에서 관리한다. 현재 완료 항목과 검증 한계는 [진행 목록](ROADMAP.md)에 기록한다.
 
 Astro와 React로 별도 포트폴리오를 만들고, 소개 페이지는 GitHub Pages에 배포한다. 미니 PC에서는 K3s 위에 Java 서비스와 Jenkins CI, Argo CD CD를 구성한다. 방문자는 합성 데이터 처리 결과와 실제 배포 이력을 확인하고, 상세한 기술 설명은 기존 TIL로 이어서 읽는다.
 

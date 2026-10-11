@@ -5,9 +5,9 @@
 ## 먼저 충족할 조건
 
 1. 사용자 확인을 마친 SSH 접속으로 호스트를 읽기 전용 점검합니다. 기존 서비스·데이터·포트·가용 자원과 백업 위치를 확인합니다.
-2. [Compose 검증](local-compose.md)에서 실제 MariaDB 연결, Flyway, 입력 12건의 결과(성공 7·실패 3·중복 2·대기 0), API 재시작 후 중복 적재가 없음을 확인합니다.
+2. [Linux CI에서 검증한 결과](../evidence/compose-ci/README.md)를 미니 PC의 [Compose 환경](local-compose.md)에서 재현합니다. 실제 MariaDB 연결, Flyway, 입력 12건의 결과(성공 7·실패 3·중복 2·대기 0), API 재시작 후 중복 적재가 없음을 확인합니다.
 3. [플랫폼 설치](platform-install.md)와 [Jenkins CI](jenkins-ci.md)의 실제 실행을 확인합니다. K3s와 local-path provisioner가 정상이어야 합니다.
-4. API·web 이미지를 실제 빌드·게시하고 앱의 commit·registry digest를 기록합니다. 현재 Jenkinsfile은 검사·패키징까지만 하며 이미지 게시와 CD는 후속 작업입니다.
+4. CI에서 검증한 Dockerfile로 배포용 API·web 이미지를 빌드해 registry에 게시하고 앱의 commit·digest를 기록합니다. 현재 Jenkinsfile은 검사·패키징까지만 하며 이미지 게시와 CD는 후속 작업입니다.
 5. 별도 GitOps 저장소, namespace platform-lab과 고정 release lab을 준비합니다. 앱 배포의 소유자는 Argo CD로 정합니다.
 
 이 단계의 chart에는 public ingress, 인증 게이트웨이와 HTTPS가 없습니다. ClusterIP는 외부 노출 설정을 만들지 않는다는 뜻이며 클러스터 내부의 다른 Pod까지 격리하는 NetworkPolicy는 아직 포함하지 않습니다.

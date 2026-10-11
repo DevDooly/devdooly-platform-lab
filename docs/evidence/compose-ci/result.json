@@ -1,0 +1,106 @@
+{
+  "verifiedAt": "2026-10-11T10:58:18.831620+00:00",
+  "scope": "GITHUB_ACTIONS_EPHEMERAL_LINUX_COMPOSE",
+  "runId": 38133671877,
+  "runUrl": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38133671877",
+  "sourceCommit": "52802ef60089514054728ed36f8ee417d2db72e1",
+  "conclusion": "success",
+  "runner": "ubuntu-24.04",
+  "apiTests": {
+    "tests": 15,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "jobs": [
+    {
+      "name": "verify",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout",
+          "conclusion": "success"
+        },
+        {
+          "name": "Set up Java 21",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify API",
+          "conclusion": "success"
+        },
+        {
+          "name": "Set up Node 24",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify web",
+          "conclusion": "success"
+        },
+        {
+          "name": "Prepare isolated Compose environment",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build container images",
+          "conclusion": "success"
+        },
+        {
+          "name": "Start MariaDB, API and web",
+          "conclusion": "success"
+        },
+        {
+          "name": "Wait for API and persisted sample",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check actual same-origin UI and MariaDB results",
+          "conclusion": "success"
+        },
+        {
+          "name": "Recreate API with a new address",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify Nginx DNS refresh and persisted idempotency",
+          "conclusion": "success"
+        },
+        {
+          "name": "Show container state on failure",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Stop Compose services",
+          "conclusion": "success"
+        },
+        {
+          "name": "Upload allowlisted validation evidence",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Set up Node 24",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Set up Java 21",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Checkout",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "miniPcDeploymentVerified": false,
+  "jenkinsRuntimeVerified": false,
+  "argoSyncVerified": false
+}

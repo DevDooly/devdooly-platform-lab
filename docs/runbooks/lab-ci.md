@@ -1,6 +1,6 @@
 # Linux runner에서 Lab 컨테이너 검증
 
-현재는 **workflow 작성, 실제 GitHub Actions Compose 실행 전**입니다. 로컬 Docker Engine을 사용할 수 없어 MariaDB·컨테이너·Nginx DNS 갱신 검증을 GitHub의 일회성 Ubuntu runner에서 실행하도록 준비했습니다. 실행 결과가 나오기 전까지 이 문서를 통과 증거로 사용하지 않습니다.
+GitHub의 일회성 Ubuntu runner에서 실제 MariaDB·컨테이너·Nginx DNS 갱신 검증을 통과했습니다. [성공한 실행과 공개 응답](../evidence/compose-ci/README.md)을 확인합니다. 미니 PC와 Jenkins 운영 검증은 별도입니다.
 
 [lab-ci.yml](../../.github/workflows/lab-ci.yml)은 관련 소스가 main에 push되거나 수동 실행할 때 동작합니다. `contents: read`만 사용하며 registry 게시·배포·GitOps 변경 권한은 없습니다. Jenkins 운영 환경을 설치하거나 대체했다는 의미도 아닙니다.
 
