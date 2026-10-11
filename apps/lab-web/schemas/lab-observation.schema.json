@@ -1,0 +1,421 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devdooly.github.io/devdooly-platform-lab/schemas/lab-observation.schema.json",
+  "title": "Verified mini-PC Lab observation v1",
+  "description": "Public sanitized observation only. Runtime validator also checks source SHA equality, independent canonical classifications and chronological ordering.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "kind": {
+      "const": "observed"
+    },
+    "capturedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$"
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "environment": {
+          "const": "mini-pc"
+        },
+        "sourceCommit": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "collectorVersion": {
+          "const": "1"
+        },
+        "evidenceUrl": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://(github\\.com|devdooly\\.github\\.io)/[^?]*$"
+        }
+      },
+      "required": [
+        "environment",
+        "sourceCommit",
+        "collectorVersion"
+      ]
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "runs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              },
+              "synthetic": {
+                "const": true
+              },
+              "seed": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "inputCount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "successCount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "failureCount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "duplicateCount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "pendingCount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "startedAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "Z$"
+              },
+              "completedAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "Z$"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "status",
+              "synthetic",
+              "seed",
+              "inputCount",
+              "successCount",
+              "failureCount",
+              "duplicateCount",
+              "pendingCount",
+              "startedAt",
+              "completedAt"
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 20
+        },
+        "detail": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "synthetic-v1-seed-42"
+            },
+            "name": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "synthetic": {
+              "const": true
+            },
+            "seed": {
+              "const": 42
+            },
+            "inputCount": {
+              "const": 12
+            },
+            "successCount": {
+              "const": 7
+            },
+            "failureCount": {
+              "const": 3
+            },
+            "duplicateCount": {
+              "const": 2
+            },
+            "pendingCount": {
+              "const": 0
+            },
+            "startedAt": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "Z$"
+            },
+            "completedAt": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "Z$"
+            },
+            "observedAt": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "Z$"
+            },
+            "scenario": {
+              "const": "sensor-validation-v1"
+            },
+            "description": {
+              "type": "string"
+            },
+            "outcomes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "sequence": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "eventId": {
+                    "type": "string"
+                  },
+                  "sensorId": {
+                    "type": "string"
+                  },
+                  "eventTime": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "status": {
+                    "enum": [
+                      "SUCCESS",
+                      "FAILED",
+                      "DUPLICATE",
+                      "PENDING"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "sequence",
+                  "eventId",
+                  "sensorId",
+                  "eventTime",
+                  "value",
+                  "status",
+                  "reason"
+                ]
+              },
+              "minItems": 12,
+              "maxItems": 12
+            },
+            "series": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "eventTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "Z$"
+                  },
+                  "sensorId": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "eventTime",
+                  "sensorId",
+                  "value"
+                ]
+              },
+              "minItems": 7,
+              "maxItems": 7
+            },
+            "failureReasons": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "reason": {
+                    "type": "string"
+                  },
+                  "count": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "reason",
+                  "count"
+                ]
+              }
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "status",
+            "synthetic",
+            "seed",
+            "inputCount",
+            "successCount",
+            "failureCount",
+            "duplicateCount",
+            "pendingCount",
+            "startedAt",
+            "completedAt",
+            "observedAt",
+            "scenario",
+            "description",
+            "outcomes",
+            "series",
+            "failureReasons"
+          ]
+        },
+        "summary": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "service": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "environment": {
+              "type": "string"
+            },
+            "sourceCommit": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{40}$"
+            },
+            "synthetic": {
+              "const": true
+            },
+            "publicExecutionEnabled": {
+              "const": false
+            },
+            "components": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string"
+                  },
+                  "detail": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "status",
+                  "detail"
+                ]
+              }
+            },
+            "observedAt": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "Z$"
+            }
+          },
+          "required": [
+            "service",
+            "status",
+            "environment",
+            "sourceCommit",
+            "synthetic",
+            "publicExecutionEnabled",
+            "components",
+            "observedAt"
+          ]
+        },
+        "releases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "service": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "sourceCommit": {
+                "type": "string"
+              },
+              "imageDigest": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "deploymentStatus": {
+                "type": "string"
+              },
+              "startedAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "Z$"
+              }
+            },
+            "required": [
+              "service",
+              "version",
+              "sourceCommit",
+              "imageDigest",
+              "deploymentStatus",
+              "startedAt"
+            ]
+          },
+          "minItems": 1
+        },
+        "observedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$"
+        }
+      },
+      "required": [
+        "runs",
+        "detail",
+        "summary",
+        "releases",
+        "observedAt"
+      ]
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "kind",
+    "capturedAt",
+    "provenance",
+    "data"
+  ]
+}

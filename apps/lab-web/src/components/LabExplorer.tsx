@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { fetchLab, fetchRun } from '../lib/api';
+import { fetchRun } from '../lib/api';
+import { loadLabSources } from '../lib/observation';
+import type { ObservationRecord, SourceMode } from '../lib/observation';
 import type { LabData, Point, OutcomeStatus } from '../lib/api';
 import snapshot from '../data/snapshot.json';
 
@@ -48,9 +50,11 @@ function SensorChart({ points }: { points: Point[] }) {
   </div>;
 }
 
-export default function LabExplorer({ apiBase = '/api' }: { apiBase?: string }) {
+export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/lab-observation.json' }: { apiBase?: string; observationUrl?: string }) {
   const [data, setData] = useState<LabData>(initial);
-  const [mode, setMode] = useState<'snapshot' | 'live'>('snapshot');
+  const [mode, setMode] = useState<SourceMode>('fixture');
+  const [observation, setObservation] = useState<ObservationRecord | null>(null);
+  const cachedObservation = useRef<ObservationRecord | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [tab, setTab] = useState<'chart' | 'events'>('chart');
@@ -63,8 +67,11 @@ export default function LabExplorer({ apiBase = '/api' }: { apiBase?: string }) 
     const request = new AbortController(); controller.current = request;
     setLoading(true); setError('');
     const timer = setTimeout(() => request.abort(), 8000);
-    try { const result = await fetchLab(apiBase, request.signal, data.detail.id); if (mounted.current) { setData(result); setMode('live'); } }
-    catch { if (mounted.current && controller.current === request) { setData(initial); setMode('snapshot'); setError('실시간 Lab 연결 불가'); } }
+    try {
+      const result = await loadLabSources({ apiBase, observationUrl, fixture: initial, signal: request.signal, preferredId: data.detail.id, previousObservation: cachedObservation.current });
+      if (mounted.current && controller.current === request) { setData(result.data); setMode(result.mode); setObservation(result.observation); cachedObservation.current = result.cachedObservation; if (result.mode !== 'live') setError('실시간 Lab 연결 불가'); }
+    }
+    catch { if (mounted.current && controller.current === request) { setData(initial); setMode('fixture'); setObservation(null); setError('실시간 Lab 연결 불가'); } }
     finally { clearTimeout(timer); if (mounted.current && controller.current === request) setLoading(false); }
   }
   useEffect(() => { mounted.current = true; void refresh(); return () => { mounted.current = false; controller.current?.abort(); }; }, []);
@@ -83,12 +90,13 @@ export default function LabExplorer({ apiBase = '/api' }: { apiBase?: string }) 
   return <>
     <section id="lab" className="section lab-section" aria-labelledby="lab-title">
       <div className="section-heading"><div><span className="eyebrow">02 / EXPLORE THE LAB</span><h2 id="lab-title">결과로 보는 작은 데이터 파이프라인.</h2><p>12개의 합성 센서 이벤트를 검증하고, 처리된 이유까지 확인합니다.</p></div><span className="section-mark">[ READ ONLY ]</span></div>
-      <div className={`connection-banner ${mode === 'live' ? 'connected' : ''}`} role="status" aria-live="polite"><span className="signal-dot"/><div><strong>{loading ? '실시간 상태 확인 중' : mode === 'live' ? '실시간 API 연결됨' : error || '합성 데이터 샘플'}</strong><span>{mode === 'live' ? `API 관측 · ${formatTime(data.observedAt)}` : `합성 데이터 샘플 · 파일 생성 ${formatTime(initial.capturedAt)}`}</span></div><button className="button button-small" onClick={() => void refresh()} disabled={loading}><span aria-hidden="true">↻</span> {loading ? '확인 중' : '실시간 조회'}</button></div>
-      {mode === 'snapshot' && <p className="snapshot-note">이 화면은 고정 샘플의 기대 결과입니다. 실제 실행·배포 기록은 API 연결 후 표시합니다.</p>}
+      <div className={`connection-banner ${mode === 'live' ? 'connected' : ''}`} role="status" aria-live="polite"><span className="signal-dot"/><div><strong>{loading ? '실시간 상태 확인 중' : mode === 'live' ? '실시간 API 연결됨' : mode === 'recorded' ? '미니 PC에서 확인한 마지막 기록' : error || '합성 데이터 샘플'}</strong><span>{mode === 'live' ? `API 관측 · ${formatTime(data.observedAt)}` : mode === 'recorded' ? `수집 · ${formatTime(observation?.capturedAt)}` : `합성 데이터 샘플 · 파일 생성 ${formatTime(initial.capturedAt)}`}</span></div><button className="button button-small" onClick={() => void refresh()} disabled={loading}><span aria-hidden="true">↻</span> {loading ? '확인 중' : '실시간 조회'}</button></div>
+      {mode === 'fixture' && <p className="snapshot-note">이 화면은 고정 샘플의 기대 결과입니다. 실제 실행·배포 기록은 API 연결 후 표시합니다.</p>}
+      {mode === 'recorded' && observation && <div className="observation-note"><p>{error ? `${error}. ` : ''}수집 당시의 합성 데이터 처리 결과와 API 런타임입니다. 현재 상태나 CI/CD 배포 이력을 뜻하지 않습니다.</p><div><span>DEPLOYED SOURCE</span><code title={observation.provenance.sourceCommit}>{observation.provenance.sourceCommit.slice(0, 12)}</code>{observation.provenance.evidenceUrl && <a href={observation.provenance.evidenceUrl} target="_blank" rel="noreferrer">검증 기록 ↗</a>}</div></div>}
       {mode === 'live' && error && <p className="error-note" role="alert">{error}</p>}
       <div className="lab-workspace"><div className="run-main">
         <div className="run-title"><div><span className="code-label">SCENARIO / {detail.scenario}</span><h3>{detail.name}</h3></div><span className="tag tag-green">합성 데이터</span></div>
-        <div className="run-controls"><label htmlFor="run-select">실행 결과</label><select id="run-select" value={detail.id} onChange={event => void selectRun(event.target.value)} disabled={loading}>{data.runs.map(run => <option value={run.id} key={run.id}>{run.name} / seed {run.seed}</option>)}</select><span className="code-label">SEED {detail.seed}</span></div>
+        <div className="run-controls"><label htmlFor="run-select">실행 결과</label><select id="run-select" value={detail.id} onChange={event => void selectRun(event.target.value)} disabled={loading || mode !== 'live'}>{data.runs.map(run => <option value={run.id} key={run.id}>{run.name} / seed {run.seed}</option>)}</select><span className="code-label">SEED {detail.seed}</span></div>
         <div className="metrics"><div className="metric metric-total"><span>입력 이벤트</span><strong>{detail.inputCount}<small>건</small></strong></div>{counts.map(([label, value, color]) => <button className={`metric ${color} ${filter === ({ 성공: 'SUCCESS', 실패: 'FAILED', 중복: 'DUPLICATE', 대기: 'PENDING' } as Record<string, string>)[label] && tab === 'events' ? 'metric-selected' : ''}`} key={label} onClick={() => { setFilter(({ 성공: 'SUCCESS', 실패: 'FAILED', 중복: 'DUPLICATE', 대기: 'PENDING' } as Record<string, OutcomeStatus>)[label]!); setTab('events'); }} aria-label={`${label} ${value}건 상세 보기`}><span><i/>{label}</span><strong>{value}<small>건</small></strong></button>)}</div>
         <div className="count-bar" aria-label="입력 이벤트 처리 비율">{counts.filter(([, value]) => value > 0).map(([label, value, color]) => <span key={label} className={color} style={{ flex: value }} title={`${label} ${value}건`}/>)}</div>
         <p className="balance-note">입력 {detail.inputCount} = 성공 {detail.successCount} + 실패 {detail.failureCount} + 중복 {detail.duplicateCount} + 대기 {detail.pendingCount}</p>
@@ -99,8 +107,8 @@ export default function LabExplorer({ apiBase = '/api' }: { apiBase?: string }) 
     </section>
     <section id="platform" className="section platform-section" aria-labelledby="platform-title"><div className="section-heading"><div><span className="eyebrow">03 / FROM SOURCE TO SERVICE</span><h2 id="platform-title">배포도 설명할 수 있도록.</h2><p>연결된 상태와 앞으로 구축할 부분을 함께 공개합니다.</p></div><span className="section-mark">[ OBSERVABILITY ]</span></div>
       <div className="deployment-flow" aria-label="구축할 CI CD 처리 흐름"><span><b>01</b> Git commit</span><i>→</i><span><b>02</b> Jenkins CI</span><i>→</i><span><b>03</b> Image digest</span><i>→</i><span><b>04</b> GitOps + Helm</span><i>→</i><span><b>05</b> Argo CD / K3s</span></div>
-      <div className="platform-grid">{data.summary.components.map(component => <article className="platform-item" key={component.name}><div><span className={`component-dot ${component.status === 'RUNNING' ? 'running' : ''}`}/><h3>{componentLabel[component.name] || component.name}</h3><span className="platform-status">{componentStatus(component.status)}</span></div><p>{component.detail}</p></article>)}</div>
-      <div className="release-strip"><div><span className="eyebrow">RUNTIME INFORMATION</span><strong>{data.releases.length ? '현재 API 런타임' : '배포 관측 이력 없음'}</strong></div>{data.releases.length ? data.releases.map((release, index) => <div key={`${release.service}-${index}`} className="release-meta"><span>{release.service} / v{release.version}</span><code>{release.sourceCommit === 'unknown' ? '소스 commit 미주입' : release.sourceCommit.slice(0, 12)}</code><small>{release.deploymentStatus === 'LOCAL_RUNTIME' ? '로컬 실행 정보 · CI/CD 이력 연결 전' : release.deploymentStatus}</small><small>{release.imageDigest ? `이미지 ${release.imageDigest}` : '이미지 digest 미관측'}</small></div>) : <p>Jenkins·Argo CD의 실제 검증 결과를 연결한 뒤 표시합니다.</p>}<span className="tag">공개 실행 비활성</span></div>
+      <div className="platform-grid">{data.summary.components.map(component => <article className="platform-item" key={component.name}><div><span className={`component-dot ${component.status === 'RUNNING' ? 'running' : ''}`}/><h3>{componentLabel[component.name] || component.name}</h3><span className="platform-status">{mode === 'recorded' && component.status === 'RUNNING' ? '수집 당시 관측' : componentStatus(component.status)}</span></div><p>{component.detail}</p></article>)}</div>
+      <div className="release-strip"><div><span className="eyebrow">RUNTIME INFORMATION</span><strong>{data.releases.length ? mode === 'recorded' ? '수집 당시 API 런타임' : '현재 API 런타임' : '배포 관측 이력 없음'}</strong></div>{data.releases.length ? data.releases.map((release, index) => <div key={`${release.service}-${index}`} className="release-meta"><span>{release.service} / v{release.version}</span><code>{release.sourceCommit === 'unknown' ? '소스 commit 미주입' : release.sourceCommit.slice(0, 12)}</code><small>{release.deploymentStatus === 'LOCAL_RUNTIME' ? '로컬 실행 정보 · CI/CD 이력 연결 전' : release.deploymentStatus === 'RUNTIME_ONLY' ? 'API 런타임 정보 · CI/CD 이력 연결 전' : release.deploymentStatus}</small><small>{release.imageDigest ? `이미지 ${release.imageDigest}` : '이미지 digest 미관측'}</small></div>) : <p>Jenkins·Argo CD의 실제 검증 결과를 연결한 뒤 표시합니다.</p>}<span className="tag">공개 실행 비활성</span></div>
     </section>
   </>;
 }

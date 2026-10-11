@@ -45,12 +45,12 @@ export function isRunDetail(value: unknown): value is RunDetail {
     && Array.isArray(value.outcomes) && value.outcomes.every(row => object(row) && count(row.sequence) && text(row.eventId) && text(row.sensorId) && text(row.eventTime) && (row.value === null || (typeof row.value === 'number' && Number.isFinite(row.value))) && ['SUCCESS', 'FAILED', 'DUPLICATE', 'PENDING'].includes(String(row.status)) && text(row.reason))
     && Array.isArray(value.failureReasons) && value.failureReasons.every(reason => object(reason) && text(reason.reason) && count(reason.count));
 }
-function isSummary(value: unknown): value is Summary {
+export function isSummary(value: unknown): value is Summary {
   return object(value) && text(value.service) && text(value.status) && text(value.environment) && text(value.sourceCommit)
     && typeof value.synthetic === 'boolean' && typeof value.publicExecutionEnabled === 'boolean' && timestamp(value.observedAt)
     && Array.isArray(value.components) && value.components.every(component => object(component) && text(component.name) && text(component.status) && text(component.detail));
 }
-function isRelease(value: unknown): value is Release {
+export function isRelease(value: unknown): value is Release {
   return object(value) && text(value.service) && text(value.version) && text(value.sourceCommit)
     && (value.imageDigest === null || text(value.imageDigest)) && text(value.deploymentStatus) && timestamp(value.startedAt);
 }
