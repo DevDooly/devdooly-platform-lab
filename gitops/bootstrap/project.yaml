@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform-lab
+  namespace: argocd
+spec:
+  description: Personal synthetic-data lab in its dedicated namespace
+  sourceRepos:
+    - https://github.com/DevDooly/devdooly-platform-lab.git
+  destinations:
+    - namespace: platform-lab
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - group: apps
+      kind: Deployment
+    - group: apps
+      kind: StatefulSet
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: PersistentVolumeClaim

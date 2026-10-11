@@ -1,0 +1,13 @@
+# Actual registry references from publication run 38135514326.
+# Credentials are created only in the destination namespace.
+api:
+  image:
+    repository: ghcr.io/devdooly/devdooly-platform-lab-api
+    digest: sha256:b8a94430636e292b8f76e1f062b969c04437e37e5c78deca56a5eef2e03a3fc9
+  sourceCommit: bbc8c6eb0bfa9cc8871e538ae0f63027d81e9e53
+web:
+  image:
+    repository: ghcr.io/devdooly/devdooly-platform-lab-web
+    digest: sha256:9dc90625a031840057105ac6047db2b60681ff2a28ec56541a46c09d95771f3d
+database:
+  existingSecret: platform-lab-db
