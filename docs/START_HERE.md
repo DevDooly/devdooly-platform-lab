@@ -23,9 +23,11 @@ Jenkins의 첫 빌드는 플러그인 충돌로 단계가 실행되지 않아 �
 
 관리 화면은 [SSH 접속 도우미](runbooks/admin-access.md)를 사용합니다. 본인 PC에 준비한 `.local/open-admin.ps1`을 실행한 동안 Jenkins는 `http://127.0.0.1:18081`, Argo CD는 `https://127.0.0.1:18443`에서 접속합니다. 초기 로그인 정보는 미니 PC 프로젝트의 `.local/admin/`에 0600 파일로 보관합니다. 비밀번호를 채팅이나 Git으로 옮기지 않습니다.
 
-Argo CD 자체 서명 인증서는 접속 안내에 따라 서버 인증서 지문을 대조합니다. 기존 사용자 kubeconfig·시스템 Helm·Docker·프록시는 유지합니다.
+Argo CD 자체 서명 인증서는 접속 안내에 따라 서버 인증서 지문을 대조합니다. 오래된 CA가 남아 있던 사용자 kubeconfig는 원본을 백업하고, 사용자 승인 후 현재 K3s 전용 0600 설정으로 교정했습니다. 현재 context는 `devdooly-platform-lab`이며 시스템 Helm·Docker·프록시는 유지합니다.
 
 ## 다음 작업
+
+[다음 개발 계획](NEXT_STEPS.md)에 우선순위와 단계별 결과물·완료 조건을 정리했습니다.
 
 1. 초기 관리자 비밀번호 변경과 본인 관리 화면 로그인 확인
 2. 외부 백업 위치 결정, Lab DB·Jenkins·K3s 설정의 백업과 복원 검증

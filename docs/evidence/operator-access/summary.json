@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "scope": "KUBECONFIG_CORRECTION_AND_EXISTING_DATA_RESTART",
+  "observedAt": "2026-10-11T12:19:36.540445+00:00",
+  "k3sPreserved": true,
+  "legacyConfig": {
+    "oldCertificateAuthorityYear": 2025,
+    "backedUpBeforeReplacement": true,
+    "correctedToCurrentCluster": true,
+    "currentContext": "devdooly-platform-lab",
+    "configMode": "0600"
+  },
+  "runtime": {
+    "nodeCount": 1,
+    "nodeReady": true,
+    "podCount": 11,
+    "allPodsReady": true
+  },
+  "argo": {
+    "sync": "Synced",
+    "health": "Healthy",
+    "revision": "edd04c2fd3cd6479f47926b099a568284d89baff",
+    "operationPhase": "Succeeded"
+  },
+  "applicationChecks": {
+    "canonicalOutcomes": 12,
+    "counts": {
+      "inputCount": 12,
+      "successCount": 7,
+      "failureCount": 3,
+      "duplicateCount": 2,
+      "pendingCount": 0
+    },
+    "webProxyApi": "PASSED",
+    "databaseSelectOne": "PASSED",
+    "httpRejections": {
+      "POST /api/demo/runs": 405,
+      "GET /api/demo/runs/missing": 404
+    }
+  },
+  "existingServices": {
+    "runningContainerCount": 23,
+    "sameContainerIds": true,
+    "sameStartTimes": true,
+    "ufwStatusUnchanged": true,
+    "ufwFilesUnchanged": true
+  },
+  "sameHostBackup": {
+    "created": true,
+    "archiveListingVerified": true,
+    "sha256Recorded": true,
+    "rootOnly": true
+  },
+  "limits": {
+    "restartSource": "EXISTING_DATA_ON_SAME_DISK",
+    "restoreFromBackupVerified": false,
+    "offHostCopyVerified": false,
+    "hostRebootVerified": false
+  }
+}
