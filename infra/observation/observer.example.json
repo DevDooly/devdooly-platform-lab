@@ -1,0 +1,10 @@
+{
+  "k3s_path": "/usr/local/bin/k3s",
+  "kubeconfig": "/ROOT_PRIVATE_KUBECONFIG_PATH",
+  "server": "https://LOOPBACK_ADDRESS:KUBERNETES_TLS_PORT",
+  "ca_file": "/ROOT_CONTROLLED_CA_FILE_PATH",
+  "collector_path": "/opt/devdooly-platform-lab/observation/platform_collector.py",
+  "state_directory": "/var/lib/devdooly-platform-observer",
+  "runtime_directory": "/run/devdooly-platform-observer",
+  "pages_token_file": "/home/OPERATOR/.config/devdooly-platform-lab/github-pages.token"
+}

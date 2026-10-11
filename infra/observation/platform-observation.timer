@@ -1,0 +1,14 @@
+[Unit]
+Description=Periodic host capture and Pages dispatch (install inactive)
+
+[Timer]
+OnBootSec=5min
+OnUnitInactiveSec=30min
+RandomizedDelaySec=60s
+AccuracySec=1min
+Unit=platform-observation.service
+Persistent=false
+
+[Install]
+WantedBy=timers.target
+# Do not enable until the dedicated Pages credential and manual cycle pass.

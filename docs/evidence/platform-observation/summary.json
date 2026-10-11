@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "scope": "ACTUAL_MINI_PC_READ_ONLY_PLATFORM_COLLECTION",
-  "phase3Status": "COLLECTION_VERIFIED_PUBLICATION_PENDING",
+  "phase3Status": "CORE_VERIFIED_SCHEDULED_COLLECTION_PAT_PENDING",
   "finalVerifiedCollection": {
     "capturedAt": "2026-10-11T15:27:44.173356Z",
     "mainCommit": "e823cb793308e79ea5b7b5a17af2d554b4091275",
@@ -32,7 +32,11 @@
         "ready": 1,
         "image": "ghcr.io/devdooly/devdooly-platform-lab-web@sha256:e389ce9083b07c8b8fdeac334b13c1f1af9a0066fd541f46e7db78b5651b855a"
       },
-      { "component": "database", "desired": 1, "ready": 1 }
+      {
+        "component": "database",
+        "desired": 1,
+        "ready": 1
+      }
     ],
     "sourceScope": "DEPLOYMENT_TEMPLATE_ANNOTATION",
     "imageScope": "DEPLOYMENT_TEMPLATE_DECLARED_DIGEST",
@@ -68,17 +72,89 @@
   "localValidation": {
     "webTestsPassed": 26,
     "webTestsAddedForPlatformObservation": 13,
-    "astroCheck": { "errors": 0, "warnings": 0, "hints": 0 },
+    "astroCheck": {
+      "errors": 0,
+      "warnings": 0,
+      "hints": 0
+    },
     "pagesBaseBuildPassed": true,
-    "collectorWindowsOfflineTests": { "run": 41, "passed": 40, "failed": 0, "errors": 0, "posixModeTestSkipped": 1 },
-    "collectorUbuntuIsolatedTests": { "run": 41, "passed": 41, "failed": 0, "errors": 0, "skipped": 0, "posix0600TestPassed": true },
-    "staleAndBrowserFetchFailureScope": "OFFLINE_UI_TESTS_ONLY"
+    "collectorWindowsOfflineTests": {
+      "run": 41,
+      "passed": 40,
+      "failed": 0,
+      "errors": 0,
+      "posixModeTestSkipped": 1
+    },
+    "collectorUbuntuIsolatedTests": {
+      "run": 41,
+      "passed": 41,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "posix0600TestPassed": true
+    },
+    "staleAndBrowserFetchFailureScope": "OFFLINE_UI_TESTS_ONLY",
+    "automationUbuntuIsolatedTests": {
+      "run": 33,
+      "passed": 33,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "pagesPublicationTests": {
+      "run": 33,
+      "passed": 33,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "combinedWindowsOfflineTests": {
+      "run": 107,
+      "passed": 105,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 2,
+      "scope": "COLLECTOR_AUTOMATION_AND_PAGES_PUBLICATION_TESTS_EXCLUDING_WEB_UI_TESTS"
+    },
+    "automationWindowsFinalTests": {
+      "run": 35,
+      "passed": 34,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 1,
+      "skippedScope": "POSIX_FILE_PERMISSION_ON_WINDOWS"
+    },
+    "automationUbuntuFinalTests": {
+      "root": {
+        "run": 35,
+        "passed": 35,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "nonRoot": {
+        "run": 35,
+        "passed": 35,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "scope": "SYNTHETIC_FIXTURES_PRODUCTION_ROOT_GUARDS_UNCHANGED"
+    },
+    "combinedWindowsFinalOfflineTests": {
+      "run": 109,
+      "passed": 107,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 2,
+      "scope": "COLLECTOR_41_AUTOMATION_35_PAGES_33_EXCLUDING_WEB_UI_TESTS"
+    }
   },
   "boundaries": {
-    "newPlatformSnapshotPublishedToPages": false,
-    "newPlatformCardPublicBrowserVerified": false,
+    "newPlatformSnapshotPublishedToPages": true,
+    "newPlatformCardPublicBrowserVerified": true,
     "scheduledCollectionActivated": false,
-    "actualLabStopScenarioExecuted": false,
+    "actualLabStopScenarioExecuted": true,
     "newInboundExposureConfigured": false,
     "livePublicReadApiConnected": false,
     "existingRuntimeNotConfiguredValuesChanged": false,
@@ -86,10 +162,216 @@
     "currentJvmSourceQueriedByThisCollector": false
   },
   "pending": [
-    "OUTBOUND_PAGES_DISPATCH",
-    "PUBLIC_BROWSER_QA",
     "SCHEDULED_COLLECTION_AND_CREDENTIAL_ROTATION",
-    "ACTUAL_LAB_STOP_PRESERVATION_CHECK",
     "OPTIONAL_LIVE_READ_API_AND_EXTERNAL_HTTPS"
-  ]
+  ],
+  "finalVerifiedCollectionScope": "INITIAL_COLLECTION_RECOVERY_VALIDATION",
+  "publicationChecks": {
+    "deployedSourceAfterPr5": "41897dbb9d2a38537f1d06928dcd01273d64be4d",
+    "successfulWorkflowRuns": [
+      {
+        "runId": 38152343057,
+        "scenario": "INITIAL_PLATFORM_PUBLICATION"
+      },
+      {
+        "runId": 38152498240,
+        "scenario": "NORMAL_MANUAL_DISPATCH",
+        "previousArtifactRecoveryVerified": false
+      },
+      {
+        "runId": 38153467726,
+        "scenario": "ACTUAL_AUTHENTICATION_FAILURE_DISPATCH"
+      },
+      {
+        "runId": 38154402207,
+        "scenario": "POST_FIX_PUBLIC_RECORD_RECOVERY",
+        "previousArtifactRecoveryVerified": true
+      },
+      {
+        "runId": 38154516815,
+        "scenario": "POST_FIX_OUT_OF_ORDER_PRESERVATION",
+        "previousArtifactRecoveryVerified": true
+      },
+      {
+        "runId": 38155062511,
+        "scenario": "FINAL_NORMAL_RECOVERY_PUBLICATION",
+        "publicBrowserVerified": true
+      }
+    ],
+    "authenticationFailurePublication": {
+      "httpStatus": 401,
+      "errorCode": "AUTHENTICATION_FAILED",
+      "preservedCapturedAt": "2026-10-11T15:57:45.192508Z",
+      "failureAttemptedAt": "2026-10-11T15:57:48.944192Z",
+      "entireLastSuccessPreserved": true,
+      "publicJsonAndBrowserVerified": true,
+      "actualTlsRequestHttp401Verified": true
+    },
+    "publicBrowser": {
+      "desktopWidth": 1280,
+      "mobileWidth": 390,
+      "horizontalOverflow": false
+    },
+    "outOfOrderRegression": {
+      "detectedRunId": 38154110011,
+      "workflowConclusion": "success",
+      "publicSnapshotRegressedToInitialSeed": true,
+      "cause": "DYNAMIC_RUN_NAME_FILTER_EXCLUDED_PRIOR_DEPLOYS",
+      "correctionReverified": true,
+      "correctionCommit": "e670837fc678e9d10ea5dec4560db644f33957ab",
+      "restorationRunId": 38154402207,
+      "fixedOutOfOrderRunId": 38154516815,
+      "previousArtifactAttemptedAtAfterFixedOutOfOrder": "2026-10-11T15:57:48.944192Z",
+      "publicJsonAndBrowserPreserved": true
+    },
+    "gitOpsCommitAfterPr5": "c87787217e18a3d2954e61920e3b3b904706b001",
+    "correctionValidationRuns": {
+      "labCi": {
+        "runId": 38154386379,
+        "conclusion": "success"
+      },
+      "pushPages": {
+        "runId": 38154386391,
+        "conclusion": "success"
+      }
+    }
+  },
+  "automationInstallation": {
+    "installed": true,
+    "systemdAnalyzeVerified": true,
+    "daemonReloaded": true,
+    "timerEnabled": false,
+    "timerActive": false,
+    "pagesPatPresent": false,
+    "tokenContentReadDuringInstall": false,
+    "hostCycleDispatchPerformed": false,
+    "systemdServiceExecutionVerified": false
+  },
+  "apiWebStopVerification": {
+    "scope": "API_WEB_REPLICAS_ZERO_DATABASE_AND_EXISTING_SERVICES_PRESERVED",
+    "pauseCommit": "61d092161b078cc3beda3d12ea246eddef831fc7",
+    "pausedArgoSyncedHealthy": true,
+    "pausedActualApiPods": 0,
+    "pausedActualWebPods": 0,
+    "pausedActualDatabasePods": 1,
+    "firstHelperAttempt": {
+      "timeUtc": "16:18:09",
+      "result": "failed",
+      "passedCheckCount": 5,
+      "reason": "ENDPOINTS_NULL_SUBSETS_NOT_HANDLED"
+    },
+    "correctedHelperRetry": {
+      "attempt": 1,
+      "observedAt": "2026-10-11T16:19:17.041460Z",
+      "allChecksPassed": true
+    },
+    "publicHomeHttpStatus": 200,
+    "publicSnapshotHttpStatus": 200,
+    "publicBrowserReloadVerified": true,
+    "preservedCapturedAt": "2026-10-11T15:57:45.192508Z",
+    "preservedAttemptedAt": "2026-10-11T15:57:48.944192Z",
+    "historicalImagePinsAndReadyOnePreserved": true,
+    "databasePodUidAndSqlTimesFlywayPvcPreserved": true,
+    "existingDockerCount": 23,
+    "existingDockerIdsMountsStartTimesPreserved": true,
+    "restoreCommit": "5df664d95e051fb30cb1ca13915087d45ec9188c",
+    "restoredAt": "2026-10-11T16:20:20.506300Z",
+    "restoration": "SAME_PR5_NORMAL_B_SOURCE_AND_DIGESTS",
+    "restoredSourceCommit": "41897dbb9d2a38537f1d06928dcd01273d64be4d",
+    "restoredPodCount": 3,
+    "restoredChecks": {
+      "threeLabPodsReady": true,
+      "canonicalTwelveResults": true,
+      "persistedRunAndEventTimesPresent": true,
+      "argoSyncedHealthyAtExpectedRevision": true,
+      "apiSourceAndDigestMatch": true,
+      "podSpecsMatchPins": true,
+      "ociContentDigestsAndAmd64Relationship": true,
+      "criConfigMatchesAmd64Manifest": true,
+      "sqlStableDuringObservation": true,
+      "dockerAllRunning": true,
+      "productionPvcUidsBindingsAndStorageUnchanged": true,
+      "databasePodImageAndMountsUnchanged": true,
+      "allSqlRowsTimestampsAndFlywayUnchanged": true,
+      "allPersistedApiFieldsExceptObservedAtUnchanged": true,
+      "existingDockerIdsMountsStartTimesUnchanged": true,
+      "hostBootUnchanged": true,
+      "nodesUnchanged": true,
+      "ufwUnchanged": true,
+      "originalApiWebPinsAndSourceRestored": true
+    },
+    "restoredOciChecks": {
+      "api": {
+        "targetDigest": "sha256:57c7fcbaf266eda7402831df95a12d4cabfab250071a75eaf4d8d1855f1296cb",
+        "targetKind": "index",
+        "amd64ManifestDigest": "sha256:8309241ec24f265bf840a019b607a3d7db50392f97905d3a3998026cf06694d0",
+        "configDigest": "sha256:760677b976fef4a45fda2d3318e057be296d8b75095a45fc71333bdc508c3e22",
+        "platform": "linux/amd64",
+        "sourceCommitLabel": "41897dbb9d2a38537f1d06928dcd01273d64be4d",
+        "runtimeReports": "index",
+        "criConfigMatches": true
+      },
+      "web": {
+        "targetDigest": "sha256:012f955d4d85178c95c09c2dfee4b4ec858b3b87a1ac5216f53e81aca9e591f8",
+        "targetKind": "index",
+        "amd64ManifestDigest": "sha256:a6980bf3de983f074b8ccae39fed46cfc8f9c3f64bede0523f782d50fb8a56f8",
+        "configDigest": "sha256:c428790036c70bcb70cd478e06b5ed4862d3c67e8cb339396d5396cfcb47f150",
+        "platform": "linux/amd64",
+        "sourceCommitLabel": "41897dbb9d2a38537f1d06928dcd01273d64be4d",
+        "runtimeReports": "index",
+        "criConfigMatches": true
+      }
+    },
+    "runtimeValidationScope": "SEPARATE_RUNTIME_HELPER_NOT_PLATFORM_COLLECTOR"
+  },
+  "latestRecoveryCollection": {
+    "schemaVersion": 1,
+    "kind": "platform-observation",
+    "latestAttempt": {
+      "attemptedAt": "2026-10-11T16:20:31.503389Z",
+      "status": "success",
+      "errorCode": "NONE"
+    },
+    "lastSuccess": {
+      "capturedAt": "2026-10-11T16:20:31.503389Z",
+      "collectorVersion": "1",
+      "mainCommit": "5df664d95e051fb30cb1ca13915087d45ec9188c",
+      "jenkins": null,
+      "argo": {
+        "revision": "5df664d95e051fb30cb1ca13915087d45ec9188c",
+        "sync": "Synced",
+        "health": "Healthy"
+      },
+      "workloads": [
+        {
+          "component": "api",
+          "desired": 1,
+          "ready": 1,
+          "image": "ghcr.io/devdooly/devdooly-platform-lab-api@sha256:57c7fcbaf266eda7402831df95a12d4cabfab250071a75eaf4d8d1855f1296cb"
+        },
+        {
+          "component": "web",
+          "desired": 1,
+          "ready": 1,
+          "image": "ghcr.io/devdooly/devdooly-platform-lab-web@sha256:012f955d4d85178c95c09c2dfee4b4ec858b3b87a1ac5216f53e81aca9e591f8"
+        },
+        {
+          "component": "database",
+          "desired": 1,
+          "ready": 1
+        }
+      ],
+      "deploymentSourceCommit": "41897dbb9d2a38537f1d06928dcd01273d64be4d"
+    }
+  },
+  "initialFailureScope": "LOCAL_CREDENTIAL_FORMAT_REJECTION",
+  "latestRecoveryPublication": {
+    "runId": 38155062511,
+    "buildConclusion": "success",
+    "deployConclusion": "success",
+    "publicBrowserVerified": true,
+    "capturedAt": "2026-10-11T16:20:31.503389Z",
+    "failureBannerCleared": true,
+    "sourceAndRevisionAndWorkloadCountsMatchSnapshot": true
+  }
 }

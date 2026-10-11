@@ -27,8 +27,12 @@
 
 실행 이력은 페이지를 끝까지 읽되 최대 10,000개로 제한합니다. 상한 도달 또는 동일 run의 10회 초과 재실행에서는 seed로 되돌아가지 않고 중단합니다. 이 규모에 가까워지기 전에 별도 영속 관측 저장소나 검증 가능한 최신 기록 색인을 도입해야 합니다. artifact 보존 기간은 90일이며, 장기간 중단 후에는 이전 기록을 확인한 뒤 게시 경로를 복구합니다.
 
-## 자동 실행 준비
+## 현재 검증과 자동 실행 준비
+
+2026년 10월 12일 KST 기준, 실제 수집·정상/HTTP 401 실패 수동 Pages 게시와 공개 브라우저를 확인했습니다. 이후 실제 순서 역전 게시에서 발견한 seed 회귀를 교정하고 공개 JSON·브라우저·이전 artifact의 시각 보존을 재검증했습니다. 앞선 정상 dispatch를 이전 artifact 복구 검증 근거로 사용하지 않습니다. API·웹 중단·같은 정상 B 복원 후의 정상 관측본도 Pages 38155062511에 게시하고 공개 브라우저에서 회복을 확인했습니다. [실행 순서와 결과](../evidence/platform-observation/README.md)를 확인합니다.
+
+Ubuntu collector 41개·자동화 33개 검사는 모두 통과했습니다. 호스트 자동화는 root 소유 파일·설정·unit의 비활성 설치와 `systemd-analyze verify`, `daemon-reload`를 완료했습니다. timer는 disabled·inactive이고 전용 Pages PAT가 없습니다. 설치 시 토큰 내용 읽기·host cycle dispatch·timer enable/start는 수행하지 않았습니다. [자동화](../../infra/observation/AUTOMATION.md), [설치·수동 검증](../../infra/observation/INSTALL.md)을 따릅니다.
 
 자동 게시에는 이 저장소의 `Actions: Read and write` 전용 token이 필요합니다. Jenkins commit-status token과 분리하며 token을 Git에 저장하지 않습니다. 전용 credential이 준비되기 전에는 주기 실행을 켜지 않습니다. 수동 게시·브라우저 검증과 자동 주기 활성화는 [실행 근거](../evidence/platform-observation/README.md)에 각각 기록합니다.
 
-실제 Lab 중단 상황, 외부 실시간 조회 API와 공개 HTTPS 경로는 별도 검증 대상입니다. 인증 실패 시 기록 보존 검증을 이들 검증으로 대체하지 않습니다.
+실제 API·웹 replicas 0 중단에서 공개 홈·마지막 기록과 DB·기존 서비스 보존, 같은 PR #5 정상 B 복원을 확인했습니다. 인증 실패·API 웹 중단·복원은 각각의 실행 근거로 구분합니다. 호스트·DB 전체 중단, 외부 실시간 조회 API와 공개 HTTPS 경로는 이번 검증 범위가 아닙니다.
