@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "820d5c398af2b1d62a0566f9184d015ab22e9f15",
+  "validationRunId": 38136672189,
+  "publicationRunUrl": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38136786768",
+  "observedAt": "2026-10-11T11:47:29.572344Z",
+  "images": {
+    "api": {
+      "repository": "ghcr.io/devdooly/devdooly-platform-lab-api",
+      "tag": "sha-820d5c398af2b1d62a0566f9184d015ab22e9f15-r38136786768-a1",
+      "digest": "sha256:1c114976aeb32e3fa1c2dda84a0a27db0b390c38a6bb59e8c5ada771c340bcf4",
+      "reference": "ghcr.io/devdooly/devdooly-platform-lab-api@sha256:1c114976aeb32e3fa1c2dda84a0a27db0b390c38a6bb59e8c5ada771c340bcf4",
+      "platform": "linux/amd64"
+    },
+    "web": {
+      "repository": "ghcr.io/devdooly/devdooly-platform-lab-web",
+      "tag": "sha-820d5c398af2b1d62a0566f9184d015ab22e9f15-r38136786768-a1",
+      "digest": "sha256:e389ce9083b07c8b8fdeac334b13c1f1af9a0066fd541f46e7db78b5651b855a",
+      "reference": "ghcr.io/devdooly/devdooly-platform-lab-web@sha256:e389ce9083b07c8b8fdeac334b13c1f1af9a0066fd541f46e7db78b5651b855a",
+      "platform": "linux/amd64"
+    }
+  },
+  "deploymentStatus": "NOT_DEPLOYED_BY_THIS_WORKFLOW",
+  "anonymousPullStatus": "NOT_CHECKED"
+}

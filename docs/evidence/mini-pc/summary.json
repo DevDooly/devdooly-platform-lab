@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "environment": "mini-pc",
+  "capturedAt": "2026-10-11T11:53:14.158648Z",
+  "sourceCommit": "820d5c398af2b1d62a0566f9184d015ab22e9f15",
+  "argo": {
+    "sync": "Synced",
+    "health": "Healthy",
+    "revision": "ee91e5dc743b71c585680ebf36756ee71fb4a5a7",
+    "operationPhase": "Succeeded"
+  },
+  "runtime": {
+    "podCount": 3,
+    "allReady": true,
+    "images": [
+      "ghcr.io/devdooly/devdooly-platform-lab-api@sha256:1c114976aeb32e3fa1c2dda84a0a27db0b390c38a6bb59e8c5ada771c340bcf4",
+      "ghcr.io/devdooly/devdooly-platform-lab-web@sha256:e389ce9083b07c8b8fdeac334b13c1f1af9a0066fd541f46e7db78b5651b855a",
+      "mariadb:11.8.9@sha256:6422478cb8e159f080fb1d8ccf65101e26fe51385787fde7d16c3b165a331f15"
+    ],
+    "pvc": {
+      "phase": "Bound",
+      "capacity": {
+        "storage": "10Gi"
+      }
+    }
+  },
+  "checks": {
+    "canonicalOutcomes": 12,
+    "counts": {
+      "inputCount": 12,
+      "successCount": 7,
+      "failureCount": 3,
+      "duplicateCount": 2,
+      "pendingCount": 0
+    },
+    "webProxyApi": "PASSED",
+    "databaseSelectOne": "PASSED",
+    "httpRejections": {
+      "POST /api/demo/runs": 405,
+      "GET /api/demo/runs/missing": 404
+    }
+  },
+  "networkSmoke": {
+    "scope": "ON_CLUSTER_NETWORK_SMOKE",
+    "results": [
+      {
+        "check": "API_SERVICE_TLS_NO_DNS",
+        "status": "PASSED",
+        "httpStatus": 401,
+        "tlsVerified": true
+      },
+      {
+        "check": "CLUSTER_DNS",
+        "status": "PASSED",
+        "answers": 1
+      },
+      {
+        "check": "EXTERNAL_DNS",
+        "status": "PASSED",
+        "answers": 1
+      },
+      {
+        "check": "EXTERNAL_HTTPS",
+        "status": "PASSED",
+        "httpStatus": 200,
+        "tlsVerified": true
+      }
+    ]
+  },
+  "anonymousImagePulls": [
+    {
+      "reference": "ghcr.io/devdooly/devdooly-platform-lab-api@sha256:1c114976aeb32e3fa1c2dda84a0a27db0b390c38a6bb59e8c5ada771c340bcf4",
+      "anonymous": true,
+      "exitCode": 0,
+      "elapsedSeconds": 8.85
+    },
+    {
+      "reference": "ghcr.io/devdooly/devdooly-platform-lab-web@sha256:e389ce9083b07c8b8fdeac334b13c1f1af9a0066fd541f46e7db78b5651b855a",
+      "anonymous": true,
+      "exitCode": 0,
+      "elapsedSeconds": 3.84
+    }
+  ],
+  "apiPodRecreation": {
+    "passed": true,
+    "capturedAt": "2026-10-11T11:50:08.747798+00:00",
+    "apiPodRecreated": true,
+    "runCountBefore": 1,
+    "runCountAfter": 1,
+    "durableRunFieldsUnchanged": true,
+    "webProxyRecovered": true,
+    "databasePodRecreated": false,
+    "databaseVolumeRecreated": false
+  },
+  "preservation": {
+    "docker": {
+      "beforeRunningCount": 23,
+      "currentRunningCount": 23,
+      "oldIdsStillRunning": 23,
+      "oldIdsMissing": 0,
+      "oldIdsRestartedSinceAudit": 0
+    },
+    "ufw": {
+      "textUnchanged": true,
+      "archivedRegularFileCount": 17,
+      "archivedFileContentsUnchanged": true
+    },
+    "observedAt": "2026-10-11T11:52:29.096303+00:00"
+  },
+  "limits": {
+    "livePublicApiConnected": false,
+    "jenkinsPublisherConnected": false,
+    "platformCollectorsConnected": false,
+    "offHostBackupVerified": false,
+    "restoreVerified": false,
+    "hostRebootVerified": false,
+    "previousDigestRollbackVerified": false,
+    "persistentVolumeReclaimPolicy": "Delete"
+  },
+  "apiCapturedAt": "2026-10-11T11:50:24.807323Z",
+  "managementAccess": {
+    "observedAt": "2026-10-11T11:50:42.6087226Z",
+    "localhostSshTunnelVerified": true,
+    "jenkinsLoginPageStatus": 200,
+    "argoTlsFingerprintMatched": true,
+    "interactiveLoginVerified": false,
+    "temporaryTunnelStopped": true
+  }
+}
