@@ -29,8 +29,8 @@ public class PlatformController {
         return Map.of("service", "devdooly-platform-lab-api", "status", databaseUp ? "UP" : "DEGRADED", "environment", environment,
             "sourceCommit", sourceCommit, "synthetic", true, "publicExecutionEnabled", false,
             "components", List.of(component("API", "RUNNING", "Spring Boot 조회 API"), component("DATABASE", databaseUp ? "RUNNING" : "UNAVAILABLE", databaseLabel),
-                component("JENKINS", "NOT_CONFIGURED", "실제 CI 연결 전"), component("ARGO_CD", "NOT_CONFIGURED", "실제 CD 연결 전"),
-                component("KUBERNETES", "NOT_CONFIGURED", "서버 구성 전"), component("KAFKA", "PLANNED", "4단계"), component("S3", "PLANNED", "4단계")),
+                component("JENKINS", "NOT_CONFIGURED", "CI 상태 수집 연결 전"), component("ARGO_CD", "NOT_CONFIGURED", "CD 상태 수집 연결 전"),
+                component("KUBERNETES", "NOT_CONFIGURED", "클러스터 상태 수집 연결 전"), component("KAFKA", "PLANNED", "4단계"), component("S3", "PLANNED", "4단계")),
             "observedAt", clock.instant());
     }
     @GetMapping("/releases") public Map<String, Object> releases() {

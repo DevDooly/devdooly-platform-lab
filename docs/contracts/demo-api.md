@@ -23,7 +23,7 @@ outcomes는 입력 순서 12건, series는 성공한 7건의 차트 입력이다
 ## GET /api/platform/summary
 
 ```json
-{"service":"devdooly-platform-lab-api","status":"UP","environment":"local","sourceCommit":"unknown","synthetic":true,"publicExecutionEnabled":false,"components":[{"name":"API","status":"RUNNING","detail":"Spring Boot 조회 API"},{"name":"DATABASE","status":"RUNNING","detail":"MariaDB"},{"name":"JENKINS","status":"NOT_CONFIGURED","detail":"실제 CI 연결 전"},{"name":"ARGO_CD","status":"NOT_CONFIGURED","detail":"실제 CD 연결 전"},{"name":"KUBERNETES","status":"NOT_CONFIGURED","detail":"서버 구성 전"},{"name":"KAFKA","status":"PLANNED","detail":"4단계"},{"name":"S3","status":"PLANNED","detail":"4단계"}],"observedAt":"2026-10-11T00:01:00Z"}
+{"service":"devdooly-platform-lab-api","status":"UP","environment":"local","sourceCommit":"unknown","synthetic":true,"publicExecutionEnabled":false,"components":[{"name":"API","status":"RUNNING","detail":"Spring Boot 조회 API"},{"name":"DATABASE","status":"RUNNING","detail":"MariaDB"},{"name":"JENKINS","status":"NOT_CONFIGURED","detail":"CI 상태 수집 연결 전"},{"name":"ARGO_CD","status":"NOT_CONFIGURED","detail":"CD 상태 수집 연결 전"},{"name":"KUBERNETES","status":"NOT_CONFIGURED","detail":"클러스터 상태 수집 연결 전"},{"name":"KAFKA","status":"PLANNED","detail":"4단계"},{"name":"S3","status":"PLANNED","detail":"4단계"}],"observedAt":"2026-10-11T00:01:00Z"}
 ```
 
 DATABASE 상태는 실제 SELECT 1 점검에 따라 RUNNING/UNAVAILABLE. H2 local-dev/test일 때 detail은 H2 (local validation only). sourceCommit은 SOURCE_COMMIT 환경변수로 주입하며 미설정은 unknown. 구성되지 않은 도구를 정상 배포로 표시하지 않는다.
