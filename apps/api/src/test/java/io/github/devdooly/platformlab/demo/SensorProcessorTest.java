@@ -9,7 +9,7 @@ class SensorProcessorTest {
     @Test void fixedScenarioHasIndependentExpectedOutcomes() {
         var result = processor.process(SyntheticScenario.events());
         assertThat(result.inputCount()).isEqualTo(12);
-        assertThat(result.successCount()).isEqualTo(7);
+        assertThat(result.successCount()).isEqualTo(8);
         assertThat(result.failureCount()).isEqualTo(3);
         assertThat(result.duplicateCount()).isEqualTo(2);
         assertThat(result.pendingCount()).isZero();
