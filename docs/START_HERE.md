@@ -1,59 +1,49 @@
-# 구현을 시작하기 위한 안내
+# 현재 상태에서 이어서 구축하기
 
-저장소의 초기 준비는 끝났습니다. 다음 실제 작업은 미니 PC 환경 점검이며, 그 결과로 설치 범위와 개발 환경을 확정합니다.
+계획 저장소를 GitHub에 연결했고 Java API와 포트폴리오 MVP를 구현했습니다. 로컬 검증과 서버 운영은 구분해 기록합니다. 체크 항목은 [진행 목록](ROADMAP.md), 설계는 [전체 계획](PROJECT_PLAN.md)에서 확인합니다.
 
-## 준비된 것
+## 완료한 작업
 
-- 프로젝트 이름: `devdooly-platform-lab`
-- 로컬 Git 저장소와 기본 브랜치: `main`
-- 상세 계획, 단계별 작업 목록, 기술 결정과 검증 양식
-- API, Lab UI, 시나리오, 측정, Ansible 작업을 시작할 디렉터리 안내
-- Git 제외 규칙과 공통 파일 형식
+- GitHub `DevDooly/devdooly-platform-lab`에 초기 계획 등록
+- Java 21·Spring Boot 4.1.1·Maven 3.10.0 고정과 공식 Wrapper 구성
+- 합성 센서 이벤트 12건과 독립 기대 결과 정의
+- 조회 API, JPA·Flyway, H2의 실제 HTTP·DB 통합 검증: 테스트 15개 통과
+- Astro 7.3.8·React 19.3.0 화면, 타입 검사와 테스트 4개 및 정적 빌드 통과
+- 실제 API proxy를 통한 화면 HTTP smoke 통과
+- GitHub Pages 프로젝트 사이트와 게시 workflow 구성
+- MariaDB Compose·컨테이너 정의와 Jenkins CI·플랫폼 설치 설정 준비
 
-소스 구현, 라이브러리 설치, 서버 변경, SSH 접속, GitHub 저장소 생성·푸시는 아직 진행하지 않았습니다. 초기 커밋은 문서와 안내 파일만 포함합니다.
+Jenkins·Argo CD·K3s는 미니 PC에 아직 설치하지 않았습니다. MariaDB 실제 실행과 이미지 빌드도 아직 검증하지 않았습니다. 공개 Pages의 정적 샘플을 실제 서버 실행 기록으로 표시하지 않습니다.
 
-## 작업 순서
+## 미니 PC에서 다음으로 진행할 순서
 
-1. [전체 계획](PROJECT_PLAN.md)과 [진행 목록](ROADMAP.md)을 읽습니다.
-2. 로컬 `.local/host.md`의 호스트 메모를 확인하고 SSH 사용자, 포트와 접속 방법을 실제 작업 때 확정합니다. 이 파일은 현재 PC에만 있고 clone에는 포함되지 않습니다.
-3. [호스트 점검 절차](runbooks/host-inventory.md)로 OS, 기존 서비스, 포트, 메모리, 저장공간과 백업을 확인합니다. 점검 원본은 `.local/`에 둡니다.
-4. 사용할 설치 경로, 자원 예산과 백업 위치를 정하고 공개 가능한 요약만 기록합니다.
-5. 첫 구현의 Java·Spring Boot·빌드 도구 및 Node·Astro 버전을 공식 지원 기준으로 선택하고 고정합니다. 빌드 도구는 하나만 사용하고 wrapper 또는 lockfile을 포함합니다.
-6. API 명세와 작은 합성 샘플의 기대 결과를 먼저 정한 뒤 Spring Boot API와 MariaDB를 구현합니다. Lab UI의 조회 화면을 붙여 로컬에서 확인합니다.
-7. 공개 포트폴리오의 Pages 주소와 저장소를 확인하고 소개·프로젝트·TIL 연결을 작성합니다.
-8. 로컬 검증을 마친 뒤 2단계의 K3s, Jenkins, Argo CD와 GitOps로 넘어갑니다.
+1. 사용자가 서버 ED25519 지문을 대조하고 전용 공개키를 등록합니다. 개인키는 접속 PC에 보관하며 Git에 넣지 않습니다.
+2. 확인한 지문과 공개키로 SSH 인증 후 [호스트 점검](runbooks/host-inventory.md)을 읽기 전용으로 수행합니다. 자동 점검 도구는 `infra/scripts/inspect-host.py`이며 결과는 `.local/`에 저장합니다.
+3. 기존 서비스·포트·데이터·백업·실제 가용 자원을 확인하고 설치 경로와 복구 범위를 정합니다. 기존 설정을 먼저 백업합니다.
+4. [MariaDB·Compose](runbooks/local-compose.md)로 실제 DB 연결, 컨테이너, 재시작 멱등과 화면을 확인합니다.
+5. [플랫폼 설치](runbooks/platform-install.md)에 따라 K3s·Jenkins·Argo CD를 적용합니다. CI pipeline의 실제 agent 기동과 실패 차단을 확인합니다.
+6. 이미지 게시와 별도 GitOps 저장소를 연결하고 Helm·Argo CD로 앱을 배포합니다. Jenkins에서 같은 앱의 `helm upgrade`를 중복 실행하지 않습니다.
+7. 인증된 관리 경로와 공개 HTTPS를 구성하고 외부망에서 확인합니다. 실제 공개 API가 준비되면 [Pages 연결 설정](runbooks/pages.md)을 갱신합니다.
 
-환경 점검과 로컬 개발은 준비가 되는 쪽부터 진행할 수 있습니다. 서버 설치는 기존 서비스 영향과 복구 방법이 정리된 뒤 시작합니다.
+서버 설치에 sudo가 필요하지만 비대화형 권한이 없다면, 사용자가 직접 확인하여 실행할 설치 파일을 준비합니다. 대화에 비밀번호를 요청하거나 전체 sudo 무암호 권한을 추가하지 않습니다.
 
-## 첫 구현에서 확인할 결과
+## 로컬 검증을 이어갈 때
 
-- 고정 seed를 가진 작은 합성 센서 데이터가 있고 기대 결과를 설명할 수 있습니다.
-- 샘플 실행 결과 목록과 단건 결과를 API로 조회할 수 있습니다.
-- 잘못된 시간·중복 키·빈 입력에 대한 동작이 명확하고 의미 있는 검증을 통과합니다.
-- 화면에 입력·성공·실패·중복·대기 건수와 실행·관측 시각을 구분합니다.
-- 실행한 테스트와 결과가 검증 기록에 연결됩니다.
+- [API 실행·테스트](../apps/api/README.md), [API 검증 근거](evidence/api-mvp/README.md)
+- [화면 실행·테스트](../apps/lab-web/README.md), [화면 검증 근거](../apps/lab-web/VALIDATION.md)
+- [독립 데이터 기대 결과](../tests/scenarios/sensor-validation-v1.json)
+- [Jenkins CI 정의와 첫 실행](runbooks/jenkins-ci.md)
 
-공개 실행 버튼, Kafka, S3, 실제 외부 공개는 이 첫 결과 이후의 작업입니다.
+로컬 API는 H2 profile, Compose는 MariaDB입니다. `sourceCommit=unknown`은 실제 commit을 주입하지 않은 실행이며, releases 응답은 현재 JVM 정보입니다. 이를 빌드·배포 이력으로 바꾸려면 실제 Jenkins·Argo CD 관측을 연결해야 합니다.
 
-## 아직 정할 항목
+## 아직 결정하거나 확인할 항목
 
-| 항목 | 결정 시점 |
+| 항목 | 확인 시점 |
 | --- | --- |
-| Ubuntu 세부 버전, 기존 서비스와 데이터 위치 | 환경 점검 |
-| SSH 사용자·포트·공개키 등록, 서버 지문 확인 | 원격 점검 착수 |
-| 외부 백업 저장 위치와 복원 범위 | 서버 구성 전 |
-| Java·Spring Boot·빌드 도구·Node 버전 | 로컬 구현 착수 |
-| 공개 포트폴리오 Pages 저장소와 주소 | 1단계 |
-| 외부 HTTPS 방식과 도메인 | 공개 준비 |
-| GitHub 원격 저장소 공개 범위와 라이선스 | 저장소 게시 전 |
+| Ubuntu 세부 버전, 기존 서비스·포트·데이터 경로 | SSH 인증 직후 읽기 전용 점검 |
+| 별도 백업 위치, 설치·PV 경로와 복구 범위 | 서버 변경 전 |
+| DDNS·공인 IP·CGNAT·HTTPS 방식과 도메인 | 외부 공개 전 |
+| 이미지 게시 권한과 GitOps 저장소의 접근 범위 | CI/CD 연결 전 |
 | S3 제품과 영속 catalog | 각각 4단계와 6단계 |
 
-현재 운영체제와 실제 사용량을 확인하기 전에는 패키지 설치나 서비스 중단 명령을 실행하지 않습니다. SSH 키가 필요하면 접속 클라이언트에서 생성하고 공개키만 등록합니다.
-
-## 다음 작업에 사용할 요청
-
-> devdooly-platform-lab 저장소의 AGENTS.md와 docs/START_HERE.md를 읽고 구현을 시작해 주세요. 먼저 Ubuntu 미니 PC의 기존 서비스와 데이터를 보존하며 읽기 전용 점검을 진행할 수 있도록 접속 정보를 확인하고, 실제 사용량으로 자원 예산을 조정해 주세요. 로컬에서는 합성 데이터의 Spring Boot API와 MariaDB, Astro·React Lab 조회 화면을 작은 범위부터 구현합니다. 공개 포트폴리오는 GitHub Pages에 두고 기존 TIL을 연결합니다. 첫 검증을 마친 뒤 Jenkins CI와 Argo CD·Helm GitOps를 연결합니다. 완료한 항목만 진행 목록과 검증 기록에 반영해 주세요.
-
-## 이후 GitHub에 등록할 때
-
-이름은 `devdooly-platform-lab`을 사용합니다. 공개 범위를 정해 원격 저장소를 생성하고, 준비된 로컬 저장소에 origin을 연결한 뒤 main을 push합니다. 원격에 README·license·gitignore를 별도로 생성하면 초기 이력이 달라질 수 있으므로 이 로컬 저장소의 초기 파일을 기준으로 등록합니다. 저장소 이름의 사용 가능 여부는 생성 시 확인합니다.
+실제 호스트 주소와 SSH 메모는 `.local/host.md`에 있으며 clone에는 포함되지 않습니다. 공개 사이트는 [프로젝트 Pages](https://devdooly.github.io/devdooly-platform-lab/)를 사용하고 기존 TIL 및 사용자 사이트 저장소는 유지합니다.

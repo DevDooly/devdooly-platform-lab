@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "scenario": "sensor-validation-v1",
+  "synthetic": true,
+  "seed": 42,
+  "description": "Company-independent synthetic fixture. Expected classifications are defined before processing.",
+  "expected": {
+    "inputCount": 12,
+    "successCount": 7,
+    "failureCount": 3,
+    "duplicateCount": 2,
+    "pendingCount": 0
+  },
+  "expectedOutcomes": [
+    {
+      "sequence": 1,
+      "status": "SUCCESS",
+      "reason": "ACCEPTED"
+    },
+    {
+      "sequence": 2,
+      "status": "SUCCESS",
+      "reason": "ACCEPTED"
+    },
+    {
+      "sequence": 3,
+      "status": "SUCCESS",
+      "reason": "ACCEPTED"
+    },
+    {
+      "sequence": 4,
+      "status": "DUPLICATE",
+      "reason": "DUPLICATE_EVENT_ID"
+    },
+    {
+      "sequence": 5,
+      "status": "FAILED",
+      "reason": "INVALID_TIMESTAMP"
+    },
+    {
+      "sequence": 6,
+      "status": "FAILED",
+      "reason": "OUT_OF_ORDER"
+    },
+    {
+      "sequence": 7,
+      "status": "FAILED",
+      "reason": "OUT_OF_RANGE"
+    },
+    {
+      "sequence": 8,
+      "status": "SUCCESS",
+      "reason": "ACCEPTED"
+    },
+    {
+      "sequence": 9,
+      "status": "SUCCESS",
+      "reason": "ACCEPTED"
+    },
+    {
+      "sequence": 10,
+      "status": "SUCCESS",
+      "reason": "ACCEPTED"
+    },
+    {
+      "sequence": 11,
+      "status": "DUPLICATE",
+      "reason": "DUPLICATE_EVENT_ID"
+    },
+    {
+      "sequence": 12,
+      "status": "SUCCESS",
+      "reason": "ACCEPTED"
+    }
+  ],
+  "invariant": "inputCount = successCount + failureCount + duplicateCount + pendingCount",
+  "validValueRange": {
+    "minInclusive": 0,
+    "maxInclusive": 100
+  },
+  "timeRule": "Per-sensor last accepted Instant; earlier fails, equal allowed; invalid input does not advance watermark."
+}

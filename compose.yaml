@@ -1,0 +1,53 @@
+name: devdooly-platform-lab
+
+services:
+  db:
+    image: mariadb:11.8.9@sha256:6422478cb8e159f080fb1d8ccf65101e26fe51385787fde7d16c3b165a331f15
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:?Generate .local/compose.env first}
+      MARIADB_DATABASE: platform_lab
+      MARIADB_USER: platform_lab
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:?Generate .local/compose.env first}
+    volumes:
+      - platform_db:/var/lib/mysql
+    healthcheck:
+      test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
+      start_period: 30s
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+    mem_limit: 1536m
+
+  api:
+    build:
+      context: .
+      dockerfile: infra/containers/api.Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/platform_lab
+      SPRING_DATASOURCE_USERNAME: platform_lab
+      SPRING_DATASOURCE_PASSWORD: ${MARIADB_PASSWORD:?Generate .local/compose.env first}
+      DB_PASSWORD: ${MARIADB_PASSWORD:?Generate .local/compose.env first}
+      LAB_ENVIRONMENT: compose
+      SOURCE_COMMIT: ${SOURCE_COMMIT:-unknown}
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70.0 -XX:+ExitOnOutOfMemoryError
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    mem_limit: 768m
+
+  web:
+    build:
+      context: .
+      dockerfile: infra/containers/web.Dockerfile
+    ports:
+      - ${LAB_BIND_HOST:-127.0.0.1}:${LAB_HTTP_PORT:-4310}:8080
+    depends_on:
+      api:
+        condition: service_started
+    restart: unless-stopped
+    mem_limit: 192m
+
+volumes:
+  platform_db:

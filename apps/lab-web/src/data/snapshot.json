@@ -1,0 +1,246 @@
+{
+  "runs": [
+    {
+      "id": "synthetic-v1-seed-42",
+      "name": "합성 센서 품질 검증",
+      "status": "COMPLETED",
+      "synthetic": true,
+      "seed": 42,
+      "inputCount": 12,
+      "successCount": 7,
+      "failureCount": 3,
+      "duplicateCount": 2,
+      "pendingCount": 0,
+      "startedAt": null,
+      "completedAt": null
+    }
+  ],
+  "detail": {
+    "id": "synthetic-v1-seed-42",
+    "name": "합성 센서 품질 검증",
+    "status": "COMPLETED",
+    "synthetic": true,
+    "seed": 42,
+    "inputCount": 12,
+    "successCount": 7,
+    "failureCount": 3,
+    "duplicateCount": 2,
+    "pendingCount": 0,
+    "startedAt": null,
+    "completedAt": null,
+    "observedAt": null,
+    "scenario": "sensor-validation-v1",
+    "description": "고정 seed 합성 데이터의 화면 예시입니다. 실시간 API 실행 기록이 아니며 중복 ID, 잘못된 시간, 시간 역순, 범위 오류의 기대 결과를 보여줍니다.",
+    "outcomes": [
+      {
+        "sequence": 1,
+        "eventId": "evt-001",
+        "sensorId": "sensor-a",
+        "eventTime": "2026-01-01T00:00:00Z",
+        "value": 21.5,
+        "status": "SUCCESS",
+        "reason": "ACCEPTED"
+      },
+      {
+        "sequence": 2,
+        "eventId": "evt-002",
+        "sensorId": "sensor-b",
+        "eventTime": "2026-01-01T00:00:00Z",
+        "value": 25.9,
+        "status": "SUCCESS",
+        "reason": "ACCEPTED"
+      },
+      {
+        "sequence": 3,
+        "eventId": "evt-003",
+        "sensorId": "sensor-a",
+        "eventTime": "2026-01-01T00:01:00Z",
+        "value": 20.4,
+        "status": "SUCCESS",
+        "reason": "ACCEPTED"
+      },
+      {
+        "sequence": 4,
+        "eventId": "evt-003",
+        "sensorId": "sensor-a",
+        "eventTime": "2026-01-01T00:01:00Z",
+        "value": 30.0,
+        "status": "DUPLICATE",
+        "reason": "DUPLICATE_EVENT_ID"
+      },
+      {
+        "sequence": 5,
+        "eventId": "evt-004",
+        "sensorId": "sensor-a",
+        "eventTime": "not-a-timestamp",
+        "value": 30.0,
+        "status": "FAILED",
+        "reason": "INVALID_TIMESTAMP"
+      },
+      {
+        "sequence": 6,
+        "eventId": "evt-005",
+        "sensorId": "sensor-a",
+        "eventTime": "2026-01-01T00:00:30Z",
+        "value": 30.0,
+        "status": "FAILED",
+        "reason": "OUT_OF_ORDER"
+      },
+      {
+        "sequence": 7,
+        "eventId": "evt-006",
+        "sensorId": "sensor-b",
+        "eventTime": "2026-01-01T00:01:00Z",
+        "value": 120.0,
+        "status": "FAILED",
+        "reason": "OUT_OF_RANGE"
+      },
+      {
+        "sequence": 8,
+        "eventId": "evt-007",
+        "sensorId": "sensor-b",
+        "eventTime": "2026-01-01T00:01:00Z",
+        "value": 28.9,
+        "status": "SUCCESS",
+        "reason": "ACCEPTED"
+      },
+      {
+        "sequence": 9,
+        "eventId": "evt-008",
+        "sensorId": "sensor-a",
+        "eventTime": "2026-01-01T00:02:00Z",
+        "value": 21.1,
+        "status": "SUCCESS",
+        "reason": "ACCEPTED"
+      },
+      {
+        "sequence": 10,
+        "eventId": "evt-009",
+        "sensorId": "sensor-b",
+        "eventTime": "2026-01-01T00:02:00Z",
+        "value": 25.6,
+        "status": "SUCCESS",
+        "reason": "ACCEPTED"
+      },
+      {
+        "sequence": 11,
+        "eventId": "evt-001",
+        "sensorId": "sensor-a",
+        "eventTime": "2026-01-01T00:00:00Z",
+        "value": 30.0,
+        "status": "DUPLICATE",
+        "reason": "DUPLICATE_EVENT_ID"
+      },
+      {
+        "sequence": 12,
+        "eventId": "evt-010",
+        "sensorId": "sensor-a",
+        "eventTime": "2026-01-01T00:03:00Z",
+        "value": 20.3,
+        "status": "SUCCESS",
+        "reason": "ACCEPTED"
+      }
+    ],
+    "series": [
+      {
+        "eventTime": "2026-01-01T00:00:00Z",
+        "sensorId": "sensor-a",
+        "value": 21.5
+      },
+      {
+        "eventTime": "2026-01-01T00:00:00Z",
+        "sensorId": "sensor-b",
+        "value": 25.9
+      },
+      {
+        "eventTime": "2026-01-01T00:01:00Z",
+        "sensorId": "sensor-a",
+        "value": 20.4
+      },
+      {
+        "eventTime": "2026-01-01T00:01:00Z",
+        "sensorId": "sensor-b",
+        "value": 28.9
+      },
+      {
+        "eventTime": "2026-01-01T00:02:00Z",
+        "sensorId": "sensor-a",
+        "value": 21.1
+      },
+      {
+        "eventTime": "2026-01-01T00:02:00Z",
+        "sensorId": "sensor-b",
+        "value": 25.6
+      },
+      {
+        "eventTime": "2026-01-01T00:03:00Z",
+        "sensorId": "sensor-a",
+        "value": 20.3
+      }
+    ],
+    "failureReasons": [
+      {
+        "reason": "INVALID_TIMESTAMP",
+        "count": 1
+      },
+      {
+        "reason": "OUT_OF_ORDER",
+        "count": 1
+      },
+      {
+        "reason": "OUT_OF_RANGE",
+        "count": 1
+      }
+    ]
+  },
+  "summary": {
+    "service": "devdooly-platform-lab-api",
+    "status": "NOT_CONNECTED",
+    "environment": "not-observed",
+    "sourceCommit": "unknown",
+    "synthetic": true,
+    "publicExecutionEnabled": false,
+    "components": [
+      {
+        "name": "API",
+        "status": "NOT_CONNECTED",
+        "detail": "실시간 API 관측 전"
+      },
+      {
+        "name": "DATABASE",
+        "status": "NOT_CONNECTED",
+        "detail": "실제 DB 관측 전"
+      },
+      {
+        "name": "JENKINS",
+        "status": "NOT_CONFIGURED",
+        "detail": "CI 환경 연결 전"
+      },
+      {
+        "name": "ARGO_CD",
+        "status": "NOT_CONFIGURED",
+        "detail": "CD 환경 연결 전"
+      },
+      {
+        "name": "KUBERNETES",
+        "status": "NOT_CONFIGURED",
+        "detail": "서버 환경 연결 전"
+      },
+      {
+        "name": "KAFKA",
+        "status": "PLANNED",
+        "detail": "4단계에서 연결 예정"
+      },
+      {
+        "name": "S3",
+        "status": "PLANNED",
+        "detail": "4단계에서 검증 예정"
+      }
+    ],
+    "observedAt": null
+  },
+  "releases": [],
+  "observedAt": null,
+  "capturedAt": "2026-10-11T10:28:07.981454Z",
+  "snapshotNote": "합성 데이터 샘플 파일 생성 시각입니다. API 실행·배포 관측 기록이 아닙니다."
+}

@@ -1,0 +1,38 @@
+{
+  "executedAt": "2026-10-11T10:28:40.700902Z",
+  "command": "./mvnw -B -ntp verify",
+  "java": "Microsoft OpenJDK 21.0.9",
+  "springBoot": "4.1.1",
+  "maven": "3.10.0",
+  "wrapper": "3.3.4",
+  "database": "H2 2.4.240 test profile",
+  "result": "BUILD SUCCESS",
+  "suites": [
+    {
+      "name": "io.github.devdooly.platformlab.demo.ApiIntegrationTest",
+      "tests": "6",
+      "errors": "0",
+      "skipped": "0",
+      "failures": "0",
+      "time": "7.606"
+    },
+    {
+      "name": "io.github.devdooly.platformlab.demo.SensorProcessorTest",
+      "tests": "9",
+      "errors": "0",
+      "skipped": "0",
+      "failures": "0",
+      "time": "0.02"
+    }
+  ],
+  "totalTests": 15,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "wrapperType": "bin",
+  "wrapperRegressionVerifiedAt": "2026-10-11T10:40:23.611902Z",
+  "wrapperRegressionResult": "BUILD SUCCESS; 15 tests passed; jar packaged after stopping the owned Windows local-dev process that locked the previous jar",
+  "freshWrapperCache": "Maven 3.10.0 downloaded and extracted by official wrapper Java code in a new temporary MAVEN_USER_HOME",
+  "wrapperSha256": "4e2fbf6554bc8a4702cdfdd3bef464f423393d784ddbb037216320ce55d5e4e1",
+  "mavenDistributionSha256": "1f6d9909266510f039f59aa0e13dcd2c66da85f043e56276e41f2918f8bddaff"
+}

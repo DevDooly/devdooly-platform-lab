@@ -1,0 +1,308 @@
+{
+  "capturedAt": "2026-10-11T10:28:40.700902Z",
+  "environment": "local-dev",
+  "database": "H2 file, MariaDB mode; not a MariaDB integration result",
+  "responses": {
+    "/actuator/health": {
+      "status": 200,
+      "body": {
+        "groups": [
+          "liveness",
+          "readiness"
+        ],
+        "status": "UP"
+      }
+    },
+    "/actuator/health/readiness": {
+      "status": 200,
+      "body": {
+        "status": "UP"
+      }
+    },
+    "/api/demo/runs": {
+      "status": 200,
+      "body": {
+        "items": [
+          {
+            "id": "synthetic-v1-seed-42",
+            "name": "합성 센서 품질 검증",
+            "status": "COMPLETED",
+            "synthetic": true,
+            "seed": 42,
+            "inputCount": 12,
+            "successCount": 7,
+            "failureCount": 3,
+            "duplicateCount": 2,
+            "pendingCount": 0,
+            "startedAt": "2026-10-11T10:27:56.065297Z",
+            "completedAt": "2026-10-11T10:27:56.067298Z"
+          }
+        ],
+        "observedAt": "2026-10-11T10:28:40.908357100Z"
+      }
+    },
+    "/api/demo/runs/synthetic-v1-seed-42": {
+      "status": 200,
+      "body": {
+        "id": "synthetic-v1-seed-42",
+        "name": "합성 센서 품질 검증",
+        "status": "COMPLETED",
+        "synthetic": true,
+        "seed": 42,
+        "inputCount": 12,
+        "successCount": 7,
+        "failureCount": 3,
+        "duplicateCount": 2,
+        "pendingCount": 0,
+        "startedAt": "2026-10-11T10:27:56.065297Z",
+        "completedAt": "2026-10-11T10:27:56.067298Z",
+        "scenario": "sensor-validation-v1",
+        "description": "회사 데이터와 무관한 고정 seed 합성 데이터. 중복 ID, 잘못된 시간, 시간 역순, 범위 오류를 검증합니다.",
+        "outcomes": [
+          {
+            "sequence": 1,
+            "eventId": "evt-001",
+            "sensorId": "sensor-a",
+            "eventTime": "2026-01-01T00:00:00Z",
+            "value": 21.5,
+            "status": "SUCCESS",
+            "reason": "ACCEPTED"
+          },
+          {
+            "sequence": 2,
+            "eventId": "evt-002",
+            "sensorId": "sensor-b",
+            "eventTime": "2026-01-01T00:00:00Z",
+            "value": 25.9,
+            "status": "SUCCESS",
+            "reason": "ACCEPTED"
+          },
+          {
+            "sequence": 3,
+            "eventId": "evt-003",
+            "sensorId": "sensor-a",
+            "eventTime": "2026-01-01T00:01:00Z",
+            "value": 20.4,
+            "status": "SUCCESS",
+            "reason": "ACCEPTED"
+          },
+          {
+            "sequence": 4,
+            "eventId": "evt-003",
+            "sensorId": "sensor-a",
+            "eventTime": "2026-01-01T00:01:00Z",
+            "value": 30.0,
+            "status": "DUPLICATE",
+            "reason": "DUPLICATE_EVENT_ID"
+          },
+          {
+            "sequence": 5,
+            "eventId": "evt-004",
+            "sensorId": "sensor-a",
+            "eventTime": "not-a-timestamp",
+            "value": 30.0,
+            "status": "FAILED",
+            "reason": "INVALID_TIMESTAMP"
+          },
+          {
+            "sequence": 6,
+            "eventId": "evt-005",
+            "sensorId": "sensor-a",
+            "eventTime": "2026-01-01T00:00:30Z",
+            "value": 30.0,
+            "status": "FAILED",
+            "reason": "OUT_OF_ORDER"
+          },
+          {
+            "sequence": 7,
+            "eventId": "evt-006",
+            "sensorId": "sensor-b",
+            "eventTime": "2026-01-01T00:01:00Z",
+            "value": 120.0,
+            "status": "FAILED",
+            "reason": "OUT_OF_RANGE"
+          },
+          {
+            "sequence": 8,
+            "eventId": "evt-007",
+            "sensorId": "sensor-b",
+            "eventTime": "2026-01-01T00:01:00Z",
+            "value": 28.9,
+            "status": "SUCCESS",
+            "reason": "ACCEPTED"
+          },
+          {
+            "sequence": 9,
+            "eventId": "evt-008",
+            "sensorId": "sensor-a",
+            "eventTime": "2026-01-01T00:02:00Z",
+            "value": 21.1,
+            "status": "SUCCESS",
+            "reason": "ACCEPTED"
+          },
+          {
+            "sequence": 10,
+            "eventId": "evt-009",
+            "sensorId": "sensor-b",
+            "eventTime": "2026-01-01T00:02:00Z",
+            "value": 25.6,
+            "status": "SUCCESS",
+            "reason": "ACCEPTED"
+          },
+          {
+            "sequence": 11,
+            "eventId": "evt-001",
+            "sensorId": "sensor-a",
+            "eventTime": "2026-01-01T00:00:00Z",
+            "value": 30.0,
+            "status": "DUPLICATE",
+            "reason": "DUPLICATE_EVENT_ID"
+          },
+          {
+            "sequence": 12,
+            "eventId": "evt-010",
+            "sensorId": "sensor-a",
+            "eventTime": "2026-01-01T00:03:00Z",
+            "value": 20.3,
+            "status": "SUCCESS",
+            "reason": "ACCEPTED"
+          }
+        ],
+        "series": [
+          {
+            "eventTime": "2026-01-01T00:00:00Z",
+            "sensorId": "sensor-a",
+            "value": 21.5
+          },
+          {
+            "eventTime": "2026-01-01T00:00:00Z",
+            "sensorId": "sensor-b",
+            "value": 25.9
+          },
+          {
+            "eventTime": "2026-01-01T00:01:00Z",
+            "sensorId": "sensor-a",
+            "value": 20.4
+          },
+          {
+            "eventTime": "2026-01-01T00:01:00Z",
+            "sensorId": "sensor-b",
+            "value": 28.9
+          },
+          {
+            "eventTime": "2026-01-01T00:02:00Z",
+            "sensorId": "sensor-a",
+            "value": 21.1
+          },
+          {
+            "eventTime": "2026-01-01T00:02:00Z",
+            "sensorId": "sensor-b",
+            "value": 25.6
+          },
+          {
+            "eventTime": "2026-01-01T00:03:00Z",
+            "sensorId": "sensor-a",
+            "value": 20.3
+          }
+        ],
+        "failureReasons": [
+          {
+            "reason": "INVALID_TIMESTAMP",
+            "count": 1
+          },
+          {
+            "reason": "OUT_OF_ORDER",
+            "count": 1
+          },
+          {
+            "reason": "OUT_OF_RANGE",
+            "count": 1
+          }
+        ],
+        "observedAt": "2026-10-11T10:28:40.941435600Z"
+      }
+    },
+    "/api/platform/summary": {
+      "status": 200,
+      "body": {
+        "service": "devdooly-platform-lab-api",
+        "sourceCommit": "unknown",
+        "environment": "local",
+        "status": "UP",
+        "observedAt": "2026-10-11T10:28:40.968487100Z",
+        "components": [
+          {
+            "status": "RUNNING",
+            "detail": "Spring Boot 조회 API",
+            "name": "API"
+          },
+          {
+            "status": "RUNNING",
+            "detail": "H2 (local validation only)",
+            "name": "DATABASE"
+          },
+          {
+            "status": "NOT_CONFIGURED",
+            "detail": "실제 CI 연결 전",
+            "name": "JENKINS"
+          },
+          {
+            "status": "NOT_CONFIGURED",
+            "detail": "실제 CD 연결 전",
+            "name": "ARGO_CD"
+          },
+          {
+            "status": "NOT_CONFIGURED",
+            "detail": "서버 구성 전",
+            "name": "KUBERNETES"
+          },
+          {
+            "status": "PLANNED",
+            "detail": "4단계",
+            "name": "KAFKA"
+          },
+          {
+            "status": "PLANNED",
+            "detail": "4단계",
+            "name": "S3"
+          }
+        ],
+        "publicExecutionEnabled": false,
+        "synthetic": true
+      }
+    },
+    "/api/platform/releases": {
+      "status": 200,
+      "body": {
+        "items": [
+          {
+            "service": "api",
+            "version": "0.1.0",
+            "sourceCommit": "unknown",
+            "imageDigest": null,
+            "deploymentStatus": "LOCAL_RUNTIME",
+            "startedAt": "2026-10-11T10:27:55.311016700Z"
+          }
+        ],
+        "observedAt": "2026-10-11T10:28:40.979986600Z"
+      }
+    },
+    "POST /api/demo/runs": {
+      "status": 405,
+      "body": {
+        "timestamp": "2026-10-11T10:28:41.024Z",
+        "status": 405,
+        "error": "Method Not Allowed",
+        "path": "/api/demo/runs"
+      }
+    },
+    "GET /api/demo/runs/missing": {
+      "status": 404,
+      "body": {
+        "message": "요청한 실행 결과가 없습니다.",
+        "code": "RUN_NOT_FOUND",
+        "observedAt": "2026-10-11T10:28:41.046793200Z"
+      }
+    }
+  }
+}

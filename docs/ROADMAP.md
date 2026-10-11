@@ -1,6 +1,6 @@
 # 단계별 작업과 완료 조건
 
-체크된 항목은 확인된 결과가 있는 작업입니다. 계획 단계의 기능에는 체크하지 않습니다. 서버 구현에 착수하면 이 목록과 검증 기록을 함께 갱신합니다.
+체크된 항목은 확인된 결과가 있는 작업입니다. 계획 단계의 기능에는 체크하지 않습니다. 현재 로컬 API·화면 MVP를 구현했으며 H2와 MariaDB·서버 검증을 구분합니다. 각 항목은 실제 검증과 함께 갱신합니다.
 
 ## 저장소 준비 완료
 
@@ -8,6 +8,7 @@
 - [x] 전체 계획과 첫 기술 결정 정리
 - [x] 시작 안내, 환경 점검 절차와 검증 양식 작성
 - [x] Git 초기화와 문서·디렉터리 안내의 초기 커밋
+- [x] GitHub origin 연결과 main 최초 push
 
 ## 0 기존 환경 확인
 
@@ -22,21 +23,26 @@
 
 ## 1 최소 서비스와 포트폴리오
 
-- [ ] Java·Spring Boot·빌드 도구·Node·Astro 버전 선택과 고정
-- [ ] 합성 데이터 schema, seed와 독립적인 기대 결과 정의
-- [ ] Spring Boot 샘플 작업·결과 조회 API와 MariaDB 구현
-- [ ] 입력 검증·중복·시간·실패 시나리오 확인
-- [ ] Astro·React Lab 조회 화면과 API 연결
-- [ ] 공개 포트폴리오 저장소와 Pages 주소 확인
-- [ ] 소개·경력·프로젝트 설명과 기존 TIL 연결
-- [ ] 테스트 결과와 공개 가능한 샘플 결과 기록
+- [x] Java·Spring Boot·빌드 도구·Node·Astro 버전 선택과 고정
+- [x] 합성 데이터 schema, seed와 독립적인 기대 결과 정의
+- [x] Spring Boot 샘플 결과 조회 API, JPA·Flyway 구현과 H2 검증
+- [ ] MariaDB 실제 연결·컨테이너·재시작 검증
+- [x] 입력 검증·중복·시간·실패 시나리오 확인: API 테스트 15개 통과
+- [x] Astro·React Lab 조회 화면과 로컬 API 연결: 테스트 4개·타입 검사·HTTP smoke 통과
+- [x] 공개 포트폴리오 저장소와 Pages 주소 확인
+- [ ] GitHub Actions 최초 게시 성공과 외부 화면 검증
+- [x] 소개·기술 경험·프로젝트 설명과 기존 TIL 연결
+- [x] 테스트 결과와 공개 가능한 샘플 결과 기록
 
 완료 조건: 동일 샘플의 기대 결과를 반복 검증할 수 있고, 화면에서 현재 구현 범위와 설계를 이해할 수 있습니다.
+
+근거: [API 검증](evidence/api-mvp/README.md), [화면 검증](../apps/lab-web/VALIDATION.md), [Pages 게시](runbooks/pages.md). 전체 1단계 완료는 MariaDB와 최초 공개 검증 후 판단합니다.
 
 ## 2 K3s와 CI 및 CD
 
 - [ ] 점검 결과에 맞춰 K3s와 namespace·자원 설정 구성
-- [ ] Jenkins controller executor 0과 별도 빌드 agent 구성
+- [x] Jenkins controller executor 0, 별도 agent·테스트 pipeline 정의 작성
+- [ ] Jenkins 실제 agent Pod 기동과 pipeline 성공·실패 검증
 - [ ] Java 이미지 빌더 검증, GHCR 게시 권한과 digest 기록
 - [ ] devdooly-platform-gitops 저장소와 Helm chart·values 작성
 - [ ] Jenkins 테스트·이미지 게시·GitOps 변경 PR 연결
@@ -52,7 +58,8 @@
 - [ ] 공개 요약 collector와 허용 필드만 반환하는 API 구현
 - [ ] 휴대폰 외부망에서 TLS·화면·API와 관리 접근 제한 확인
 - [ ] 검토한 실행·배포 snapshot을 GitHub Pages에 게시
-- [ ] Lab 연결 실패 때 상태와 마지막 수집 시각 표시
+- [x] Lab 연결 실패와 합성 샘플을 표시하고 미관측 시각을 구분
+- [ ] 실제 관측 snapshot과 마지막 수집 시각 게시
 
 완료 조건: 방문자가 합성 데이터 결과와 배포 요약을 볼 수 있고, Lab 중단 때도 공개 홈의 프로젝트와 이전 결과를 읽을 수 있습니다. 첫 공개 목표는 여기까지입니다.
 

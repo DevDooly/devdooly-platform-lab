@@ -1,0 +1,9 @@
+# 신규 단일 노드 전용. 기존 설정을 덮어쓰지 않는다.
+# 설치 전 기존 서비스, 포트, CIDR, 데이터 경로와 백업을 확인한다.
+write-kubeconfig-mode: "0600"
+secrets-encryption: true
+disable:
+  - traefik
+  - servicelb
+# 기존 호스트의 80/443을 보존한다. ingress는 HTTPS 공개 단계에서 별도 구성한다.
+# node-ip, tls-san, data-dir는 실제 점검 결과가 필요하므로 추정하지 않는다.

@@ -1,0 +1,88 @@
+{
+  "verifiedAt": "2026-10-11",
+  "scope": "LOCAL_HELM_RENDER_ONLY",
+  "helmVersion": "v4.3.0+gbec5b06",
+  "kubernetesVersionForRendering": "1.36.5",
+  "yamlParserVersion": "2.9.1",
+  "helmStrictLint": {
+    "jenkins": "PASSED",
+    "argocd": "PASSED"
+  },
+  "jenkins": {
+    "manifestCount": 14,
+    "kinds": {
+      "ServiceAccount": 2,
+      "Secret": 1,
+      "ConfigMap": 3,
+      "PersistentVolumeClaim": 1,
+      "Role": 2,
+      "RoleBinding": 2,
+      "Service": 1,
+      "StatefulSet": 1,
+      "Pod": 1
+    },
+    "helmTestHookCount": 2
+  },
+  "argocd": {
+    "manifestCount": 44,
+    "kinds": {
+      "NetworkPolicy": 4,
+      "ServiceAccount": 5,
+      "Secret": 1,
+      "ConfigMap": 7,
+      "CustomResourceDefinition": 3,
+      "ClusterRole": 2,
+      "ClusterRoleBinding": 2,
+      "Role": 5,
+      "RoleBinding": 5,
+      "Service": 4,
+      "Deployment": 4,
+      "StatefulSet": 1,
+      "Job": 1
+    },
+    "helmTestHookCount": 0
+  },
+  "policyChecksPassed": 33,
+  "checks": [
+    "jenkins: services remain ClusterIP",
+    "jenkins: no ingress or gateway routes",
+    "jenkins: no host networking or host ports",
+    "argocd: services remain ClusterIP",
+    "argocd: no ingress or gateway routes",
+    "argocd: no host networking or host ports",
+    "Jenkins controller has zero executors",
+    "Jenkins anonymous access is disabled",
+    "Jenkins signup is disabled",
+    "Jenkins TCP agent listener is not exposed through a Service",
+    "Jenkins cloud allows one build Pod",
+    "Jenkins agents use WebSocket",
+    "Default agent template exists and is capped at one",
+    "Default template uses distinct build service account",
+    "Default template merges inherited YAML",
+    "Default Pod does not automount API credentials",
+    "Default Pod uses UID/GID/fsGroup 1000",
+    "Build service account disables token automount",
+    "Jenkins uses the explicit 10Gi local-path PVC",
+    "Pipeline JUnit and Timestamper plugins are pinned",
+    "Argo keeps local admin and disables anonymous access",
+    "Argo UI exec is disabled",
+    "Argo server retains TLS",
+    "Argo has no persistent cache PVC",
+    "Argo ApplicationSet is scaled to zero",
+    "Argo Dex and Notifications are disabled",
+    "Pipeline Pod uses the expected service account and no API token",
+    "Pipeline Pod keeps UID/GID/fsGroup 1000",
+    "Pipeline jnlp inherits its chart image and command",
+    "Pipeline containers cannot escalate or keep capabilities",
+    "Build images match the repository image lock",
+    "Pipeline inherits default and disables concurrent builds",
+    "Downloaded Helm matches the official Windows SHA256"
+  ],
+  "serverInstallationVerified": false,
+  "jenkinsExecutionVerified": false,
+  "argoSyncVerified": false,
+  "limitations": [
+    "No Kubernetes API server dry-run, image pull, PVC binding, plugin installation or Pipeline execution was performed.",
+    "Major chart/application versions and primary plugins are pinned; transitive plugins and every platform image digest are not fully locked."
+  ]
+}

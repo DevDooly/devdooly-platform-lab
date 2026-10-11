@@ -1,0 +1,11 @@
+{
+  "verifiedAt": "2026-10-11",
+  "source": "Docker Official Images registry manifests",
+  "images": {
+    "mariadb:11.8.9": "mariadb:11.8.9@sha256:6422478cb8e159f080fb1d8ccf65101e26fe51385787fde7d16c3b165a331f15",
+    "eclipse-temurin:21-jdk": "eclipse-temurin:21-jdk@sha256:3e3c176ffed168beb42c607be9bc1639b466cf00261a0fb04425562c9d0c5c2b",
+    "eclipse-temurin:21-jre": "eclipse-temurin:21-jre@sha256:cff19e6215689161eb6162c11b86b0c60ddf802164f2eaf48d570f8fb79a36c5",
+    "node:24.19.0-alpine": "node:24.19.0-alpine@sha256:d32cdf619f63fe0471182d08996dd516c6275bb5fd31ae06e55a570bd9e1ad43",
+    "nginx:stable-alpine": "nginx:stable-alpine@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94"
+  }
+}

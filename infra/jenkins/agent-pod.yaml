@@ -1,0 +1,109 @@
+# Inherits the chart's default jnlp agent (JDK 25); application builds use Java 21.
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app.kubernetes.io/part-of: devdooly-platform-lab
+    app.kubernetes.io/component: ci-agent
+spec:
+  serviceAccountName: jenkins-build-agent
+  automountServiceAccountToken: false
+  restartPolicy: Never
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: jnlp
+      # Image/agent command come from the chart's default pod template.
+      env:
+        - name: HOME
+          value: /home/jenkins
+      volumeMounts:
+        - name: build-home
+          mountPath: /home/jenkins
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: [ALL]
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+          ephemeral-storage: 128Mi
+        limits:
+          cpu: 500m
+          memory: 384Mi
+          ephemeral-storage: 1Gi
+    - name: maven
+      image: eclipse-temurin:21-jdk@sha256:3e3c176ffed168beb42c607be9bc1639b466cf00261a0fb04425562c9d0c5c2b
+      imagePullPolicy: IfNotPresent
+      command: [sleep]
+      args: [99d]
+      workingDir: /home/jenkins/agent
+      env:
+        - name: HOME
+          value: /home/jenkins
+        - name: MAVEN_USER_HOME
+          value: /home/jenkins/.m2
+        - name: JAVA_TOOL_OPTIONS
+          value: -XX:MaxRAMPercentage=45.0 -Duser.home=/home/jenkins
+        - name: MAVEN_OPTS
+          value: -Xmx512m
+      volumeMounts:
+        - name: build-home
+          mountPath: /home/jenkins
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: [ALL]
+      resources:
+        requests:
+          cpu: 250m
+          memory: 512Mi
+          ephemeral-storage: 256Mi
+        limits:
+          cpu: 1500m
+          memory: 2Gi
+          ephemeral-storage: 4Gi
+    - name: node
+      image: node:24.19.0-alpine@sha256:d32cdf619f63fe0471182d08996dd516c6275bb5fd31ae06e55a570bd9e1ad43
+      imagePullPolicy: IfNotPresent
+      command: [sleep]
+      args: [99d]
+      workingDir: /home/jenkins/agent
+      env:
+        - name: HOME
+          value: /home/jenkins
+        - name: NPM_CONFIG_CACHE
+          value: /home/jenkins/.cache/npm
+        - name: XDG_CACHE_HOME
+          value: /home/jenkins/.cache
+        - name: ASTRO_TELEMETRY_DISABLED
+          value: '1'
+        - name: NODE_OPTIONS
+          value: --max-old-space-size=1024
+      volumeMounts:
+        - name: build-home
+          mountPath: /home/jenkins
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: [ALL]
+      resources:
+        requests:
+          cpu: 250m
+          memory: 384Mi
+          ephemeral-storage: 256Mi
+        limits:
+          cpu: 1500m
+          memory: 1536Mi
+          ephemeral-storage: 4Gi
+  volumes:
+    - name: build-home
+      emptyDir:
+        sizeLimit: 6Gi

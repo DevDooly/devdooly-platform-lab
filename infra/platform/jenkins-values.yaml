@@ -1,0 +1,80 @@
+# jenkins/jenkins 5.9.68 전용. 관리 화면은 ClusterIP + SSH tunnel.
+controller:
+  numExecutors: 0
+  image:
+    tag: "2.580.1-jdk25"
+    pullPolicy: IfNotPresent
+  serviceType: ClusterIP
+  # 차트는 Service만 제거한다. JVM 내부 50000은 남지만 WebSocket agent가 사용하지 않는다.
+  agentListenerEnabled: false
+  ingress:
+    enabled: false
+  javaOpts: "-Xms256m -Xmx1024m -XX:+ExitOnOutOfMemoryError"
+  resources:
+    requests: {cpu: "250m", memory: "768Mi"}
+    limits: {cpu: "1000m", memory: "1536Mi"}
+  initContainerResources:
+    requests: {cpu: "100m", memory: "256Mi"}
+    limits: {cpu: "1000m", memory: "1536Mi"}
+  installPlugins:
+    - kubernetes:4557.ve746270f672f
+    - workflow-aggregator:608.v67378e9d3db_1
+    - git:5.10.1
+    - configuration-as-code:2133.ve570217cdb_cd
+  additionalPlugins:
+    - timestamper:1.30
+    - junit:1437.v12280a_c49b_50
+  initializeOnce: true
+  installLatestPlugins: false
+  installLatestSpecifiedPlugins: false
+  JCasC:
+    defaultConfig: true
+    overwriteConfiguration: false
+  sidecars:
+    configAutoReload:
+      resources:
+        requests: {cpu: "25m", memory: "64Mi"}
+        limits: {cpu: "200m", memory: "128Mi"}
+agent:
+  enabled: true
+  podName: default
+  image:
+    repository: jenkins/inbound-agent
+    tag: "3385.vf1123fb_515da_-1-jdk25"
+  websocket: true
+  containerCap: 1
+  instanceCap: 1
+  idleMinutes: 0
+  privileged: false
+  hostNetworking: false
+  runAsUser: 1000
+  runAsGroup: 1000
+  useDefaultServiceAccount: true
+  serviceAccount: jenkins-build-agent
+  yamlMergeStrategy: merge
+  inheritYamlMergeStrategy: true
+  yamlTemplate: |-
+    apiVersion: v1
+    kind: Pod
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+  resources:
+    requests: {cpu: "100m", memory: "128Mi"}
+    limits: {cpu: "500m", memory: "512Mi"}
+serviceAccountAgent:
+  create: true
+  name: jenkins-build-agent
+  automountServiceAccountToken: false
+rbac:
+  create: true
+  readSecrets: false
+persistence:
+  enabled: true
+  storageClass: local-path
+  accessMode: ReadWriteOnce
+  size: "10Gi"

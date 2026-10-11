@@ -1,0 +1,8 @@
+# Explicit opt-in only. This profile does not validate MariaDB compatibility.
+spring:
+  datasource:
+    url: jdbc:h2:file:./target/local-db;MODE=MariaDB;DATABASE_TO_LOWER=TRUE;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: ""
+lab:
+  database-label: H2 (local validation only)

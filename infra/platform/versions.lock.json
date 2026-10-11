@@ -1,0 +1,37 @@
+{
+  "verifiedAt": "2026-10-11",
+  "k3s": {
+    "version": "v1.36.5+k3s1",
+    "channel": "stable",
+    "source": "https://raw.githubusercontent.com/k3s-io/k3s/main/channel.yaml"
+  },
+  "helm": {
+    "version": "v4.3.0",
+    "windowsAmd64": {
+      "url": "https://get.helm.sh/helm-v4.3.0-windows-amd64.zip",
+      "sha256": "304ea163cce4d9ad14e189c01846c6a34de9cfdfe48536ae54b2e8ba7884e67c"
+    },
+    "linuxAmd64": {
+      "url": "https://get.helm.sh/helm-v4.3.0-linux-amd64.tar.gz",
+      "sha256": "86584a54def73570558f66f5111cc53dfed56689637ae32c1201205d494f54fb"
+    }
+  },
+  "charts": {
+    "jenkins": {
+      "version": "5.9.68",
+      "appVersion": "2.580.1",
+      "repository": "https://charts.jenkins.io",
+      "sha256": "5eba515b2fd7819523251c38927fc96b767feb1c1caab78a1f19312bed70c020"
+    },
+    "argocd": {
+      "version": "10.10.2",
+      "appVersion": "v3.5.4",
+      "repository": "https://argoproj.github.io/argo-helm",
+      "sha256": "1f2bdb0e23b87fdac5222d99d1acf6964e670db9bf63912c58ab4677e505638b"
+    }
+  },
+  "plugins": {
+    "timestamper": "1.30",
+    "junit": "1437.v12280a_c49b_50"
+  }
+}

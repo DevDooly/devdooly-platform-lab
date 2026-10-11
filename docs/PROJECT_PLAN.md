@@ -2,7 +2,7 @@
 
 2026년 10월 11일 · 김선홍 DevDooly
 
-저장소 초기 준비: 계획과 안내 파일만 포함한다. 애플리케이션 구현, 원격 서버 변경, GitHub 게시와 SSH 접속은 시작하지 않았다. 실제 호스트 주소는 Git에서 제외되는 `.local/host.md`에서 관리한다.
+진행 현황: GitHub 저장소를 연결하고 Java API·Astro/React 화면 MVP와 배포 설정을 구현했다. 로컬 API 검증은 H2이며 테스트 15개, 화면 테스트 4개와 실제 API HTTP smoke를 통과했다. MariaDB 컨테이너와 미니 PC 운영 검증은 대기 중이다. 서버 SSH 지문 확인·공개키 등록 후 읽기 전용 점검부터 진행한다. 공개 홈은 프로젝트 Pages `https://devdooly.github.io/devdooly-platform-lab/`로 정했다. 실제 호스트 주소는 Git에서 제외되는 `.local/host.md`에서 관리한다. 현재 완료 항목과 검증 한계는 [진행 목록](ROADMAP.md)에 기록한다.
 
 Astro와 React로 별도 포트폴리오를 만들고, 소개 페이지는 GitHub Pages에 배포한다. 미니 PC에서는 K3s 위에 Java 서비스와 Jenkins CI, Argo CD CD를 구성한다. 방문자는 합성 데이터 처리 결과와 실제 배포 이력을 확인하고, 상세한 기술 설명은 기존 TIL로 이어서 읽는다.
 
@@ -54,7 +54,7 @@ Next.js도 정적 export가 가능하다. 다만 이 프로젝트는 백엔드�
 | 공개 Lab | 미니 PC K3s | 데모 UI와 Spring Boot API, 공개용 실행·배포 현황 |
 | 관리 도구 | 사설 접속 또는 별도 인증 | Jenkins, Argo CD, Grafana, DB·스토리지 관리 |
 
-사용자 사이트를 만들면 `DevDooly/devdooly.github.io` 저장소와 `https://devdooly.github.io/`를 사용할 수 있다. 기존 `/TIL/` 프로젝트 사이트와 함께 운영하는 구성이 가능하다. 저장소 존재 여부를 먼저 확인하고, 필요하면 `/portfolio/` 프로젝트 사이트로 시작한다. GitHub 프로필 README용 `DevDooly/devdooly` 저장소와 사용자 사이트 저장소는 역할이 다르다. 이 주소들은 신규 사이트의 후보이며 아직 생성·배포한 주소가 아니다. [GitHub Pages 사이트 유형](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages)
+기존 사용자 사이트 저장소와 TIL은 유지하고, 우선 `DevDooly/devdooly-platform-lab`의 프로젝트 Pages `https://devdooly.github.io/devdooly-platform-lab/`에 공개 홈과 샘플 Lab을 게시한다. GitHub Pages를 Actions source로 설정했고 실제 게시 결과는 workflow에서 확인한다. 미니 PC 공개 API가 연결되기 전에는 합성 샘플과 미관측 상태를 명시한다. 선택 근거는 [ADR 0002](adr/0002-initial-public-portfolio.md)에 기록했다. [GitHub Pages 사이트 유형](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages)
 
 공개 홈은 GitHub Actions로 정적 빌드·게시하고, 미니 PC Lab의 CI와 CD는 Jenkins와 Argo CD로 보여준다. 공개 홈의 가용성과 개인 서버 운영 실험을 분리하는 선택이다. [Astro GitHub Pages 배포](https://docs.astro.build/en/guides/deploy/github/)
 

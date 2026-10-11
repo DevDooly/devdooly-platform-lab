@@ -1,0 +1,57 @@
+---
+import LabExplorer from '../components/LabExplorer';
+import '../styles/global.css';
+const assetBase = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const apiBase = import.meta.env.PUBLIC_API_BASE_URL || '/api';
+const github = 'https://github.com/DevDooly/devdooly-platform-lab';
+const skills = [
+  { index: '01', title: 'Java & Spring Boot', description: '반도체 제조 데이터 ETL 서비스를 개발하고 운영합니다. 레거시 코드의 오류와 프로젝트 구조를 꾸준히 개선해 왔습니다.', tags: ['Backend', 'ETL', 'Code quality'] },
+  { index: '02', title: 'Data & Messaging', description: 'Kafka의 오류를 분석하고 버전 업그레이드를 진행했습니다. Hadoop, Tez·Trino, Iceberg 기반 데이터 처리 경험을 연결합니다.', tags: ['Kafka', 'Hadoop', 'Iceberg'] },
+  { index: '03', title: 'Delivery & Operation', description: 'Jenkins CI와 Argo CD 기반 CD를 구성·수정하며, Kubernetes·MinIO 운영과 Helm 차트 작성 및 배포를 담당합니다.', tags: ['Kubernetes', 'Helm', 'GitOps'] },
+];
+const steps = [
+  { number: '00', title: '환경과 데이터 먼저 확인', text: '기존 Ubuntu 서비스와 데이터를 보존하며 설치 범위와 백업 경로를 정합니다.', state: '진행 중', tone: 'active' },
+  { number: '01', title: '작은 API와 조회 화면', text: '고정 seed 합성 데이터, Spring Boot 조회 API와 Astro·React 화면을 연결합니다.', state: 'MVP 구현', tone: 'active' },
+  { number: '02', title: '빌드부터 배포까지', text: 'Jenkins 테스트·이미지 빌드와 Argo CD·Helm 배포를 실제 기록으로 연결합니다.', state: '다음 단계', tone: '' },
+  { number: '03', title: '외부에서도 읽을 수 있게', text: 'HTTPS와 공개 요약, 정적 결과 보관으로 Lab이 꺼져도 설명을 남깁니다.', state: '예정', tone: '' },
+  { number: '04–06', title: '메시징과 데이터 플랫폼 확장', text: 'Kafka·객체 저장소, AI 개선 사례와 Iceberg·Spark·Trino를 순서대로 검증합니다.', state: '예정', tone: '' },
+];
+---
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f6f0" />
+    <title>DevDooly — 만드는 과정이 보이는 Platform Lab</title>
+    <meta name="description" content="김선홍의 Java·데이터·플랫폼 개발 기록. 합성 데이터의 처리 결과와 배포 상태를 직접 살펴보는 개인 엔지니어링 Lab입니다." />
+    <link rel="icon" type="image/svg+xml" href={`${assetBase}favicon.svg`} />
+  </head>
+  <body>
+    <a href="#main" class="skip-link">본문으로 이동</a>
+    <header class="site-header"><div class="header-inner">
+      <a class="brand" href="#" aria-label="DevDooly Platform Lab 처음으로"><svg aria-hidden="true" viewBox="0 0 36 36"><path d="M18 0v36M0 18h36M5.3 5.3l25.4 25.4M5.3 30.7 30.7 5.3" stroke="currentColor" stroke-width="6"/></svg><span>DevDooly<strong>PLATFORM LAB</strong></span></a>
+      <nav aria-label="주 메뉴"><a href="#about">소개</a><a href="#lab">실행 결과</a><a href="#platform">배포 상태</a><a href="#progress">구축 기록</a></nav>
+      <a class="header-github" href={github} target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+    </div></header>
+    <main id="main">
+      <section class="hero section" aria-labelledby="hero-title"><div class="hero-copy">
+        <div class="hero-eyebrow"><span class="eyebrow">PERSONAL ENGINEERING LAB</span><span class="tag"><i/>MVP 구축 중</span></div>
+        <h1 id="hero-title">만들고, 관찰하고.<br/><span>더 나은 코드로.</span></h1>
+        <p class="hero-description">안녕하세요, 개발자 김선홍입니다.<br/>Java 서비스와 데이터 파이프라인을 다루며 쌓은 경험을<br class="desktop-break"/> 직접 동작하는 작은 플랫폼으로 풀어갑니다.</p>
+        <div class="hero-actions"><a class="button button-primary" href="#lab">Lab 살펴보기 <span aria-hidden="true">↗</span></a><a class="text-link" href="https://devdooly.github.io/TIL/" target="_blank" rel="noreferrer">문제로부터 배운 기록, TIL <span aria-hidden="true">↗</span></a></div>
+        <div class="hero-footnote"><span class="line"/><span>BACKEND · DATA · PLATFORM</span><span class="edition">VOL. 01 / WORK IN PROGRESS</span></div>
+      </div><div class="hero-visual" aria-label="소스 코드에서 관측 가능한 서비스로 이어지는 프로젝트 구조">
+        <div class="visual-topline"><span>THE WORKBENCH</span><span>↗</span></div>
+        <div class="visual-title">A little system.<br/>A visible process.</div>
+        <div class="system-diagram"><div class="system-node source-node"><span class="node-icon">&#123; &#125;</span><div><small>BUILD SOMETHING</small><strong>Java / Spring Boot</strong></div><span class="node-code">01</span></div><div class="node-connector"><span/>validate → persist → inspect</div><div class="diagram-branches"><div class="system-node mini-node"><span class="node-icon">≋</span><small>SYNTHETIC DATA</small><strong>결과와 실패 사유</strong></div><div class="system-node mini-node"><span class="node-icon">⌁</span><small>DELIVERY</small><strong>빌드와 배포 근거</strong></div></div><div class="node-connector bottom-connector"><span/></div><div class="system-node observe-node"><span class="node-icon">◎</span><div><small>MAKE IT VISIBLE</small><strong>Platform Lab</strong></div><span class="small-tag">READ ONLY</span></div></div>
+        <div class="visual-bottom"><span class="bracket">[</span><p>결과뿐 아니라<br/>왜 그렇게 동작하는지까지.</p><span class="visual-star" aria-hidden="true">✳</span><span class="bracket">]</span></div>
+      </div></section>
+      <section id="about" class="section experience-section" aria-labelledby="experience-title"><div class="section-heading"><div><span class="eyebrow">01 / EXPERIENCE INTO EVIDENCE</span><h2 id="experience-title">실무에서 다룬 기술, 직접 확인할 수 있는 기록.</h2></div><a class="text-link" href="https://github.com/DevDooly" target="_blank" rel="noreferrer">개발 기록 더 보기 ↗</a></div><div class="experience-grid">{skills.map(skill => <article class="experience-item"><span class="experience-number">{skill.index}</span><h3>{skill.title}</h3><p>{skill.description}</p><div class="skill-tags">{skill.tags.map(tag => <span>{tag}</span>)}</div></article>)}</div><div class="ai-note"><span class="ai-symbol" aria-hidden="true">✳</span><div><h3>AI와 함께 읽고, 개발자의 판단으로 개선합니다.</h3><p>LLM을 레거시 코드 분석과 버그 수정에 적극 활용합니다. 연산 로직의 시간복잡도 개선, 시간 동기화 오류 수정, 코딩 스타일 정리 경험을 바탕으로 공개 가능한 개인 예제를 준비합니다.</p></div><span class="tag">개인 검증 사례 준비 중</span></div></section>
+      <LabExplorer client:load apiBase={apiBase}/>
+      <section id="progress" class="section progress-section" aria-labelledby="progress-title"><div class="progress-intro"><span class="eyebrow">04 / BUILD IN THE OPEN</span><h2 id="progress-title">구축 과정도<br/>기록합니다.</h2><p>이곳은 개인 Lab의 첫 버전입니다.<br/>실무 경험과 새로 구축하는 환경을 구분하고,<br/>검증한 결과만 기록합니다.</p><a class="text-link" href={`${github}/blob/main/docs/ROADMAP.md`} target="_blank" rel="noreferrer">전체 진행 목록 ↗</a></div><div class="progress-list">{steps.map(step => <article class="progress-step"><span class="step-number">{step.number}</span><div><h3>{step.title}</h3><p>{step.text}</p></div><span class={`step-state ${step.tone}`}>{step.state}</span></article>)}</div></section>
+      <section class="section notes-section" aria-label="기술 문서와 소스 코드"><div><span class="eyebrow">THE NOTES BEHIND THE WORK</span><h2>코드 옆에, 이유를 남깁니다.</h2><p>문제를 이해하고 선택한 방법, 검증한 과정은 문서에서 이어집니다.</p></div><div class="notes-links"><a href="https://devdooly.github.io/TIL/" target="_blank" rel="noreferrer"><div><small>TECHNICAL WIKI</small><strong>TIL · 매일의 기술 기록</strong></div><span aria-hidden="true">↗</span></a><a href={`${github}/tree/main/docs`} target="_blank" rel="noreferrer"><div><small>PROJECT DOCUMENTS</small><strong>설계 결정과 검증 기록</strong></div><span aria-hidden="true">↗</span></a></div></section>
+    </main>
+    <footer class="site-footer"><div><span class="footer-name">DevDooly <span>김선홍</span></span><p>실무 경험에서 출발한 개인 플랫폼. 모든 예제는 합성 데이터로 구성합니다.</p></div><a href="#main">BACK TO TOP ↑</a></footer>
+  </body>
+</html>

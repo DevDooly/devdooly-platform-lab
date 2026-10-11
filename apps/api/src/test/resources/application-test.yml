@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:platform_lab_tests;MODE=MariaDB;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+lab:
+  environment: test
+  database-label: H2 (local validation only)
