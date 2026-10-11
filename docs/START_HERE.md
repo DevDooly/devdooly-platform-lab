@@ -1,50 +1,45 @@
 # 현재 상태에서 이어서 구축하기
 
-계획 저장소를 GitHub에 연결했고 Java API와 포트폴리오 MVP를 구현했습니다. 로컬 검증과 서버 운영은 구분해 기록합니다. 체크 항목은 [진행 목록](ROADMAP.md), 설계는 [전체 계획](PROJECT_PLAN.md)에서 확인합니다.
+Java API·포트폴리오를 구현하고 Ubuntu 미니 PC에 K3s·Jenkins·Argo CD를 설치했습니다. 현재 상태와 관측 시각은 [미니 PC 근거](evidence/mini-pc/README.md), 실제 빌드는 [Jenkins 근거](evidence/jenkins-ci/README.md)에서 확인합니다. 전체 단계는 [진행 목록](ROADMAP.md)을 따릅니다.
 
-## 완료한 작업
+## 확인한 결과
 
-- GitHub `DevDooly/devdooly-platform-lab`에 초기 계획 등록
-- Java 21·Spring Boot 4.1.1·Maven 3.10.0 고정과 공식 Wrapper 구성
-- 합성 센서 이벤트 12건과 독립 기대 결과 정의
-- 조회 API, JPA·Flyway, H2의 실제 HTTP·DB 통합 검증: 테스트 15개 통과
-- Astro 7.3.8·React 19.3.0 화면, 타입 검사와 테스트 4개 및 정적 빌드 통과
-- 실제 API proxy를 통한 화면 HTTP smoke 통과
-- GitHub Pages 프로젝트 사이트 최초 게시와 PC·모바일 화면 검증
-- Linux runner에서 이미지 빌드·MariaDB 연결·API 재생성·데이터 보존 검증
-- Jenkins CI 정의·K3s/Jenkins/Argo CD 설치 설정·앱 Helm chart 준비
+- 서버 지문 대조와 전용 키 SSH 인증, Ubuntu·포트·기존 서비스 읽기 전용 점검
+- 기존 Docker 컨테이너 23개와 방화벽 설정 보존, 새 Lab 전용 설치·저장 경로
+- K3s Node Ready와 클러스터 API·DNS·외부 HTTPS 통신 확인
+- Java 21·Spring Boot API 테스트 15개, Astro·React 테스트 13개
+- Linux runner의 이미지 빌드·MariaDB·API 교체·데이터 보존 검증
+- GHCR 이미지 게시와 미니 PC에서 익명 다운로드
+- Jenkins Kubernetes agent의 테스트·패키징 실행과 산출물 확인
+- 기존 저장소 `gitops/`의 digest 고정값으로 Argo CD 앱 배포
+- API·웹·DB Ready, PVC Bound, 웹을 통한 12건 처리 결과 검증
+- 공개 Pages용 실제 관측 기록 수집과 계약 검증
 
-Jenkins·Argo CD·K3s는 미니 PC에 아직 설치하지 않았습니다. MariaDB·이미지 빌드·Nginx DNS 갱신은 [임시 Linux runner](evidence/compose-ci/README.md)에서 검증했습니다. 미니 PC에서는 별도로 확인해야 합니다. 공개 Pages의 정적 샘플을 실제 서버 실행 기록으로 표시하지 않습니다.
+Jenkins의 첫 빌드는 플러그인 충돌로 단계가 실행되지 않아 성공으로 인정하지 않았습니다. 교정 후 실제 단계·JUnit·산출물을 별도로 확인했습니다. 현재 이미지 게시자는 Actions이며 Jenkins의 이미지 게시·GitOps PR 자동화는 다음 작업입니다.
 
-## 미니 PC에서 다음으로 진행할 순서
+## 지금 접속하기
 
-1. 사용자가 서버 ED25519 지문을 대조하고 전용 공개키를 등록합니다. 개인키는 접속 PC에 보관하며 Git에 넣지 않습니다.
-2. 확인한 지문과 공개키로 SSH 인증 후 [호스트 점검](runbooks/host-inventory.md)을 읽기 전용으로 수행합니다. 자동 점검 도구는 `infra/scripts/inspect-host.py`이며 결과는 `.local/`에 저장합니다.
-3. 기존 서비스·포트·데이터·백업·실제 가용 자원을 확인하고 설치 경로와 복구 범위를 정합니다. 기존 설정을 먼저 백업합니다.
-4. [MariaDB·Compose](runbooks/local-compose.md)로 실제 DB 연결, 컨테이너, 재시작 멱등과 화면을 확인합니다.
-5. [플랫폼 설치](runbooks/platform-install.md)에 따라 K3s·Jenkins·Argo CD를 적용합니다. CI pipeline의 실제 agent 기동과 실패 차단을 확인합니다.
-6. 이미지 게시와 별도 GitOps 저장소를 연결하고 [준비한 앱 Helm chart](runbooks/app-helm.md)를 Argo CD로 배포합니다. Jenkins에서 같은 앱의 `helm upgrade`를 중복 실행하지 않습니다.
-7. 인증된 관리 경로와 공개 HTTPS를 구성하고 외부망에서 확인합니다. 실제 공개 API가 준비되면 [Pages 연결 설정](runbooks/pages.md)을 갱신합니다.
+공개 결과는 [포트폴리오](https://devdooly.github.io/devdooly-platform-lab/)에서 볼 수 있습니다. **미니 PC에서 확인한 마지막 기록**은 정적 관측본이며, 실시간 상태는 아닙니다. API의 플랫폼 `NOT_CONFIGURED`는 상태 수집이 연결되지 않았음을 뜻합니다.
 
-서버 설치에 sudo가 필요하지만 비대화형 권한이 없다면, 사용자가 직접 확인하여 실행할 설치 파일을 준비합니다. 대화에 비밀번호를 요청하거나 전체 sudo 무암호 권한을 추가하지 않습니다.
+관리 화면은 [SSH 접속 도우미](runbooks/admin-access.md)를 사용합니다. 본인 PC에 준비한 `.local/open-admin.ps1`을 실행한 동안 Jenkins는 `http://127.0.0.1:18081`, Argo CD는 `https://127.0.0.1:18443`에서 접속합니다. 초기 로그인 정보는 미니 PC 프로젝트의 `.local/admin/`에 0600 파일로 보관합니다. 비밀번호를 채팅이나 Git으로 옮기지 않습니다.
 
-## 로컬 검증을 이어갈 때
+Argo CD 자체 서명 인증서는 접속 안내에 따라 서버 인증서 지문을 대조합니다. 기존 사용자 kubeconfig·시스템 Helm·Docker·프록시는 유지합니다.
 
-- [API 실행·테스트](../apps/api/README.md), [API 검증 근거](evidence/api-mvp/README.md)
-- [화면 실행·테스트](../apps/lab-web/README.md), [화면 검증 근거](../apps/lab-web/VALIDATION.md)
-- [독립 데이터 기대 결과](../tests/scenarios/sensor-validation-v1.json)
-- [Jenkins CI 정의와 첫 실행](runbooks/jenkins-ci.md)
+## 다음 작업
 
-로컬 API는 H2 profile, Compose는 MariaDB입니다. `sourceCommit=unknown`은 실제 commit을 주입하지 않은 실행이며, releases 응답은 현재 JVM 정보입니다. 이를 빌드·배포 이력으로 바꾸려면 실제 Jenkins·Argo CD 관측을 연결해야 합니다.
+1. 초기 관리자 비밀번호 변경과 본인 관리 화면 로그인 확인
+2. 외부 백업 위치 결정, Lab DB·Jenkins·K3s 설정의 백업과 복원 검증
+3. Jenkins 이미지 게시·GitOps PR 연계와 실제 실패 차단·이전 digest 복구 검증
+4. 허용 필드만 수집하는 Jenkins·Argo CD collector 연결
+5. 기존 프록시·DDNS·TLS 조건을 확인한 뒤 공개 읽기 API와 외부망 검증
+6. Kafka·S3 및 AI 개선 재현을 진행 목록 순서대로 추가
 
-## 아직 결정하거나 확인할 항목
+기존 서비스가 있으므로 재부팅·방화벽 변경·프록시 교체를 일괄 실행하지 않습니다. 같은 서버의 설정 백업은 외부 데이터 백업이나 복원 검증을 대신하지 않습니다. PV의 Delete 정책 때문에 PVC·namespace를 수동 삭제하면 데이터가 지워질 수 있습니다.
 
-| 항목 | 확인 시점 |
-| --- | --- |
-| Ubuntu 세부 버전, 기존 서비스·포트·데이터 경로 | SSH 인증 직후 읽기 전용 점검 |
-| 별도 백업 위치, 설치·PV 경로와 복구 범위 | 서버 변경 전 |
-| DDNS·공인 IP·CGNAT·HTTPS 방식과 도메인 | 외부 공개 전 |
-| 이미지 게시 권한과 GitOps 저장소의 접근 범위 | CI/CD 연결 전 |
-| S3 제품과 영속 catalog | 각각 4단계와 6단계 |
+## 관련 자료
 
-실제 호스트 주소와 SSH 메모는 `.local/host.md`에 있으며 clone에는 포함되지 않습니다. 공개 사이트는 [프로젝트 Pages](https://devdooly.github.io/devdooly-platform-lab/)를 사용하고 기존 TIL 및 사용자 사이트 저장소는 유지합니다.
+- [전체 계획](PROJECT_PLAN.md), [배포 결정](adr/0003-gitops-in-existing-repository.md)
+- [API 계약](contracts/demo-api.md), [API 검증](evidence/api-mvp/README.md)
+- [화면 검증](../apps/lab-web/VALIDATION.md), [관측 기록 계약](../apps/lab-web/OBSERVATION.md)
+- [K3s bootstrap](runbooks/k3s-bootstrap.md), [플랫폼 설치](runbooks/platform-install.md)
+- [이미지 게시](runbooks/image-publication.md), [앱 Helm](runbooks/app-helm.md)

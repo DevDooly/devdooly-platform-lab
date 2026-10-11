@@ -1,6 +1,6 @@
 # 단계별 작업과 완료 조건
 
-체크된 항목은 확인된 결과가 있는 작업입니다. 계획 단계의 기능에는 체크하지 않습니다. 현재 로컬 API·화면 MVP를 구현했으며 H2와 MariaDB·서버 검증을 구분합니다. 각 항목은 실제 검증과 함께 갱신합니다.
+체크된 항목은 확인된 결과가 있는 작업입니다. 계획 단계의 기능에는 체크하지 않습니다. 현재 로컬·Linux runner 검증과 미니 PC의 K3s·Jenkins·Argo CD 실행을 확인했으며, 실제 근거와 남은 작업을 구분합니다. 각 항목은 실제 검증과 함께 갱신합니다.
 
 ## 저장소 준비 완료
 
@@ -12,12 +12,12 @@
 
 ## 0 기존 환경 확인
 
-- [ ] Ubuntu 버전·지원 상태, CPU·메모리·디스크 확인
-- [ ] 기존 서비스·컨테이너·포트와 데이터 경로 조사
-- [ ] SSH 접속 방법과 서버 지문 확인
+- [x] Ubuntu 버전·지원 상태, CPU·메모리·디스크 확인
+- [x] 기존 서비스·컨테이너·포트와 데이터 경로 조사
+- [x] SSH 접속 방법과 서버 지문 확인
 - [ ] 백업 현황과 별도 백업 위치 결정
 - [ ] 기존 DDNS·공인 IP·CGNAT 여부와 HTTPS 선택지 확인
-- [ ] 설치 경로·PV 경로·자원 예산·원상 복구 범위 기록
+- [x] 설치 경로·PV 경로·자원 예산·원상 복구 범위 기록
 
 완료 조건: 기존 서비스에 미칠 영향을 설명하고, 보존할 데이터와 새로운 설치 범위를 정할 수 있습니다.
 
@@ -28,7 +28,7 @@
 - [x] Spring Boot 샘플 결과 조회 API, JPA·Flyway 구현과 H2 검증
 - [x] Linux runner의 MariaDB 실제 연결·컨테이너·API 교체와 멱등 검증: [근거](evidence/compose-ci/README.md)
 - [x] 입력 검증·중복·시간·실패 시나리오 확인: API 테스트 15개 통과
-- [x] Astro·React Lab 조회 화면과 로컬 API 연결: 테스트 4개·타입 검사·HTTP smoke 통과
+- [x] Astro·React Lab 조회 화면과 로컬 API 연결: 테스트 13개·타입 검사·HTTP smoke 통과
 - [x] 공개 포트폴리오 저장소와 Pages 주소 확인
 - [x] GitHub Actions 최초 게시 성공과 외부 화면 검증: [공개 기록](evidence/web-mvp/README.md)
 - [x] 소개·기술 경험·프로젝트 설명과 기존 TIL 연결
@@ -36,31 +36,35 @@
 
 완료 조건: 동일 샘플의 기대 결과를 반복 검증할 수 있고, 화면에서 현재 구현 범위와 설계를 이해할 수 있습니다.
 
-근거: [API 검증](evidence/api-mvp/README.md), [화면 검증](../apps/lab-web/VALIDATION.md), [Pages 게시](runbooks/pages.md). 1단계의 로컬·임시 Linux 컨테이너와 Pages 검증을 마쳤습니다. 미니 PC 운영은 0단계 점검과 2단계 실제 설치로 이어갑니다.
+근거: [API 검증](evidence/api-mvp/README.md), [화면 검증](../apps/lab-web/VALIDATION.md), [Pages 게시](runbooks/pages.md). 1단계의 로컬·임시 Linux 컨테이너와 Pages 검증을 마쳤습니다. 미니 PC 운영 결과는 [실제 서버 근거](evidence/mini-pc/README.md)에 별도 기록합니다.
 
 ## 2 K3s와 CI 및 CD
 
-- [ ] 점검 결과에 맞춰 K3s와 namespace·자원 설정 구성
+- [x] 점검 결과에 맞춰 K3s와 namespace·자원 설정 구성
 - [x] Jenkins controller executor 0, 별도 agent·테스트 pipeline 정의 작성
-- [ ] Jenkins 실제 agent Pod 기동과 pipeline 성공·실패 검증
-- [ ] Java 이미지 빌더 검증, GHCR 게시 권한과 digest 기록
+- [x] Jenkins 실제 Kubernetes agent·테스트·패키징 성공 확인: [근거](evidence/jenkins-ci/README.md)
+- [ ] Jenkins 실제 테스트 실패 시 게시·배포 차단을 별도 검증
+- [x] Actions 이미지 빌드·GHCR 게시·digest 기록과 서버 익명 다운로드
 - [x] API·화면·MariaDB 앱 Helm chart 작성과 lint·render 검증: [근거](../infra/charts/platform-lab/ci/render-validation.json)
-- [ ] devdooly-platform-gitops 저장소와 실제 이미지·환경 values 연결
+- [x] 기존 저장소 gitops/에 실제 image digest·환경 values·Application 연결: [결정](adr/0003-gitops-in-existing-repository.md)
 - [ ] Jenkins 테스트·이미지 게시·GitOps 변경 PR 연결
-- [ ] Argo CD 동기화와 실제 서비스 버전 확인
-- [ ] 정상 배포·실패 차단·이전 digest 복구 검증
+- [x] Argo CD 동기화와 실제 서비스 버전 확인
+- [x] 고정 image digest의 정상 배포와 Argo CD Synced·Healthy 확인
+- [ ] 테스트 실패 시 게시 차단·이전 digest 복구 검증
 - [ ] 재부팅 복구와 필요한 설정·데이터의 외부 백업 확보
 
 완료 조건: 소스 commit부터 image digest, GitOps commit, 실행 버전까지 추적되고 실패·복구 결과가 남습니다.
 
 ## 3 외부 공개
 
-- [ ] HTTPS 경로와 관리 도구의 인증된 접근 구성
+- [x] 관리 도구의 SSH 인증 접속과 localhost 화면 응답 검증 ([접속 안내](runbooks/admin-access.md))
+- [ ] 미니 PC 공개 Lab의 HTTPS 경로와 실시간 API 연결
 - [ ] 공개 요약 collector와 허용 필드만 반환하는 API 구현
 - [ ] 휴대폰 외부망에서 TLS·화면·API와 관리 접근 제한 확인
-- [ ] 검토한 실행·배포 snapshot을 GitHub Pages에 게시
+- [x] 검토한 실제 앱 관측 snapshot을 Pages 소스에 등록: [근거](evidence/mini-pc/README.md)
 - [x] Lab 연결 실패와 합성 샘플을 표시하고 미관측 시각을 구분
-- [ ] 실제 관측 snapshot과 마지막 수집 시각 게시
+- [x] 실제 관측 snapshot·수집 시각·source SHA 표시 구현과 관측 계약 검증
+- [ ] Jenkins·Argo CD의 실시간 요약 collector와 배포 이력 연결
 
 완료 조건: 방문자가 합성 데이터 결과와 배포 요약을 볼 수 있고, Lab 중단 때도 공개 홈의 프로젝트와 이전 결과를 읽을 수 있습니다. 첫 공개 목표는 여기까지입니다.
 

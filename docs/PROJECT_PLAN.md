@@ -2,7 +2,7 @@
 
 2026년 10월 11일 · 김선홍 DevDooly
 
-진행 현황: GitHub 저장소를 연결하고 Java API·Astro/React 화면 MVP와 배포 설정을 구현했다. 로컬 API 검증은 H2이며 테스트 15개, 화면 테스트 4개와 실제 API HTTP smoke를 통과했다. MariaDB 컨테이너·Nginx DNS 갱신·처리 결과 보존은 임시 Linux runner에서 검증했고, 미니 PC 운영 검증은 대기 중이다. 서버 SSH 지문 확인·공개키 등록 후 읽기 전용 점검부터 진행한다. 공개 홈은 프로젝트 Pages `https://devdooly.github.io/devdooly-platform-lab/`로 정했다. 실제 호스트 주소는 Git에서 제외되는 `.local/host.md`에서 관리한다. 현재 완료 항목과 검증 한계는 [진행 목록](ROADMAP.md)에 기록한다.
+진행 현황: Java API 테스트 15개, Astro·React 테스트 13개와 Linux MariaDB 통합 검증을 통과했다. 미니 PC의 기존 Docker 서비스·방화벽을 보존하고 K3s·Jenkins·Argo CD를 설치했다. 앱의 실제 동기화·Pod·PVC·HTTP 결과는 [서버 근거](evidence/mini-pc/README.md), CI는 [Jenkins 근거](evidence/jenkins-ci/README.md)에 기록한다. 공개 Pages는 마지막 실제 관측 기록을 제공하며, 실시간 API·플랫폼 collector·외부 백업·복원은 후속 작업이다. 아래 설계의 미구현 범위는 [진행 목록](ROADMAP.md)을 따른다.
 
 Astro와 React로 별도 포트폴리오를 만들고, 소개 페이지는 GitHub Pages에 배포한다. 미니 PC에서는 K3s 위에 Java 서비스와 Jenkins CI, Argo CD CD를 구성한다. 방문자는 합성 데이터 처리 결과와 실제 배포 이력을 확인하고, 상세한 기술 설명은 기존 TIL로 이어서 읽는다.
 
@@ -12,10 +12,10 @@ Astro와 React로 별도 포트폴리오를 만들고, 소개 페이지는 GitHu
 
 | 항목 | 확인된 환경 |
 | --- | --- |
-| 운영체제 | Ubuntu, 세부 버전은 설치 전 확인 |
-| CPU | AMD Ryzen 7 5700 |
-| 메모리 | 32GiB, 실제 사용 가능한 메모리는 사전 점검 |
-| 저장공간 | 전체 500GB 중 약 200GB 사용 가능 |
+| 운영체제 | Ubuntu 22.04.5 LTS, 실제 점검 완료 |
+| CPU | AMD Ryzen 7 5700U, 16 threads |
+| 메모리 | 실제 인식 약 30GiB, 설치 전 가용 약 22GiB |
+| 저장공간 | ext4 약 468GiB, 점검 시 가용 약 235GiB |
 | 내부 주소 | `<mini-pc-lan-ip>`, 실제 값은 Git 제외 로컬 메모에 보관 |
 | 기존 DDNS | `<lab-ddns-host>`, 실제 값은 Git 제외 로컬 메모에 보관 |
 | 기존 문서 사이트 | https://devdooly.github.io/TIL/ |
@@ -120,7 +120,7 @@ flowchart LR
   N --> M[Jenkins Argo CD Grafana]
 ```
 
-Ubuntu에 K3s 단일 노드를 구성한다. 기본 Ingress와 local-path PV를 활용하고, 플랫폼·애플리케이션·데이터·모니터링 영역을 namespace로 나눈다. namespace는 권한과 자원을 구분하는 수단이며 물리적인 장애 분리는 아니다.
+Ubuntu에 K3s 단일 노드를 구성한다. 기존 프록시를 보존하기 위해 기본 Traefik·ServiceLB는 끄고 전용 local-path PV를 활용하며, 플랫폼·애플리케이션·데이터·모니터링 영역을 namespace로 나눈다. namespace는 권한과 자원을 구분하는 수단이며 물리적인 장애 분리는 아니다.
 
 K3s 공식 최소 자원은 클러스터 기반 요구량으로, Jenkins·Java·DB·Kafka 전체 요구량을 뜻하지 않는다. 실제 워크로드에 맞춰 별도의 자원 예산을 둔다. [K3s 요구사항](https://docs.k3s.io/installation/requirements)
 
@@ -128,32 +128,30 @@ Lab UI는 정적 Astro·React 빌드를 Nginx 컨테이너로 제공한다. 같�
 
 ### 저장소 제안
 
-첫 구현은 애플리케이션과 GitOps 저장소 두 개로 시작한다. 포트폴리오 사용자 사이트를 루트 주소에 둘 때는 Pages용 저장소를 별도로 사용한다. `devdooly-platform-lab` 로컬 Git 저장소는 초기화했으며 아직 구현 코드는 없다. GitOps와 Pages 저장소는 후속 단계에서 생성 여부와 주소를 확정한다. 아래 구조는 구현 단계의 목표다.
+현재는 기존 `devdooly-platform-lab` 한 저장소에 앱·포트폴리오·Helm chart·GitOps values를 관리한다. [ADR 0003](adr/0003-gitops-in-existing-repository.md)에 초기 범위와 권한 분리의 한계를 기록했다. 기존 TIL은 유지한다.
 
 ```text
 devdooly-platform-lab/
   apps/api/                 Spring Boot API
-  apps/worker/              Kafka 소비 처리
-  apps/lab-web/             Astro React Lab UI
-  tests/scenarios/          합성 데이터와 검증 시나리오
-  benchmarks/               공개 예제와 측정 결과
-  docs/adr/                 기술 결정
-  docs/runbooks/            운영과 복구 절차
-  infra/ansible/            호스트 구성
-  Jenkinsfile              2단계에서 실제 파이프라인과 함께 추가
-
-devdooly-platform-gitops/
-  charts/platform-lab/      직접 작성하는 애플리케이션 chart
-  environments/lab/         이미지 digest와 환경별 values
-  platform/                 Argo CD Application과 기반 구성
-
-devdooly.github.io/         선택하는 경우 공개 포트폴리오
+  apps/lab-web/             Astro React 포트폴리오와 Lab UI
+  tests/scenarios/          합성 데이터와 독립 기대 결과
+  benchmarks/               후속 공개 예제와 측정 결과
+  docs/                     ADR·운영·실제 검증 근거
+  infra/charts/             직접 작성한 앱 chart
+  infra/platform/           기반 도구 설치 값과 버전
+  infra/jenkins/            Kubernetes 빌드 agent
+  gitops/bootstrap/         Argo CD Project·Application
+  gitops/environments/      실제 image digest와 환경 values
+  Jenkinsfile              테스트·패키징 pipeline
 TIL/                       기존 저장소와 주소 유지
 ```
+
 
 서드파티 chart도 버전을 고정하고 선택 이유를 기록한다. Git에는 코드와 선언 설정을 넣고 토큰·인증서 개인키·DB 비밀번호는 넣지 않는다. 초기에는 제한된 Kubernetes Secret과 별도 백업으로 시작하고, 이후 SOPS 같은 암호화된 선언 관리 방식을 추가할 수 있다.
 
 ## 5 CI와 CD의 동작
+
+현재 검증한 구성은 Jenkins의 테스트·패키징, Actions의 컨테이너 검증·GHCR 게시, 검토한 기존 저장소 gitops values와 Argo CD 배포다. 아래 Jenkins 이미지 게시·GitOps PR 흐름은 후속 목표이며 현재 완료 상태로 표시하지 않는다.
 
 ```mermaid
 flowchart LR

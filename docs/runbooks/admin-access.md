@@ -45,7 +45,7 @@
 
 ## 최초 로그인과 TLS 지문 확인
 
-초기 비밀번호는 사용자가 자신의 Ubuntu 비공개 터미널에서 프로젝트의 `.local/admin/jenkins-initial-password`, `.local/admin/argocd-initial-password` 파일을 직접 확인합니다. 디렉터리 권한은 700, 파일 권한은 600으로 제한합니다. 도우미는 파일을 읽거나 비밀번호·토큰을 출력하지 않습니다. 채팅·CI 로그·스크린샷·Git에 옮기지 말고 로그인 후 초기 비밀번호를 변경합니다.
+Jenkins 사용자 이름은 `.local/admin/jenkins-username` 파일에 있고, Argo CD 초기 사용자 이름은 `admin`입니다. 초기 비밀번호는 사용자가 자신의 Ubuntu 비공개 터미널에서 프로젝트의 `.local/admin/jenkins-initial-password`, `.local/admin/argocd-initial-password` 파일을 직접 확인합니다. 디렉터리 권한은 700, 파일 권한은 600으로 제한합니다. 도우미는 파일을 읽거나 비밀번호·토큰을 출력하지 않습니다. 채팅·CI 로그·스크린샷·Git에 옮기지 말고 로그인 후 초기 비밀번호를 변경합니다.
 
 Argo CD의 자체 서명 TLS 인증서는 그대로 유지합니다. SSH 호스트 키를 확인한 Ubuntu 터미널에서 현재 `argocd-server`의 ClusterIP를 확인한 뒤, 그 주소의 인증서 SHA-256 지문·유효기간을 읽습니다. 아래 `<Argo ClusterIP>`는 직접 확인한 실제 주소로 바꿉니다.
 

@@ -1,6 +1,6 @@
 # 실제 미니 PC 관측 기록 계약 v1
 
-선택적 공개 파일은 `public/data/lab-observation.json`입니다. 현재 저장소에는 실제 수집을 가장한 이 파일을 만들지 않습니다. [JSON Schema](schemas/lab-observation.schema.json)와 실행 가능한 validator로 수집 후 내용을 확인합니다.
+공개 파일 `public/data/lab-observation.json`에는 미니 PC에서 실제 수집하고 검증한 기록을 담았습니다. 수집 근거는 [서버 검증 기록](../../docs/evidence/mini-pc/README.md)에서 확인할 수 있습니다. 갱신할 때마다 [JSON Schema](schemas/lab-observation.schema.json)와 실행 가능한 validator로 내용을 확인합니다.
 
 화면의 우선순위는 **연결된 API → 검증한 미니 PC 관측 기록 → 설명용 합성 샘플**입니다. 과거 관측 기록은 ‘미니 PC에서 확인한 마지막 기록’과 실제 수집 시각·source commit을 표시합니다. API에 연결되지 않은 정적 기록을 실시간 상태로 표시하지 않습니다.
 

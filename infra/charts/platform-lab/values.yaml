@@ -1,5 +1,5 @@
-# API/web images are NOT published to a registry yet; CI builds are ephemeral.
-# Supply real registry repositories and immutable digests before deployment.
+# Defaults deliberately contain no deployable API/web image references.
+# Supply verified registry repositories and immutable digests, e.g. gitops environment values.
 api:
   replicaCount: 1
   image:
