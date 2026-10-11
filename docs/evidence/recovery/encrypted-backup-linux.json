@@ -1,0 +1,13 @@
+{
+  "platform": "Ubuntu",
+  "python": "3.10.12",
+  "cryptography": "46.0.5",
+  "fixturePlaintextBytes": 4194377,
+  "verifyHashMatches": true,
+  "linuxAtomicOutputMatches": true,
+  "outputMode": "0600",
+  "existingOutputPreserved": true,
+  "tamperRejectedWithNoPlaintext": true,
+  "temporaryPlaintextRemoved": true,
+  "renameNoReplaceCollisionPreserved": true
+}

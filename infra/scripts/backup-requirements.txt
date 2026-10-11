@@ -1,0 +1,2 @@
+# Verified with Python 3.12.14 on Windows; utility requires Python >=3.10.
+cryptography==50.0.2

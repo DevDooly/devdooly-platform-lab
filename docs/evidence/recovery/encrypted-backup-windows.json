@@ -1,0 +1,33 @@
+{
+  "scope": "OFFLINE_RANDOM_FIXTURE_SECURITY_CHECKS",
+  "platform": "Windows",
+  "python": "3.12.14",
+  "cryptography": "50.0.2",
+  "checksPassed": 20,
+  "checks": [
+    "verify-only-0-bytes",
+    "roundtrip-0-bytes",
+    "existing-output-preserved-0-bytes",
+    "verify-only-1-bytes",
+    "roundtrip-1-bytes",
+    "existing-output-preserved-1-bytes",
+    "verify-only-4194377-bytes",
+    "roundtrip-4194377-bytes",
+    "existing-output-preserved-4194377-bytes",
+    "wrong-key-no-plaintext-published",
+    "tampered-ciphertext-no-plaintext-published",
+    "tampered-nonce-aad-no-plaintext-published",
+    "tampered-tag-no-plaintext-published",
+    "wrong-magic-no-plaintext-published",
+    "truncated-header-no-plaintext-published",
+    "truncated-payload-no-plaintext-published",
+    "wrong-sha256-no-plaintext-published",
+    "invalid-key-length-rejected",
+    "concurrent-output-preserved-and-temp-cleaned",
+    "windows-acl-current-user-and-system-only-no-inheritance"
+  ],
+  "limits": [
+    "Random offline fixtures only; no production backup or server was accessed by these checks.",
+    "Linux renameat2 publication path has not been executed in this Windows validation."
+  ]
+}

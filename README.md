@@ -14,6 +14,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 | K3s·Helm·Argo CD | 미니 PC에서 앱 자동 동기화, Synced·Healthy, MariaDB PVC | [실제 서버 근거](docs/evidence/mini-pc/README.md), [GitOps 선언](gitops/README.md) |
 | Jenkins | Kubernetes agent에서 실제 테스트·패키징 | [빌드 근거와 한계](docs/evidence/jenkins-ci/README.md), [CI 절차](docs/runbooks/jenkins-ci.md) |
 | 관리자 접속 | ClusterIP 관리 화면과 SSH 접속 도우미 | [접속 방법](docs/runbooks/admin-access.md) |
+| 백업과 복구 | 외부 암호화 백업·격리 DB 복원·호스트 재부팅 | [실제 검증과 한계](docs/evidence/recovery/README.md) |
 
 미니 PC의 웹을 통해 API·MariaDB를 조회하고 합성 입력 12건의 결과를 확인했습니다. 기대 결과는 성공 7·실패 3·중복 2·대기 0입니다. 공개 Pages는 **미니 PC에서 확인한 마지막 기록**과 수집 시각·source commit을 표시합니다. 현재 공개 홈에 미니 PC 실시간 API는 연결하지 않았습니다.
 
@@ -57,7 +58,7 @@ flowchart LR
 
 현재 이미지 게시자는 GitHub Actions입니다. Jenkins는 테스트와 패키징을 실행하며, 이미지 게시·GitOps 변경 PR을 Jenkins에서 자동으로 수행하는 단계는 남아 있습니다. Argo CD가 앱의 배포를 관리합니다. 동일 앱에 Jenkins의 `helm upgrade`를 중복 적용하지 않습니다.
 
-기존 Docker 서비스·프록시·방화벽은 보존했습니다. K3s 기본 Traefik·ServiceLB는 사용하지 않습니다. 설정 감사 백업은 동일 서버에 있으며, 외부 백업·복원·재부팅 복구·이전 digest 복구는 아직 검증하지 않았습니다. Kafka·S3는 4단계, AI 개선 재현은 5단계, Iceberg·Spark·Trino는 6단계입니다.
+기존 Docker 서비스·프록시·방화벽은 보존했습니다. K3s 기본 Traefik·ServiceLB는 사용하지 않습니다. 외부 암호화 백업, 격리 DB 복원과 호스트 재부팅 복구를 검증했습니다. K3s·Jenkins archive 전체 복원과 이전 image digest 복구는 아직 검증하지 않았습니다. Kafka·S3는 4단계, AI 개선 재현은 5단계, Iceberg·Spark·Trino는 6단계입니다.
 
 ## 저장소 구성
 

@@ -1,0 +1,41 @@
+{
+  "observedAt": "2026-10-11T13:51:46.398666+00:00",
+  "portableBackupCli": {
+    "logicalDumpCreated": true,
+    "dumpBytes": 6825,
+    "innodbOnly": true,
+    "singleTransaction": true,
+    "sourceUnchangedDuringDump": true,
+    "sqliteOnlineBackupQuickCheck": "ok",
+    "k3sTokenAndConfigurationIncluded": true,
+    "seconds": 0.529
+  },
+  "portableRestoreCli": {
+    "sameMariaDbAndApiDigests": true,
+    "separateNamespaceAndPvc": true,
+    "newSecretUsed": false,
+    "ownedTrialSecretReused": true,
+    "ingressOrNodePortAdded": false,
+    "namespaceNetworkIsolation": true,
+    "sqlMatchedBeforeApiStart": true,
+    "runCount": 1,
+    "outcomeCount": 12,
+    "counts": {
+      "inputCount": 12,
+      "successCount": 7,
+      "failureCount": 3,
+      "duplicateCount": 2,
+      "pendingCount": 0
+    },
+    "timestampsAndFlywayHistoryPreserved": true,
+    "allOutcomeReasonsMatched": true,
+    "duplicateConstraintRejected": true,
+    "apiRestartPreservedData": true,
+    "productionPvcPreserved": true,
+    "productionMountAndDataPreserved": true,
+    "importSeconds": 0.268,
+    "totalSeconds": 61.046,
+    "testWorkloadsStopped": true,
+    "testPvcRetainedForFollowUp": true
+  }
+}

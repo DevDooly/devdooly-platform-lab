@@ -14,11 +14,11 @@ Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접
 | 포트폴리오 | 웹 테스트 13개, Pages 게시, 미니 PC 관측 기록 표시 | 플랫폼 요약과 관측 시각 자동 갱신 |
 | Jenkins | Kubernetes agent에서 테스트·패키징, 산출물과 소스 SHA 확인 | 이미지 게시·GitOps PR·실패 차단 |
 | Argo CD와 Helm | 미니 PC의 API·웹·DB 배포, Synced·Healthy 확인 | 이전 digest로 복구하는 실제 훈련 |
-| 운영 | K3s 복구·데이터 유지, 오래된 사용자 kubeconfig 교정, 동일 서버의 데이터 백업 | 별도 저장 위치와 격리된 복원 검증 |
+| 운영 | 외부 암호화 백업·격리 DB 복원·호스트 재부팅, 사용자 kubectl 복구 | 초기 비밀번호 교체, 추가 장치 사본·전체 archive 복원 |
 
-현재 이미지 게시자는 GitHub Actions입니다. 공개 Lab은 마지막으로 수집한 실제 결과를 보여주며, 실시간 API·Jenkins·Argo CD 상태 수집은 아직 연결하지 않았습니다. 같은 서버에 보관한 백업과 서비스 재기동 확인을 별도 백업에서의 복원 성공으로 간주하지 않습니다.
+현재 이미지 게시자는 GitHub Actions입니다. 공개 Lab은 마지막으로 수집한 실제 결과를 보여주며, 실시간 API·Jenkins·Argo CD 상태 수집은 아직 연결하지 않았습니다. Windows 외부 암호문은 인증·해시를 확인했고, DB는 서버의 새 논리 dump로 격리 복원했습니다. 외부 암호문을 K3s에 되돌리는 통합 복구와 K3s·Jenkins archive 전체 복원은 별도로 남아 있습니다.
 
-실행 근거는 [미니 PC 배포](evidence/mini-pc/README.md), [Jenkins 빌드](evidence/jenkins-ci/README.md), [후속 접속과 재기동 검증](evidence/operator-access/README.md), [관측 계약](../apps/lab-web/OBSERVATION.md)에 있습니다. 아래 체크 항목은 앞으로 수행할 작업입니다.
+실행 근거는 [미니 PC 배포](evidence/mini-pc/README.md), [Jenkins 빌드](evidence/jenkins-ci/README.md), [후속 접속과 재기동 검증](evidence/operator-access/README.md), [관측 계약](../apps/lab-web/OBSERVATION.md)에 있습니다. 완료 항목은 실제 검증 근거와 함께 표시합니다. [백업·복원·재부팅 검증](evidence/recovery/README.md)을 추가했습니다.
 
 ## 진행 순서
 
@@ -35,15 +35,17 @@ Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접
 
 ## 1 운영 기준과 복구
 
-- [ ] 사용 중인 클러스터 이름·CA·접속 방식과 설치·데이터 경로를 운영 안내에 정리합니다. 삭제나 정리 전에는 연결 설정과 실제 실행 대상을 함께 확인합니다.
-- [ ] 관리자 초기 비밀번호 변경 여부를 확인하고, 비밀값을 공개 파일과 분리합니다.
-- [ ] 서버 외부의 백업 위치를 정하고 K3s datastore·token, Jenkins Home, MariaDB 데이터를 각각 보관합니다.
-- [ ] 운영 PVC와 분리한 테스트 볼륨에 MariaDB를 복원하고, 기존 12건 결과와 중복 방지 동작을 비교합니다.
-- [ ] 기존 서비스의 영향을 설명할 수 있는 복구 절차를 작성한 뒤 재부팅 복구를 별도로 검증합니다.
+- [x] 사용 중인 클러스터 이름·CA·접속 방식과 설치·데이터 경로를 운영 안내에 정리합니다. 삭제나 정리 전에는 연결 설정과 실제 실행 대상을 함께 확인합니다.
+- [x] 관리자 초기 비밀번호 변경 여부를 확인하고, 비밀값을 공개 파일과 분리합니다.
+- [x] 서버 외부의 백업 위치를 정하고 K3s datastore·token, Jenkins Home, MariaDB 데이터를 각각 보관합니다.
+- [x] 운영 PVC와 분리한 테스트 볼륨에 MariaDB를 복원하고, 기존 12건 결과와 중복 방지 동작을 비교합니다.
+- [x] 기존 서비스의 영향을 설명할 수 있는 복구 절차를 작성한 뒤 재부팅 복구를 별도로 검증합니다.
 
 **완료 조건:** 백업 해시·대상·시각, 실제 복원 명령과 결과, 복구 시간, 확인한 데이터가 남아 있어야 합니다. 외부 백업은 전송 후의 무결성과 접근 권한도 확인합니다. K3s는 datastore와 함께 server token을 복원해야 하므로 둘을 같은 복구 단위로 관리합니다. [K3s 백업과 복원](https://docs.k3s.io/datastore/backup-restore)
 
 **공개 결과:** 비밀값을 제외한 복구 기록과 kubeconfig 인증서 오류의 증상·원인·교정·재확인 과정입니다.
+
+[운영 대상 확인](runbooks/lab-operations.md)과 [재실행 명령](runbooks/lab-recovery.md)을 함께 제공합니다. 초기 관리자 비밀번호는 아직 유효합니다. 위 체크는 변경 여부와 보관 방식을 확인했다는 뜻이며 비밀번호 교체 완료를 뜻하지 않습니다. 외부 백업과 격리 DB 복원, 호스트 재부팅 결과는 [복구 검증](evidence/recovery/README.md)에 있습니다.
 
 ## 2 CI/CD 연결
 
@@ -122,7 +124,7 @@ CKA 학습은 Lab과 연결합니다. context·RBAC·Service와 DNS·probe·requ
 
 ## 바로 다음 작업
 
-1. 별도 백업 위치를 결정하고 격리된 DB 복원 검증부터 진행합니다.
+1. 외부 백업·격리 DB 복원·호스트 재부팅 검증을 완료했습니다. 초기 관리자 비밀번호 교체는 별도로 남아 있습니다.
 2. Jenkins 게시 방식과 권한을 설계한 뒤 실패 차단·digest 복구를 검증합니다.
 3. 공개 상태 수집의 허용 필드와 오래된 기록 표시를 구현합니다.
 4. AI 개선 예제의 작은 실패 테스트를 준비해 후속 개인 사례로 연결합니다.

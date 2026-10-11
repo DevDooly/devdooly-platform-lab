@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-11T13:38:35.663864+00:00",
+  "offHostColdBackup": {
+    "plaintextBytes": 3420565222,
+    "encryptedBytes": 3420565258,
+    "encryption": "AES-256-GCM",
+    "gcmAuthenticationVerified": true,
+    "readBackDecryptionSha256Matches": true,
+    "transferSeconds": 138.921,
+    "backupOnSeparateHost": true,
+    "oneDriveExcluded": true,
+    "aclCurrentUserAndSystemOnly": true
+  },
+  "currentOffHostBackups": {
+    "componentCount": 4,
+    "components": [
+      {
+        "name": "mariadb.sql",
+        "bytes": 6825,
+        "verified": true
+      },
+      {
+        "name": "k3s-datastore.tar.gz",
+        "bytes": 2581509,
+        "verified": true
+      },
+      {
+        "name": "jenkins-home.tar.gz",
+        "bytes": 309657060,
+        "verified": true
+      },
+      {
+        "name": "jenkins-master.key",
+        "bytes": 256,
+        "verified": true
+      }
+    ],
+    "jenkinsMasterKeySeparated": true,
+    "serverExternalEncryptedCopy": true
+  },
+  "databaseBackup": {
+    "logicalDumpCreated": true,
+    "dumpBytes": 6825,
+    "innodbOnly": true,
+    "singleTransaction": true,
+    "sourceUnchangedDuringDump": true,
+    "sqliteOnlineBackupQuickCheck": "ok",
+    "k3sTokenAndConfigurationIncluded": true,
+    "seconds": 0.735
+  },
+  "isolatedDatabaseRestore": {
+    "sameMariaDbAndApiDigests": true,
+    "separateNamespaceAndPvc": true,
+    "newSecretUsed": true,
+    "ingressOrNodePortAdded": false,
+    "namespaceNetworkIsolation": true,
+    "sqlMatchedBeforeApiStart": true,
+    "runCount": 1,
+    "outcomeCount": 12,
+    "counts": {
+      "inputCount": 12,
+      "successCount": 7,
+      "failureCount": 3,
+      "duplicateCount": 2,
+      "pendingCount": 0
+    },
+    "timestampsAndFlywayHistoryPreserved": true,
+    "allOutcomeReasonsMatched": true,
+    "duplicateConstraintRejected": true,
+    "apiRestartPreservedData": true,
+    "productionPvcPreserved": true,
+    "importSeconds": 0.276,
+    "totalSeconds": 51.48,
+    "testWorkloadsStopped": true,
+    "testPvcRetainedForFollowUp": true
+  },
+  "jenkinsBackup": {
+    "jenkinsIdleBeforeStop": true,
+    "jenkinsHomeArchivedWhileStopped": true,
+    "masterKeyExcludedFromRegularArchive": true,
+    "masterKeyStoredSeparately": true,
+    "archiveListingVerified": true,
+    "jenkinsReadyAfterBackup": true,
+    "initialPasswordStillAuthenticates": true,
+    "archiveBytes": 309657060,
+    "totalSeconds": 64.461
+  },
+  "hostReboot": {
+    "hostBootIdChanged": true,
+    "nodeCount": 1,
+    "nodeReady": true,
+    "podCount": 11,
+    "allPodsReady": true,
+    "argoSync": "Synced",
+    "argoHealth": "Healthy",
+    "dockerContainerCount": 23,
+    "allOriginalContainersRunning": true,
+    "sameDockerContainerIdsAndMounts": true,
+    "manualRestartCount": 1,
+    "samePvcUids": true,
+    "sqlRowsTimestampsAndFlywayHistoryUnchanged": true,
+    "apiCanonicalOutcomesMatched": true,
+    "counts": {
+      "inputCount": 12,
+      "successCount": 7,
+      "failureCount": 3,
+      "duplicateCount": 2,
+      "pendingCount": 0
+    },
+    "userKubectlWorks": true,
+    "userKubeconfigMode": "0600",
+    "ufwStatusAndFilesUnchanged": true,
+    "initialArgoPasswordStillValid": true
+  },
+  "beforeRebootPreservation": {
+    "same23DockerIdsAndStartTimes": true,
+    "ufwStatusAndFilesUnchanged": true
+  },
+  "limits": {
+    "fullK3sArchiveRestoreTested": false,
+    "jenkinsArchiveRestoreTested": false,
+    "dbRestoreSource": "FRESH_LOGICAL_DUMP_ON_SERVER",
+    "offHostEncryptedFilesRestoredIntoK3s": false,
+    "administratorInitialPasswordsStillInUse": true,
+    "secondBackupDeviceVerified": false
+  },
+  "publicRecoveryTools": {
+    "offlineGuardChecksPassed": 31,
+    "ubuntuBackupAndExplicitTrialReusePassed": true,
+    "encryptedColdBackupVerifyOnly": {
+      "gcmAuthenticationVerified": true,
+      "expectedSha256Matched": true,
+      "plaintextBytes": 3420565222,
+      "plaintextFileCreated": false
+    },
+    "newTrialDefaultPathRetested": false
+  }
+}

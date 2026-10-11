@@ -14,6 +14,7 @@ Java API·포트폴리오를 구현하고 Ubuntu 미니 PC에 K3s·Jenkins·Argo
 - 기존 저장소 `gitops/`의 digest 고정값으로 Argo CD 앱 배포
 - API·웹·DB Ready, PVC Bound, 웹을 통한 12건 처리 결과 검증
 - 공개 Pages용 실제 관측 기록 수집과 계약 검증
+- 외부 암호화 백업·격리 DB 복원·호스트 재부팅: [근거와 한계](evidence/recovery/README.md)
 
 Jenkins의 첫 빌드는 플러그인 충돌로 단계가 실행되지 않아 성공으로 인정하지 않았습니다. 교정 후 실제 단계·JUnit·산출물을 별도로 확인했습니다. 현재 이미지 게시자는 Actions이며 Jenkins의 이미지 게시·GitOps PR 자동화는 다음 작업입니다.
 
@@ -30,13 +31,13 @@ Argo CD 자체 서명 인증서는 접속 안내에 따라 서버 인증서 지�
 [다음 개발 계획](NEXT_STEPS.md)에 우선순위와 단계별 결과물·완료 조건을 정리했습니다.
 
 1. 초기 관리자 비밀번호 변경과 본인 관리 화면 로그인 확인
-2. 외부 백업 위치 결정, Lab DB·Jenkins·K3s 설정의 백업과 복원 검증
+2. 확보한 외부 백업의 추가 물리 장치 사본과 K3s·Jenkins archive 전체 복원 검토
 3. Jenkins 이미지 게시·GitOps PR 연계와 실제 실패 차단·이전 digest 복구 검증
 4. 허용 필드만 수집하는 Jenkins·Argo CD collector 연결
 5. 기존 프록시·DDNS·TLS 조건을 확인한 뒤 공개 읽기 API와 외부망 검증
 6. Kafka·S3 및 AI 개선 재현을 진행 목록 순서대로 추가
 
-기존 서비스가 있으므로 재부팅·방화벽 변경·프록시 교체를 일괄 실행하지 않습니다. 같은 서버의 설정 백업은 외부 데이터 백업이나 복원 검증을 대신하지 않습니다. PV의 Delete 정책 때문에 PVC·namespace를 수동 삭제하면 데이터가 지워질 수 있습니다.
+기존 서비스가 있으므로 재부팅·방화벽 변경·프록시 교체를 일괄 실행하지 않습니다. Windows 외부 사본의 무결성, 격리 DB 복원과 호스트 재부팅을 검증했습니다. K3s·Jenkins archive 전체 복원은 아직 별도 작업입니다. PV의 Delete 정책 때문에 PVC·namespace를 수동 삭제하면 데이터가 지워질 수 있습니다.
 
 ## 관련 자료
 
