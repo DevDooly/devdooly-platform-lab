@@ -10,10 +10,10 @@ const skills = [
   { index: '03', title: 'Delivery & Operation', description: 'Jenkins CI와 Argo CD 기반 CD를 구성·수정하며, Kubernetes·MinIO 운영과 Helm 차트 작성 및 배포를 담당합니다.', tags: ['Kubernetes', 'Helm', 'GitOps'] },
 ];
 const steps = [
-  { number: '00', title: '환경과 데이터 먼저 확인', text: '기존 Ubuntu 서비스와 데이터를 보존하며 설치 범위와 백업 경로를 정합니다.', state: '진행 중', tone: 'active' },
+  { number: '00', title: '환경과 데이터 먼저 확인', text: '기존 서비스와 포트·데이터 경로를 점검하고 별도 Lab의 설치 범위를 정했습니다.', state: '점검 완료', tone: 'active' },
   { number: '01', title: '작은 API와 조회 화면', text: '고정 seed 합성 데이터, Spring Boot 조회 API와 Astro·React 화면을 연결합니다.', state: 'MVP 구현', tone: 'active' },
-  { number: '02', title: '빌드부터 배포까지', text: 'Jenkins 테스트·이미지 빌드와 Argo CD·Helm 배포를 실제 기록으로 연결합니다.', state: '다음 단계', tone: '' },
-  { number: '03', title: '외부에서도 읽을 수 있게', text: 'HTTPS와 공개 요약, 정적 결과 보관으로 Lab이 꺼져도 설명을 남깁니다.', state: '예정', tone: '' },
+  { number: '02', title: '빌드부터 배포까지', text: 'Jenkins 테스트·패키징, Actions 이미지 게시, Argo CD·Helm 배포를 구분해 기록하며 CI 연계를 확장합니다.', state: '실제 배포', tone: 'active' },
+  { number: '03', title: '외부에서도 읽을 수 있게', text: '미니 PC의 관측 기록을 공개합니다. 실시간 API 연결과 공개 HTTPS 경로는 별도로 준비합니다.', state: '관측 기록 공개', tone: 'active' },
   { number: '04–06', title: '메시징과 데이터 플랫폼 확장', text: 'Kafka·객체 저장소, AI 개선 사례와 Iceberg·Spark·Trino를 순서대로 검증합니다.', state: '예정', tone: '' },
 ];
 ---
