@@ -1,0 +1,100 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: network-smoke
+  namespace: platform-lab-netcheck
+  labels:
+    app.kubernetes.io/name: platform-lab-network-smoke
+spec:
+  restartPolicy: Never
+  activeDeadlineSeconds: 180
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: smoke
+      image: node:24.19.0-alpine@sha256:d32cdf619f63fe0471182d08996dd516c6275bb5fd31ae06e55a570bd9e1ad43
+      imagePullPolicy: IfNotPresent
+      command: [node, --eval]
+      args:
+        - |
+          const https = require('node:https');
+          const dns = require('node:dns').promises;
+          const fs = require('node:fs');
+          const results = [];
+          async function check(name, action) {
+            try {
+              const value = await action();
+              results.push({check:name,status:'PASSED',...value});
+            } catch (error) {
+              results.push({check:name,status:'FAILED',code:error.code || 'CHECK_FAILED'});
+            }
+          }
+          function lookup(name) {
+            return Promise.race([
+              dns.resolve4(name).then(values => ({answers:values.length})),
+              new Promise((_,reject) => setTimeout(() => reject(
+                Object.assign(new Error('DNS timeout'),{code:'DNS_TIMEOUT'})),7000))
+            ]);
+          }
+          function get(url, ca) {
+            return new Promise((resolve,reject) => {
+              const request=https.get(url,{...(ca ? {ca}:{}),timeout:10000},response => {
+                response.resume();
+                resolve({httpStatus:response.statusCode,tlsVerified:true});
+              });
+              request.on('timeout',() => request.destroy(
+                Object.assign(new Error('HTTPS timeout'),{code:'HTTPS_TIMEOUT'})));
+              request.on('error',reject);
+            });
+          }
+          (async () => {
+            const ca=fs.readFileSync('/var/run/lab-ca/ca.crt');
+            const api='https://'+process.env.KUBERNETES_SERVICE_HOST+':'+
+              process.env.KUBERNETES_SERVICE_PORT_HTTPS+'/readyz';
+            await check('API_SERVICE_TLS_NO_DNS',() => get(api,ca));
+            await check('CLUSTER_DNS',() => lookup('kubernetes.default.svc.cluster.local'));
+            await check('EXTERNAL_DNS',() => lookup('github.com'));
+            await check('EXTERNAL_HTTPS',() => get('https://github.com/'));
+            console.log(JSON.stringify({scope:'ON_CLUSTER_NETWORK_SMOKE',results}));
+            process.exit(results.every(result => result.status==='PASSED') ? 0 : 1);
+          })().catch(error => {
+            console.log(JSON.stringify({scope:'ON_CLUSTER_NETWORK_SMOKE',status:'FAILED',
+              code:error.code || 'SETUP_FAILED'}));
+            process.exit(1);
+          });
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: [ALL]
+      resources:
+        requests:
+          cpu: 25m
+          memory: 32Mi
+          ephemeral-storage: 16Mi
+        limits:
+          cpu: 500m
+          memory: 128Mi
+          ephemeral-storage: 64Mi
+      volumeMounts:
+        - name: ca
+          mountPath: /var/run/lab-ca
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+  volumes:
+    - name: ca
+      configMap:
+        name: kube-root-ca.crt
+        items:
+          - key: ca.crt
+            path: ca.crt
+    - name: tmp
+      emptyDir:
+        sizeLimit: 16Mi

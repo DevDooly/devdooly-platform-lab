@@ -3,7 +3,19 @@
   "k3s": {
     "version": "v1.36.5+k3s1",
     "channel": "stable",
-    "source": "https://raw.githubusercontent.com/k3s-io/k3s/main/channel.yaml"
+    "source": "https://raw.githubusercontent.com/k3s-io/k3s/main/channel.yaml",
+    "linuxAmd64": {
+      "url": "https://github.com/k3s-io/k3s/releases/download/v1.36.5%2Bk3s1/k3s",
+      "sha256": "d73847bcd3c5fccef0115b372e2f9a91f3032dc84bbf71518a4617565294d313"
+    },
+    "checksumListAmd64": {
+      "url": "https://github.com/k3s-io/k3s/releases/download/v1.36.5%2Bk3s1/sha256sum-amd64.txt",
+      "sha256": "ee5fa48dfc2f3d3e521170bfb52c5dd44365ac734c23857a664c27109ae2ce9a"
+    },
+    "installer": {
+      "url": "https://raw.githubusercontent.com/k3s-io/k3s/v1.36.5%2Bk3s1/install.sh",
+      "sha256": "46177d4c99440b4c0311b67233823a8e8a2fc09693f6c89af1a7161e152fbfad"
+    }
   },
   "helm": {
     "version": "v4.3.0",
