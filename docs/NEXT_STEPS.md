@@ -12,7 +12,7 @@ Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접
 | --- | --- | --- |
 | Java API | 테스트 15개, MariaDB 저장, 합성 입력 12건 검증 | 메시지 수신과 재처리 |
 | 포트폴리오 | 웹 테스트 13개, Pages 게시, 미니 PC 관측 기록 표시 | 플랫폼 요약과 관측 시각 자동 갱신 |
-| Jenkins | Kubernetes agent에서 테스트·패키징, 산출물과 소스 SHA 확인 | 이미지 게시·GitOps PR·실패 차단 |
+| Jenkins | Kubernetes agent에서 테스트·패키징, 산출물과 소스 SHA 확인 | 전용 status 권한 등록·게시 gate·실패 차단 |
 | Argo CD와 Helm | 미니 PC의 API·웹·DB 배포, Synced·Healthy 확인 | 이전 digest로 복구하는 실제 훈련 |
 | 운영 | 외부 암호화 백업·격리 DB 복원·호스트 재부팅, 사용자 kubectl 복구 | 초기 비밀번호 교체, 추가 장치 사본·전체 archive 복원 |
 
@@ -49,7 +49,7 @@ Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접
 
 ## 2 CI/CD 연결
 
-목표 흐름은 `Jenkins 테스트 → 이미지 게시 → digest 기록 → GitOps 변경 PR → Argo CD 배포`입니다. 현재 동작하는 Actions 게시 경로를 기준으로 비교하고, Jenkins 게시 경로를 검증한 뒤 게시 주체를 하나로 정합니다. Actions의 PR 검증은 계속 활용할 수 있습니다.
+목표 흐름은 `Jenkins 테스트 + Actions 통합 검증 → Actions 이미지 게시 → digest 기록 → GitOps 변경 PR → Argo CD 배포`입니다. [ADR 0004](adr/0004-jenkins-gated-actions-publication.md)에 따라 Actions를 단일 게시자로 유지하고 동일 소스 SHA의 Jenkins 성공을 추가 조건으로 연결합니다. 현재는 전용 credential 등록 전의 초안입니다. [등록·검증 순서](runbooks/cicd-publication.md)와 [준비 검증](evidence/cicd-gate/README.md)을 구분합니다.
 
 - [ ] 호스트 Docker socket을 공유하지 않는 이미지 빌드 방식을 검토하고 agent의 실행 권한·캐시·자원 한도를 기록합니다.
 - [ ] 게시와 PR 생성 권한을 필요한 저장소·패키지 범위로 제한하고, 만료·회전·로그 마스킹을 점검합니다.
@@ -125,7 +125,7 @@ CKA 학습은 Lab과 연결합니다. context·RBAC·Service와 DNS·probe·requ
 ## 바로 다음 작업
 
 1. 외부 백업·격리 DB 복원·호스트 재부팅 검증을 완료했습니다. 초기 관리자 비밀번호 교체는 별도로 남아 있습니다.
-2. Jenkins 게시 방식과 권한을 설계한 뒤 실패 차단·digest 복구를 검증합니다.
+2. 준비한 Jenkins status credential을 등록한 뒤 게시 gate·실제 실패 차단·이전 digest 복구를 검증합니다.
 3. 공개 상태 수집의 허용 필드와 오래된 기록 표시를 구현합니다.
 4. AI 개선 예제의 작은 실패 테스트를 준비해 후속 개인 사례로 연결합니다.
 
