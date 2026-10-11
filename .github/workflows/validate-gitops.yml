@@ -1,0 +1,39 @@
+name: Validate GitOps change scope
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - gitops/environments/home-lab/values.yaml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gitops-change-scope-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  validate-scope:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout trusted validation tools from the PR base
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
+      - name: Read public PR files and enforce image-only changes
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 infra/scripts/validate_gitops_pr.py \
+            --number "$PR_NUMBER" --base "$PR_BASE_SHA" --head "$PR_HEAD_SHA" \
+            --repository "$GITHUB_REPOSITORY"
+
+      - name: State the verification boundary
+        run: |
+          printf '%s\n' 'Only the PR file scope and supported values were validated. Registry image content, Helm rendering, and deployment still require separate verification.' >> "$GITHUB_STEP_SUMMARY"

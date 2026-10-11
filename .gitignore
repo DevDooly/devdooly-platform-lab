@@ -48,3 +48,7 @@ Desktop.ini
 *.log
 /tmp/
 /artifacts/
+
+# Python generated files
+__pycache__/
+*.py[cod]

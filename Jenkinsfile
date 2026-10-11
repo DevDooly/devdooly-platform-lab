@@ -10,16 +10,22 @@ pipeline {
     options {
         skipDefaultCheckout(true)
         disableConcurrentBuilds()
+        skipStagesAfterUnstable()
         timeout(time: 30, unit: 'MINUTES')
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '5'))
         timestamps()
     }
+    // Poll the public main branch; no public Jenkins endpoint/webhook is needed.
+    triggers { pollSCM('H/5 * * * *') }
     environment {
         HOME = '/home/jenkins'
         MAVEN_USER_HOME = '/home/jenkins/.m2'
         NPM_CONFIG_CACHE = '/home/jenkins/.cache/npm'
         XDG_CACHE_HOME = '/home/jenkins/.cache'
         ASTRO_TELEMETRY_DISABLED = '1'
+        // Dedicated secret text: this repository's Commit statuses: write only.
+        // Do not replace it with a developer's existing CLI/OAuth/registry token.
+        GITHUB_STATUS_CREDENTIAL_ID = 'platform-lab-github-status'
     }
     stages {
         stage('Checkout') {
@@ -30,7 +36,24 @@ pipeline {
                     if (!(sourceCommit ==~ /[0-9a-f]{40}/)) {
                         error('SCM checkout did not return a valid commit SHA')
                     }
+                    if (!(scmVars.GIT_BRANCH in ['origin/main', 'main', 'refs/heads/main', 'refs/remotes/origin/main'])) {
+                        error('The credentialed publication CI job is restricted to main')
+                    }
+                    env.SOURCE_COMMIT = sourceCommit
                     writeFile file: 'ci-build-info.txt', text: "sourceCommit=${sourceCommit}\nbuildNumber=${env.BUILD_NUMBER}\n"
+                }
+            }
+        }
+        stage('Record pending CI') {
+            steps {
+                container('node') {
+                    withCredentials([string(credentialsId: env.GITHUB_STATUS_CREDENTIAL_ID, variable: 'GITHUB_STATUS_TOKEN')]) {
+                        sh label: 'Record pending status for the exact checked-out commit', script: '''#!/bin/sh
+set -eu
+set +x
+CI_STATUS=pending CI_STATUS_OUTPUT=artifacts/jenkins/status-pending.json node infra/scripts/github-commit-status.mjs
+'''
+                    }
                 }
             }
         }
@@ -69,13 +92,58 @@ npm test
 npm run build
 '''
                     }
+                    sh label: 'Status client negative tests without credentials', script: 'node --test tests/ci/github-commit-status.test.mjs'
+                }
+            }
+        }
+        stage('Archive verified CI') {
+            steps {
+                container('node') {
+                    sh label: 'Require the API jar, web entry point and exact source metadata', script: '''#!/bin/sh
+set -eu
+set -- apps/api/target/platform-lab-api-*.jar
+test "$#" -eq 1
+test -s "$1"
+test -s apps/lab-web/dist/index.html
+test -s ci-build-info.txt
+test -s artifacts/jenkins/status-pending.json
+'''
+                }
+                archiveArtifacts artifacts: 'apps/api/target/platform-lab-api-*.jar,apps/lab-web/dist/**,ci-build-info.txt,artifacts/jenkins/status-pending.json', allowEmptyArchive: false, fingerprint: true
+            }
+        }
+        stage('Record success CI') {
+            steps {
+                container('node') {
+                    // Bind only after tests and the required artifacts succeeded.
+                    withCredentials([string(credentialsId: env.GITHUB_STATUS_CREDENTIAL_ID, variable: 'GITHUB_STATUS_TOKEN')]) {
+                        sh label: 'Confirm tests and artifacts for the exact source SHA', script: '''#!/bin/sh
+set -eu
+set +x
+CI_STATUS=success node infra/scripts/github-commit-status.mjs
+'''
+                    }
                 }
             }
         }
     }
     post {
-        success {
-            archiveArtifacts artifacts: 'apps/api/target/platform-lab-api-*.jar,apps/lab-web/dist/**,ci-build-info.txt', allowEmptyArchive: false, fingerprint: true
+        unsuccessful {
+            script {
+                if (env.SOURCE_COMMIT) {
+                    container('node') {
+                        withCredentials([string(credentialsId: env.GITHUB_STATUS_CREDENTIAL_ID, variable: 'GITHUB_STATUS_TOKEN')]) {
+                            withEnv(["CI_STATUS=${currentBuild.currentResult == 'ABORTED' ? 'error' : 'failure'}"]) {
+                                sh label: 'Record unsuccessful CI; never publish', script: '''#!/bin/sh
+set -eu
+set +x
+node infra/scripts/github-commit-status.mjs
+'''
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
