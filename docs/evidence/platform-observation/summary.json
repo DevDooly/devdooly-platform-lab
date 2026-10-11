@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "scope": "ACTUAL_MINI_PC_READ_ONLY_PLATFORM_COLLECTION",
+  "phase3Status": "COLLECTION_VERIFIED_PUBLICATION_PENDING",
+  "finalVerifiedCollection": {
+    "capturedAt": "2026-10-11T15:27:44.173356Z",
+    "mainCommit": "e823cb793308e79ea5b7b5a17af2d554b4091275",
+    "jenkins": {
+      "sourceCommit": "e823cb793308e79ea5b7b5a17af2d554b4091275",
+      "buildNumber": 10,
+      "statusId": 56090140506,
+      "state": "success",
+      "createdAt": "2026-10-11T15:19:36Z",
+      "issuer": "DevDooly"
+    },
+    "argo": {
+      "revision": "e823cb793308e79ea5b7b5a17af2d554b4091275",
+      "sync": "Synced",
+      "health": "Healthy"
+    },
+    "deploymentSourceCommit": "820d5c398af2b1d62a0566f9184d015ab22e9f15",
+    "workloads": [
+      {
+        "component": "api",
+        "desired": 1,
+        "ready": 1,
+        "image": "ghcr.io/devdooly/devdooly-platform-lab-api@sha256:1c114976aeb32e3fa1c2dda84a0a27db0b390c38a6bb59e8c5ada771c340bcf4"
+      },
+      {
+        "component": "web",
+        "desired": 1,
+        "ready": 1,
+        "image": "ghcr.io/devdooly/devdooly-platform-lab-web@sha256:e389ce9083b07c8b8fdeac334b13c1f1af9a0066fd541f46e7db78b5651b855a"
+      },
+      { "component": "database", "desired": 1, "ready": 1 }
+    ],
+    "sourceScope": "DEPLOYMENT_TEMPLATE_ANNOTATION",
+    "imageScope": "DEPLOYMENT_TEMPLATE_DECLARED_DIGEST",
+    "readinessScope": "ACTUAL_NON_TERMINATING_RUNNING_READY_PODS_WITH_ALL_CONTAINERS_READY"
+  },
+  "actualChecks": {
+    "readOnlyServiceAccountCollection": true,
+    "outputFileMode": "0600",
+    "authenticationFailurePreservedEntireLastSuccess": true,
+    "authenticationFailurePreservedCapturedAt": true,
+    "recoveredAfterAuthenticationFailure": true,
+    "authenticationFailureSequence": {
+      "firstSuccessCapturedAt": "2026-10-11T15:27:43.555475Z",
+      "failureAttemptedAt": "2026-10-11T15:27:43.705672Z",
+      "failurePreservedCapturedAt": "2026-10-11T15:27:43.555475Z",
+      "recoveredCapturedAt": "2026-10-11T15:27:44.173356Z"
+    },
+    "allowed": [
+      "NAMED_API_WEB_DEPLOYMENTS_GET",
+      "NAMED_DATABASE_STATEFULSET_GET",
+      "LAB_NAMESPACE_PODS_LIST",
+      "NAMED_ARGO_APPLICATION_GET"
+    ],
+    "denied": [
+      "SECRETS_GET_LIST",
+      "POD_LOGS_EXEC",
+      "NODES_READ",
+      "DEPLOYMENT_PATCH",
+      "OTHER_NAMESPACE_PODS_LIST",
+      "UNRELATED_ARGO_APPLICATION_GET"
+    ]
+  },
+  "localValidation": {
+    "webTestsPassed": 26,
+    "webTestsAddedForPlatformObservation": 13,
+    "astroCheck": { "errors": 0, "warnings": 0, "hints": 0 },
+    "pagesBaseBuildPassed": true,
+    "collectorWindowsOfflineTests": { "run": 41, "passed": 40, "failed": 0, "errors": 0, "posixModeTestSkipped": 1 },
+    "collectorUbuntuIsolatedTests": { "run": 41, "passed": 41, "failed": 0, "errors": 0, "skipped": 0, "posix0600TestPassed": true },
+    "staleAndBrowserFetchFailureScope": "OFFLINE_UI_TESTS_ONLY"
+  },
+  "boundaries": {
+    "newPlatformSnapshotPublishedToPages": false,
+    "newPlatformCardPublicBrowserVerified": false,
+    "scheduledCollectionActivated": false,
+    "actualLabStopScenarioExecuted": false,
+    "newInboundExposureConfigured": false,
+    "livePublicReadApiConnected": false,
+    "existingRuntimeNotConfiguredValuesChanged": false,
+    "containerRuntimeImageIdVerifiedByThisCollector": false,
+    "currentJvmSourceQueriedByThisCollector": false
+  },
+  "pending": [
+    "OUTBOUND_PAGES_DISPATCH",
+    "PUBLIC_BROWSER_QA",
+    "SCHEDULED_COLLECTION_AND_CREDENTIAL_ROTATION",
+    "ACTUAL_LAB_STOP_PRESERVATION_CHECK",
+    "OPTIONAL_LIVE_READ_API_AND_EXTERNAL_HTTPS"
+  ]
+}

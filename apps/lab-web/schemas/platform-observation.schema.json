@@ -1,0 +1,370 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Public platform observation v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "latestAttempt",
+    "lastSuccess"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "kind": {
+      "const": "platform-observation"
+    },
+    "latestAttempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attemptedAt",
+        "status",
+        "errorCode"
+      ],
+      "properties": {
+        "attemptedAt": {
+          "$ref": "#/$defs/utc"
+        },
+        "status": {
+          "enum": [
+            "success",
+            "failure"
+          ]
+        },
+        "errorCode": {
+          "enum": [
+            "NONE",
+            "GITHUB_STATUS_UNAVAILABLE",
+            "ARGO_UNAVAILABLE",
+            "WORKLOADS_UNAVAILABLE",
+            "AUTHENTICATION_FAILED",
+            "TIMEOUT",
+            "INVALID_OBSERVATION",
+            "COLLECTION_FAILED"
+          ]
+        }
+      }
+    },
+    "lastSuccess": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/success"
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "latestAttempt": {
+            "properties": {
+              "status": {
+                "const": "success"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "latestAttempt": {
+            "properties": {
+              "errorCode": {
+                "const": "NONE"
+              }
+            }
+          },
+          "lastSuccess": {
+            "$ref": "#/$defs/success"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "latestAttempt": {
+            "properties": {
+              "errorCode": {
+                "enum": [
+                  "GITHUB_STATUS_UNAVAILABLE",
+                  "ARGO_UNAVAILABLE",
+                  "WORKLOADS_UNAVAILABLE",
+                  "AUTHENTICATION_FAILED",
+                  "TIMEOUT",
+                  "INVALID_OBSERVATION",
+                  "COLLECTION_FAILED"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "utc": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?!0000)\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d{1,9})?Z$"
+    },
+    "sha": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "jenkins": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceCommit",
+        "statusId",
+        "state",
+        "createdAt",
+        "buildNumber",
+        "issuer"
+      ],
+      "properties": {
+        "sourceCommit": {
+          "$ref": "#/$defs/sha"
+        },
+        "statusId": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "state": {
+          "enum": [
+            "pending",
+            "success",
+            "failure",
+            "error"
+          ]
+        },
+        "createdAt": {
+          "$ref": "#/$defs/utc"
+        },
+        "buildNumber": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "issuer": {
+          "const": "DevDooly"
+        }
+      }
+    },
+    "argo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "sync",
+        "health"
+      ],
+      "properties": {
+        "revision": {
+          "$ref": "#/$defs/sha"
+        },
+        "sync": {
+          "enum": [
+            "Synced",
+            "OutOfSync",
+            "Unknown"
+          ]
+        },
+        "health": {
+          "enum": [
+            "Healthy",
+            "Progressing",
+            "Degraded",
+            "Suspended",
+            "Missing",
+            "Unknown"
+          ]
+        }
+      }
+    },
+    "api": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "component",
+        "desired",
+        "ready",
+        "image"
+      ],
+      "properties": {
+        "component": {
+          "const": "api"
+        },
+        "desired": {
+          "$ref": "#/$defs/count"
+        },
+        "ready": {
+          "$ref": "#/$defs/count"
+        },
+        "image": {
+          "type": "string",
+          "pattern": "^ghcr\\.io/devdooly/devdooly-platform-lab-api@sha256:[a-f0-9]{64}$"
+        }
+      }
+    },
+    "web": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "component",
+        "desired",
+        "ready",
+        "image"
+      ],
+      "properties": {
+        "component": {
+          "const": "web"
+        },
+        "desired": {
+          "$ref": "#/$defs/count"
+        },
+        "ready": {
+          "$ref": "#/$defs/count"
+        },
+        "image": {
+          "type": "string",
+          "pattern": "^ghcr\\.io/devdooly/devdooly-platform-lab-web@sha256:[a-f0-9]{64}$"
+        }
+      }
+    },
+    "database": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "component",
+        "desired",
+        "ready"
+      ],
+      "properties": {
+        "component": {
+          "const": "database"
+        },
+        "desired": {
+          "$ref": "#/$defs/count"
+        },
+        "ready": {
+          "$ref": "#/$defs/count"
+        }
+      }
+    },
+    "success": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capturedAt",
+        "collectorVersion",
+        "mainCommit",
+        "jenkins",
+        "argo",
+        "workloads",
+        "deploymentSourceCommit"
+      ],
+      "properties": {
+        "capturedAt": {
+          "$ref": "#/$defs/utc"
+        },
+        "collectorVersion": {
+          "const": "1"
+        },
+        "mainCommit": {
+          "$ref": "#/$defs/sha"
+        },
+        "jenkins": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/jenkins"
+            }
+          ]
+        },
+        "argo": {
+          "$ref": "#/$defs/argo"
+        },
+        "deploymentSourceCommit": {
+          "$ref": "#/$defs/sha"
+        },
+        "workloads": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/api"
+              },
+              {
+                "$ref": "#/$defs/web"
+              },
+              {
+                "$ref": "#/$defs/database"
+              }
+            ]
+          },
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "component": {
+                    "const": "api"
+                  }
+                },
+                "required": [
+                  "component"
+                ]
+              },
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "component": {
+                    "const": "web"
+                  }
+                },
+                "required": [
+                  "component"
+                ]
+              },
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "component": {
+                    "const": "database"
+                  }
+                },
+                "required": [
+                  "component"
+                ]
+              },
+              "minContains": 1,
+              "maxContains": 1
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -56,20 +56,27 @@
 
 완료 조건: 소스 commit부터 image digest, GitOps commit, 실행 버전까지 추적되고 실패·복구 결과가 남습니다.
 
-정상 A → B 배포, 실제 main의 실패 차단, GitOps A 복구를 확인했습니다. 2단계의 세 운영 시나리오를 완료했고 다음은 3단계 관측 공개입니다. token의 실제 만료·회전, 동시 요청 실험과 K3s·Jenkins archive 전체 복원은 별도 운영 후속으로 남깁니다.
+정상 A → B 배포, 실제 main의 실패 차단, GitOps A 복구를 확인했습니다. 2단계의 세 운영 시나리오를 완료했고 3단계 관측 공개를 진행합니다. token의 실제 만료·회전, 동시 요청 실험과 K3s·Jenkins archive 전체 복원은 별도 운영 후속으로 남깁니다.
 
 ## 3 외부 공개
 
 - [x] 관리 도구의 SSH 인증 접속과 localhost 화면 응답 검증 ([접속 안내](runbooks/admin-access.md))
 - [ ] 미니 PC 공개 Lab의 HTTPS 경로와 실시간 API 연결
-- [ ] 공개 요약 collector와 허용 필드만 반환하는 API 구현
+- [x] 공개 플랫폼 관측의 strict allowlist 계약·validator와 읽기 전용 collector 구현: [계약](../apps/lab-web/PLATFORM_OBSERVATION.md)
+- [x] 전용 ServiceAccount로 지정 Deployment·DB StatefulSet·Pod 준비 상태·Argo와 main의 Jenkins status 실제 수집: [근거](evidence/platform-observation/README.md)
+- [x] 실제 읽기 권한 허용·거부, 출력 0600, 인증 실패 때 마지막 성공 전체·시각 유지 및 회복 확인: [근거](evidence/platform-observation/summary.json)
+- [x] collector 실패·브라우저 조회 실패·2시간 초과·출처 차이를 구분하는 UI 로컬 검증: 전체 26개 테스트·타입 검사·Pages 경로 빌드
+- [ ] 허용 JSON의 outbound Pages 게시와 새 플랫폼 카드 공개 브라우저 확인
+- [ ] 정기 수집·credential 회전·반복 게시 운영 검증
+- [ ] 실제 Lab 중단 후 공개 홈·마지막 기록 보존 검증
+- [ ] 공개 읽기 API 구현과 실시간 연결
 - [ ] 휴대폰 외부망에서 TLS·화면·API와 관리 접근 제한 확인
 - [x] 검토한 실제 앱 관측 snapshot을 Pages 소스에 등록: [근거](evidence/mini-pc/README.md)
 - [x] Lab 연결 실패와 합성 샘플을 표시하고 미관측 시각을 구분
 - [x] 실제 관측 snapshot·수집 시각·source SHA 표시 구현과 관측 계약 검증
-- [ ] Jenkins·Argo CD의 실시간 요약 collector와 배포 이력 연결
+- [ ] 필요한 항목에 한해 Jenkins·Argo CD 실시간 요약과 배포 이력 연결
 
-완료 조건: 방문자가 합성 데이터 결과와 배포 요약을 볼 수 있고, Lab 중단 때도 공개 홈의 프로젝트와 이전 결과를 읽을 수 있습니다. 첫 공개 목표는 여기까지입니다.
+완료 조건: 방문자가 합성 데이터 결과와 배포 요약을 볼 수 있고, Lab 중단 때도 공개 홈의 프로젝트와 이전 결과를 읽을 수 있습니다. 첫 공개 목표는 여기까지입니다. 현재 실제 수집·인증 실패·회복을 검증했으며, 새 플랫폼 기록의 공개 게시·브라우저 확인·정기 실행과 실제 Lab 중단은 아직 완료하지 않았습니다. 실시간 공개 API와 새로운 inbound 경로도 연결하지 않았습니다.
 
 ## 4 Kafka와 객체 저장소
 

@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "kind": "platform-observation",
+  "latestAttempt": {
+    "attemptedAt": "2026-10-11T15:27:44.173356Z",
+    "status": "success",
+    "errorCode": "NONE"
+  },
+  "lastSuccess": {
+    "capturedAt": "2026-10-11T15:27:44.173356Z",
+    "collectorVersion": "1",
+    "mainCommit": "e823cb793308e79ea5b7b5a17af2d554b4091275",
+    "jenkins": {
+      "sourceCommit": "e823cb793308e79ea5b7b5a17af2d554b4091275",
+      "statusId": 56090140506,
+      "state": "success",
+      "createdAt": "2026-10-11T15:19:36Z",
+      "buildNumber": 10,
+      "issuer": "DevDooly"
+    },
+    "argo": {
+      "revision": "e823cb793308e79ea5b7b5a17af2d554b4091275",
+      "sync": "Synced",
+      "health": "Healthy"
+    },
+    "workloads": [
+      {
+        "component": "api",
+        "desired": 1,
+        "ready": 1,
+        "image": "ghcr.io/devdooly/devdooly-platform-lab-api@sha256:1c114976aeb32e3fa1c2dda84a0a27db0b390c38a6bb59e8c5ada771c340bcf4"
+      },
+      {
+        "component": "web",
+        "desired": 1,
+        "ready": 1,
+        "image": "ghcr.io/devdooly/devdooly-platform-lab-web@sha256:e389ce9083b07c8b8fdeac334b13c1f1af9a0066fd541f46e7db78b5651b855a"
+      },
+      {
+        "component": "database",
+        "desired": 1,
+        "ready": 1
+      }
+    ],
+    "deploymentSourceCommit": "820d5c398af2b1d62a0566f9184d015ab22e9f15"
+  }
+}
