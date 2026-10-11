@@ -65,7 +65,9 @@ Windows 브라우저의 `https://127.0.0.1:18443` 인증서 정보에서 같은 
 - `ExitOnForwardFailure=yes`는 로컬 포트 바인딩 실패를 잡지만, 원격 Service의 실제 응답을 보장하지 않습니다. 화면이 열리지 않으면 Pod readiness와 서버에서 ClusterIP로의 연결을 따로 확인합니다.
 - Service가 재생성되어 ClusterIP가 바뀌면 터널을 종료하고 도우미를 다시 실행해 현재 주소를 조회합니다. 기존 프록시·Docker·UFW를 우선 재시작하거나 변경하지 않습니다.
 
-이 도우미의 로컬 검증은 PowerShell 구문과 입력·Service 응답 검증입니다. 실제 SSH 터널·브라우저 로그인 성공은 해당 서버에서 별도로 확인해 기록해야 합니다. 관리 도구 설치와 실제 CI·CD 실행 결과도 각각 구분합니다.
+2026-10-11에 비공개 실행 파일로 실제 SSH 터널을 열어 Jenkins `/login`의 HTTP 200과 로그인 폼을 확인했습니다. Argo CD는 인증된 SSH 경로에서 `argocd/argocd-secret`의 키 이름을 확인한 뒤 공개 `tls.crt`만 읽어, 터널의 인증서 SHA-256 지문과 유효기간을 대조했습니다. 지문은 일치했고 TLS 1.3으로 연결됐습니다. 전역 TLS 설정이나 브라우저 보안 설정을 변경하지 않았으며, 확인 후 생성한 터널 프로세스와 두 로컬 리스너를 모두 정리했습니다. 상세 측정은 Git에서 제외한 `.local/admin-access-validation.json`에 보관합니다.
+
+PowerShell 5.1 구문·입력·Service 응답 검증 48개도 통과했습니다. 실제 접속 확인 범위는 로그인 전 HTTP 응답과 인증서 대조까지이며, 비밀번호 조회·로그인과 CI·CD 실행 결과는 별도 검증으로 구분합니다.
 
 관련 문서: [플랫폼 설치](platform-install.md), [Jenkins CI](jenkins-ci.md), [앱 배포](app-helm.md).
 
