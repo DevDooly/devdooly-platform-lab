@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-11T11:56:19.981240Z",
+  "controllerVersion": "2.580.1",
+  "helmChartVersion": "5.9.68",
+  "declaredPinsSource": "infra/platform/jenkins-values.yaml",
+  "transitiveVersionsEnforcedByValues": false,
+  "officialPinVerification": {
+    "pipeline-model-definition": {
+      "version": "2.2293.v6e7193cec599",
+      "requiredCore": "2.504.3",
+      "url": "https://updates.jenkins.io/download/plugins/pipeline-model-definition/2.2293.v6e7193cec599/pipeline-model-definition.hpi",
+      "sha1": "0qBLsRBiToL4CNPvUlmuA0RsOkw=",
+      "releaseTimestamp": "2026-08-12T20:37:54.00Z",
+      "metadataSource": "https://plugins.jenkins.io/api/plugin/pipeline-model-definition",
+      "installedSha256": "9f4f62e0a13fefc9c5736a20ad5124af2a324357294fd8ea8d8f848b7c497f92",
+      "installedArchiveMatchesOfficialSha1": true
+    },
+    "pipeline-model-api": {
+      "version": "2.2293.v6e7193cec599",
+      "requiredCore": "2.504.3",
+      "url": "https://updates.jenkins.io/download/plugins/pipeline-model-api/2.2293.v6e7193cec599/pipeline-model-api.hpi",
+      "sha1": "tYM6Vvd/xAUfJULZzwScgl1WYwU=",
+      "releaseTimestamp": "2026-08-12T20:37:54.00Z",
+      "metadataSource": "https://plugins.jenkins.io/api/plugin/pipeline-model-api",
+      "installedSha256": "cdd72a69bf2863a1683b282febd0256d5d266111134c3803a8c4a051b6b4c133",
+      "installedArchiveMatchesOfficialSha1": true
+    },
+    "pipeline-model-extensions": {
+      "version": "2.2293.v6e7193cec599",
+      "requiredCore": "2.504.3",
+      "url": "https://updates.jenkins.io/download/plugins/pipeline-model-extensions/2.2293.v6e7193cec599/pipeline-model-extensions.hpi",
+      "sha1": "sYgf4gNH5QgWqG5TbV/vpQdSF10=",
+      "releaseTimestamp": "2026-08-12T20:37:54.00Z",
+      "metadataSource": "https://plugins.jenkins.io/api/plugin/pipeline-model-extensions",
+      "installedSha256": "00fbf0938ef13f6aedaa0900ec4cd03fcc986e34b1820bf13f761c2f29831861",
+      "installedArchiveMatchesOfficialSha1": true
+    },
+    "pipeline-stage-tags-metadata": {
+      "version": "2.2293.v6e7193cec599",
+      "requiredCore": "2.504.3",
+      "url": "https://updates.jenkins.io/download/plugins/pipeline-stage-tags-metadata/2.2293.v6e7193cec599/pipeline-stage-tags-metadata.hpi",
+      "sha1": "4y1S3Aua/dv2esUPl3TeGfRPAfs=",
+      "releaseTimestamp": "2026-08-12T20:37:53.00Z",
+      "metadataSource": "https://plugins.jenkins.io/api/plugin/pipeline-stage-tags-metadata",
+      "installedSha256": "032f011fc50cb273b300d44fb6c2800e3dbdf0d78548b15e0f192ba7cc95d178",
+      "installedArchiveMatchesOfficialSha1": true
+    },
+    "pipeline-rest-api": {
+      "version": "2.41",
+      "requiredCore": "2.479.1",
+      "url": "https://updates.jenkins.io/download/plugins/pipeline-rest-api/2.41/pipeline-rest-api.hpi",
+      "sha1": "ndaZqmbHClBUastwTuiNXpuioWU=",
+      "releaseTimestamp": "2026-04-18T22:54:11.00Z",
+      "metadataSource": "https://plugins.jenkins.io/api/plugin/pipeline-rest-api",
+      "installedSha256": "6e463affa43f4013c4b0865d4c0442abd738440c54c8bb0cd70f0c1164743159",
+      "installedArchiveMatchesOfficialSha1": true
+    }
+  },
+  "resolvedRelevantPlugins": {
+    "configuration-as-code": {
+      "version": "2133.ve570217cdb_cd",
+      "active": true,
+      "enabled": true
+    },
+    "git": {
+      "version": "5.10.1",
+      "active": true,
+      "enabled": true
+    },
+    "junit": {
+      "version": "1437.v12280a_c49b_50",
+      "active": true,
+      "enabled": true
+    },
+    "kubernetes": {
+      "version": "4557.ve746270f672f",
+      "active": true,
+      "enabled": true
+    },
+    "pipeline-groovy-lib": {
+      "version": "752.vdddedf804e72",
+      "active": true,
+      "enabled": true
+    },
+    "pipeline-model-api": {
+      "version": "2.2293.v6e7193cec599",
+      "active": true,
+      "enabled": true
+    },
+    "pipeline-model-definition": {
+      "version": "2.2293.v6e7193cec599",
+      "active": true,
+      "enabled": true
+    },
+    "pipeline-model-extensions": {
+      "version": "2.2293.v6e7193cec599",
+      "active": true,
+      "enabled": true
+    },
+    "pipeline-rest-api": {
+      "version": "2.41",
+      "active": true,
+      "enabled": true
+    },
+    "pipeline-stage-tags-metadata": {
+      "version": "2.2293.v6e7193cec599",
+      "active": true,
+      "enabled": true
+    },
+    "timestamper": {
+      "version": "1.30",
+      "active": true,
+      "enabled": true
+    },
+    "workflow-aggregator": {
+      "version": "608.v67378e9d3db_1",
+      "active": true,
+      "enabled": true
+    },
+    "workflow-basic-steps": {
+      "version": "1079.vce64b_a_929c5a_",
+      "active": true,
+      "enabled": true
+    },
+    "workflow-job": {
+      "version": "1546.v62a_c59c112dd",
+      "active": true,
+      "enabled": true
+    },
+    "workflow-multibranch": {
+      "version": "811.vcd33d074c2a_0",
+      "active": true,
+      "enabled": true
+    }
+  },
+  "note": "Relevant active dependency versions are an observed snapshot. Transitive dependencies were resolved by the official Jenkins plugin manager, not independently pinned in values."
+}

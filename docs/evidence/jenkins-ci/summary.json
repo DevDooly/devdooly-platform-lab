@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "scope": "ACTUAL_HOME_LAB_JENKINS_CI",
+  "observedAt": "2026-10-11T11:57:20.570559Z",
+  "jobName": "platform-lab-ci",
+  "controllerVersion": "2.580.1-jdk25",
+  "helmChartVersion": "5.9.68",
+  "latestVerifiedBuild": {
+    "number": 3,
+    "result": "SUCCESS",
+    "sourceCommit": "30b348c370050063a3f87c9bd00e7d2996102fbf",
+    "startedAt": "2026-10-11T11:54:36.554000Z",
+    "durationMillis": 91250,
+    "stages": [
+      {
+        "name": "Checkout",
+        "status": "SUCCESS",
+        "durationMillis": 11362
+      },
+      {
+        "name": "Verify API",
+        "status": "SUCCESS",
+        "durationMillis": 41348
+      },
+      {
+        "name": "Verify web",
+        "status": "SUCCESS",
+        "durationMillis": 18694
+      },
+      {
+        "name": "Declarative: Post Actions",
+        "status": "SUCCESS",
+        "durationMillis": 10188
+      }
+    ],
+    "apiTests": {
+      "report": "JUNIT",
+      "total": 15,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    "webTests": {
+      "report": "NODE_TEST_CONSOLE",
+      "total": 13,
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "artifactCount": 9,
+    "artifactPaths": [
+      "apps/api/target/platform-lab-api-0.1.0.jar",
+      "apps/lab-web/dist/_astro/client.EoSUrE1U.js",
+      "apps/lab-web/dist/_astro/index.DL84YyI7.css",
+      "apps/lab-web/dist/_astro/LabExplorer.D0o4yLX_.js",
+      "apps/lab-web/dist/_astro/react.DJY1zw8Z.js",
+      "apps/lab-web/dist/favicon.svg",
+      "apps/lab-web/dist/index.html",
+      "apps/lab-web/dist/robots.txt",
+      "ci-build-info.txt"
+    ],
+    "buildMetadata": {
+      "sourceCommit": "30b348c370050063a3f87c9bd00e7d2996102fbf",
+      "buildNumber": 3,
+      "matchesScmCommit": true
+    }
+  },
+  "priorBuilds": [
+    {
+      "number": 1,
+      "jenkinsResult": "SUCCESS",
+      "verificationResult": "NO_OP_NOT_CI_PASS",
+      "stagesAvailable": false,
+      "junitAvailable": false,
+      "artifactCount": 0,
+      "cause": "Declarative model plugin dependency version mismatch; pipeline stages did not execute."
+    },
+    {
+      "number": 2,
+      "jenkinsResult": "SUCCESS",
+      "verificationResult": "TESTS_PASSED_METADATA_INCOMPLETE",
+      "sourceCommit": "820d5c398af2b1d62a0566f9184d015ab22e9f15",
+      "apiTests": {
+        "report": "JUNIT",
+        "total": 15,
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0
+      },
+      "webTests": {
+        "report": "NODE_TEST_CONSOLE",
+        "total": 13,
+        "passed": 13,
+        "failed": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "artifactCount": 9,
+      "artifactSourceCommit": "unknown",
+      "cause": "SCM checkout returned a commit but env.GIT_COMMIT was unset; build 3 records the checkout return map."
+    }
+  ],
+  "agentObservation": {
+    "observedAt": "2026-10-11T11:56:19.954211Z",
+    "agents": [
+      {
+        "phase": "Running",
+        "containers": [
+          "jnlp",
+          "maven",
+          "node"
+        ],
+        "serviceAccount": "jenkins-build-agent",
+        "automountServiceAccountToken": false,
+        "runAsUser": 1000,
+        "runAsGroup": 1000,
+        "fsGroup": 1000,
+        "dockerSocketMounted": false,
+        "containerStates": [
+          {
+            "name": "jnlp",
+            "ready": true,
+            "restartCount": 0,
+            "waitingReason": null
+          },
+          {
+            "name": "maven",
+            "ready": true,
+            "restartCount": 0,
+            "waitingReason": null
+          },
+          {
+            "name": "node",
+            "ready": true,
+            "restartCount": 0,
+            "waitingReason": null
+          }
+        ]
+      }
+    ]
+  },
+  "controllerNumExecutors": 0,
+  "preservation": {
+    "pvcPreserved": true,
+    "adminCredentialsPreserved": true,
+    "scmDefinitionPreserved": true,
+    "backupRootOnly": true,
+    "backupIncludes": [
+      "helm user values",
+      "Helm manifest",
+      "job definition",
+      "quiesced full Jenkins home"
+    ],
+    "jobPropertiesAddedByPipeline": [
+      "jenkins.model.BuildDiscarderProperty"
+    ],
+    "propertiesRemoved": [],
+    "buildHistoryPreserved": [
+      3,
+      2,
+      1
+    ],
+    "initializeOnce": true,
+    "overwritePlugins": false
+  },
+  "verificationBoundaries": {
+    "imagePublicationByJenkins": false,
+    "deploymentByJenkins": false,
+    "forcedFailureScenarioExecuted": false,
+    "concurrentTriggerScenarioExecuted": false,
+    "jenkinsRestCollectorLinkedToDemoApi": false
+  }
+}
