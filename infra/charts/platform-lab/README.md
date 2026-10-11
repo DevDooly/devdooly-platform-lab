@@ -17,7 +17,7 @@ API/web 이미지 빌드와 MariaDB 통합 실행은 [Linux Compose CI](../../..
 | 공개 경로 | Ingress 지원 안 함, NodePort·LoadBalancer·hostPort 없음 |
 | 비밀번호 | 기존 Secret의 app-password·root-password key 참조만 함 |
 
-Nginx가 api:8080을 조회하므로 Service 이름은 api·web·db로 고정했습니다. **전용 namespace에 chart release 하나만** 설치해야 합니다. 기본 문서의 release는 lab, namespace는 platform-lab입니다. 기존 서비스·DB 경로를 재사용하지 않습니다.
+Service 이름은 api·web·db로 고정했습니다. chart는 Nginx의 `API_UPSTREAM_HOST`에 `api.<Release.Namespace>.svc.cluster.local`을 전달합니다. Nginx의 동적 resolver가 search 도메인을 확장하지 않으므로 Kubernetes에서는 전체 Service 이름을 사용하며, Compose의 기본 호스트 `api`와 구분합니다. **전용 namespace에 chart release 하나만** 설치해야 합니다. 기본 문서의 release는 lab, namespace는 platform-lab입니다. 기존 서비스·DB 경로를 재사용하지 않습니다.
 
 API/web은 읽기 전용 루트 파일 시스템, 제한된 /tmp emptyDir, RuntimeDefault, 권한 상승 금지와 capability 제거를 적용합니다. MariaDB는 공식 entrypoint가 자체 데이터 경로의 권한을 준비한 뒤 mysql 사용자로 전환하는 방식을 유지합니다. DB 초기 프로세스까지 nonroot라고 주장하지 않으며 이 설정 그대로는 Pod Security restricted 정책을 충족하지 않습니다.
 

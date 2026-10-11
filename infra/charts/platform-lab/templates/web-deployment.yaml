@@ -46,6 +46,9 @@ spec:
             readOnlyRootFilesystem: true
             capabilities:
               drop: [ALL]
+          env:
+            - name: API_UPSTREAM_HOST
+              value: {{ printf "api.%s.svc.cluster.local" .Release.Namespace | quote }}
           startupProbe:
             httpGet:
               path: /

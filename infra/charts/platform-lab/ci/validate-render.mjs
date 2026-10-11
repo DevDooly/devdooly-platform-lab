@@ -53,6 +53,18 @@ const component = name => workloads.find(doc => doc.metadata.labels['app.kuberne
 const api = component('api');
 const web = component('web');
 const db = component('database');
+const apiUpstreamHost = manifest => manifest.spec.template.spec.containers[0].env?.find(
+  item => item.name === 'API_UPSTREAM_HOST')?.value;
+check('Web dynamic DNS uses the fully-qualified API Service name for the release namespace',
+  apiUpstreamHost(web) === 'api.platform-lab.svc.cluster.local');
+const alternateNamespace = 'dns-regression-check';
+const alternateDocs = YAML.parseAllDocuments(success([
+  'template', 'lab', chart, '--namespace', alternateNamespace, ...common,
+])).map(document => document.toJSON()).filter(Boolean);
+check('Web API DNS follows a different release namespace without hardcoding platform-lab',
+  apiUpstreamHost(alternateDocs.find(document => document.kind === 'Deployment' &&
+    document.metadata.labels['app.kubernetes.io/component'] === 'web')) ===
+    `api.${alternateNamespace}.svc.cluster.local`);
 check('Seven resources: one service account, three Services, two Deployments and one StatefulSet',
   docs.length === 7 && workloads.length === 3 &&
   docs.filter(doc => doc.kind === 'Service').length === 3 &&

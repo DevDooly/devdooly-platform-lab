@@ -13,8 +13,10 @@
     "Deployment": 2,
     "StatefulSet": 1
   },
-  "policyChecksPassed": 15,
+  "policyChecksPassed": 17,
   "checks": [
+    "Web dynamic DNS uses the fully-qualified API Service name for the release namespace",
+    "Web API DNS follows a different release namespace without hardcoding platform-lab",
     "Seven resources: one service account, three Services, two Deployments and one StatefulSet",
     "No Secret, RBAC, ingress, gateway, cluster-scoped resources or standalone storage objects",
     "ClusterIP only, headless db identity, api:8080 Nginx and db:3306 JDBC",
@@ -40,7 +42,7 @@
     "public ingress enabled",
     "reuse another storage class"
   ],
-  "renderedFixtureSha256": "e57523938f86fb48cb1aa83c60eed0df500789ae57674617a562d9ffa6ad25bf",
+  "renderedFixtureSha256": "bdb5070d55a256fccd0e50252934cef1be16af357697f274188bb652e4f6f2ee",
   "appImagesPublished": false,
   "containerRuntimeVerified": false,
   "mariadbIntegrationVerified": false,

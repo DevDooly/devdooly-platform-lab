@@ -27,7 +27,7 @@ GitOps 환경 values에는 다음 항목의 **실제 값**을 설정합니다.
 
 DB 이름과 앱 계정은 platform_lab로 고정했습니다. chart는 DB 비밀번호 값을 받지 않고 Secret도 생성하지 않습니다. 앱용 Secret과 registry 인증은 배포 전에 별도 경로로 준비하되 값이나 토큰을 Git, 명령 기록, 검증 출력에 남기지 않습니다. 이미 DB가 초기화된 PVC에서는 초기 비밀번호 환경 변수로 계정을 다시 설정하지 않습니다.
 
-앱 이미지에 사용하는 Dockerfile은 infra/containers/api.Dockerfile과 web.Dockerfile입니다. 화면은 SITE_BASE 기본값 /로 빌드하는 컨테이너용 산출물입니다. GitHub Pages의 프로젝트 경로를 적용한 정적 산출물을 그대로 대신 넣지 않습니다. Nginx는 같은 namespace의 api:8080을 사용하며 /api/만 API에 전달합니다. Actuator는 공개 Nginx 경로에 연결하지 않습니다.
+앱 이미지에 사용하는 Dockerfile은 infra/containers/api.Dockerfile과 web.Dockerfile입니다. 화면은 SITE_BASE 기본값 /로 빌드하는 컨테이너용 산출물입니다. GitHub Pages의 프로젝트 경로를 적용한 정적 산출물을 그대로 대신 넣지 않습니다. chart는 Nginx의 `API_UPSTREAM_HOST`에 `api.<Release.Namespace>.svc.cluster.local`을 주입하며 `/api/`만 API의 8080 포트로 전달합니다. Nginx의 동적 DNS resolver는 `/etc/resolv.conf`의 search 도메인을 확장하지 않으므로 Kubernetes에서는 짧은 `api` 대신 이 전체 이름을 사용합니다. 컨테이너의 기본값 `api`는 Compose용이며, DNS 재조회와 `/tmp`의 설정 생성은 유지합니다. Actuator는 공개 Nginx 경로에 연결하지 않습니다.
 
 ## 클러스터 적용 전 검증
 
@@ -42,6 +42,7 @@ DB 이름과 앱 계정은 platform_lab로 고정했습니다. chart는 DB 비�
 
 - 앱 이미지의 digest가 실제 registry 산출물과 일치하고 fixture의 example.invalid가 없습니다.
 - api·web·db는 ClusterIP이며 Ingress·NodePort·hostPort가 없습니다.
+- web의 `API_UPSTREAM_HOST`는 실제 release namespace의 `api.<namespace>.svc.cluster.local`입니다. 정적 `/`의 정상 응답만으로 API proxy가 정상이라고 판단하지 않습니다.
 - Secret 값과 Secret 리소스를 생성하지 않고 기존 Secret 이름·key만 참조합니다.
 - DB claim은 신규 데이터 전용 local-path 10Gi이고 기존 데이터 경로를 가리키지 않습니다.
 - API는 단일 replica·Recreate, startup/liveness는 liveness health, readiness는 DB를 포함한 health입니다.
