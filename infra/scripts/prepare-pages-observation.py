@@ -138,11 +138,14 @@ def deployment_succeeded(get, metadata, attempt):
 
 
 def previous_snapshot(get, download, current_run, current_attempt, validate):
-    runs = [r for r in workflow_runs(get) if r.get('name') == 'Publish portfolio' and r.get('path') == '.github/workflows/pages.yml'
+    # GitHub's workflow-runs API returns the evaluated run-name in `name`
+    # as well as display_title. The workflow path and repository identify the
+    # publisher; accept its fixed versioned title for the matching event.
+    runs = [r for r in workflow_runs(get) if r.get('name') in RUN_TITLES | {'Publish portfolio'} and r.get('path') == '.github/workflows/pages.yml'
             and r.get('head_branch') == 'main' and r.get('event') in ('push', 'workflow_dispatch')
             and r.get('repository', {}).get('full_name', '').lower() == REPOSITORY.lower()
             and r.get('head_repository', {}).get('full_name', '').lower() == REPOSITORY.lower()
-            and r.get('display_title') in RUN_TITLES]
+            and r.get('display_title') == 'Portfolio snapshot v1 · ' + r.get('event', '')]
     attempts = []
     for run in runs:
         latest = run.get('run_attempt', 1)

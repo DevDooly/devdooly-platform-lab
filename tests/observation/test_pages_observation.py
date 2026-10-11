@@ -26,7 +26,7 @@ def archive(data, name='platform-observation.json'):
     return output.getvalue()
 
 def run(number, updated, attempt=1, conclusion='success'):
-    return {'id': number, 'name': 'Publish portfolio', 'path': '.github/workflows/pages.yml',
+    return {'id': number, 'name': 'Portfolio snapshot v1 · workflow_dispatch', 'path': '.github/workflows/pages.yml',
             'head_branch': 'main', 'event': 'workflow_dispatch', 'status': 'completed', 'conclusion': conclusion,
             'repository': {'full_name': module.REPOSITORY}, 'head_repository': {'full_name': module.REPOSITORY},
             'display_title': 'Portfolio snapshot v1 · workflow_dispatch', 'updated_at': updated,
@@ -103,6 +103,20 @@ class ArtifactTests(unittest.TestCase):
     def artifact(self, number, attempt=1):
         return {'id': 44, 'name': f'platform-observation-{number}-a{attempt}', 'expired': False,
                 'workflow_run': {'id': number}}
+
+    def test_live_api_run_name_retains_newer_snapshot_on_delayed_input(self):
+        metadata = run(1, '2026-01-01T00:00:09Z')
+        self.assertEqual(metadata['name'], metadata['display_title'])
+        value = record(9, 7, 'new')
+        get, download = self.setup_source([metadata], [self.artifact(1)], archive(value))
+        previous = module.previous_snapshot(get, download, 2, 1, lambda _: None)
+        self.assertEqual(module.merge_records(previous, record(2, 2)), value)
+
+    def test_mismatched_event_title_is_not_a_baseline(self):
+        other = run(1, '2026-01-01T00:00:09Z')
+        other['event'] = 'push'
+        get, download = self.setup_source([other])
+        self.assertIsNone(module.previous_snapshot(get, download, 2, 1, lambda _: None))
 
     def test_failed_rerun_recovers_previous_successful_attempt(self):
         failed = run(1, '2026-01-01T00:00:09Z', 2, 'failure')
