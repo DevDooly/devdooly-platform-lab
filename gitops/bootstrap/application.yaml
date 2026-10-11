@@ -5,17 +5,14 @@ metadata:
   namespace: argocd
 spec:
   project: platform-lab
-  sources:
-    - repoURL: https://github.com/DevDooly/devdooly-platform-lab.git
-      targetRevision: bbc8c6eb0bfa9cc8871e538ae0f63027d81e9e53
-      path: infra/charts/platform-lab
-      helm:
-        releaseName: lab
-        valueFiles:
-          - $values/gitops/environments/home-lab/values.yaml
-    - repoURL: https://github.com/DevDooly/devdooly-platform-lab.git
-      targetRevision: main
-      ref: values
+  source:
+    repoURL: https://github.com/DevDooly/devdooly-platform-lab.git
+    targetRevision: main
+    path: infra/charts/platform-lab
+    helm:
+      releaseName: lab
+      valueFiles:
+        - ../../../gitops/environments/home-lab/values.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: platform-lab

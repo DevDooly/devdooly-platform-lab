@@ -22,3 +22,5 @@ spec:
       kind: ConfigMap
     - group: ""
       kind: PersistentVolumeClaim
+    - group: ""
+      kind: ServiceAccount
