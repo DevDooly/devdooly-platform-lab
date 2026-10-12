@@ -2,7 +2,7 @@
 
 2026년 10월 12일 기준
 
-Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접 확인할 수 있는 포트폴리오로 발전시킵니다. 외부 백업·격리 DB 복원·재부팅과 CI/CD의 정상 배포·실패 차단·이전 image digest 복구를 확인했습니다. **3단계의 실제 수집·실패 후 보존·Pages 게시·공개 화면과 자동 운영 기본 경로를 검증**했습니다. 게시 순서 회귀 교정, API·웹 중단 후 같은 정상 B 복원에 이어 전용 Pages 자격증명으로 수동 host cycle·실제 systemd service·timer 최초 자동 실행의 게시를 확인했습니다. 실제 30분 간격의 반복 운영과 자격증명 만료·회전은 별도 후속입니다. 이후 합성 데이터를 Kafka와 객체 저장소로 확장하고, AI를 활용한 코드 개선과 데이터 플랫폼 사례를 추가합니다.
+Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접 확인할 수 있는 포트폴리오로 발전시킵니다. 외부 백업·격리 DB 복원·재부팅과 CI/CD의 정상 배포·실패 차단·이전 image digest 복구를 확인했습니다. **3단계의 실제 수집·실패 후 보존·Pages 게시·공개 화면과 자동 운영 기본 경로·반복 게시 11회를 검증**했습니다. 게시 순서 회귀 교정, API·웹 중단 후 같은 정상 B 복원에 이어 전용 Pages 자격증명으로 수동 host cycle·실제 systemd service·timer 자동 실행을 확인했습니다. 실제 완료 간격은 약 30~31분이었고 자격증명 만료·회전과 장기간 운영은 별도 후속입니다. 이후 합성 데이터를 Kafka와 객체 저장소로 확장하고, AI를 활용한 코드 개선과 데이터 플랫폼 사례를 추가합니다.
 
 [공개 Lab](https://devdooly.github.io/devdooly-platform-lab/) · [전체 진행 목록](ROADMAP.md) · [현재 접속 안내](START_HERE.md)
 
@@ -11,7 +11,7 @@ Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접
 | 영역 | 확인한 내용 | 다음에 채울 부분 |
 | --- | --- | --- |
 | Java API | 테스트 15개, MariaDB 저장, 합성 입력 12건 검증 | 메시지 수신과 재처리 |
-| 포트폴리오 | 앱·플랫폼 관측 공개, 1280px·390px 확인, 로컬 웹 테스트 26개, 호스트 수집·Pages 게시 | 실제 30분 간격 반복 운영·자격증명 만료·회전 |
+| 포트폴리오 | 앱·플랫폼 관측 공개, 1280px·390px 확인, 로컬 웹 테스트 26개, 자동 Pages 게시 11회·실제 간격 | 자격증명 만료·회전과 장기간 운영 |
 | Jenkins·Actions | 같은 SHA의 두 CI 성공·게시·draft GitOps PR·정상 B 배포·실제 실패 차단, main의 공개 status 수집 | credential 만료·회전과 게시 이력 보존 운영 |
 | Argo CD와 Helm | 정상 A → B → A GitOps 복구, Synced·Healthy·데이터 보존과 제한된 실제 상태 수집 | 주기 관측의 반복 운영과 실패 대응 |
 | 운영 | 외부 암호화 백업·격리 DB 복원·호스트 재부팅, 사용자 kubectl 복구 | 초기 비밀번호 교체, 추가 장치 사본·전체 archive 복원 |
@@ -65,7 +65,7 @@ GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins 
 
 ## 3 관측 공개
 
-검증한 JSON을 outbound dispatch로 Pages에 반영하고 공개 브라우저를 확인했습니다. 실제 순서 역전 게시의 seed 회귀는 교정 후 공개 JSON·브라우저·이전 artifact로 보존을 재검증했습니다. 초기 자동화 비활성 설치와 정적 검증에 이어, 전용 Pages 자격증명으로 수동 host cycle·실제 systemd service·timer 최초 자동 실행의 Pages 게시와 전체 공개 JSON 일치를 확인했습니다. timer는 enabled·active이며 실제 30분 간격 검증은 별도입니다. 이후 실시간 조회가 필요한 항목에 한해 공개 읽기 API를 연결합니다. 이번 단계에서 새 inbound 경로를 열지 않았고, Jenkins·Argo CD 관리 화면은 인증된 관리 경로를 유지합니다.
+검증한 JSON을 outbound dispatch로 Pages에 반영하고 공개 브라우저를 확인했습니다. 실제 순서 역전 게시의 seed 회귀는 교정 후 공개 JSON·브라우저·이전 artifact로 보존을 재검증했습니다. 초기 자동화 비활성 설치와 정적 검증에 이어, 전용 Pages 자격증명으로 수동 host cycle·실제 systemd service·timer 최초 자동 실행의 Pages 게시와 전체 공개 JSON 일치를 확인했습니다. 이후 최초 자동 실행을 포함한 11회가 모두 Pages build·deploy success였고 10개 실제 서비스 완료 간격은 1825.569287~1875.101367초였습니다. timer는 enabled·active입니다. 이후 실시간 조회가 필요한 항목에 한해 공개 읽기 API를 연결합니다. 이번 단계에서 새 inbound 경로를 열지 않았고, Jenkins·Argo CD 관리 화면은 인증된 관리 경로를 유지합니다.
 
 - [x] 전용 읽기 권한으로 main의 Jenkins 공개 status, 지정 Argo CD sync·health와 실제 Lab Pod 준비 수를 수집했습니다.
 - [x] main·Jenkins 대상·Argo revision·API 배포 선언 소스와 고정 image digest·관측 시각·실패 코드를 strict allowlist로 정의했습니다.
@@ -79,18 +79,19 @@ GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins 
 - [x] 전용 Pages 자격증명을 등록하고 수동 host cycle의 실제 Pages 게시·전체 공개 JSON 일치를 확인했습니다.
 - [x] 실제 systemd service 실행 성공·상태 파일 root 0600·임시 SA 토큰 정리를 확인했습니다.
 - [x] timer enabled·active와 최초 자동 trigger의 Pages 게시·전체 공개 JSON·브라우저를 확인했습니다.
-- [ ] 실제 30분 간격의 반복 수집·게시와 credential 만료·회전을 검증합니다.
+- [x] 최초 자동 실행을 포함한 11회의 Pages build·deploy success와 실제 서비스 완료 간격을 검증했습니다.
+- [ ] credential 실제 만료·회전과 장기간 운영을 검증합니다.
 - [ ] 필요한 경우 기존 프록시·TLS를 확인한 뒤 읽기 API를 연결하고 휴대폰 외부망에서 확인합니다.
 
 **완료 조건:** 정상 수집, collector 실패, Lab 중단 시나리오에서 표시 내용이 실제 관측 범위와 일치합니다. 공개 화면은 현재 JVM 정보와 별도 정적 관측·CI/CD 근거를 구분합니다. 실제 API·웹 replicas 0에서 공개 홈·마지막 기록 유지와 같은 정상 B 복원을 확인했습니다. 호스트·DB 전체 중단은 이 실험 범위가 아니며 오래된 기록·브라우저 조회 실패는 오프라인 UI 검증입니다.
 
-**현재 확인한 결과:** [실제 수집·실패 후 보존·게시·브라우저](evidence/platform-observation/README.md)를 제공합니다. 게시 순서 회귀 교정과 API·웹 중단·같은 정상 B 복원, 수동 host cycle·실제 systemd service·timer 최초 자동 실행의 Pages 게시까지 기본 경로를 검증했습니다. 같은 마지막 intent 재전송 차단도 실제 확인했으며 전체 이력의 exactly-once 보장은 아닙니다. 실제 30분 간격의 반복 운영과 credential 권한 범위 조회·만료·회전은 별도 확인 범위로 남깁니다.
+**현재 확인한 결과:** [실제 수집·실패 후 보존·게시·브라우저와 반복 실행 11회](evidence/platform-observation/README.md)를 제공합니다. 게시 순서 회귀 교정과 API·웹 중단·같은 정상 B 복원, 수동 host cycle·실제 systemd service·timer 자동 실행을 검증했습니다. 반복 11회의 Pages build·deploy 결과와 실제 간격을 확인했으며 각 회차의 전체 공개 JSON·UI 비교를 모두 수행했다는 뜻은 아닙니다. 같은 마지막 intent 재전송 차단도 실제 확인했으며 전체 이력의 exactly-once 보장은 아닙니다. 장기간 운영과 credential 권한 범위 조회·만료·회전은 별도 확인 범위로 남깁니다.
 
 ## 4 Kafka와 객체 저장소
 
 [구현 전 조사와 작은 처리 흐름](plans/phase4-messaging-storage.md)에 제품 후보, 원본 보관·재전달·DB 멱등 처리와 장애 검증 순서를 정리했습니다. 설치와 실제 검증은 다음 단계이며, 제품 선택도 SDK 호환성 확인 후 확정합니다.
 
-[읽기 전용 자원 사전 점검](evidence/messaging-storage/README.md)에서 잠정 메모리·디스크 관문을 통과했습니다. 한 시점의 여유이며 신규 구성의 부하 검증이나 설치 완료를 뜻하지 않습니다. 먼저 격리 환경에서 V2 작업/outbox·실행 슬롯과 실제 MariaDB의 잠금·재전달을 검증합니다.
+[읽기 전용 자원 사전 점검](evidence/messaging-storage/README.md)에서 잠정 메모리·디스크 관문을 통과했습니다. 한 시점의 여유이며 신규 구성의 부하 검증이나 설치 완료를 뜻하지 않습니다. V2 작업/outbox·단일 실행 슬롯과 실제 MariaDB의 잠금·동시 제출·rollback·재전달·시간대 일치를 격리 검증했습니다. 기본 verify 35개와 실제 DB 세 조건 각각 17개가 통과했으며 이전 image 호환성·기존 운영 보존도 확인했습니다. [DB 기반 코드의 결과와 한계](evidence/db-job-foundation/README.md)를 연결합니다. 운영에는 미배포이며 다음은 S3 SDK 호환성과 원본 저장 adapter입니다.
 
 기존 합성 센서 시나리오에 메시지 수신과 원본 보관을 추가합니다. 최대 이벤트 수, 동시 실행 수, 보존 기간부터 제한하고 하나의 worker로 시작합니다. 객체 저장소 제품은 구현 시점의 유지보수 상태·라이선스·S3 호환 기능을 확인한 뒤 선택합니다.
 
@@ -141,7 +142,7 @@ CKA 학습은 Lab과 연결합니다. context·RBAC·Service와 DNS·probe·requ
 
 1. 외부 백업·격리 DB 복원·호스트 재부팅 검증을 완료했습니다. 초기 관리자 비밀번호 교체는 별도로 남아 있습니다.
 2. CI/CD의 정상 B 배포·실제 실패 차단·이전 정상 A 복구를 완료했습니다. 전용 credential의 만료·회전은 운영 후속으로 관리합니다.
-3. 게시 순서 보존과 API·웹 중단 시 공개 기록 유지·같은 정상 B 복원을 검증했습니다. 전용 자격증명의 수동 host cycle·실제 systemd service·timer 최초 자동 실행과 Pages 게시까지 기본 경로를 확인했습니다. 이후 실제 30분 간격과 credential 만료·회전을 별도로 확인합니다.
-4. Kafka·객체 저장소 연결에 앞서 작업/outbox·DB 멱등 경계를 격리 환경에서 구현하고 기존 샘플 결과를 보존하는지 검증합니다. AI 개선 사례는 이후 5단계로 연결합니다.
+3. 게시 순서 보존과 API·웹 중단 시 공개 기록 유지·같은 정상 B 복원을 검증했습니다. 전용 자격증명의 수동 host cycle·실제 systemd service·timer 자동 실행과 반복 Pages 게시 11회·실제 간격까지 확인했습니다. 이후 장기간 운영과 credential 만료·회전을 별도로 확인합니다.
+4. DB 작업/outbox·멱등 경계의 격리 검증을 마쳤습니다. 다음은 Garage Java S3 SDK 호환성·원본 보관·hash 확인, Kafka 발행·수신과 장애 후 재전달 연결입니다. DB foundation은 검토용 변경이며 운영 image pin은 유지합니다. AI 개선 사례는 이후 5단계로 연결합니다.
 
 각 결과는 소스 변경, 실행 방법, 실제 검증 결과, TIL 설명, 포트폴리오 링크로 연결합니다. 작업 완료 시 [진행 목록](ROADMAP.md)을 갱신하고 프로필에는 구현한 범위만 반영합니다.

@@ -1,6 +1,6 @@
 # 공개 플랫폼 관측 수집 검증
 
-2026-10-11~12 UTC, 2026-10-12 KST 실행 결과입니다. 제한된 ServiceAccount로 실제 클러스터를 읽고, Jenkins의 공개 commit status와 함께 허용 필드만 저장했습니다. **실제 수집·인증 실패 후 보존·Pages 게시·공개 브라우저와 게시 순서 보존을 검증했습니다. 전용 Pages 자격증명으로 수동 host cycle·실제 systemd service·timer 최초 자동 실행의 게시까지 기본 자동 운영 경로를 확인했습니다. timer는 enabled·active이며, 실제 30분 간격과 자격증명 만료·회전은 별도 운영 검증으로 남습니다.**
+2026-10-11~12 UTC, 2026-10-12 KST 실행 결과입니다. 제한된 ServiceAccount로 실제 클러스터를 읽고 Jenkins의 공개 commit status와 함께 허용 필드만 저장했습니다. **실제 수집·인증 실패 후 보존·Pages 게시·공개 브라우저와 게시 순서 보존을 검증했습니다. 전용 Pages 자격증명으로 수동 host cycle·실제 systemd service·timer 자동 실행에 이어 반복 게시 11회의 build·deploy success와 실제 간격을 확인했습니다. timer는 enabled·active이며 자격증명 만료·회전과 장기간 운영은 별도 검증으로 남습니다.**
 
 [공개 요약](summary.json), [플랫폼 관측 계약](../../../apps/lab-web/PLATFORM_OBSERVATION.md), [기존 앱 관측 계약](../../../apps/lab-web/OBSERVATION.md)을 구분합니다. 수집·게시·보존 절차는 [운영 안내](../../runbooks/platform-observation.md)를 따릅니다. 아래 기록은 실시간 서비스 상태나 전체 배포 이력이 아닙니다.
 
@@ -105,13 +105,39 @@ timer 활성화는 `2026-10-12T01:38:36.685346Z`에 확인했습니다. timer는
 
 실제 service sandbox에서 별도 사용자 소유 게시 자격증명 읽기·짧은 SA 토큰 발급·collector 실행·게시 요청이 성공했습니다. 상태 파일 root `0600`, 임시 SA 토큰 파일 0개를 확인했고 최초 timer 실행 후 collector 잠금도 남지 않았습니다. oneshot service가 성공 후 inactive(dead)로 돌아간 것은 정상이며 timer의 active 상태와 구분합니다. 최초 자동 게시의 전체 공개 JSON 일치는 `2026-10-12T01:39:56.443645Z`에 확인했습니다. 공개 브라우저 재조회에서도 01:38:38 UTC 수집 완료·Jenkins build 16 success·Argo Synced Healthy·API 웹 DB 각각 1/1이 일치했습니다. 이는 해당 수집 시점의 기록이며 실시간 상태 보장은 아닙니다.
 
-같은 snapshot·journal을 설치된 uploader에 다시 입력한 실제 검사에서는 `SAME_ATTEMPT_NOT_RETRIED`와 종료 코드 1을 확인했습니다. 새 run ID가 없었고 기존 journal bytes와 최초 timer 실행의 `DISPATCHED` 기록이 유지됐습니다. 이 종료 코드는 재게시를 하지 않는 의도한 결과입니다. 마지막 intent의 재전송 차단이며 전체 이력에 대한 exactly-once 보장은 아닙니다. credential의 실제 scope 조회·만료·교체, 실제 30분 간격의 반복 게시와 장기 운영은 아직 검증하지 않았습니다.
+같은 snapshot·journal을 설치된 uploader에 다시 입력한 실제 검사에서는 `SAME_ATTEMPT_NOT_RETRIED`와 종료 코드 1을 확인했습니다. 새 run ID가 없었고 기존 journal bytes와 최초 timer 실행의 `DISPATCHED` 기록이 유지됐습니다. 이 종료 코드는 재게시를 하지 않는 의도한 결과입니다. 마지막 intent의 재전송 차단이며 전체 이력에 대한 exactly-once 보장은 아닙니다. 초기 활성화 시점에는 반복 간격을 확인하지 않았으며 후속 11회 결과는 다음 절에 별도로 기록합니다. credential의 실제 scope 조회·만료·교체와 장기간 운영은 아직 검증하지 않았습니다.
 
 ## 관측 자동화 활성화 전후 기존 서비스 보존
 
 활성화 전후의 읽기 전용 비교를 `2026-10-12T01:46:45.030525Z`에 통과했습니다. 조회 대상 Docker 컨테이너 35개 전체의 identity·시작 시각·mount 집합·running 상태가 같았고, running 수는 23개였습니다. Lab API·웹·DB 3개 Pod의 UID와 컨테이너 선언도 같았으며 모두 Ready였습니다. 이는 관측 자동화를 켜는 동안 기존 서비스와 Lab Pod를 보존했는지 비교한 결과입니다. **이번 비교에서 SQL을 다시 검증한 것은 아닙니다.**
 
 첫 비교 도구는 Docker `Mounts` 배열의 순서를 그대로 비교해 assertion이 실패했습니다. 조회마다 배열 순서가 달라지는 것을 확인하고 mount 집합으로 순서를 정규화한 retry1에서 전체 검사를 통과했습니다. 원래 실패 출력을 private 기록에 보존했으며 첫 시도를 통과로 세지 않습니다. 공개 요약의 `dockerRawMountOrderEqual: false`는 이 순서 차이를 나타내고, 실제 보존 조건인 `dockerMountSetsEqual`은 true입니다. 이를 mount 변경이나 서비스 장애로 해석하지 않습니다.
+
+## timer 반복 게시 11회와 실제 간격
+
+최초 자동 실행을 포함한 11회의 게시 요청이 모두 접수됐고 해당 Pages workflow의 build·deploy가 모두 success였습니다. 아래 시각은 **호스트 service 실행 완료 UTC**이며 collector의 수집 완료나 Pages 배포 완료 시각이 아닙니다. 최초 완료는 `2026-10-12T01:38:40.510720Z`, 마지막 완료는 `2026-10-12T06:45:29.625204Z`입니다.
+
+| 실행 | 서비스 완료 UTC — 2026-10-12 | Pages build / deploy |
+| --- | --- | --- |
+| [38192680467](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38192680467) | `01:38:40.510720` | success / success |
+| [38194669140](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38194669140) | `02:09:16.021621` | success / success |
+| [38196672320](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38196672320) | `02:39:58.959112` | success / success |
+| [38198726020](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38198726020) | `03:10:40.793426` | success / success |
+| [38200776134](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38200776134) | `03:41:55.894793` | success / success |
+| [38202843810](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38202843810) | `04:12:29.962930` | success / success |
+| [38204920752](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38204920752) | `04:43:05.802855` | success / success |
+| [38207013275](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38207013275) | `05:13:31.372142` | success / success |
+| [38209223283](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38209223283) | `05:43:57.060377` | success / success |
+| [38211593641](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38211593641) | `06:14:50.515895` | success / success |
+| [38214103463](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38214103463) | `06:45:29.625204` | success / success |
+
+11회 사이의 10개 실제 완료 간격은 최소 **1825.569287초**, 최대 **1875.101367초**였습니다. 완료 후 30분 설정에 실행 시간·지연이 더해진 약 30분 26초~31분 15초의 관측 결과입니다. 첫 OnBoot 즉시 trigger와 후속 간격을 구분하며 다음 예약만으로 반복 실행을 추정한 결과가 아닙니다. 각 회차의 전체 공개 JSON·UI를 모두 비교하거나 장기간 가용성·credential 만료·회전을 검증한 것은 아닙니다. 정확한 허용 필드와 간격 원값은 [공개 요약](summary.json)의 `repeatedVerification`에 기록합니다.
+
+후속 `2026-10-12T07:17:51.289331Z`의 읽기 전용 점검에서도 timer enabled·active, service 성공·종료 코드 0, private 상태 파일 권한 정상, 임시 credential 0개·collector 잠금 없음이 확인됐습니다. 이 점검 결과와 11회 게시 결과를 구분합니다.
+
+## 후속 최신 공개 관측본 확인
+
+별도 실행 [38216819944](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38216819944)은 Pages build·deploy success였고 수집 완료 시각 `2026-10-12T07:16:23.800530Z`의 전체 공개 envelope가 수집본과 일치했습니다. 공개 화면의 ‘게시된 기록 다시 읽기’로 다시 조회해 07:16:23 UTC·Jenkins build 17·Argo Synced Healthy·API 웹 DB 각각 1/1을 확인했습니다. 이 최신 공개본 검증은 위 11회 반복 목록에 합산하지 않고 `latestPublicationVerification`으로 따로 기록합니다. 표시 내용은 해당 수집 시점의 기록이며 실시간 상태 보장이 아닙니다.
 
 ## 로컬 구현 검증과 남은 작업
 
@@ -127,7 +153,9 @@ timer 활성화는 `2026-10-12T01:38:36.685346Z`에 확인했습니다. timer는
 | 수동 host cycle·실제 systemd service의 Pages 게시 | 실제 실행·build/deploy 성공·전체 공개 JSON 일치 |
 | timer 활성화·최초 자동 trigger | enabled·active, 자체 실행·Pages 게시·전체 JSON·브라우저 확인 |
 | 같은 마지막 intent 재전송 차단 | 실제 SAME_ATTEMPT_NOT_RETRIED, 새 run ID 없음·journal bytes 보존 |
-| 실제 30분 간격 반복 게시·자격증명 만료·회전 | 미검증 |
+| 반복 자동 게시 11회·실제 완료 간격 | 전부 Pages build·deploy success, 10개 간격 1825.569287~1875.101367초 |
+| 최신 별도 공개본·브라우저 재조회 | 07:16:23 UTC 수집본의 build·deploy·전체 JSON·브라우저 확인 |
+| 자격증명 scope 조회·만료·회전과 장기간 운영 | 미검증 |
 | API·웹 replicas 0 중단 후 공개 홈·마지막 기록과 DB·기존 서비스 보존 | 실제 중단·동일 정상 B 복원 검증 완료 |
 | 실시간 공개 읽기 API, 외부망 HTTPS 경로 | 미연결 |
 

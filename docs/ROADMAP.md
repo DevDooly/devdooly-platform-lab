@@ -72,7 +72,8 @@
 - [x] 전용 Pages 자격증명으로 수동 host cycle·Pages 게시와 전체 공개 JSON 일치 확인
 - [x] 실제 systemd service 실행 성공·root 0600 상태 파일·임시 SA 토큰 정리 확인
 - [x] timer enabled·active와 최초 자동 trigger의 Pages 게시·전체 공개 JSON·브라우저 확인
-- [ ] 실제 30분 간격 반복 수집·credential 만료·회전 운영 검증
+- [x] 최초 자동 실행을 포함한 11회의 Pages build·deploy success와 실제 서비스 완료 간격 검증: [실행 목록](evidence/platform-observation/README.md)
+- [ ] credential 실제 만료·회전과 장기간 운영 검증
 - [x] API·웹 replicas 0 중단에서 공개 홈·마지막 기록·DB·기존 서비스 보존과 같은 정상 B 복원 검증: [근거](evidence/platform-observation/README.md)
 - [ ] 공개 읽기 API 구현과 실시간 연결
 - [ ] 휴대폰 외부망에서 TLS·화면·API와 관리 접근 제한 확인
@@ -81,9 +82,15 @@
 - [x] 실제 관측 snapshot·수집 시각·source SHA 표시 구현과 관측 계약 검증
 - [ ] 필요한 항목에 한해 Jenkins·Argo CD 실시간 요약과 배포 이력 연결
 
-완료 조건: 방문자가 합성 데이터 결과와 배포 요약을 볼 수 있고, Lab 중단 때도 공개 홈의 프로젝트와 이전 결과를 읽을 수 있습니다. 첫 공개 목표는 여기까지입니다. 실제 수집·인증 실패·회복·공개 게시·브라우저·게시 순서 보존과 API·웹 중단 후 같은 정상 B 복원을 확인했습니다. 수동 host cycle·실제 systemd service·timer 최초 자동 trigger와 Pages 게시까지 기본 자동 운영 경로를 검증했습니다. timer의 첫 실행은 부팅 조건이 이미 지나 즉시 발생했으므로 실제 30분 간격의 반복 검증으로 세지 않습니다. 만료·회전의 장기 운영과 선택적인 실시간 공개 API·inbound 연결은 별도 후속입니다.
+완료 조건: 방문자가 합성 데이터 결과와 배포 요약을 볼 수 있고, Lab 중단 때도 공개 홈의 프로젝트와 이전 결과를 읽을 수 있습니다. 첫 공개 목표는 여기까지입니다. 실제 수집·인증 실패·회복·공개 게시·브라우저·게시 순서 보존과 API·웹 중단 후 같은 정상 B 복원을 확인했습니다. 수동 host cycle·실제 systemd service·timer 자동 실행과 반복 게시 11회의 Pages build·deploy success까지 검증했습니다. 첫 실행의 즉시 trigger와 후속 10개 실제 간격을 구분했고, 완료 간격은 1825.569287~1875.101367초였습니다. 만료·회전의 장기 운영과 선택적인 실시간 공개 API·inbound 연결은 별도 후속입니다.
 
 ## 4 Kafka와 객체 저장소
+
+검토용 DB foundation을 구현했으며 운영에는 배포하지 않았다. [격리 검증 결과](evidence/db-job-foundation/README.md)와 [내부 서비스 절차](runbooks/db-job-foundation.md)를 연결한다.
+
+- [x] V2 작업·outbox·단일 슬롯, raw 원본 hash·DB 멱등 경계 구현
+- [x] 실제 MariaDB의 V1 업그레이드·빈 DB 초기화·반복 시작, 동시 제출·rollback·재전달·Asia/Seoul 시각 일치 검증
+- [x] 이전 image의 V2 DB 호환성과 기존 운영 SQL·PVC·Docker 보존, 임시 자원 정리 확인
 
 - [ ] Kafka producer·worker와 멱등 키·재시도·실패 이벤트 보관 구현
 - [ ] 중복·역순·중단·재시작 후 결과 건수와 lag 확인

@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    url: ${DB_TEST_URL}
+    username: ${DB_TEST_USERNAME}
+    password: ${DB_TEST_PASSWORD}
+lab:
+  environment: isolated-db-test
+  database-label: MariaDB (isolated job foundation validation)

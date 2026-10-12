@@ -23,6 +23,7 @@ Java API·포트폴리오를 구현하고 Ubuntu 미니 PC에 K3s·Jenkins·Argo
 - 실제 HTTP 401 실패 envelope 수동 Pages 게시와 이전 성공 전체·시각 보존, 공개 1280px·390px 화면 확인
 - Ubuntu 격리 collector 41개 통과, 최종 자동화 35개 root·일반 사용자 각각 통과, 초기 비활성 자동화 설치·systemd 정적 검증 완료
 - 전용 Pages 자격증명 등록 후 수동 host cycle·실제 systemd service·timer 최초 자동 실행의 Pages 게시와 전체 공개 JSON 일치 확인
+- 최초 자동 실행을 포함한 11회의 Pages build·deploy success와 실제 약 30~31분 간격 확인
 - API·웹 replicas 0에서 공개 홈·마지막 기록과 DB·기존 서비스 보존, 같은 PR #5 정상 B 재가동·runtime 재검증 완료
 - 외부 암호화 백업·격리 DB 복원·호스트 재부팅: [근거와 한계](evidence/recovery/README.md)
 
@@ -30,11 +31,13 @@ Jenkins의 첫 빌드는 플러그인 충돌로 단계가 실행되지 않아 �
 
 ## 지금 접속하기
 
-공개 결과는 [포트폴리오](https://devdooly.github.io/devdooly-platform-lab/)에서 볼 수 있습니다. 기존 **미니 PC에서 확인한 마지막 기록**은 정적 앱 관측본이며, 실시간 상태는 아닙니다. 새 플랫폼 관측본은 공개 브라우저와 게시 순서 보존을 검증했습니다. 최초 timer 자동 수집 `2026-10-12T01:38:38.790231Z`의 전체 JSON과 브라우저 표시가 일치했습니다. timer는 enabled·active이며 실제 30분 간격의 반복 운영은 별도 확인이 필요합니다. API의 플랫폼 `NOT_CONFIGURED`는 조회 API 내부의 상태 수집이 연결되지 않았음을 뜻하며, 별도 정적 collector의 결과로 이 값을 바꾸지 않습니다.
+공개 결과는 [포트폴리오](https://devdooly.github.io/devdooly-platform-lab/)에서 볼 수 있습니다. 기존 **미니 PC에서 확인한 마지막 기록**은 정적 앱 관측본이며 실시간 상태는 아닙니다. 새 플랫폼 관측본은 공개 브라우저와 게시 순서 보존을 검증했습니다. 최초 timer 자동 수집 `2026-10-12T01:38:38.790231Z`의 전체 JSON과 브라우저 표시가 일치했습니다. 이후 서비스 실행 완료 시각 기준 01:38:40~06:45:29 UTC의 11회가 모두 Pages build·deploy success였고 약 30~31분 간격을 확인했습니다. 별도 최신 수집 `2026-10-12T07:16:23.800530Z`도 전체 공개 JSON·브라우저 재조회로 확인했습니다. timer는 enabled·active이며 장기간 운영과 자격증명 만료·회전은 후속입니다. API의 플랫폼 `NOT_CONFIGURED`는 조회 API 내부의 상태 수집이 연결되지 않았음을 뜻하며 별도 정적 collector의 결과로 이 값을 바꾸지 않습니다.
 
 관리 화면은 [SSH 접속 도우미](runbooks/admin-access.md)를 사용합니다. 본인 PC에 준비한 `.local/open-admin.ps1`을 실행한 동안 Jenkins는 `http://127.0.0.1:18081`, Argo CD는 `https://127.0.0.1:18443`에서 접속합니다. 초기 로그인 정보는 미니 PC 프로젝트의 `.local/admin/`에 0600 파일로 보관합니다. 비밀번호를 채팅이나 Git으로 옮기지 않습니다.
 
 Argo CD 자체 서명 인증서는 접속 안내에 따라 서버 인증서 지문을 대조합니다. 오래된 CA가 남아 있던 사용자 kubeconfig는 원본을 백업하고, 사용자 승인 후 현재 K3s 전용 0600 설정으로 교정했습니다. 현재 context는 `devdooly-platform-lab`이며 시스템 Helm·Docker·프록시는 유지합니다.
+
+DB 작업·outbox 기반 코드는 격리 검증을 통과한 검토용 변경입니다. 운영에는 아직 적용하지 않았습니다. [35개 기본 검사·실제 MariaDB 세 조건·기존 image 호환성](evidence/db-job-foundation/README.md)을 확인할 수 있습니다. 다음 구현은 S3 원본 저장과 Kafka 경계입니다.
 
 ## 다음 작업
 
@@ -43,7 +46,7 @@ Argo CD 자체 서명 인증서는 접속 안내에 따라 서버 인증서 지�
 1. 초기 관리자 비밀번호 변경과 본인 관리 화면 로그인 확인
 2. 확보한 외부 백업의 추가 물리 장치 사본과 K3s·Jenkins archive 전체 복원 검토
 3. 전용 status credential의 만료·회전과 게시 산출물 보존 운영 정리
-4. Pages 자격증명의 실제 만료·회전과 30분 간격의 반복 운영 검증
+4. Pages 자격증명의 실제 만료·회전과 장기간 반복 운영 검증
 5. 필요한 경우 기존 프록시·DDNS·TLS 조건을 확인한 뒤 공개 읽기 API와 외부망 검증
 6. Kafka·S3 및 AI 개선 재현을 진행 목록 순서대로 추가
 

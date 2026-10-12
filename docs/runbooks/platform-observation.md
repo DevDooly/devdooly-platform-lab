@@ -33,7 +33,7 @@
 
 Ubuntu collector 41개·최종 자동화 35개 root·일반 사용자 검사를 통과했습니다. 초기에는 root 소유 파일·설정·unit의 비활성 설치와 `systemd-analyze verify`, `daemon-reload`까지만 완료했습니다. 당시 timer는 disabled·inactive이고 전용 Pages 자격증명은 없었으며 설치 과정에서 dispatch·timer enable/start를 수행하지 않았습니다. 이 설치 이력은 후속 실제 실행과 구분합니다.
 
-2026년 10월 12일 KST에 Jenkins status 자격증명과 분리한 Pages 전용 자격증명을 등록하고 수동 host cycle → 실제 systemd service → timer 순서로 실행했습니다. 세 실행 모두 Pages build·deploy success와 전체 공개 JSON 일치를 확인했습니다. timer는 enabled·active이며 첫 자동 수집 `2026-10-12T01:38:38.790231Z`를 브라우저에서도 확인했습니다. 부팅 후 5분 조건이 이미 지나 활성화 직후 자동 실행됐으므로 **실제 30분 간격의 반복 검증은 아닙니다.** [실행별 근거](../evidence/platform-observation/README.md), [자동화](../../infra/observation/AUTOMATION.md), [설치·운영 전환](../../infra/observation/INSTALL.md)을 따릅니다.
+2026년 10월 12일 KST에 Jenkins status 자격증명과 분리한 Pages 전용 자격증명을 등록하고 수동 host cycle → 실제 systemd service → timer 순서로 실행했습니다. 세 초기 실행 모두 Pages build·deploy success와 전체 공개 JSON 일치를 확인했습니다. 첫 timer 실행은 부팅 조건이 이미 지나 즉시 발생했고 당시에는 반복 간격 검증으로 세지 않았습니다. 이후 최초 자동 실행을 포함한 11회가 모두 Pages build·deploy success였고 10개 서비스 완료 간격은 1825.569287~1875.101367초였습니다. timer는 enabled·active입니다. [실행별 근거](../evidence/platform-observation/README.md), [자동화](../../infra/observation/AUTOMATION.md), [설치·운영 전환](../../infra/observation/INSTALL.md)을 따릅니다.
 
 새 환경의 전환 순서는 전용 자격증명·권한을 확인한 뒤 수동 host cycle의 실제 게시를 확인하고, 실제 `platform-observation.service`를 실행해 sandbox와 정리를 확인한 다음 timer를 활성화하는 것입니다. `DISPATCHED` 접수만으로 Pages 배포 완료를 판단하지 않습니다. 설치·설정 검증을 마친 환경에서 다음 순서로 실행합니다.
 
@@ -49,6 +49,6 @@ sudo systemctl is-active platform-observation.timer
 sudo systemctl list-timers platform-observation.timer
 ```
 
-oneshot service는 성공 후 inactive(dead)로 돌아가며 timer의 active 상태와 구분합니다. 실제 30분 간격 반복 게시, credential의 실제 권한 범위 조회·만료·회전과 장기 운영은 아직 검증하지 않았습니다. 실패 시 기존 snapshot·journal을 삭제해 재시도하지 않으며 collector 잠금은 프로세스 부재를 확인한 뒤 해당 잠금만 정리합니다. 게시 오류 조사에는 토큰·원문 HTTP 응답을 출력하지 않습니다.
+oneshot service는 성공 후 inactive(dead)로 돌아가며 timer의 active 상태와 구분합니다. 약 5시간의 11회 게시·실제 간격을 확인한 범위이며 각 회차의 전체 공개 JSON·UI를 모두 비교하거나 장기간 가용성을 검증한 것은 아닙니다. 최신 수집 `2026-10-12T07:16:23.800530Z`은 별도 실행의 build·deploy success·전체 공개 JSON 일치와 브라우저 재조회로 확인했습니다. credential의 실제 권한 범위 조회·만료·회전과 장기간 운영은 아직 검증하지 않았습니다. 실패 시 기존 snapshot·journal을 삭제해 재시도하지 않으며 collector 잠금은 프로세스 부재를 확인한 뒤 해당 잠금만 정리합니다. 게시 오류 조사에는 토큰·원문 HTTP 응답을 출력하지 않습니다.
 
 실제 API·웹 replicas 0 중단에서 공개 홈·마지막 기록과 DB·기존 서비스 보존, 같은 PR #5 정상 B 복원을 확인했습니다. 인증 실패·API 웹 중단·복원은 각각의 실행 근거로 구분합니다. 호스트·DB 전체 중단, 외부 실시간 조회 API와 공개 HTTPS 경로는 이번 검증 범위가 아닙니다.
