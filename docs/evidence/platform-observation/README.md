@@ -1,6 +1,6 @@
 # 공개 플랫폼 관측 수집 검증
 
-2026-10-11 UTC~2026-10-12 KST 실행 결과입니다. 제한된 ServiceAccount로 실제 클러스터를 읽고, Jenkins의 공개 commit status와 함께 허용 필드만 저장했습니다. **서버 수집·인증 실패 후 보존·수동 Pages 게시와 공개 브라우저를 확인했습니다. 실제 순서 역전 게시에서 발견한 seed 회귀를 교정하고, 복구 게시와 순서 역전 재검증에서 이전 성공·실패 시각 보존을 확인했습니다. 정기 timer는 비활성이고 전용 Pages PAT를 기다립니다.**
+2026-10-11~12 UTC, 2026-10-12 KST 실행 결과입니다. 제한된 ServiceAccount로 실제 클러스터를 읽고, Jenkins의 공개 commit status와 함께 허용 필드만 저장했습니다. **실제 수집·인증 실패 후 보존·Pages 게시·공개 브라우저와 게시 순서 보존을 검증했습니다. 전용 Pages 자격증명으로 수동 host cycle·실제 systemd service·timer 최초 자동 실행의 게시까지 기본 자동 운영 경로를 확인했습니다. timer는 enabled·active이며, 실제 30분 간격과 자격증명 만료·회전은 별도 운영 검증으로 남습니다.**
 
 [공개 요약](summary.json), [플랫폼 관측 계약](../../../apps/lab-web/PLATFORM_OBSERVATION.md), [기존 앱 관측 계약](../../../apps/lab-web/OBSERVATION.md)을 구분합니다. 수집·게시·보존 절차는 [운영 안내](../../runbooks/platform-observation.md)를 따릅니다. 아래 기록은 실시간 서비스 상태나 전체 배포 이력이 아닙니다.
 
@@ -85,11 +85,33 @@ GitOps 중단 commit [`61d092161b078cc3beda3d12ea246eddef831fc7`](https://github
 
 ## 비활성 호스트 자동화 설치
 
-초기 Ubuntu 임시 격리 환경에서 collector 41개와 자동화 33개 검사를 각각 모두 통과했고 제외 항목은 0개였습니다. 자동화 실행 파일·root private 설정·unit을 설치하고 `systemd-analyze verify`와 `daemon-reload`까지 완료했습니다. 결과는 installed·verified·inactive이며 timer는 disabled·inactive입니다.
+초기 Ubuntu 임시 격리 환경에서 collector 41개와 자동화 33개 검사를 각각 모두 통과했고 제외 항목은 0개였습니다. 자동화 실행 파일·root private 설정·unit을 설치하고 `systemd-analyze verify`와 `daemon-reload`까지 완료했습니다. 당시 결과는 installed·verified·inactive였고 timer는 disabled·inactive였습니다.
 
 후속 검증에서는 일반 사용자 CI fixture를 교정하고 root 권한 정책 검사 2개를 추가했습니다. 자동화 검사 35개는 Ubuntu의 root와 일반 사용자 환경에서 각각 **35개 모두 통과·제외 0개**였습니다. 합성 fixture를 사용하는 격리 검사이며 운영 코드의 root 권한 검사는 변경하지 않았습니다. Windows 자동화 검사는 35개 중 34개 통과·POSIX 권한 1개 제외, collector 41개·자동화 35개·Pages 33개를 합한 최종 Windows 검사는 **109개 중 107개 통과·POSIX 권한 2개 제외**였습니다. 앞의 초기 33개·당시 합계 107개 기록은 실행 당시 이력으로 보존합니다. 이 결과를 실제 host cycle·systemd service 실행으로 간주하지 않습니다.
 
-전용 Pages PAT 파일은 아직 없습니다. 설치 과정에서 토큰 내용을 읽거나 host cycle dispatch, timer enable/start를 수행하지 않았습니다. 실제 systemd service sandbox·전용 PAT를 이용한 주기 수집·회전·반복 게시 운영은 별도 검증으로 남습니다. [자동화 상태](../../../infra/observation/AUTOMATION.md)와 [설치·수동 검증](../../../infra/observation/INSTALL.md)을 따릅니다.
+이 초기 설치 시점에는 전용 Pages 자격증명이 없었고 토큰 내용 읽기·host cycle dispatch·timer enable/start를 수행하지 않았습니다. 다음 절의 실제 실행과 구분해 이력을 보존합니다. [자동화 상태](../../../infra/observation/AUTOMATION.md)와 [설치·운영 전환 검증](../../../infra/observation/INSTALL.md)을 따릅니다.
+
+## 전용 자격증명으로 실제 호스트 실행과 timer 활성화
+
+2026년 10월 12일 KST에 게시 전용 자격증명을 등록한 뒤 수동 host cycle, 실제 systemd service, timer 순서로 확인했습니다. Jenkins status 자격증명과 분리했고 비밀값·원문 응답을 공개 기록에 포함하지 않습니다. `DISPATCHED` 접수와 실제 Pages 배포 결과를 각각 확인합니다.
+
+| 실행 경로 | 수집 완료 시각 UTC | 실제 결과 |
+| --- | --- | --- |
+| 수동 host cycle [38192435517](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38192435517) | `2026-10-12T01:34:50.661819Z` | Pages build·deploy success, 전체 공개 JSON이 수집본과 일치 |
+| 실제 systemd service [38192547419](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38192547419) | `2026-10-12T01:36:34.833215Z` | service `Result=success`·`ExecMainStatus=0`, Pages build·deploy success, 전체 공개 JSON 일치 |
+| timer 최초 자동 실행 [38192680467](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38192680467) | `2026-10-12T01:38:38.790231Z` | 자체 trigger·service 성공, Pages build·deploy success, 전체 공개 JSON과 브라우저 일치 |
+
+timer 활성화는 `2026-10-12T01:38:36.685346Z`에 확인했습니다. timer는 enabled·active였고 마지막 trigger는 10:38:36 KST, 다음 예약은 11:09:08 KST(`2026-10-12T02:09:08Z`)였습니다. 부팅 후 5분 조건이 이미 지나 활성화 직후 자동 실행된 결과입니다. **다음 예약이 있다는 사실은 실제 30분이 경과해 두 번째 주기가 실행됐다는 검증이 아닙니다.**
+
+실제 service sandbox에서 별도 사용자 소유 게시 자격증명 읽기·짧은 SA 토큰 발급·collector 실행·게시 요청이 성공했습니다. 상태 파일 root `0600`, 임시 SA 토큰 파일 0개를 확인했고 최초 timer 실행 후 collector 잠금도 남지 않았습니다. oneshot service가 성공 후 inactive(dead)로 돌아간 것은 정상이며 timer의 active 상태와 구분합니다. 최초 자동 게시의 전체 공개 JSON 일치는 `2026-10-12T01:39:56.443645Z`에 확인했습니다. 공개 브라우저 재조회에서도 01:38:38 UTC 수집 완료·Jenkins build 16 success·Argo Synced Healthy·API 웹 DB 각각 1/1이 일치했습니다. 이는 해당 수집 시점의 기록이며 실시간 상태 보장은 아닙니다.
+
+같은 snapshot·journal을 설치된 uploader에 다시 입력한 실제 검사에서는 `SAME_ATTEMPT_NOT_RETRIED`와 종료 코드 1을 확인했습니다. 새 run ID가 없었고 기존 journal bytes와 최초 timer 실행의 `DISPATCHED` 기록이 유지됐습니다. 이 종료 코드는 재게시를 하지 않는 의도한 결과입니다. 마지막 intent의 재전송 차단이며 전체 이력에 대한 exactly-once 보장은 아닙니다. credential의 실제 scope 조회·만료·교체, 실제 30분 간격의 반복 게시와 장기 운영은 아직 검증하지 않았습니다.
+
+## 관측 자동화 활성화 전후 기존 서비스 보존
+
+활성화 전후의 읽기 전용 비교를 `2026-10-12T01:46:45.030525Z`에 통과했습니다. 조회 대상 Docker 컨테이너 35개 전체의 identity·시작 시각·mount 집합·running 상태가 같았고, running 수는 23개였습니다. Lab API·웹·DB 3개 Pod의 UID와 컨테이너 선언도 같았으며 모두 Ready였습니다. 이는 관측 자동화를 켜는 동안 기존 서비스와 Lab Pod를 보존했는지 비교한 결과입니다. **이번 비교에서 SQL을 다시 검증한 것은 아닙니다.**
+
+첫 비교 도구는 Docker `Mounts` 배열의 순서를 그대로 비교해 assertion이 실패했습니다. 조회마다 배열 순서가 달라지는 것을 확인하고 mount 집합으로 순서를 정규화한 retry1에서 전체 검사를 통과했습니다. 원래 실패 출력을 private 기록에 보존했으며 첫 시도를 통과로 세지 않습니다. 공개 요약의 `dockerRawMountOrderEqual: false`는 이 순서 차이를 나타내고, 실제 보존 조건인 `dockerMountSetsEqual`은 true입니다. 이를 mount 변경이나 서비스 장애로 해석하지 않습니다.
 
 ## 로컬 구현 검증과 남은 작업
 
@@ -102,8 +124,11 @@ GitOps 중단 commit [`61d092161b078cc3beda3d12ea246eddef831fc7`](https://github
 | --- | --- |
 | 허용 JSON의 수동 outbound Pages dispatch | 수동 게시·복구·순서 역전 보존 재검증 완료 |
 | 새 플랫폼 카드·수집 시각·오류 표시의 공개 브라우저 검증 | 1280px·390px 확인, 교정 후 공개 JSON·artifact 시각 보존 확인 |
-| 정기 수집·토큰 회전·반복 게시 운영 | 비활성 설치 완료; 전용 Pages PAT 대기 |
+| 수동 host cycle·실제 systemd service의 Pages 게시 | 실제 실행·build/deploy 성공·전체 공개 JSON 일치 |
+| timer 활성화·최초 자동 trigger | enabled·active, 자체 실행·Pages 게시·전체 JSON·브라우저 확인 |
+| 같은 마지막 intent 재전송 차단 | 실제 SAME_ATTEMPT_NOT_RETRIED, 새 run ID 없음·journal bytes 보존 |
+| 실제 30분 간격 반복 게시·자격증명 만료·회전 | 미검증 |
 | API·웹 replicas 0 중단 후 공개 홈·마지막 기록과 DB·기존 서비스 보존 | 실제 중단·동일 정상 B 복원 검증 완료 |
 | 실시간 공개 읽기 API, 외부망 HTTPS 경로 | 미연결 |
 
-이번 단계에서는 새로운 inbound 공개 경로를 열지 않았습니다. 관리 도구는 기존 인증된 접속 경로를 유지하며, 서버에서 허용한 JSON을 밖으로 전달하는 수동 경로와 교정 후 실제 순서 보존 재검증을 확인했습니다. 기존 Pages의 앱 관측본 공개와 이번 새 플랫폼 관측본의 게시 완료를 구분합니다. 실제 접속 주소·관리 endpoint·credential·원문 진단은 이 근거에 포함하지 않습니다.
+이번 단계에서는 새로운 inbound 공개 경로를 열지 않았습니다. 관리 도구는 기존 인증된 접속 경로를 유지하며 서버에서 허용한 JSON을 밖으로 전달합니다. 기존 Pages의 앱 관측본, 새 플랫폼 관측본, 초기 수동 게시와 후속 호스트 실행을 구분합니다. 실제 접속 주소·관리 endpoint·credential·원문 진단은 이 근거에 포함하지 않습니다.

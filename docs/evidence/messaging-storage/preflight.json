@@ -1,0 +1,23 @@
+{
+  "observedAt": "2026-10-12T01:37:36.094751Z",
+  "scope": "READ_ONLY_POINT_IN_TIME_RESOURCE_PREFLIGHT",
+  "logicalCpuCount": 16,
+  "memoryTotalBytes": 32998993920,
+  "memoryAvailableBytes": 20781006848,
+  "labFilesystemTotalBytes": 502392610816,
+  "labFilesystemAvailableBytes": 244923068416,
+  "loadAverage": [
+    1.1494140625,
+    1.47900390625,
+    1.5625
+  ],
+  "existingDockerContainerCount": 35,
+  "existingDockerRunningCount": 23,
+  "existingDockerRestartingCount": 0,
+  "kubernetesPodCount": 11,
+  "kubernetesReadyNodeCount": 1,
+  "proposedMinimumResourceGatePassed": true,
+  "blockingReasons": [],
+  "servicesInstalledByThisCheck": false,
+  "limits": "POINT_IN_TIME_NOT_PEAK_LOAD_OR_RESERVATION_PROOF"
+}

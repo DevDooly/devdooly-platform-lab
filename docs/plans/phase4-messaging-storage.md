@@ -1,6 +1,6 @@
 # 4단계 준비 조사: Kafka와 원본 객체 보관
 
-조사일: 2026-10-12 KST. 이 문서는 구현 전 제안이다. 작성 과정에서는 기존 코드와 공식 문서를 조사했으며, Kafka·객체 저장소 설치나 코드 구현은 수행하지 않았다. 공식 웹 문서와 현재 저장소를 읽어 작성했다. 이미지 다운로드, 실제 digest 대조, Java SDK 연동과 성능 측정은 아직 수행하지 않았다.
+조사일: 2026-10-12 KST. 이 문서는 구현 전 제안이다. 기존 코드와 공식 문서를 조사했고, 같은 날 읽기 전용 자원 사전 점검을 추가했다. Kafka·객체 저장소 설치와 4단계 코드 구현은 수행하지 않았다. 이미지 다운로드, 실제 digest 대조, Java SDK 연동과 성능 측정은 아직 수행하지 않았으며, Kafka·Garage·SDK의 배포 조합은 미확정이다.
 
 ## 권장 범위
 
@@ -24,6 +24,16 @@
 Flyway V1에는 `(run_id, input_sequence)` unique 제약과 전체 건수 CHECK가 이미 있다. 그러나 `existsById()` 확인만으로 다중 worker의 원자적 작업 선점까지 보장하지는 않는다. 현재 `COMPLETED` 고정 응답과 `completed_at NOT NULL`도 비동기 진행 상태에는 그대로 쓸 수 없다. 비동기 작업 상태는 별도 작은 테이블로 관리하고, 완료된 결과만 기존 결과 테이블에 원자적으로 저장하는 쪽이 변경 범위가 작다. `DemoRun` 생성자의 고정 run ID·seed·scenario와 detail의 고정 설명도 새 작업 메타데이터를 받도록 분리해야 하며, 기존 seed 샘플의 동작은 유지한다.
 
 참고한 로컬 자료: `AGENTS.md`, `README.md`, `docs/START_HERE.md`, `docs/ROADMAP.md`, `apps/api/README.md`, `apps/api/pom.xml`, `SensorProcessor.java`, `DemoService.java`, `DemoRun.java`, `SyntheticScenario.java`, `V1__create_demo_evidence.sql`, `SensorProcessorTest.java`, `ApiIntegrationTest.java`, `infra/charts/platform-lab/values.yaml`, 합성 시나리오와 안내.
+
+## 첫 구현에서 유지할 계약
+
+첫 수정은 Kafka·S3 연결에 앞서 원본 schema·작업/outbox·DB 멱등 경계를 격리 환경에서 구현하는 범위로 잡는다. 기존 Flyway `V1__create_demo_evidence.sql`과 seed 결과 행·처리 시각을 보존하고, 새 작업/outbox와 전체 실행 슬롯은 **V2 migration**으로 추가한다. 미리 생성한 singleton 슬롯 행의 DB 잠금과 작업 고유 키로 동시 작업 1개를 보장하며, `existsById()`나 프로세스 내 변수만으로 제한하지 않는다.
+
+`GET /api/demo/runs`와 상세 조회는 완료된 결과 계약을 유지한다. 진행 중 작업은 별도 job 조회 계약으로 분리한다. 기존 웹의 `isRun()`은 유효한 `completedAt`을 요구하며, `lab-observation v1`은 `synthetic-v1-seed-42`·seed 42·12/7/3/2/0과 입력별 판정을 고정 검증한다. 새 비동기 작업을 이 정적 샘플 관측본에 넣거나 nullable 완료 시각을 기존 run 응답에 섞지 않는다. 별도 job 관측 계약을 만들고, 기존 고정 샘플 조회·`lab-observation v1`·`platform-observation v1`을 유지한다. 공개 POST는 계속 제공하지 않는다.
+
+기존 `SampleBootstrap`은 모든 profile에서 실행되므로 worker·관리자 일회 실행 profile에서는 비활성화한다. 초기에는 조회 API가 migration·seed 주체이고 worker는 migration·seed를 실행하지 않도록 구분한다. worker는 웹 서버 없는 별도 profile로 시작한다. `DemoRun`의 고정 메타데이터 생성자와 detail의 고정 설명은 새 작업 메타데이터를 받도록 분리하되 기존 seed 생성 경로는 유지한다.
+
+잠금·트랜잭션의 합격 근거는 **실제 MariaDB 격리 검증**으로 남긴다. 동시 제출 2개, 같은 run+같은 hash 재요청, 같은 run+다른 hash 거부, 결과 commit 전 rollback, commit 뒤 같은 작업 재전달에서 DB 효과 1회와 기존 완료 시각·seed 전체 행 보존을 확인한다. H2 결과만으로 MariaDB 동시성·잠금까지 검증했다고 기록하지 않는다. 이 항목은 앞으로 실행할 검증이며 아직 통과한 결과가 아니다.
 
 ## 제품과 공식 배포 상태
 
@@ -64,7 +74,7 @@ SeaweedFS도 한 프로세스의 `weed mini` 구성이 있지만 내부에 maste
 4. 작은 outbox publisher가 topic `lab.sensor-runs.v1`에 원본 object key·hash·입력 수·scenarioVersion·run ID만 보낸다. partition 1, key run ID, consumer 1로 시작한다. 발행 ACK 뒤 outbox 표시 전에 중단되면 같은 작업이 재전달될 수 있게 설계한다.
 5. worker는 DB의 고유 run과 row lock으로 선점하고, S3 원본 hash를 검증한 뒤 기존 `SensorProcessor`로 전체 묶음을 판정한다. 결과와 12개 outcome, 작업 완료 상태를 같은 DB 트랜잭션으로 저장한다. 그 뒤 Kafka offset을 commit한다.
 6. 이미 완료된 run의 재전달은 hash를 대조하고 결과를 추가하지 않는다. 저장 당시 처리 시각도 덮어쓰지 않는다. Kafka 전달 횟수와 재전달 억제 횟수는 업무상 중복 2건과 다른 항목으로 기록한다.
-7. 결과 JSON과 실패 입력·실패 이유 JSON은 DB 완료 후 별도 export outbox로 S3에 저장한다. export 장애를 연산 실패로 바꾸지 않고 `RESULT_EXPORT_PENDING`으로 드러낸다. 같은 hash·결과 버전의 결정적 key로 재시도하고, 실제 export 확인 뒤에만 결과 파일 보관 완료로 표시한다.
+7. 결과 JSON과 실패 입력·실패 이유 JSON은 DB 완료 후 별도 export outbox로 S3에 저장한다. 연산 완료와 export 상태를 분리하고, export 장애를 연산 실패로 바꾸지 않고 `RESULT_EXPORT_PENDING`으로 드러낸다. 같은 hash·결과 버전의 결정적 key로 재시도하고, 실제 export 확인 뒤에만 결과 파일 보관 완료로 표시한다. **최초 정책은 결과·실패 파일의 export 완료까지 전체 실행 슬롯을 보유**한다. export 대기·운영자 정지 중에는 후속 작업을 받지 않아 미완료 작업 누적을 억제한다. 복구 불가능한 작업의 슬롯 해제는 원본·결과 보존을 확인한 명시적 운영자 종료 절차에서만 수행한다.
 
 새로 필요한 것은 작은 작업/outbox 테이블과 producer·consumer 코드다. outbox용 별도 제품은 없다. 최초 producer는 현재 Java image의 관리자 전용 일회 실행 기능으로, worker는 같은 처리 코드를 쓰는 별도 profile의 Pod 1개로 두면 조회 API와 장애 시험을 분리할 수 있다. API의 기존 자동 sample bootstrap을 worker profile에서 실행하지 않도록 구분한다. 기존 완료 샘플을 새 작업의 결과처럼 재사용하지 않는다.
 
@@ -92,7 +102,7 @@ AWS SDK for Java v2의 S3 client 하나로 아래를 확인한다. endpointOverr
 
 ## 단일 미니 PC 자원과 보존
 
-현재 조건은 RAM 32 GiB 단일 노드와 기존 Docker 컨테이너 23개다. 아래는 **미측정 초기 제안값**으로, 실사용량이나 처리 성능 수치가 아니다. 조사 중 원격 인벤토리를 새로 실행하지 않았으므로 남은 RAM·디스크가 충분하다고 확정하지 않는다.
+현재 조건은 RAM 32 GiB 단일 노드와 실행 중인 기존 Docker 컨테이너 23개다. 아래는 **미측정 초기 제안값**으로, 신규 구성의 실사용량이나 처리 성능 수치가 아니다. 뒤의 자원 사전 점검은 현재 여유를 한 시점에 관측한 결과이며 이 제안 예산의 부하 검증이나 자원 예약을 뜻하지 않는다.
 
 | 추가 구성 | 초기 CPU request / limit 제안 | 메모리 request / limit 제안 | 영속 디스크 제안 |
 | --- | --- | --- | --- |
@@ -102,7 +112,9 @@ AWS SDK for Java v2의 S3 client 하나로 아래를 확인한다. endpointOverr
 
 추가 Pod의 메모리 limit 합계는 약 4.25 GiB다. CPU·heap·page cache 사용은 12건과 1,000건 실험에서 조정한다. Kafka의 단일 combined KRaft는 개발 환경용이며 고가용성 구성이 아니다. 단일 디스크의 Kafka RF1·Garage 복제 없는 운영은 호스트·디스크 장애를 견디는 복제나 외부 백업을 대신하지 않는다. [Kafka combined mode 범위](https://kafka.apache.org/43/operations/kraft/).
 
-설치 전 새 읽기 전용 점검에서 기존 서비스·노드 사용량, available memory, inode·파일시스템 여유와 PV 실사용량을 확인한다. 잠정 관문은 available memory 6 GiB 이상, 해당 파일시스템 여유 40 GiB 이상이며 부족하면 축소 설치 대신 구축을 보류하고 예산부터 다시 정한다. 과거의 200 GB 여유를 현재 여유로 간주하지 않는다. Jenkins build·백업·큰 이미지 빌드와 장애 실험을 겹치지 않는다.
+2026-10-12 10:37:36 KST의 [읽기 전용 자원 사전 점검](../evidence/messaging-storage/README.md)에서 available memory `20,781,006,848` bytes(약 19.35 GiB), Lab 파일시스템 여유 `244,923,068,416` bytes(약 228.10 GiB)를 확인했다. Docker는 전체 35개 중 실행 23개·재시작 중 0개, Kubernetes는 Pod 11개·Ready node 1개였다. available memory 6 GiB·해당 파일시스템 여유 40 GiB의 **잠정 관문은 그 시점에 통과**했다. peak 부하·지속 여유·신규 Pod 스케줄링과 PV 용량 예약은 확인하지 않았다. 이 점검에서 서비스는 설치하지 않았고 Kafka·Garage·SDK 조합은 여전히 미확정이다. 허용 필드만 공개한 [원본 수치 요약](../evidence/messaging-storage/preflight.json)을 연결한다.
+
+실제 설치 직전 기존 서비스·노드 사용량, available memory, inode·파일시스템 여유와 PV 실사용량을 다시 확인한다. 잠정 관문보다 부족하면 축소 설치 대신 구축을 보류하고 예산부터 다시 정한다. 과거의 200 GB나 이번 한 시점의 여유를 설치 시점 여유로 간주하지 않는다. Jenkins build·백업·큰 이미지 빌드와 장애 실험을 겹치지 않는다.
 
 - Lab 전용 리소스와 새 PV 경로만 추가하고 기존 Docker daemon·볼륨·프록시·방화벽 설정은 유지한다. Kafka/S3는 ClusterIP로만 연결하며 외부 포트·Ingress·NodePort는 만들지 않는다.
 - Kafka topic은 partition 1·RF1로 명시 생성한다. 짧은 실습 보존 시간과 per-partition byte 상한·segment 크기를 고정하고, 비동기 정리 때문에 실제 디스크를 감시한다. 보존 만료 전 완료되지 않은 작업은 원본을 기준으로 복구할 수 있어야 한다.
@@ -123,10 +135,10 @@ AWS SDK for Java v2의 S3 client 하나로 아래를 확인한다. endpointOverr
 | Kafka ACK 뒤 outbox 표시 전 중단 | outbox 재발행은 발생해도 결과 중복 없음 |
 | 원본 Put 실패 / 원본 hash 불일치 | 완료 처리·잘못된 결과 없음, 작업 상태와 고정 오류 코드, 비밀값 없는 실패 요약 |
 | Kafka 잠시 불가 | 원본·DB queued/outbox 유지, 복구 뒤 처리, 무제한 busy retry 없음 |
-| S3 결과 export 실패 | DB 결과는 보존되고 export pending 표시, 회복 후 결과 파일 hash 일치 |
+| S3 결과 export 실패 | DB 결과·처리 시각 보존, export pending 동안 실행 슬롯 보유·후속 작업 거부, 회복 후 결과·실패 파일 hash 일치와 슬롯 해제 |
 | Kafka·S3 Pod 재생성 | 기존 PV 보존, 원본 Get hash·작업 결과·broker 기록을 다시 확인 |
 | 원본에서 별도 재처리 | 새 run에 `replayOf` 기록, 원본 hash 동일, 시간·ID를 제외한 판정 12개 동일; 기존 run 결과 불변 |
-| 1,000개·동시 2회 요청·상한 초과 | 허용 작업 1개, 초과 거부, 입력 회계식 유지, 종료/오류 때 실행 슬롯 해제 |
+| 1,000개·동시 2회 요청·상한 초과 | 허용 작업 1개, 초과 거부, 입력 회계식 유지, export 완료 또는 보존 확인한 명시적 운영자 종료 때만 슬롯 해제 |
 | 기존 환경 보존 | Docker 23개 identity·start time·mount, DB/PVC·공개 Pages와 마지막 관측 기록 보존 |
 
 업무상 FAILED 3개는 영구 입력 오류로 결과에 기록하며 Kafka 재시도하지 않는다. S3·DB·broker의 일시 장애는 작업 단위의 유한 재시도 대상으로 구분한다. 반복 인프라 오류는 `PAUSED_OPERATOR` 등 고정 상태로 남기고 자동 재시도를 멈춘다. 첫 버전은 전체 작업 1개여서 해당 작업이 정지하면 후속 작업도 대기하는 한계를 공개한다. 실패 raw를 임의 삭제하거나 실패 이벤트를 성공 건수에 포함하지 않는다.
@@ -136,7 +148,7 @@ lag는 묶음 작업 메시지 수이며 센서 입력 건수가 아니다. 화�
 ## 3단계 이후 실행 순서
 
 1. 3단계의 outbound 게시·실제 공개 화면·실패 보존·중단 후 회복 근거를 현재 검증 문서와 일치시킨다. 정적 관측과 실시간 연결을 계속 구분한다.
-2. 로컬/격리 CI에서 원본 schema·작업/outbox 상태·멱등 키·보존 정책을 먼저 확정한다. 기존 12개 판정과 read-only API가 유지되는 회귀 검증을 추가한다.
+2. 로컬/격리 CI에서 원본 schema·V2 작업/outbox·singleton 실행 슬롯·멱등 키·보존 정책을 먼저 확정한다. 실제 MariaDB에서 잠금·동시 제출·rollback·재전달을 검증하고, 기존 V1·seed 전체 행과 처리 시각·12개 판정·read-only API를 보존한다. bootstrap/profile을 구분하고 새 job 조회/관측 계약을 기존 고정 샘플 계약과 분리한다.
 3. Garage Java SDK 관문을 통과한 뒤 S3 선정 ADR을 작성한다. 고정 Kafka image/client 조합, 저장소 image, 태그·digest·라이선스와 필요한 권한을 기록한다.
 4. 읽기 전용 자원 재점검과 새 볼륨·백업 범위를 확정하고, 기존 Helm/GitOps 흐름으로 새 Lab 전용 구성을 배포한다. 설치·배포는 이번 준비 작업에서 실행하지 않는다.
 5. 12건 정상 → 재전달 → 각 장애 경계 → 재시작 → 원본 replay → 1,000건 제한 순서로 한 번씩 검증한다. 실제 실패와 회복을 포함한 근거만 공개한다.

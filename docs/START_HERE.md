@@ -1,6 +1,6 @@
 # 현재 상태에서 이어서 구축하기
 
-Java API·포트폴리오를 구현하고 Ubuntu 미니 PC에 K3s·Jenkins·Argo CD를 설치했습니다. 현재 상태와 관측 시각은 [미니 PC 근거](evidence/mini-pc/README.md), 실제 빌드는 [Jenkins 근거](evidence/jenkins-ci/README.md)에서 확인합니다. 별도 플랫폼 collector는 실제 읽기 수집·인증 실패 후 기록 보존·회복과 수동 Pages 게시·공개 화면을 확인했습니다. 이후 발견한 게시 순서 회귀는 교정 후 실제 복구·순서 역전 게시로 재검증했고 정기 timer는 비활성입니다. [플랫폼 수집 근거와 한계](evidence/platform-observation/README.md)를 함께 확인합니다. 전체 단계는 [진행 목록](ROADMAP.md)을 따릅니다.
+Java API·포트폴리오를 구현하고 Ubuntu 미니 PC에 K3s·Jenkins·Argo CD를 설치했습니다. 현재 상태와 관측 시각은 [미니 PC 근거](evidence/mini-pc/README.md), 실제 빌드는 [Jenkins 근거](evidence/jenkins-ci/README.md)에서 확인합니다. 별도 플랫폼 collector는 실제 읽기 수집·인증 실패 후 기록 보존·회복과 Pages 게시·공개 화면을 확인했습니다. 게시 순서 회귀도 교정 후 재검증했습니다. 전용 Pages 자격증명으로 수동 실행·실제 systemd service·timer 최초 자동 실행과 게시를 확인했습니다. [플랫폼 수집 근거와 한계](evidence/platform-observation/README.md)를 함께 확인합니다. 전체 단계는 [진행 목록](ROADMAP.md)을 따릅니다.
 
 ## 확인한 결과
 
@@ -21,7 +21,8 @@ Java API·포트폴리오를 구현하고 Ubuntu 미니 PC에 K3s·Jenkins·Argo
 - 인증 실패 때 마지막 성공 전체·수집 시각 유지와 정상 수집 회복, 실제 출력 0600 확인
 - 새 관측 UI의 실패·오래된 기록 표시 로컬 검증: 신규 13개를 포함한 전체 웹 테스트 26개·타입 검사·Pages 경로 빌드
 - 실제 HTTP 401 실패 envelope 수동 Pages 게시와 이전 성공 전체·시각 보존, 공개 1280px·390px 화면 확인
-- Ubuntu 격리 collector 41개 통과, 최종 자동화 35개 root·일반 사용자 각각 통과, 비활성 자동화 설치·systemd 정적 검증 완료; 정기 실행은 미활성
+- Ubuntu 격리 collector 41개 통과, 최종 자동화 35개 root·일반 사용자 각각 통과, 초기 비활성 자동화 설치·systemd 정적 검증 완료
+- 전용 Pages 자격증명 등록 후 수동 host cycle·실제 systemd service·timer 최초 자동 실행의 Pages 게시와 전체 공개 JSON 일치 확인
 - API·웹 replicas 0에서 공개 홈·마지막 기록과 DB·기존 서비스 보존, 같은 PR #5 정상 B 재가동·runtime 재검증 완료
 - 외부 암호화 백업·격리 DB 복원·호스트 재부팅: [근거와 한계](evidence/recovery/README.md)
 
@@ -29,7 +30,7 @@ Jenkins의 첫 빌드는 플러그인 충돌로 단계가 실행되지 않아 �
 
 ## 지금 접속하기
 
-공개 결과는 [포트폴리오](https://devdooly.github.io/devdooly-platform-lab/)에서 볼 수 있습니다. 기존 **미니 PC에서 확인한 마지막 기록**은 정적 앱 관측본이며, 실시간 상태는 아닙니다. 새 플랫폼 관측본은 수동 게시와 공개 브라우저를 확인했고, 실제 순서 역전 게시에서 발견한 seed 회귀도 교정 후 재검증했습니다. 최종 정상 수집 `2026-10-11T16:20:31.503389Z`의 Pages 게시와 공개 브라우저 회복도 확인했습니다. 정기 실행은 전용 Pages PAT 대기로 비활성입니다. API의 플랫폼 `NOT_CONFIGURED`는 조회 API 내부의 상태 수집이 연결되지 않았음을 뜻하며, 별도 정적 collector의 결과로 이 값을 바꾸지 않습니다.
+공개 결과는 [포트폴리오](https://devdooly.github.io/devdooly-platform-lab/)에서 볼 수 있습니다. 기존 **미니 PC에서 확인한 마지막 기록**은 정적 앱 관측본이며, 실시간 상태는 아닙니다. 새 플랫폼 관측본은 공개 브라우저와 게시 순서 보존을 검증했습니다. 최초 timer 자동 수집 `2026-10-12T01:38:38.790231Z`의 전체 JSON과 브라우저 표시가 일치했습니다. timer는 enabled·active이며 실제 30분 간격의 반복 운영은 별도 확인이 필요합니다. API의 플랫폼 `NOT_CONFIGURED`는 조회 API 내부의 상태 수집이 연결되지 않았음을 뜻하며, 별도 정적 collector의 결과로 이 값을 바꾸지 않습니다.
 
 관리 화면은 [SSH 접속 도우미](runbooks/admin-access.md)를 사용합니다. 본인 PC에 준비한 `.local/open-admin.ps1`을 실행한 동안 Jenkins는 `http://127.0.0.1:18081`, Argo CD는 `https://127.0.0.1:18443`에서 접속합니다. 초기 로그인 정보는 미니 PC 프로젝트의 `.local/admin/`에 0600 파일로 보관합니다. 비밀번호를 채팅이나 Git으로 옮기지 않습니다.
 
@@ -42,7 +43,7 @@ Argo CD 자체 서명 인증서는 접속 안내에 따라 서버 인증서 지�
 1. 초기 관리자 비밀번호 변경과 본인 관리 화면 로그인 확인
 2. 확보한 외부 백업의 추가 물리 장치 사본과 K3s·Jenkins archive 전체 복원 검토
 3. 전용 status credential의 만료·회전과 게시 산출물 보존 운영 정리
-4. 전용 Pages PAT를 준비한 뒤 host cycle·systemd service와 정기 운영 검증
+4. Pages 자격증명의 실제 만료·회전과 30분 간격의 반복 운영 검증
 5. 필요한 경우 기존 프록시·DDNS·TLS 조건을 확인한 뒤 공개 읽기 API와 외부망 검증
 6. Kafka·S3 및 AI 개선 재현을 진행 목록 순서대로 추가
 

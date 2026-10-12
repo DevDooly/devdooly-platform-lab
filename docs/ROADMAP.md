@@ -69,7 +69,10 @@
 - [x] 허용 JSON의 수동 outbound Pages 게시·HTTP 401 실패 보존과 새 플랫폼 카드 공개 1280px·390px 확인: [근거](evidence/platform-observation/README.md)
 - [x] 실제 순서 역전 게시에서 발견한 seed 회귀 교정과 이전 성공 artifact·공개 JSON·브라우저 기준 재검증: [실패 발견과 교정](evidence/platform-observation/README.md)
 - [x] Ubuntu collector 41개·최종 자동화 35개 root·일반 사용자 각각 통과와 비활성 설치·systemd 정적 검증: [상태](../infra/observation/AUTOMATION.md)
-- [ ] 정기 수집·credential 회전·반복 게시 운영 검증
+- [x] 전용 Pages 자격증명으로 수동 host cycle·Pages 게시와 전체 공개 JSON 일치 확인
+- [x] 실제 systemd service 실행 성공·root 0600 상태 파일·임시 SA 토큰 정리 확인
+- [x] timer enabled·active와 최초 자동 trigger의 Pages 게시·전체 공개 JSON·브라우저 확인
+- [ ] 실제 30분 간격 반복 수집·credential 만료·회전 운영 검증
 - [x] API·웹 replicas 0 중단에서 공개 홈·마지막 기록·DB·기존 서비스 보존과 같은 정상 B 복원 검증: [근거](evidence/platform-observation/README.md)
 - [ ] 공개 읽기 API 구현과 실시간 연결
 - [ ] 휴대폰 외부망에서 TLS·화면·API와 관리 접근 제한 확인
@@ -78,7 +81,7 @@
 - [x] 실제 관측 snapshot·수집 시각·source SHA 표시 구현과 관측 계약 검증
 - [ ] 필요한 항목에 한해 Jenkins·Argo CD 실시간 요약과 배포 이력 연결
 
-완료 조건: 방문자가 합성 데이터 결과와 배포 요약을 볼 수 있고, Lab 중단 때도 공개 홈의 프로젝트와 이전 결과를 읽을 수 있습니다. 첫 공개 목표는 여기까지입니다. 현재 실제 수집·인증 실패·회복·수동 공개 게시·브라우저를 확인했습니다. 게시 순서 회귀는 교정 후 실제 재검증을 완료했습니다. API·웹 replicas 0의 중단과 같은 정상 B 복원도 확인했습니다. 전용 Pages PAT를 이용한 host cycle·정기 실행은 남아 있습니다. 실시간 공개 API와 새로운 inbound 경로도 연결하지 않았습니다.
+완료 조건: 방문자가 합성 데이터 결과와 배포 요약을 볼 수 있고, Lab 중단 때도 공개 홈의 프로젝트와 이전 결과를 읽을 수 있습니다. 첫 공개 목표는 여기까지입니다. 실제 수집·인증 실패·회복·공개 게시·브라우저·게시 순서 보존과 API·웹 중단 후 같은 정상 B 복원을 확인했습니다. 수동 host cycle·실제 systemd service·timer 최초 자동 trigger와 Pages 게시까지 기본 자동 운영 경로를 검증했습니다. timer의 첫 실행은 부팅 조건이 이미 지나 즉시 발생했으므로 실제 30분 간격의 반복 검증으로 세지 않습니다. 만료·회전의 장기 운영과 선택적인 실시간 공개 API·inbound 연결은 별도 후속입니다.
 
 ## 4 Kafka와 객체 저장소
 

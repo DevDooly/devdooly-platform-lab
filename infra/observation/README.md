@@ -1,18 +1,20 @@
-# 공개 플랫폼 수집기 준비본
+# 공개 플랫폼 수집기와 호스트 자동화
 
-Python 표준 라이브러리만 사용하는 읽기 전용 수집기입니다. 공개 GitHub main의 Jenkins commit status와 K3s의 제한된 리소스를 읽고, 웹과 합의한 platform-observation v1의 허용 필드만 출력 파일에 저장합니다. **이 준비본에는 실제 관측 JSON이 없습니다.** 서버 실행·RBAC 적용·공개 게시·원격 변경은 통합 담당자가 검토 후 수행합니다.
+Python 표준 라이브러리만 사용하는 읽기 전용 수집기입니다. 공개 GitHub main의 Jenkins commit status와 K3s의 제한된 리소스를 읽고, platform-observation v1의 허용 필드만 저장합니다. 실제 RBAC 적용·수집·인증 실패 후 이전 성공 보존·Pages 게시를 검증했습니다. 전용 Pages 자격증명 등록 후 수동 host cycle·실제 systemd service·timer 최초 자동 실행의 게시와 전체 공개 JSON 일치도 확인했습니다. [실행 근거와 남은 범위](../../docs/evidence/platform-observation/README.md)를 함께 확인합니다.
 
-## 파일과 통합 위치
+## 통합 파일
 
-| 준비 파일 | 권장 저장소 위치 |
+| 역할 | 저장소 위치 |
 | --- | --- |
 | platform_collector.py | infra/observation/platform_collector.py |
 | platform_contract.py | infra/observation/platform_contract.py |
 | rbac.yaml | infra/observation/rbac.yaml |
 | test_platform_collector.py | tests/observation/test_platform_collector.py |
-| offline-validation.json | 로컬 검증 근거; 실제 서버 수집 결과와 구분 |
+| host_cycle.py·pages_uploader.py | infra/observation/의 호스트 수집·게시 요청 실행기 |
+| platform-observation.service·timer | infra/observation/의 호스트 systemd 선언 |
+| 검증 결과 | [공개 검증 요약](../../docs/evidence/platform-observation/summary.json) |
 
-수집기 두 Python 파일은 같은 디렉터리에 둡니다. Python 3.10 이상이며 추가 패키지나 Jenkins 관리자 credential, GitHub token, kubectl 실행, 관리자 kubeconfig fallback이 없습니다. 인접한 UI 준비본의 PLATFORM_OBSERVATION.md, platform-observation.schema.json, validatePlatformObservation이 같은 계약을 검증합니다.
+수집기 두 Python 파일은 같은 디렉터리에 둡니다. Python 3.10 이상이며 수집기 자체에는 추가 패키지나 Jenkins 관리자 credential, GitHub token, kubectl 실행, 관리자 kubeconfig fallback이 없습니다. 호스트 실행기가 관리자 설정으로 짧은 SA 토큰만 발급해 수집기에 전달하고, 별도 uploader가 Pages 전용 자격증명으로 게시를 요청합니다. UI의 [PLATFORM_OBSERVATION.md](../../apps/lab-web/PLATFORM_OBSERVATION.md), 구조 schema와 semantic validator가 같은 계약을 검증합니다. [자동화](AUTOMATION.md)와 [설치·운영 전환](INSTALL.md)에서 책임과 권한을 구분합니다.
 
 ## 출처와 정확한 의미
 
@@ -34,9 +36,9 @@ HTTP timeout은 요청당 최대 6초, 전체 기본 기한은 60초입니다. G
 
 TLS CA와 hostname 검증을 켜고 리디렉션과 환경 프록시를 사용하지 않습니다. 토큰은 파일에서만 읽으며 매 요청 다시 읽어 회전을 지원합니다. 응답은 최대 2MiB입니다. stdout에는 상태·고정 코드·완료 시각·마지막 성공 유무만 출력합니다.
 
-출력은 같은 디렉터리의 0600 임시 파일을 fsync한 뒤 원자적으로 교체합니다. 출력별 배타 lock으로 동시 쓰기를 막고, 유효하지 않은 snapshot이나 교체 실패가 기존 파일을 지우지 않는지 테스트합니다. POSIX 0600과 디렉터리 fsync는 Linux에서 최종 검증해야 합니다. 비정상 종료로 남은 lock은 실행 중 프로세스가 없는지 확인한 뒤 운영자가 처리합니다.
+출력은 같은 디렉터리의 0600 임시 파일을 fsync한 뒤 원자적으로 교체합니다. 출력별 배타 lock으로 동시 쓰기를 막고, 유효하지 않은 snapshot이나 교체 실패가 기존 파일을 지우지 않는지 테스트합니다. Ubuntu 격리 검사 41개와 실제 수집에서 POSIX 0600을 확인했습니다. 비정상 종료로 남은 lock은 실행 중 프로세스가 없는지 확인한 뒤 운영자가 처리합니다.
 
-## 최초 서버 검증 순서
+## 새 환경의 최초 서버 검증 순서
 
 1. rbac.yaml의 기존 동명 SA/Role/Binding 충돌과 권한 범위를 검토합니다. namespace를 만들거나 기존 설정을 덮어쓰는 작업은 이 수집기가 하지 않습니다.
 2. 관리자 권한은 RBAC 적용과 **10분 SA token 발급에만** 사용합니다. 실제 수집 HTTP는 platform-public-observer SA credential만 사용합니다. 서버 주소, CA 경로와 token 파일을 .local/ 아래에 두고 디렉터리 0700/파일 0600으로 보호합니다. 토큰을 콘솔·환경 변수·명령 인수에 넣지 않습니다.
@@ -85,19 +87,14 @@ get/list 외 동작, Secrets, logs, exec, nodes, 다른 Application과 namespace
 
 ## 오프라인 검증
 
-준비 디렉터리에서는 다음과 같이 실행합니다.
-
-```sh
-python3 -B -m unittest -v test_platform_collector
-```
-
-통합 위치로 옮기면 테스트 import 경로를 맞추거나 다음처럼 실행합니다.
+저장소 루트에서 다음과 같이 실행합니다.
 
 ```sh
 PYTHONPATH=infra/observation python3 -B -m unittest discover -s tests/observation -p 'test_platform_collector.py' -v
+python3 -B -m unittest discover -s tests/observation -p 'test_phase3_automation.py' -v
 ```
 
-합성 입력만 사용해 상태 4종, 최신 항목 신뢰 검증, 페이지 제한, main 이동, 실제 Pod 준비 조건, 허용 이미지, 출처 분리, 실패 시 이전 성공 보존, unknown 필드, 잘못된 날짜·나노초 순서, 원자적 파일 교체와 권한·리디렉션을 검증합니다. 준비 검증과 실제 서버 검증은 별도 기록합니다. 현재 Job/CronJob·공개 HTTP·자동 게시·추가 외부 포트는 구성하지 않았습니다.
+합성 입력만 사용해 상태 4종, 최신 항목 신뢰 검증, 페이지 제한, main 이동, 실제 Pod 준비 조건, 허용 이미지, 출처 분리, 실패 시 이전 성공 보존, unknown 필드, 잘못된 날짜·나노초 순서, 원자적 파일 교체와 권한·리디렉션을 검증합니다. 합성 검사와 실제 서버 실행은 별도 기록합니다. 자동 수집·게시 요청은 호스트의 oneshot service와 timer로 실행하며 Kubernetes Job/CronJob은 구성하지 않았습니다. 공개 실시간 HTTP와 새 inbound 포트도 추가하지 않았습니다. 실제 30분 간격 반복 운영과 자격증명 만료·회전은 아직 검증하지 않았습니다.
 
 ## 공식 근거
 

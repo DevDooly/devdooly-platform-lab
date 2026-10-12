@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "scope": "ACTUAL_MINI_PC_READ_ONLY_PLATFORM_COLLECTION",
-  "phase3Status": "CORE_VERIFIED_SCHEDULED_COLLECTION_PAT_PENDING",
+  "phase3Status": "CORE_AUTOMATION_VERIFIED_TIMER_ACTIVE_OPERATIONAL_FOLLOW_UPS_REMAIN",
   "finalVerifiedCollection": {
     "capturedAt": "2026-10-11T15:27:44.173356Z",
     "mainCommit": "e823cb793308e79ea5b7b5a17af2d554b4091275",
@@ -153,7 +153,7 @@
   "boundaries": {
     "newPlatformSnapshotPublishedToPages": true,
     "newPlatformCardPublicBrowserVerified": true,
-    "scheduledCollectionActivated": false,
+    "scheduledCollectionActivated": true,
     "actualLabStopScenarioExecuted": true,
     "newInboundExposureConfigured": false,
     "livePublicReadApiConnected": false,
@@ -162,7 +162,8 @@
     "currentJvmSourceQueriedByThisCollector": false
   },
   "pending": [
-    "SCHEDULED_COLLECTION_AND_CREDENTIAL_ROTATION",
+    "ACTUAL_30_MINUTE_INTERVAL_AND_LONG_RUNNING_OPERATION",
+    "CREDENTIAL_SCOPE_QUERY_EXPIRY_AND_ROTATION",
     "OPTIONAL_LIVE_READ_API_AND_EXTERNAL_HTTPS"
   ],
   "finalVerifiedCollectionScope": "INITIAL_COLLECTION_RECOVERY_VALIDATION",
@@ -373,5 +374,101 @@
     "capturedAt": "2026-10-11T16:20:31.503389Z",
     "failureBannerCleared": true,
     "sourceAndRevisionAndWorkloadCountsMatchSnapshot": true
+  },
+  "automationInstallationScope": "HISTORICAL_INITIAL_INACTIVE_INSTALLATION_BEFORE_DEDICATED_CREDENTIAL_REGISTRATION",
+  "activationVerification": {
+    "scope": "ACTUAL_MANUAL_HOST_CYCLE_SYSTEMD_SERVICE_AND_FIRST_TIMER_TRIGGER_WITH_PAGES_PUBLICATION",
+    "dedicatedPagesCredentialRegistered": true,
+    "manualHostCycle": {
+      "runId": 38192435517,
+      "attemptStatus": "DISPATCHED",
+      "capturedAt": "2026-10-12T01:34:50.661819Z",
+      "pagesBuildConclusion": "success",
+      "pagesDeployConclusion": "success",
+      "entirePublicEnvelopeMatched": true
+    },
+    "systemdService": {
+      "runId": 38192547419,
+      "attemptStatus": "DISPATCHED",
+      "capturedAt": "2026-10-12T01:36:34.833215Z",
+      "serviceResult": "success",
+      "execMainStatus": 0,
+      "pagesBuildConclusion": "success",
+      "pagesDeployConclusion": "success",
+      "publicVerifiedAt": "2026-10-12T01:38:00.773923Z",
+      "entirePublicEnvelopeMatched": true,
+      "stateFilesRootOwnedMode0600": true,
+      "temporaryServiceAccountTokenFilesRemaining": 0
+    },
+    "timer": {
+      "enabled": true,
+      "active": true,
+      "activationObservedAt": "2026-10-12T01:38:36.685346Z",
+      "firstTriggerWasAutomatic": true,
+      "initialOnBootThresholdAlreadyElapsed": true,
+      "runId": 38192680467,
+      "attemptStatus": "DISPATCHED",
+      "capturedAt": "2026-10-12T01:38:38.790231Z",
+      "serviceResult": "success",
+      "execMainStatus": 0,
+      "serviceInactiveAfterOneshot": true,
+      "pagesBuildConclusion": "success",
+      "pagesDeployConclusion": "success",
+      "publicVerifiedAt": "2026-10-12T01:39:56.443645Z",
+      "entirePublicEnvelopeMatched": true,
+      "publicBrowserReloadVerified": true,
+      "browserJenkinsBuildNumber": 16,
+      "browserJenkinsStatus": "success",
+      "browserArgoSync": "Synced",
+      "browserArgoHealth": "Healthy",
+      "browserWorkloadCountsMatchSnapshot": true,
+      "stateFilesRootOwnedMode0600": true,
+      "temporaryServiceAccountTokenFilesRemaining": 0,
+      "collectorLockFilesRemaining": 0,
+      "nextScheduledAtAtObservation": "2026-10-12T02:09:08Z",
+      "actualThirtyMinuteIntervalElapsedVerified": false
+    },
+    "lastIntentGuardVerified": true,
+    "lastIntentGuard": {
+      "attemptStatus": "SAME_ATTEMPT_NOT_RETRIED",
+      "exitCode": 1,
+      "exitCodeIsByDesign": true,
+      "newRunIdCreated": false,
+      "priorDispatchJournalBytesPreserved": true,
+      "priorDispatchedRunId": 38192680467,
+      "globalExactlyOnceClaimed": false
+    },
+    "credentialActualScopeQueried": false,
+    "credentialActualExpiryTested": false,
+    "credentialRotationTested": false,
+    "longRunningRepeatedPublicationVerified": false,
+    "newInboundExposureConfigured": false,
+    "preservationComparison": {
+      "verifiedAt": "2026-10-12T01:46:45.030525Z",
+      "existingDockerContainerCount": 35,
+      "existingDockerRunningCount": 23,
+      "allDockerIdentitiesStartTimesMountsAndRunningStatesPreserved": true,
+      "threeLabPodIdentitiesAndContainerSpecsPreserved": true,
+      "allChecksPassed": true,
+      "checks": {
+        "dockerIdentitySetEqual": true,
+        "dockerStartTimesEqual": true,
+        "dockerMountSetsEqual": true,
+        "dockerRunningStatesEqual": true,
+        "dockerRawMountOrderEqual": false,
+        "labPodIdentitySetEqual": true,
+        "labContainerSpecsEqual": true,
+        "threeLabPodsReady": true
+      },
+      "scope": "READ_ONLY_COMPARISON_ACROSS_OBSERVER_TIMER_ACTIVATION_NO_SQL_REVALIDATION"
+    },
+    "initialPreservationComparison": {
+      "status": "HELPER_ASSERTION_FAILED",
+      "reason": "DOCKER_MOUNT_ARRAY_ORDER_DIFFERED_BETWEEN_READS",
+      "rawFailureRetainedPrivately": true,
+      "firstAttemptCountedAsPassed": false
+    },
+    "mountComparisonSemantics": "ORDER_INDEPENDENT_MOUNT_SETS_RAW_ARRAY_ORDER_CAN_DIFFER",
+    "sqlRevalidatedDuringActivation": false
   }
 }

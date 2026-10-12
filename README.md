@@ -21,7 +21,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 API의 Jenkins·Argo CD·Kubernetes `NOT_CONFIGURED`는 **조회 API 내부의 상태 수집 연결 전**을 뜻합니다. 별도의 정적 플랫폼 collector는 실제 서버 수집과 인증 실패 후 이전 성공 기록·수집 시각 보존 및 회복을 확인했습니다. 이 결과로 API 값을 정상으로 바꾸지 않으며, releases는 현재 JVM 정보입니다.
 
-새 플랫폼 관측본은 Jenkins 대상 SHA·Argo GitOps revision·API 배포 선언 소스와 image digest를 구분합니다. 읽기 권한의 허용·거부와 출력 `0600`, 수동 Pages 게시와 실제 인증 실패 후 이전 성공 보존을 확인했습니다. 공개 화면은 1280px·390px에서 가로 넘침 없이 확인했습니다. 이후 실제 순서 역전 게시에서 발견한 seed 회귀를 교정하고, 복구·순서 역전 재게시에서 이전 성공·실패 시각 보존을 실제 재검증했습니다. **API·웹을 0개로 내린 동안에도 공개 홈·마지막 기록이 유지됐고 같은 정상 B로 복원했습니다. 최종 정상 수집은 `2026-10-11T16:20:31.503389Z`이며 공개 브라우저에서 회복을 확인했습니다. 정기 timer는 비활성이고 전용 Pages PAT를 기다립니다.** [단계별 실제 결과](docs/evidence/platform-observation/README.md)를 구분해 기록합니다.
+새 플랫폼 관측본은 Jenkins 대상 SHA·Argo GitOps revision·API 배포 선언 소스와 image digest를 구분합니다. 읽기 권한의 허용·거부와 출력 `0600`, 인증 실패 후 이전 성공 보존을 확인했습니다. 공개 화면은 1280px·390px에서 가로 넘침 없이 확인했습니다. 실제 게시 순서 역전에서 발견한 seed 회귀도 교정 후 재검증했습니다. **API·웹을 0개로 내린 동안에도 공개 홈·마지막 기록이 유지됐고 같은 정상 B로 복원했습니다. 전용 Pages 자격증명으로 수동 호스트 수집·실제 systemd service·timer 최초 자동 실행과 Pages 게시를 확인했습니다. 첫 자동 수집 `2026-10-12T01:38:38.790231Z`의 전체 공개 JSON 일치와 브라우저 표시도 확인했습니다.** timer는 enabled·active이며 실제 30분 간격의 반복 운영과 자격증명 만료·회전은 아직 검증하지 않았습니다. [단계별 실제 결과](docs/evidence/platform-observation/README.md)를 구분해 기록합니다.
 
 ## 로컬 실행
 
@@ -61,14 +61,14 @@ flowchart LR
   A --> K[K3s API 웹 MariaDB]
   K --> O
   K --> S[읽기 권한 플랫폼 수집기]
-  S -. 수동 Pages 게시 .-> O
+  S -. outbound Pages 게시 .-> O
 ```
 
 GitHub Actions가 유일한 이미지 게시자입니다. 현재 main의 같은 source SHA에서 Jenkins 테스트·필수 산출물과 Actions 통합 검증이 모두 성공해야 게시합니다. Jenkins는 전용 credential로 commit status만 전달합니다. Actions의 draft GitOps PR 자동 제안을 활성화했으며, 검토 후 main에 반영하면 Argo CD가 배포합니다. 자동 승인·자동 병합과 Jenkins의 `helm upgrade`는 사용하지 않습니다.
 
 정상 B 배포에서 source SHA·image digest·GitOps commit·실행 이미지를 연결했습니다. 실제 JUnit 실패에서는 새 이미지·게시 artifact·GitOps PR이 생기지 않았고, 기존 B의 Deployment·Pod·전체 SQL·저장 시각·PVC와 기존 Docker 상태가 유지됐습니다. 이후 GitOps의 API/Web digest와 sourceCommit을 정상 A로 되돌려 Argo Synced·Healthy, 3개 Pod Ready와 기존 데이터·서비스 보존까지 검증했습니다. [정상·실패·복구 근거](docs/evidence/cicd-gate/README.md)를 함께 확인합니다.
 
-기존 Docker 서비스·프록시·방화벽은 보존했습니다. K3s 기본 Traefik·ServiceLB는 사용하지 않습니다. 외부 암호화 백업, 격리 DB 복원, 호스트 재부팅과 GitOps의 이전 image digest 복구를 검증했습니다. K3s·Jenkins archive 전체 복원은 아직 별도 작업입니다. 3단계는 제한된 실제 수집·수동 게시·공개 화면까지 확인했고, 교정 후 게시 순서 보존까지 실제 검증했고 API·웹 중단·같은 정상 B 복원까지 확인했으며 정기 운영을 이어갑니다. 새 inbound 경로는 열지 않았습니다. Kafka·S3는 4단계, AI 개선 재현은 5단계, Iceberg·Spark·Trino는 6단계입니다.
+기존 Docker 서비스·프록시·방화벽은 보존했습니다. K3s 기본 Traefik·ServiceLB는 사용하지 않습니다. 외부 암호화 백업, 격리 DB 복원, 호스트 재부팅과 GitOps의 이전 image digest 복구를 검증했습니다. K3s·Jenkins archive 전체 복원은 아직 별도 작업입니다. 3단계의 수집·공개 게시·순서 보존·API 웹 중단 후 복구와 자동 운영 기본 경로를 검증했습니다. 실제 30분 간격·자격증명 만료·회전은 운영 후속이며, 선택적인 실시간 API·inbound 연결은 별도 미구현 범위입니다. 새 inbound 경로는 열지 않았습니다. Kafka·S3는 4단계, AI 개선 재현은 5단계, Iceberg·Spark·Trino는 6단계입니다.
 
 ## 저장소 구성
 
