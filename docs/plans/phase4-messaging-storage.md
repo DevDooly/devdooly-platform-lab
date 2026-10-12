@@ -1,6 +1,6 @@
 # 4단계 준비 조사: Kafka와 원본 객체 보관
 
-조사일: 2026-10-12 KST. 이 문서는 구현 전 제안이다. 기존 코드와 공식 문서를 조사했고, 같은 날 읽기 전용 자원 사전 점검을 추가했다. Kafka·객체 저장소 설치는 수행하지 않았다. 이후 첫 코드인 DB 작업/outbox·singleton 슬롯을 구현해 격리 MariaDB 검증을 통과했으며 운영에는 미배포 상태다. [실제 결과](../evidence/db-job-foundation/README.md)와 [서비스 절차](../runbooks/db-job-foundation.md)를 연결한다. 이미지 다운로드, 실제 digest 대조, Java SDK 연동과 성능 측정은 아직 수행하지 않았으며, Kafka·Garage·SDK의 배포 조합은 미확정이다.
+조사일: 2026-10-12 KST. 이 문서는 Kafka·객체 저장소의 연결 전 계획과 첫 DB 기반 구현 결과를 구분한다. 기존 코드와 공식 문서를 조사했고, 같은 날 읽기 전용 자원 사전 점검을 추가했다. Kafka·객체 저장소 설치는 수행하지 않았다. 이후 첫 코드인 DB 작업/outbox·singleton 슬롯을 구현해 격리 MariaDB 검증을 통과했으며 운영에는 미배포 상태다. [실제 결과](../evidence/db-job-foundation/README.md)와 [서비스 절차](../runbooks/db-job-foundation.md)를 연결한다. Kafka·Garage 이미지 다운로드·배포 digest 대조, Java S3 SDK 연동과 성능 측정은 아직 수행하지 않았으며 Kafka·Garage·SDK의 배포 조합은 미확정이다. 격리 DB 검증에는 기존에 고정한 MariaDB와 API 이미지를 사용했다.
 
 ## 권장 범위
 
@@ -15,7 +15,7 @@
 
 첫 구현에 ZooKeeper, Kafka operator, Schema Registry, Kafka Connect, Debezium, Redis, 별도 Kafka 관리 UI, Spark·Trino·Airflow를 추가하지 않는다. 현재 공개 POST는 계속 비활성화한다. 공개 Pages와 기존 관측 계약은 유지하며, Kafka·S3 연결 완료 표시는 실제 검증 뒤에만 추가한다.
 
-## 현재 코드에서 확인한 출발점
+## 최초 조사 당시 코드에서 확인한 출발점
 
 실제 API 경로는 `apps/api/`이다. Java 21·Spring Boot 4.1.1, JPA·Flyway·MariaDB를 사용하며 Kafka·S3 의존성은 없다. `DemoService.ensureSample()`은 최초 시작에 고정 run을 한 번 저장하고, `SensorProcessor.process(List<SensorEvent>)`는 한 묶음을 순서대로 판정한다. 처리기의 중복 ID 집합과 센서별 마지막 성공 시각은 호출 안의 메모리 상태다.
 
@@ -29,11 +29,11 @@ Flyway V1에는 `(run_id, input_sequence)` unique 제약과 전체 건수 CHECK�
 
 첫 수정은 Kafka·S3 연결에 앞서 원본 schema·작업/outbox·DB 멱등 경계를 격리 환경에서 구현하는 범위로 잡는다. 기존 Flyway `V1__create_demo_evidence.sql`과 seed 결과 행·처리 시각을 보존하고, 새 작업/outbox와 전체 실행 슬롯은 **V2 migration**으로 추가한다. 미리 생성한 singleton 슬롯 행의 DB 잠금과 작업 고유 키로 동시 작업 1개를 보장하며, `existsById()`나 프로세스 내 변수만으로 제한하지 않는다.
 
-`GET /api/demo/runs`와 상세 조회는 완료된 결과 계약을 유지한다. 진행 중 작업은 별도 job 조회 계약으로 분리한다. 기존 웹의 `isRun()`은 유효한 `completedAt`을 요구하며, `lab-observation v1`은 `synthetic-v1-seed-42`·seed 42·12/7/3/2/0과 입력별 판정을 고정 검증한다. 새 비동기 작업을 이 정적 샘플 관측본에 넣거나 nullable 완료 시각을 기존 run 응답에 섞지 않는다. 별도 job 관측 계약을 만들고, 기존 고정 샘플 조회·`lab-observation v1`·`platform-observation v1`을 유지한다. 공개 POST는 계속 제공하지 않는다.
+`GET /api/demo/runs`와 상세 조회는 완료된 결과 계약을 유지한다. 진행 중 작업은 향후 별도 job 조회 계약으로 분리한다. 이번 foundation에는 job HTTP 조회를 추가하지 않았다. 기존 웹의 `isRun()`은 유효한 `completedAt`을 요구하며, `lab-observation v1`은 `synthetic-v1-seed-42`·seed 42·12/7/3/2/0과 입력별 판정을 고정 검증한다. 새 비동기 작업을 이 정적 샘플 관측본에 넣거나 nullable 완료 시각을 기존 run 응답에 섞지 않는다. 별도 job 관측 계약을 만들고, 기존 고정 샘플 조회·`lab-observation v1`·`platform-observation v1`을 유지한다. 공개 POST는 계속 제공하지 않는다.
 
-기존 `SampleBootstrap`은 모든 profile에서 실행되므로 worker·관리자 일회 실행 profile에서는 비활성화한다. 초기에는 조회 API가 migration·seed 주체이고 worker는 migration·seed를 실행하지 않도록 구분한다. worker는 웹 서버 없는 별도 profile로 시작한다. `DemoRun`의 고정 메타데이터 생성자와 detail의 고정 설명은 새 작업 메타데이터를 받도록 분리하되 기존 seed 생성 경로는 유지한다.
+최초 조사 당시 `SampleBootstrap`은 모든 profile에서 실행됐다. 이번 foundation은 `worker`·`admin` profile에서 자동 bootstrap을 제외했고, `DemoRun`에 별도 작업 메타데이터 생성 경로와 공유 결과 저장 경로를 추가해 기존 seed 경로를 유지했다. 현재 작업도 같은 고정 시나리오이므로 detail 설명은 유지한다. 범용 시나리오 설명 분리, 조회 API만의 migration 주체 설정, worker의 Flyway·웹 서버 비활성화와 실제 worker·관리자 실행기는 후속 구현이다. profile로 bootstrap을 제외했다고 migration이나 웹 서버가 자동 비활성화되는 것은 아니다.
 
-잠금·트랜잭션의 합격 근거는 **실제 MariaDB 격리 검증**으로 남긴다. 동시 제출 2개, 같은 run+같은 hash 재요청, 같은 run+다른 hash 거부, 결과 commit 전 rollback, commit 뒤 같은 작업 재전달에서 DB 효과 1회와 기존 완료 시각·seed 전체 행 보존을 확인한다. H2 결과만으로 MariaDB 동시성·잠금까지 검증했다고 기록하지 않는다. 이 항목은 앞으로 실행할 검증이며 아직 통과한 결과가 아니다.
+잠금·트랜잭션의 합격 근거는 **실제 MariaDB 격리 검증**으로 남긴다. 동시 제출 2개, 같은 run+같은 hash 재요청, 같은 run+다른 hash 거부, 결과 commit 전 rollback, commit 뒤 같은 작업 재전달에서 DB 효과 1회와 기존 완료 시각·seed 전체 행 보존을 확인한다. H2 결과만으로 MariaDB 동시성·잠금까지 검증했다고 기록하지 않는다. 이번 foundation에서 기존 V1 업그레이드·빈 DB 초기화·반복 시작 조건 각각의 실제 MariaDB 17개 검증을 통과했다. 비UTC JVM 완료 시각 일치와 이전 image 호환성도 확인했다. [실제 결과와 검증 실패·교정 기록](../evidence/db-job-foundation/README.md)을 연결한다. Kafka 발행·수신·offset·S3의 장애 후 복구는 아직 후속 관문이다.
 
 ## 제품과 공식 배포 상태
 

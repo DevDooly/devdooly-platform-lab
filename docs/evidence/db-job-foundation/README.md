@@ -18,6 +18,10 @@
 
 17개 MariaDB 시험을 세 조건에서 각각 실행했다. 서로 다른 51개 시험이라는 뜻은 아니다. 이미지와 실제 DB 버전, LF 기준 검증 소스의 SHA-256은 요약에 남겼다. H2 시험과 실제 MariaDB 시험을 구분한다. SQL 원문·개별 연결 주소·자격증명·실행 로그는 공개하지 않는다.
 
+## GitHub 컨테이너 통합 검증
+
+[실행 38219180199](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38219180199)는 구현 commit `c5c1e8589f34e42b99576c935a00c868f26ff407`에서 성공했다. API 시험 35개·웹 검사와 테스트·컨테이너 build·MariaDB/API/web 기동을 통과했다. API container와 주소를 바꾼 뒤에도 Nginx container·전체 저장 결과·시각·12건 판정과 POST 405가 유지됐다. 산출물을 내려받아 before/after와 JUnit 결과를 대조했다. 이후 변경은 이 검증 결과와 설명을 보강한 문서뿐이며, 요약의 12개 구현 파일 fingerprint는 그대로다. 이 CI는 운영 배포나 실제 Kafka·S3 시험이 아니다.
+
 ## DB 경계
 
 - 같은 run·같은 원본 재요청은 같은 작업을 반환하고, 다른 원본 hash와 기존 seed ID는 거부한다. 원본 NDJSON byte·잘못된 시각·업무 중복 ID를 보존한다.

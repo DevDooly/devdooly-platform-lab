@@ -138,6 +138,10 @@
       "nodesUnchanged": true,
       "ufwUnchanged": true,
       "originalApiWebPinsAndSourceRestored": true
+    },
+    "checkScope": {
+      "dockerAllRunning": "the 23 originally running containers; total existing containers are 35",
+      "originalApiWebPinsAndSourceRestored": "same production pins before and after isolated tests; no deployment or rollback performed"
     }
   },
   "cleanup": {
@@ -152,5 +156,32 @@
     "offsetCommit": false,
     "resultFilesExported": false
   },
-  "productionV2Applied": false
+  "productionV2Applied": false,
+  "continuousIntegration": {
+    "runId": 38219180199,
+    "runUrl": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38219180199",
+    "testedSourceCommit": "c5c1e8589f34e42b99576c935a00c868f26ff407",
+    "branch": "feat/db-job-foundation",
+    "status": "completed",
+    "conclusion": "success",
+    "apiTests": 35,
+    "jobConclusion": "success",
+    "composeBeforeCapturedAt": "2026-10-12T07:43:09.398Z",
+    "composeAfterCapturedAt": "2026-10-12T07:43:20.628Z",
+    "counts": {
+      "inputCount": 12,
+      "successCount": 7,
+      "failureCount": 3,
+      "duplicateCount": 2,
+      "pendingCount": 0
+    },
+    "publicPostStatus": 405,
+    "checks": {
+      "apiContainerRecreated": true,
+      "apiAddressChanged": true,
+      "nginxContainerUnchanged": true,
+      "persistedSampleUnchanged": true
+    },
+    "scope": "branch CI container validation; no production rollout; later documentation-only changes retain the same implementation fingerprints"
+  }
 }
