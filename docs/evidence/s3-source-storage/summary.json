@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "verifiedAt": "2026-10-14T10:49:52.744117+00:00",
+  "scope": "Synthetic fixed 12-event raw-source storage; isolated Garage plus H2, no production deployment",
+  "javaMajor": 21,
+  "jvmTimezone": "Asia/Seoul",
+  "awsSdkVersion": "2.55.16",
+  "garage": {
+    "version": "2.4.1",
+    "platform": "linux/amd64",
+    "indexDigest": "sha256:9c96caa2612d3411acc5b0e6701fb238dbfba33e533a6d7d3d811a4b12d0d020",
+    "manifestDigest": "sha256:0d7c74fc8ca6fef68a5a941c0e7558c8b1e92ba3588fa7505400e1350456c796",
+    "imageConfigDigest": "sha256:c7746d213b6809acdd57ab4b7c48f9e2636e4382a3a63e3ee845a1e82df40209",
+    "imageConfigMatched": true,
+    "replicationFactor": 1,
+    "metadataBackend": "sqlite",
+    "memoryLimitBytes": 1610612736,
+    "cpuLimit": 1,
+    "noPublishedPorts": true,
+    "internalNetwork": true
+  },
+  "defaultVerify": {
+    "tests": 54,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "jarBuilt": true
+  },
+  "defaultChecksumFirstTrial": {
+    "executed": 4,
+    "failures": 1,
+    "errors": 3,
+    "putStatusCode": 400,
+    "reason": "Invalid payload signature",
+    "passed": false
+  },
+  "garageCompatibilityTrial": {
+    "executed": 4,
+    "passed": 4,
+    "skippedPersistence": 1,
+    "requestChecksumCalculation": "WHEN_REQUIRED",
+    "responseChecksumPolicyChanged": false,
+    "generalFactoryChecksumPolicyChanged": false
+  },
+  "persistenceTrial": {
+    "beforePassed": true,
+    "containerRecreated": true,
+    "sameImage": true,
+    "expectedPersistentPathsVerified": true,
+    "afterGetOnlyPassed": true,
+    "markerDeletedAfterVerification": true
+  },
+  "cleanup": {
+    "trialContainerRemoved": true,
+    "trialNetworkRemoved": true,
+    "privateDataRetained": true
+  },
+  "productionPreservation": {
+    "observedAt": "2026-10-14T10:49:58.579147+00:00",
+    "passed": true,
+    "existingDockerCount": 26,
+    "productionPvcCount": 2,
+    "labPodCount": 3,
+    "checks": {
+      "productionPvcUidsBindingsAndStorageUnchanged": true,
+      "databasePodImageAndMountsUnchanged": true,
+      "allSqlRowsTimestampsAndFlywayUnchanged": true,
+      "allPersistedApiFieldsExceptObservedAtUnchanged": true,
+      "existingDockerIdsMountsStartTimesUnchanged": true,
+      "hostBootUnchanged": true,
+      "ufwUnchanged": true
+    }
+  },
+  "implementationSha256Lf": {
+    "apps/api/pom.xml": "11d01bf93d6ce662e3cd8168e055d233bf2c694ffb4579c65a103fdf7fa07d1c",
+    "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/CanonicalSource.java": "ca13afe5fc57a062cf913bddafe1a496715569ea6dacca49692af999a7ff10c4",
+    "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/LabJobService.java": "75098ab8371320417bfdd08cabe9336a6b2e856c98a3f8c22d262895665af121",
+    "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/RawSourceStore.java": "3861c9a7b9e538170b01894075e1260b433fe0e3f66fda87a2ffb4ede512517c",
+    "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/S3ClientFactory.java": "b31cf3c276ea2e2aeed5e0e0fe580307c86bb69c5c74672dc51c551288fd920a",
+    "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/S3RawSourceStore.java": "62d515eebefb69e58f6bdbe58c948d2d27bb0f42dfce880be1a9d8a3555e6bce",
+    "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/SourceStagingService.java": "3de6c3a362ec00b3a33297524b79018492eb6aa481437a3f76688dc203fdef9f",
+    "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/CanonicalSourceTest.java": "f421afab05db59269412386633f5544aea9b1c58ae44011873be7d0e2e325079",
+    "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/GarageRawSourceIT.java": "543642983d4c75a8d00d805a5b60c1ada0789ec815e8436d52efe3e0688a6190",
+    "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/LabJobContractTests.java": "a845906c67f972ecda89caac13c0295f9218e5eab6fe4f5e5e00930647897c81",
+    "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/LabJobIntegrationTest.java": "744d28dc2cab7f51e40875744af01f536a5aeb75a44f3fbebe3e7ef3f837d92c",
+    "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/MariaDbLabJobIT.java": "85d3011a8e52d3ba1b8a2d81b3223c22f2c7a917933fa8d646d2d9e4ff6501b4",
+    "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/S3RawSourceStoreTest.java": "925299c34353e044f5546deb0d209fe81d8a296067c3b763273ca89759b8aa87",
+    "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/SampleBootstrapProfileTest.java": "2ca5bdb31277f51fac37836163d269b902f2167e5e20de434a20988fd9cacdc8",
+    "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/SourceStagingIntegrationTest.java": "e8464e415c70a3a1557c0e97b2e3eec2076dea686b017605eb86cc21a9076887"
+  },
+  "notVerified": [
+    "production Garage/Kafka deployment",
+    "MariaDB and S3 combined integration",
+    "Kafka publication or offsets",
+    "result export",
+    "multi-writer CAS or WORM",
+    "host/disk-loss recovery",
+    "PUT acknowledgement loss",
+    "operator termination during S3 I/O"
+  ]
+}

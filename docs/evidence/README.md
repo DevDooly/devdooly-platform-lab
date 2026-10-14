@@ -5,6 +5,7 @@
 | 기록 | 확인한 범위 |
 | --- | --- |
 | [Linux 컨테이너 통합](compose-ci/README.md) | 실제 MariaDB·Flyway·컨테이너·API 주소 변경·Nginx와 결과 보존 |
+| [S3 원본 보관](s3-source-storage/README.md) | 기본 54개·실제 SDK 4개·재생성 전 Put/Get·후 Get-only 보존, checksum 실패 교정과 기존 운영 보존 |
 | [API MVP](api-mvp/README.md) | Windows·Java 21, 테스트 15개, H2 실제 HTTP·DB 검증 |
 | [화면 테스트](../../apps/lab-web/VALIDATION.md) | 타입 검사·테스트 4개·정적 빌드, 로컬 API HTTP smoke |
 | [Pages 최초 공개](web-mvp/README.md) | Actions 게시 성공, 공개 문서·asset 200, PC·모바일 UI 확인 |

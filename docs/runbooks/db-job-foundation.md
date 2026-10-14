@@ -4,7 +4,7 @@
 
 ## 현재 범위
 
-`apps/api/src/main/java/io/github/devdooly/platformlab/jobs/`의 `LabJobService`와 `CanonicalSource`, Flyway `V2__create_lab_job_outbox.sql`이 대상이다. 외부에서 호출할 job HTTP API·관리자 CLI·스케줄러·Kafka producer/consumer·S3 adapter는 없다. 기존 [조회 API 계약](../contracts/demo-api.md)의 GET과 `POST /api/demo/runs` 거부(405), `publicExecutionEnabled: false`를 유지한다. 내부 메서드의 존재를 공개 실행이나 Kafka·S3 연결 완료로 표시하지 않는다.
+`apps/api/src/main/java/io/github/devdooly/platformlab/jobs/`의 `LabJobService`와 `CanonicalSource`, Flyway `V2__create_lab_job_outbox.sql`이 대상이다. 외부 job HTTP API·관리자 CLI·스케줄러·Kafka producer/consumer는 없다. 이후 추가한 명시적 S3 원본 adapter는 [별도 절차](s3-source-storage.md)와 [실제 근거](../evidence/s3-source-storage/README.md)에 정리했다. 이 문서의 35개·MariaDB 각 17개 결과는 최초 DB 기반 코드의 검증 범위다. 기존 [조회 API 계약](../contracts/demo-api.md)의 GET과 `POST /api/demo/runs` 거부(405), `publicExecutionEnabled: false`를 유지한다. 내부 메서드의 존재를 공개 실행이나 Kafka·S3 연결 완료로 표시하지 않는다.
 
 원본은 공개 합성 시나리오 `sensor-validation-v1`의 **순서가 고정된 12개 입력**만 허용한다. 최대 크기는 1 MiB(1,048,576 bytes)다. UTF-8 NDJSON의 중복 JSON key·추가 필드·trailing token·입력 순서나 값 변경을 거부한다. 잘못된 시각 문자열과 업무상 중복 ID는 원본대로 보존한다. 공백·LF/CRLF처럼 표현만 다른 유효 원본도 byte가 다르면 SHA-256이 다르다. 이름에 canonical이 있어도 byte 표현을 하나로 정규화하거나 hash를 같게 만들지는 않는다.
 

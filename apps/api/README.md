@@ -35,7 +35,7 @@ MariaDB 없이 로컬 코드·HTTP를 확인할 때만 명시적으로 다음 pr
 - 고정 seed 42의 12건: 성공 7, 실패 3, 중복 2, 대기 0
 - 최초 시작 시 고정 run ID를 저장하고 이후 시작에서는 이미 저장된 결과를 재사용
 
-공개 실행 POST와 Kafka·S3 연동은 없습니다. 현재 bootstrap은 단일 앱 인스턴스 시작을 전제로 합니다. 여러 replica가 동시에 최초 시작하는 배포 전에는 DB 잠금/별도 seed Job을 추가해야 합니다.
+공개 실행 POST와 Kafka 연동은 없습니다. S3 원본 adapter는 명시적 내부 호출과 격리 검증만 추가했으며 기본 앱에는 자동 연결하지 않습니다. [S3 사용·검증 절차](../../docs/runbooks/s3-source-storage.md)를 참고합니다. 현재 bootstrap은 단일 앱 인스턴스 시작을 전제로 합니다. 여러 replica가 동시에 최초 시작하는 배포 전에는 DB 잠금/별도 seed Job을 추가해야 합니다.
 
 [API 계약](../../docs/contracts/demo-api.md), [독립 시나리오](../../tests/scenarios/sensor-validation-v1.json), [검증 기록](../../docs/evidence/api-mvp/README.md)을 참고합니다.
 

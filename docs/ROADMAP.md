@@ -94,7 +94,8 @@
 
 - [ ] Kafka producer·worker와 멱등 키·재시도·실패 이벤트 보관 구현
 - [ ] 중복·역순·중단·재시작 후 결과 건수와 lag 확인
-- [ ] S3 후보의 필요한 SDK 기능을 검증한 뒤 제품 선정
+- [x] Garage·Java SDK의 필요한 API·기본 checksum 실패와 호환성 교정 검증 후 한정 선정: [ADR 0005](adr/0005-verified-raw-source-storage.md)
+- [x] 원본 전체 bytes·크기·SHA-256, 상태 전환 전 실패·재시도와 컨테이너 재생성 후 Get-only 보존: [근거](evidence/s3-source-storage/README.md)
 - [ ] 결과 파일과 보존 정책, 지연·자원 지표 연결
 - [ ] 최대 1,000개 이벤트·전체 동시 작업 1개·요청 빈도 제한 검증
 - [ ] 제한을 검증한 뒤 공개 샘플 실행 기능 추가

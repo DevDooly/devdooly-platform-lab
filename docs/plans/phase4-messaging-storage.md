@@ -1,6 +1,6 @@
 # 4단계 준비 조사: Kafka와 원본 객체 보관
 
-조사일: 2026-10-12 KST. 이 문서는 Kafka·객체 저장소의 연결 전 계획과 첫 DB 기반 구현 결과를 구분한다. 기존 코드와 공식 문서를 조사했고, 같은 날 읽기 전용 자원 사전 점검을 추가했다. Kafka·객체 저장소 설치는 수행하지 않았다. 이후 첫 코드인 DB 작업/outbox·singleton 슬롯을 구현해 격리 MariaDB 검증을 통과했으며 운영에는 미배포 상태다. [실제 결과](../evidence/db-job-foundation/README.md)와 [서비스 절차](../runbooks/db-job-foundation.md)를 연결한다. Kafka·Garage 이미지 다운로드·배포 digest 대조, Java S3 SDK 연동과 성능 측정은 아직 수행하지 않았으며 Kafka·Garage·SDK의 배포 조합은 미확정이다. 격리 DB 검증에는 기존에 고정한 MariaDB와 API 이미지를 사용했다.
+최초 조사: 2026-10-12 KST. DB 작업/outbox·단일 슬롯을 격리 MariaDB에서 검증한 뒤, 2026-10-14에는 Garage 2.4.1·Java SDK 2.55.16 원본 adapter를 추가했다. 기본 checksum의 실제 실패와 Garage 전용 설정의 교정, 전체 원본 검증·재시도·컨테이너 재생성 후 Get-only 보존을 확인했다. [DB 기반 근거](../evidence/db-job-foundation/README.md), [S3 검증 근거](../evidence/s3-source-storage/README.md), [선정 ADR](../adr/0005-verified-raw-source-storage.md)을 연결한다. 운영 image·DB는 갱신하지 않았고 Kafka 전달·offset·결과 export는 아직 미구현이다. 아래 제품 조사는 최초 시점의 기록이며 이후 확정한 조합은 ADR을 따른다.
 
 ## 권장 범위
 

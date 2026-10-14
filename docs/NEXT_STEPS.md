@@ -89,11 +89,11 @@ GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins 
 
 ## 4 Kafka와 객체 저장소
 
-[구현 전 조사와 작은 처리 흐름](plans/phase4-messaging-storage.md)에 제품 후보, 원본 보관·재전달·DB 멱등 처리와 장애 검증 순서를 정리했습니다. 설치와 실제 검증은 다음 단계이며, 제품 선택도 SDK 호환성 확인 후 확정합니다.
+[구현 전 조사와 작은 처리 흐름](plans/phase4-messaging-storage.md)에 제품 후보, 원본 보관·재전달·DB 멱등 처리와 장애 검증 순서를 정리했습니다. 이는 최초 계획이며, 이후 Garage·SDK의 격리 검증과 한정 채택을 아래 근거에 추가했습니다. 운영 설치는 후속 단계입니다.
 
-[읽기 전용 자원 사전 점검](evidence/messaging-storage/README.md)에서 잠정 메모리·디스크 관문을 통과했습니다. 한 시점의 여유이며 신규 구성의 부하 검증이나 설치 완료를 뜻하지 않습니다. V2 작업/outbox·단일 실행 슬롯과 실제 MariaDB의 잠금·동시 제출·rollback·재전달·시간대 일치를 격리 검증했습니다. 기본 verify 35개와 실제 DB 세 조건 각각 17개가 통과했으며 이전 image 호환성·기존 운영 보존도 확인했습니다. [DB 기반 코드의 결과와 한계](evidence/db-job-foundation/README.md)를 연결합니다. 운영에는 미배포이며 다음은 S3 SDK 호환성과 원본 저장 adapter입니다.
+[읽기 전용 자원 사전 점검](evidence/messaging-storage/README.md)에서 잠정 메모리·디스크 관문을 통과했습니다. 한 시점의 여유이며 신규 구성의 부하 검증이나 설치 완료를 뜻하지 않습니다. V2 작업/outbox·단일 실행 슬롯과 실제 MariaDB의 잠금·동시 제출·rollback·재전달·시간대 일치를 격리 검증했습니다. 기본 verify 35개와 실제 DB 세 조건 각각 17개가 통과했으며 이전 image 호환성·기존 운영 보존도 확인했습니다. [DB 기반 코드의 결과와 한계](evidence/db-job-foundation/README.md)를 연결합니다. 운영에는 미배포입니다. 이후 Garage 원본 adapter의 기본 verify 54개·실제 SDK 4개·컨테이너 재생성 전후 각 1개를 통과했습니다. 기본 checksum 실패의 교정과 기존 운영 보존은 [S3 근거](evidence/s3-source-storage/README.md), 한정 선정은 [ADR 0005](adr/0005-verified-raw-source-storage.md)에 있습니다. 다음은 Kafka 전달과 offset 경계입니다.
 
-기존 합성 센서 시나리오에 메시지 수신과 원본 보관을 추가합니다. 최대 이벤트 수, 동시 실행 수, 보존 기간부터 제한하고 하나의 worker로 시작합니다. 객체 저장소 제품은 구현 시점의 유지보수 상태·라이선스·S3 호환 기능을 확인한 뒤 선택합니다.
+기존 합성 센서 시나리오에 메시지 수신과 원본 보관을 추가합니다. 최대 이벤트 수, 동시 실행 수, 보존 기간부터 제한하고 하나의 worker로 시작합니다. 객체 저장소는 유지보수 상태·라이선스·S3 호환 기능을 확인한 Garage로 한정 채택했으며 운영 배포 조건은 별도로 검증합니다.
 
 - [ ] 동일 이벤트 재전송, 센서별 시간 역순, 잘못된 값의 처리 규칙을 명시합니다.
 - [ ] DB 반영 전후에 worker를 중단해 재시작·재전달 시 중복 적재를 방지하는지 확인합니다.
@@ -143,6 +143,6 @@ CKA 학습은 Lab과 연결합니다. context·RBAC·Service와 DNS·probe·requ
 1. 외부 백업·격리 DB 복원·호스트 재부팅 검증을 완료했습니다. 초기 관리자 비밀번호 교체는 별도로 남아 있습니다.
 2. CI/CD의 정상 B 배포·실제 실패 차단·이전 정상 A 복구를 완료했습니다. 전용 credential의 만료·회전은 운영 후속으로 관리합니다.
 3. 게시 순서 보존과 API·웹 중단 시 공개 기록 유지·같은 정상 B 복원을 검증했습니다. 전용 자격증명의 수동 host cycle·실제 systemd service·timer 자동 실행과 반복 Pages 게시 11회·실제 간격까지 확인했습니다. 이후 장기간 운영과 credential 만료·회전을 별도로 확인합니다.
-4. DB 작업/outbox·멱등 경계의 격리 검증을 마쳤습니다. 다음은 Garage Java S3 SDK 호환성·원본 보관·hash 확인, Kafka 발행·수신과 장애 후 재전달 연결입니다. DB foundation은 검토용 변경이며 운영 image pin은 유지합니다. AI 개선 사례는 이후 5단계로 연결합니다.
+4. DB 작업/outbox·멱등 경계의 격리 검증을 마쳤습니다. Garage Java SDK 호환성·원본 보관·hash 확인과 컨테이너 재생성 후 Get-only 보존도 검증했습니다. 다음은 Kafka 발행·수신과 장애 후 재전달 연결입니다. DB foundation은 검토용 변경이며 운영 image pin은 유지합니다. AI 개선 사례는 이후 5단계로 연결합니다.
 
 각 결과는 소스 변경, 실행 방법, 실제 검증 결과, TIL 설명, 포트폴리오 링크로 연결합니다. 작업 완료 시 [진행 목록](ROADMAP.md)을 갱신하고 프로필에는 구현한 범위만 반영합니다.
