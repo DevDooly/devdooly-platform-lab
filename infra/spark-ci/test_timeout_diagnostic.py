@@ -21,6 +21,12 @@ def progress():
 
 
 class TimeoutDiagnostics(unittest.TestCase):
+    def setUp(self):
+        # Existing timeout contracts never invoke Docker; resource sampling has
+        # its own exact-target mocked tests in test_oom_diagnostic.py.
+        sample = patch.object(r, 'capture_spark_cgroup', return_value=r.empty_cgroup_diagnostic())
+        sample.start(); self.addCleanup(sample.stop)
+
     def test_complete_fixed_transition_is_atomic_immutable_and_does_not_claim_completion(self):
         with tempfile.TemporaryDirectory()as folder,patch.object(b,'PROOF',Path(folder)),patch.object(os,'O_NOFOLLOW',getattr(os,'O_NOFOLLOW',0),create=True):
             b.write_progress(progress()['milestones'],'NOEXEC',100)

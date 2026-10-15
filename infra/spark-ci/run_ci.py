@@ -300,6 +300,158 @@ def log_signature(raw):
     return next((name for name, pattern in signatures if re.search(pattern, raw)), 'NO_RECOGNIZED_SIGNATURE')
 
 
+def oom_subtype_signature(raw):
+    """Fixed bounded-tail signatures, not a diagnosis or a kernel-OOM claim."""
+    raw = raw[-262144:]
+    prefix = rb'java\.lang\.OutOfMemoryError: '
+    signatures = (
+        ('JAVA_HEAP_SPACE_SIGNATURE', prefix + rb'Java heap space(?:\r?\n|$)'),
+        ('NATIVE_THREAD_SIGNATURE', prefix + rb'unable to create native thread(?:[:\r\n]|$)'),
+        ('DIRECT_BUFFER_SIGNATURE', prefix + rb'(?:Direct buffer memory(?:\r?\n|$)|Cannot reserve [0-9]{1,20} bytes of direct buffer memory(?:[ (\r\n]|$))'),
+        ('METASPACE_SIGNATURE', prefix + rb'Metaspace(?:\r?\n|$)'))
+    found = [name for name, pattern in signatures if re.search(pattern, raw)]
+    return found[0] if len(found) == 1 else 'MULTIPLE_OOM_SUBTYPE_SIGNATURES' if found else 'OOM_SUBTYPE_UNOBSERVED'
+
+
+CGROUP_FILES = ('pids.current', 'pids.max', 'pids.events', 'memory.current', 'memory.max', 'memory.events')
+CGROUP_SCRIPT = '''set -eu
+count=0
+while IFS= read -r membership; do
+    [ "$membership" = "0::/" ] || exit 42
+    count=$((count + 1))
+done < /proc/self/cgroup
+[ "$count" = 1 ] && [ -f /sys/fs/cgroup/cgroup.controllers ] || exit 42
+printf 'CGROUP_V2_CONTAINER_ROOT\\n'
+for name in pids.current pids.max pids.events memory.current memory.max memory.events; do
+    printf 'BEGIN %s\\n' "$name"
+    while IFS= read -r line; do printf '%s\\n' "$line"; done < "/sys/fs/cgroup/$name"
+    printf 'END %s\\n' "$name"
+done
+'''
+
+
+def parse_cgroup_sample(raw):
+    require(isinstance(raw, bytes) and 0 < len(raw) <= 8192, 'BOUNDED_CGROUP_SAMPLE')
+    lines = raw.decode('ascii').splitlines()
+    require(lines and lines.pop(0) == 'CGROUP_V2_CONTAINER_ROOT', 'CONTAINER_ROOT_CGROUP_V2_REQUIRED')
+    sections = {}
+    for name in CGROUP_FILES:
+        require(lines and lines.pop(0) == 'BEGIN ' + name, 'FIXED_CGROUP_SECTION_ORDER')
+        section = []
+        while lines and lines[0] != 'END ' + name:
+            section.append(lines.pop(0))
+            require(len(section) <= 16, 'BOUNDED_CGROUP_EVENT_KEYS')
+        require(lines and lines.pop(0) == 'END ' + name, 'COMPLETE_CGROUP_SECTION')
+        sections[name] = section
+    require(not lines, 'NO_EXTRA_CGROUP_OUTPUT')
+    def number(value):
+        require(re.fullmatch(r'(?:0|[1-9][0-9]{0,18})', value) is not None, 'NONNEGATIVE_CGROUP_INTEGER')
+        result = int(value)
+        require(result < 2**63, 'BOUNDED_CGROUP_INTEGER')
+        return result
+    def scalar(name, unlimited=False):
+        require(len(sections[name]) == 1, 'ONE_CGROUP_SCALAR')
+        value = sections[name][0]
+        return None if unlimited and value == 'max' else number(value)
+    def events(name, required):
+        parsed = {}
+        for line in sections[name]:
+            fields = line.split(' ')
+            require(len(fields) == 2 and re.fullmatch('[a-z_]{1,32}', fields[0]) is not None
+                and fields[0] not in parsed, 'UNIQUE_NUMERIC_CGROUP_EVENTS')
+            parsed[fields[0]] = number(fields[1])
+        require(set(required) <= set(parsed), 'REQUIRED_CGROUP_EVENTS_OBSERVED')
+        return parsed
+    pids = events('pids.events', ('max',))
+    memory = events('memory.events', ('low', 'high', 'max', 'oom', 'oom_kill'))
+    pid_max, memory_max = scalar('pids.max', True), scalar('memory.max', True)
+    return {'pidsCurrent': scalar('pids.current'), 'pidsMax': pid_max, 'pidsMaxUnlimited': pid_max is None,
+        'pidsEventsMax': pids['max'], 'memoryCurrentBytes': scalar('memory.current'), 'memoryMaxBytes': memory_max,
+        'memoryMaxUnlimited': memory_max is None, 'memoryEventsLow': memory['low'], 'memoryEventsHigh': memory['high'],
+        'memoryEventsMax': memory['max'], 'memoryEventsOom': memory['oom'], 'memoryEventsOomKill': memory['oom_kill'],
+        'memoryEventsOomGroupKill': memory.get('oom_group_kill'), 'pidsLimitMatchesPlan': pid_max == 256,
+        'memoryLimitMatchesPlan': memory_max == 3*1024**3}
+
+
+def empty_cgroup_diagnostic():
+    return {'collection': 'NOT_REQUESTED', 'identityBound': False, 'execAttempted': False,
+        'scope': 'POINT_IN_TIME_CGROUP_V2_SEQUENTIAL_READS', 'eventCounterScope': 'CONTAINER_LIFETIME_KERNEL_COUNTERS_NO_BASELINE',
+        'diagnosticExecOverheadIncluded': False, 'baselineOrDeltaMeasured': False, 'values': {}}
+
+
+def bounded_cgroup_exec(cid):
+    """One fixed readonly shell; caps both pipes and only terminates its CLI child."""
+    require(re.fullmatch('[a-f0-9]{64}', cid), 'EXACT_FULL_CGROUP_TARGET_ID')
+    argv = ['docker', 'exec', '--user', '185:185', cid, '/bin/sh', '-c', CGROUP_SCRIPT]
+    child = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    chunks, overflow, reader_error = [bytearray(), bytearray()], threading.Event(), threading.Event()
+    def collect(stream, target):
+        try:
+            while True:
+                raw = stream.read1(1024)
+                if not raw:
+                    return
+                remaining = 8192 - len(target)
+                target.extend(raw[:remaining])
+                if len(raw) > remaining:
+                    overflow.set(); return
+        except Exception:
+            reader_error.set()
+    readers = [threading.Thread(target=collect, args=(stream, target), daemon=True)
+        for stream, target in zip((child.stdout, child.stderr), chunks)]
+    for reader in readers:
+        reader.start()
+    timed_out = False
+    try:
+        deadline = time.monotonic() + 5
+        while child.poll() is None and not overflow.is_set() and not reader_error.is_set():
+            if time.monotonic() >= deadline:
+                timed_out = True; break
+            time.sleep(0.025)
+    finally:
+        if child.poll() is None:
+            child.terminate()
+            try:
+                child.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                child.kill(); child.wait(timeout=2)
+        for reader in readers:
+            reader.join(timeout=2)
+        child.stdout.close(); child.stderr.close()
+    require(not any(reader.is_alive() for reader in readers) and not reader_error.is_set(), 'BOUNDED_CGROUP_CHILD_READ_COMPLETED')
+    result = subprocess.CompletedProcess(argv, child.returncode, bytes(chunks[0]), bytes(chunks[1]))
+    result.capture_truncated = overflow.is_set()
+    result.capture_timed_out = timed_out
+    return result
+
+
+def capture_spark_cgroup(attempt, expected):
+    diagnostic = empty_cgroup_diagnostic()
+    diagnostic['collection'] = 'UNOBSERVED'
+    try:
+        before = next(v for v in attempt.containers() if v['role'] == 'spark')
+        require(before['id'] == expected['id'] and type(before['running']) is bool, 'EXACT_CGROUP_OWNER_BEFORE_READ')
+        if not before['running']:
+            diagnostic['collection'] = 'NOT_RUNNING'
+            return diagnostic
+        diagnostic['execAttempted'] = True
+        result = bounded_cgroup_exec(before['id'])
+        # Raw fixed-command output/errors stay private, including OCI exec errors.
+        save(attempt.root / 'spark-cgroup.stdout', result.stdout)
+        save(attempt.root / 'spark-cgroup.stderr', result.stderr)
+        after = next(v for v in attempt.containers() if v['role'] == 'spark')
+        require(after['id'] == before['id'] and after['running'] is True, 'SAME_LIVE_CGROUP_OWNER_AFTER_READ')
+        require(result.returncode == 0 and not result.capture_truncated and not result.capture_timed_out,
+            'COMPLETE_SUCCESSFUL_CGROUP_READ')
+        values = parse_cgroup_sample(result.stdout)
+        diagnostic.update(collection='OBSERVED', identityBound=True, diagnosticExecOverheadIncluded=True, values=values)
+    except Exception:
+        # PID saturation can prevent even this single diagnostic shell from starting.
+        # Failure proves neither zero counters nor that a particular limit was hit.
+        pass
+    return diagnostic
+
+
 def safe_progress(value):
     fields = {'schemaVersion', 'scope', 'sequence', 'lastPhase', 'milestones',
         'elapsedMillis', 'tmpMountFlag', 'completionNotProven'}
@@ -395,6 +547,7 @@ def spark_diagnostics(attempt, expected, diagnostic, deadline_capture=False):
         'ACTUAL_SPARK_STATE_TYPES')
     diagnostic.update(stateObserved=True, runningAtCapture=before['running'],
         exitCode=None if before['running'] else before['exitCode'], oomKilled=before['oom'])
+    diagnostic['cgroup'] = capture_spark_cgroup(attempt, before)
     logs = bounded_deadline_logs(before['id']) if deadline_capture else attempt.command(
         ['docker', 'logs', '--tail', '200', before['id']], sensitive=True, check=False)
     # These files remain in the private runner directory and are never artifacts.
@@ -407,6 +560,7 @@ def spark_diagnostics(attempt, expected, diagnostic, deadline_capture=False):
     diagnostic.update(runningAtCapture=after['running'], exitCode=None if after['running'] else after['exitCode'],
         oomKilled=after['oom'], logCollection='TRUNCATED' if getattr(logs, 'capture_truncated', False) else 'COLLECTED' if logs.returncode == 0 else 'UNAVAILABLE',
         logSignature=log_signature(logs.stdout + b'\n' + logs.stderr) if logs.returncode == 0 else 'LOG_UNAVAILABLE')
+    diagnostic['oomSubtypeSignature'] = oom_subtype_signature(logs.stdout + b'\n' + logs.stderr) if logs.returncode == 0 else 'OOM_SUBTYPE_UNOBSERVED'
     diagnostic['progress'] = read_progress(attempt.root)
     bootstrap = None
     path = attempt.root / 'proof/bootstrap-diagnostic.json'
@@ -462,7 +616,8 @@ def main():
     results, failure, passed, stopped, initializer_stopped = {}, None, False, False, False
     diagnostics = {'stateObserved': False, 'runningAtCapture': None, 'exitCode': None, 'oomKilled': None,
         'logCollection': 'NOT_CAPTURED', 'logSignature': 'LOG_UNAVAILABLE', 'bootstrap': None,
-        'progress': None, 'deadlineCapture': 'NOT_REQUESTED'}
+        'progress': None, 'deadlineCapture': 'NOT_REQUESTED', 'oomSubtypeSignature': 'OOM_SUBTYPE_UNOBSERVED',
+        'cgroup': empty_cgroup_diagnostic()}
     checks = {'vendorBytesVerified': False, 'pinnedImagesPulled': False, 'internalNetworkVerified': False, 'containerLimitsVerified': False}
     try:
         require(shutil.disk_usage(root).free >= 6*1024**3, 'GITHUB_RUNNER_DISK_RESERVE')
