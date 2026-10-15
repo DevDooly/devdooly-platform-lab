@@ -12,6 +12,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Set;
 import java.util.UUID;
@@ -52,9 +53,26 @@ public final class LocalRuntimeProgress implements RuntimeProgress {
         record(Health.STARTING, "STARTING");
         if (!Files.exists(path.getParent(), LinkOption.NOFOLLOW_LINKS)) {
             Files.createDirectory(path.getParent(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------")));
+            clearNewDirectoryInheritedSetgid(path.getParent(), uid);
         }
         RuntimeReadyProbe.privateDirectory(path.getParent(), uid);
         if (Files.exists(path, LinkOption.NOFOLLOW_LINKS)) { RuntimeReadyProbe.privateFile(path, uid); }
+    }
+
+    private static void clearNewDirectoryInheritedSetgid(Path directory, long expectedUid) throws IOException {
+        var before = Files.readAttributes(directory, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+        long owner = ((Number) Files.getAttribute(directory, "unix:uid", LinkOption.NOFOLLOW_LINKS)).longValue();
+        int mode = ((Number) Files.getAttribute(directory, "unix:mode", LinkOption.NOFOLLOW_LINKS)).intValue() & 07777;
+        if (!before.isDirectory() || before.fileKey() == null || owner != expectedUid || (mode != 0700 && mode != 02700)) {
+            throw new IOException("New progress directory must be private and owned");
+        }
+        // A Kubernetes fsGroup emptyDir can inherit SGID despite mkdir's 0700 request.
+        // Normalize only this newly created inode; existing directories stay fail-closed.
+        if (mode == 02700) { Files.setAttribute(directory, "unix:mode", 0700, LinkOption.NOFOLLOW_LINKS); }
+        var after = Files.readAttributes(directory, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+        if (!before.fileKey().equals(after.fileKey()) || !after.isDirectory()) {
+            throw new IOException("New progress directory identity changed");
+        }
     }
 
     @Override public synchronized void starting() { if (!terminal) { publish(Health.STARTING, "STARTING"); } }
