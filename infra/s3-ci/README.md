@@ -1,6 +1,18 @@
 # Apache5 격리 Garage 검증 — 명시적 loopback TCP relay 실험
 
-상태: **SOURCE_PREPARED_NOT_RUN**. 이 파생본으로 Docker·GitHub Cloud·미니 PC를 실행하지 않았습니다. Windows 로컬의 순수 검사와 loopback TCP fixture 검사는 실제 MariaDB/Garage 호환성 증거가 아닙니다. 원본 Apache5 소스 세 파일과 기존 다섯 IT의 코드·선택은 바꾸지 않습니다.
+상태: **SOURCE_PREPARED_NOT_RUN**. 이 Surefire 진단 파생본으로 Docker·GitHub Cloud·미니 PC를 실행하지 않았습니다. Windows 로컬의 순수 검사와 loopback TCP fixture 검사는 실제 MariaDB/Garage 호환성 증거가 아닙니다. 원본 Apache5 소스 세 파일과 기존 다섯 IT의 코드·선택은 바꾸지 않습니다.
+
+## 세 번째 실제 시도와 새 Surefire 진단
+
+run `38802913533` / source `4565af3a2d2cf263bc785771ce57a278ba3da240`에서는 두 relay의 실제 TCP positive control·byte 전달·join과 소유 컨테이너 종료를 확인했습니다. API JAR는 92,724,910 bytes, SHA `bae57d6556f93d52699ba687dc573e99986beffa012f902534a4c594e4e5dbad`이며 Apache5 2.55.16과 tested adapter class bytes 일치를 확인했습니다. 이후 단일 Maven IT 명령이 `COMMAND_FAILED_OR_UNKNOWN_NO_RETRY`로 실패했습니다. 공개 summary의 tests는 null이므로 어떤 사례나 원인인지 **미관측**이며, 실제 Garage 호환성이 통과한 결과가 아닙니다.
+
+새 파생본은 IT 실행 전 예상 XML 두 파일이 없음을 확인합니다. Maven 명령을 **한 번만** `check=False`로 호출해 완료 exit code를 얻고, 그 명령이 완료했을 때에만 새 XML의 안전한 진단을 수집합니다. 그 뒤 **원래 Maven exit=0 조건과 정확한 다섯 pass/0 failure/error/skip/Asia-Seoul gate를 그대로 적용**합니다. 진단은 성공 권한을 주지 않습니다. timeout·unknown outcome에는 exit code나 testcase 0을 발명하지 않고 기존 실패를 남깁니다. 진단 실패는 relay/container 종료를 막지 않습니다.
+
+`surefire_diagnostic.py`는 예상 `GarageRawSourceIT`·`VerifiedResultExportIT` XML만 각각 최대 4MiB, nofollow 일반 파일·전후 inode/mtime/size 일치 조건으로 읽습니다. DTD/entity와 불완전 XML·counter/실제 node 불일치를 거절합니다. 두 완전한 XML이 없으면 aggregateCounts는 null입니다. missing/partial 사례의 present도 null·outcome UNOBSERVED입니다. 완전한 XML에 관측된 사례만 실제 존재/결과를 표시합니다.
+
+공개 `itDiagnostics`에는 알려진 다섯 method 이름, suite/counter/결과 enum, BeforeAll 등 이름 미인식 사례의 **개수와 unknown flag**, 고정 exception category만 추가합니다. 문자열 message·unknown class/method·URL·bucket/key·Request ID·환경·원문 XML/stack은 내보내지 않습니다. S3 HTTP status는 알려진 S3 exception class와 정확한 `(Service: S3, Status Code: ..., Request ID: ...)` 문법을 함께 관측했을 때의 숫자만 내보냅니다. 이 좁은 문법에 맞지 않으면 추측하지 않습니다. [AWS service exception 진단 형식](https://github.com/aws/aws-sdk-java-v2/blob/master/core/aws-core/src/main/java/software/amazon/awssdk/awscore/exception/AwsServiceException.java)
+
+문제 사례는 suite당 최대 8개, 원문 검사 범위는 사례당 첫 64KiB/1,024줄입니다. source frame은 저장소에서 확인한 고정 public class/file 쌍에 한해 **파일명·line 1~5000**만 최대 8개 기록합니다. method·전체 경로·원문 문장은 없습니다. 일부 원인이 잘릴 수 있는 진단이며, 인식 category만으로 sole cause나 실제 S3 요청 횟수를 주장하지 않습니다. 기존 relay 모듈·한도·API 세 파일·workflow·IT 선택·teardown·종료 규칙은 모두 유지합니다.
 
 ## 이전 실패와 새 연결 조건
 

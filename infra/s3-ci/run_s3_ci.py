@@ -15,6 +15,7 @@ import time
 import xml.etree.ElementTree as ET
 import zipfile
 from loopback_relay import LoopbackRelay
+from surefire_diagnostic import collect as collect_it_diagnostics, empty_diagnostics, report_paths
 
 sys.dont_write_bytecode = True
 MARIADB = 'mariadb:11.8.9@sha256:6422478cb8e159f080fb1d8ccf65101e26fe51385787fde7d16c3b165a331f15'
@@ -339,6 +340,7 @@ def run():
     attempt = Attempt(folder, project)
     passed = stopped = False; failure = None; totals = None; artifact = None
     relays = []; relay_reports = []; relays_stopped = True
+    it_diagnostics = empty_diagnostics()
     try:
         actual_source = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, check=True, timeout=10).stdout.decode().strip()
         require(actual_source == source, 'CHECKOUT_SHA_MISMATCH')
@@ -433,10 +435,20 @@ def run():
             'LAB_S3_TEST_ACCESS_KEY': key['accessKeyId'], 'LAB_S3_TEST_SECRET_KEY': key['secretAccessKey']})
         del key, db_password, root_password
         # This is the existing real-IO code, not a new test that mirrors the adapter.
-        attempt.command([str(maven), '-B', '-ntp', '-f', str(api/'pom.xml'), '-Dlab.s3.tests=true', '-Dlab.export.tests=true',
-            '-DargLine=-Duser.timezone=Asia/Seoul -Xmx768m', '-Dtest='+SELECTION, 'test'], env=env, timeout=300)
+        reports = api / 'target/surefire-reports'
+        require(all(not path.exists() and not path.is_symlink() for path in report_paths(reports)), 'FRESH_EXPECTED_IT_REPORTS_REQUIRED')
+        it_diagnostics['freshReportsGatePassed'] = True
+        test_exit, _ = attempt.command([str(maven), '-B', '-ntp', '-f', str(api/'pom.xml'), '-Dlab.s3.tests=true', '-Dlab.export.tests=true',
+            '-DargLine=-Duser.timezone=Asia/Seoul -Xmx768m', '-Dtest='+SELECTION, 'test'], env=env, timeout=300, check=False)
         del env
-        totals = test_summary(api / 'target/surefire-reports')
+        try:
+            it_diagnostics = collect_it_diagnostics(reports, test_exit)
+        except Exception:
+            it_diagnostics['collection'] = 'UNOBSERVED_DIAGNOSTIC_COLLECTION_FAILURE'
+        # Informational projection cannot override either the Maven exit or the
+        # unchanged exact five-pass/zero-skip/Asia-Seoul gate.
+        require(test_exit == 0, 'COMMAND_FAILED_OR_UNKNOWN_NO_RETRY')
+        totals = test_summary(reports)
         source_identity(api); require(jar_identity(api) == artifact, 'SOURCE_CLASSES_OR_API_ARTIFACT_CHANGED_DURING_ITS')
         # Existing ITs delete only their registered UUID objects/rows (also on failure).
         # Read the dedicated DB through its own container; root password never enters argv/output.
@@ -476,7 +488,7 @@ def run():
             'rawLogsCredentialsOrConnectionValuesPublished': False,
             'connectivityProfile': CONNECTIVITY_PROFILE, 'dockerPortsPublished': False,
             'ownedRelaysStoppedAndJoined': relays_stopped, 'relays': relay_reports,
-            'historicalPortGuardFailureCauseObserved': False, 'failure': failure}
+            'historicalPortGuardFailureCauseObserved': False, 'itDiagnostics': it_diagnostics, 'failure': failure}
         save_json(public_dir / 'summary.json', summary)
         print(json.dumps(summary, sort_keys=True))
     return 0 if passed else 1
