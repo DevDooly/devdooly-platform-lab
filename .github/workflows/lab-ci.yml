@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - apps/api/**
+      - examples/**
       - apps/lab-web/**
       - tests/**
       - infra/containers/**
@@ -60,13 +61,24 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
-          cache-dependency-path: apps/api/pom.xml
+          cache-dependency-path: |
+            apps/api/pom.xml
+            examples/java-window-analysis/pom.xml
 
       - name: Verify API
         working-directory: apps/api
         run: |
           chmod +x mvnw
           ./mvnw -B -ntp verify
+
+      - name: Verify Java example
+        run: |
+          chmod +x apps/api/mvnw
+          ./apps/api/mvnw -B -ntp -f examples/java-window-analysis/pom.xml verify
+          test -s examples/java-window-analysis/target/benchmarks.jar
+
+      - name: Validate benchmark result handling without measuring performance
+        run: python3 -B -m unittest discover -s examples/java-window-analysis/scripts -p 'test_*.py' -v
 
       - name: Set up Node 24
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -135,6 +147,8 @@ jobs:
           name: lab-validation-${{ github.sha }}
           path: |
             apps/api/target/surefire-reports/TEST-*.xml
+            examples/java-window-analysis/target/surefire-reports/TEST-*.xml
+            examples/java-window-analysis/target/benchmarks.jar
             artifacts/compose-before.json
             artifacts/compose-after.json
           if-no-files-found: warn

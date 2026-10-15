@@ -1,8 +1,8 @@
 # Platform Lab 다음 개발 계획
 
-초기 계획: 2026년 10월 12일 · 최근 V2 운영 배포·격리 export 경계 중단 복구 검증: 2026년 10월 15일
+초기 계획: 2026년 10월 12일 · 최근 V4 운영 전환·독립 AI Java 예제 검증: 2026년 10월 15일
 
-Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접 확인할 수 있는 포트폴리오로 발전시킵니다. 외부 백업·격리 DB 복원·재부팅과 CI/CD의 정상 배포·실패 차단·이전 image digest 복구를 확인했습니다. **기존 플랫폼 관측의 2026-10-12 수집·실패 보존·Pages 게시·공개 화면과 자동 운영·반복 게시 11회를 검증**했습니다. 게시 순서 회귀 교정, API·웹 중단 후 같은 정상 B 복원에 이어 전용 Pages 자격증명으로 수동 host cycle·실제 systemd service·timer 자동 실행을 확인했습니다. 실제 완료 간격은 약 30~31분이었고 자격증명 만료·회전과 장기간 운영은 별도 후속입니다. Kafka·Garage·상시 worker의 최초 배포와 정상 재시작 당시 총 3작업·파일 6개·슬롯 해제를 확인했습니다. 새 job timer의 자동 게시 2회·완료 간격 1개와 전용 PVC 외부 사본의 격리 복원·clone 물리 블록 복원을 검증했습니다. 이후 보존 계획·새 합성 PVC 정리·작은 자원 관측과 최대 1,000개 입력·동시 접수 경계를 격리 검증했습니다. V2 지원 API·worker를 운영에 함께 배포하고 내부 V2 작업 한 건을 추가해 현재 총 7개 EXPORTED 작업·파일 14개를 확인했습니다. 별도 격리 worker의 export 경계 강제 종료 복구도 확인했습니다. 다음은 객체 GC·다른 장애 경계/호스트 중단·과부하 정책·장기간 운영과 AI 개선·데이터 플랫폼 사례입니다.
+Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접 확인할 수 있는 포트폴리오로 발전시킵니다. 외부 백업·격리 DB 복원·재부팅과 CI/CD의 정상 배포·실패 차단·이전 image digest 복구를 확인했습니다. **기존 플랫폼 관측의 2026-10-12 수집·실패 보존·Pages 게시·공개 화면과 자동 운영·반복 게시 11회를 검증**했습니다. 게시 순서 회귀 교정, API·웹 중단 후 같은 정상 B 복원에 이어 전용 Pages 자격증명으로 수동 host cycle·실제 systemd service·timer 자동 실행을 확인했습니다. 실제 완료 간격은 약 30~31분이었고 자격증명 만료·회전과 장기간 운영은 별도 후속입니다. Kafka·Garage·상시 worker의 최초 배포와 정상 재시작 당시 총 3작업·파일 6개·슬롯 해제를 확인했습니다. 새 job timer의 자동 게시 2회·완료 간격 1개와 전용 PVC 외부 사본의 격리 복원·clone 물리 블록 복원을 검증했습니다. 이후 보존 계획·새 합성 PVC 정리·작은 자원 관측과 최대 1,000개 입력·동시 접수 경계를 격리 검증했습니다. V2 지원 API·worker를 운영에 함께 배포하고 내부 V2 작업 한 건을 추가해 현재 총 7개 EXPORTED 작업·파일 14개를 확인했습니다. 별도 격리 worker의 export 경계 강제 종료 복구도 확인했습니다. 전체 객체 참조 보호와 별도 Garage 자연 GC, 독립 AI Java 예제도 근거와 함께 기록했습니다. 다음은 다른 장애 경계/호스트 중단·과부하 정책·장기간 운영, AI 예제의 사람 검토와 데이터 플랫폼 사례입니다.
 
 [공개 Lab](https://devdooly.github.io/devdooly-platform-lab/) · [전체 진행 목록](ROADMAP.md) · [현재 접속 안내](START_HERE.md)
 
@@ -10,9 +10,9 @@ Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접
 
 | 영역 | 확인한 내용 | 다음에 채울 부분 |
 | --- | --- | --- |
-| Java API·worker | 기본 140개, 격리 기능 IT 5개·Linux 1,000개 입력 3회·export 경계 강제 종료 복구, V2 운영 배포 후 총 7작업/14파일 확인 | 다른 장애 경계·호스트 중단·과부하 정책·장기간 관측 |
+| Java API·worker | 기본 157개, 격리 기능 IT 5개·Linux 1,000개 입력 3회·export 경계 강제 종료 복구, V2 운영 배포 후 총 7작업/14파일 확인 | 다른 장애 경계·호스트 중단·과부하 정책·장기간 관측 |
 | Kafka·Garage 복구 | 외부 사본의 전용 3PVC 복원·clone 물리 블록, 보존 정책·합성 정리 검증 | 장기간 보존 운영·객체 GC·복구 절차 유지 |
-| 포트폴리오 | 웹 34개, 기존 플랫폼 11회와 별도 새 job timer 자동 게시 2회·간격 1개 확인 | 장기간 반복 운영·자격증명 회전 |
+| 포트폴리오 | 웹 41개·AI 예제 기록 선택 UI, 기존 플랫폼 11회와 별도 새 job timer 자동 게시 2회·간격 1개 확인 | 장기간 반복 운영·자격증명 회전 |
 | Jenkins·Actions | 같은 SHA의 두 CI 성공·게시·draft GitOps PR·정상 B 배포·실제 실패 차단, main의 공개 status 수집 | credential 만료·회전과 게시 이력 보존 운영 |
 | Argo CD와 Helm | 정상 A → B → A GitOps 복구, Synced·Healthy·데이터 보존과 제한된 실제 상태 수집 | 주기 관측의 반복 운영과 실패 대응 |
 | 운영 | 외부 암호화 백업·격리 DB 복원·호스트 재부팅, 사용자 kubectl 복구 | 초기 비밀번호 교체, 추가 장치 사본·전체 archive 복원 |
@@ -29,10 +29,10 @@ GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins 
 | 2 | CI/CD 연결 | 소스 SHA부터 실행 image digest까지 이어지는 배포 기록 |
 | 3 | 관측 공개 | 빌드·배포·Pod 상태와 마지막 수집 시각 |
 | 4 | Kafka와 객체 저장소 | 중복·역순·재시작에도 일관된 처리 결과 |
-| 5 | AI를 활용한 Java 개선 | 실패 재현, 개선 코드, 측정 원본과 개발자의 판단 |
+| 5 | AI를 활용한 Java 개선 | UTC 오류·동일 결과 알고리즘·실제 독립 JMH 기록, 사람 검토 대기 |
 | 6 | Iceberg와 Trino | 적재부터 SQL 조회·재시작까지 재현되는 데이터 흐름 |
 
-순서 1의 백업·격리 DB 복원·재부팅과 순서 2의 정상·실패·이전 digest 복구 검증을 마쳤습니다. 순서 3은 실제 수집·인증 실패 후 보존·회복·수동 공개 게시·브라우저를 확인했고, 게시 순서 회귀 교정 후 실제 재검증도 완료했고 API·웹 중단·같은 정상 B 복원도 확인했고 정기 운영 검증을 이어갑니다. 초기 비밀번호 교체·token 회전·추가 장치 사본·전체 archive 복원은 별도 운영 후속으로 남깁니다. AI 사례의 입력·테스트 설계는 작은 실험으로 병행할 수 있으며 공개 기능과 결과는 기존 5단계에 연결합니다. 각 단계의 완료 조건을 통과한 뒤 확장합니다.
+순서 1의 백업·격리 DB 복원·재부팅과 순서 2의 정상·실패·이전 digest 복구 검증을 마쳤습니다. 순서 3은 실제 수집·인증 실패 후 보존·회복·수동 공개 게시·브라우저를 확인했고, 게시 순서 회귀 교정 후 실제 재검증도 완료했고 API·웹 중단·같은 정상 B 복원도 확인했고 정기 운영 검증을 이어갑니다. 초기 비밀번호 교체·token 회전·추가 장치 사본·전체 archive 복원은 별도 운영 후속으로 남깁니다. AI 사례는 독립 Java 예제·실제 로컬 JMH·정적 기록 UI를 5단계에 연결했으며 사람 검토와 TIL 연결은 남아 있습니다. 각 단계의 완료 조건을 통과한 뒤 확장합니다.
 
 ## 1 운영 기준과 복구
 
@@ -139,17 +139,19 @@ GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins 
 
 ## 5 AI를 활용한 Java 개선
 
-회사의 수율 로직을 옮기지 않고, 독립적인 합성 예제 하나로 시작합니다. 후보는 중첩 탐색을 Map 기반 검색으로 바꾸는 연산 개선, 또는 시간대·이벤트 순서 오류의 수정입니다.
+[개인 합성 Java 시간창 예제](../examples/java-window-analysis/README.md)를 구현했습니다. 회사 수율 공식·업무 데이터·운영 ETL은 사용하지 않았습니다. UTC offset을 버리는 의도적 오류를 0초와 올바른 10초로 고정하고, 동일 정규화 입력을 O(n²) 기준 구현과 O(n log n) sweep으로 계산합니다.
 
-- [ ] 버그 사례는 개선 전 실패 테스트와 경계 조건을 만들고, 성능 사례는 기능 기대 결과와 개선 전 기준 측정을 확보합니다.
-- [ ] AI에 제공한 비민감 입력, 제안, 채택·수정·거절한 이유를 기록합니다.
-- [ ] 독립적인 기대 결과와 비교해 유지할 동작과 교정할 동작을 구분합니다. 성능 개선에서는 동일 입력의 기능 결과가 유지되는지도 확인합니다.
-- [ ] 성능 사례는 별도 JMH 프로젝트에서 입력 규모별로 측정하고 JDK·CPU·heap·warmup·fork 조건과 원본 결과를 남깁니다.
-- [ ] 결과 화면에 전후 코드, 실패 테스트, 측정 조건과 개선 한계를 연결합니다.
+- [x] UTC·시계 오차·인접/중첩·clipping 경계와 독립 정수 격자 oracle 2,000사례를 포함한 Java 테스트 20개
+- [x] AI에 제공한 비민감 합성 입력과 채택/제외한 설계 범위 기록: [PROVENANCE](../examples/java-window-analysis/PROVENANCE.md)
+- [x] sparse/nested × 128/512/2048/4096의 닫힌 형태 기대값과 두 구현의 동일 결과 검증
+- [x] 독립 JMH 1.37의 실제 Windows Java 21·3 fork·1 thread·256MiB/G1 측정: 16조합·48 fork·240 interval과 원본 hash 보존
+- [x] 전후 코드, 선택한 fixture의 기대 결과·ns/op·B/op·큰 오차·측정 조건을 정적 포트폴리오에 연결: 웹 41개·check/build, [실제 근거](evidence/ai-window-analysis/README.md)
+- [x] CI에 예제 verify·runner 검사와 필수 JAR guard 연결, 로컬 guard 검사 2개와 실제 Jenkins Declarative linter 확인: [검증 범위](evidence/ai-window-analysis/ci-validation.md)
+- [ ] 저장소 소유자의 사람 검토와 실제 채택 판단, TIL 연결
 
-**완료 조건:** 다른 개발자가 같은 테스트와 측정을 실행할 수 있어야 합니다. AI 사용 여부보다 오류를 어떻게 검증하고 설계를 판단했는지가 드러나야 합니다. [OpenJDK JMH 실행 안내](https://github.com/openjdk/jmh)
+**측정 한계:** UTC 파싱·정규화는 trial setup으로 제외했습니다. sparse/2048 기준 구현은 평균 11,933us에 JMH 오차 10,205us로 큰 분산이 포함됩니다. 이 짧은 로컬 합성 비교를 운영 처리량·p95·SLA·보장 개선율로 사용하지 않습니다. 측정 당시 미커밋 sourceCommit:null과 실제 source manifest/JAR/fixture/raw JSON hash를 유지하며, 사람 검토는 PENDING입니다. CI에서는 성능 benchmark를 재실행하지 않습니다.
 
-**공개 결과:** 실무 경험과 구분한 개인 재현 사례 한 편입니다. 측정 전에는 개선율을 기재하지 않습니다.
+**완료 조건:** 다른 개발자가 같은 테스트·측정 명령과 공개 근거를 확인할 수 있습니다. 구현과 측정 기록을 연결했으며 사람 검토 완료로 바꾸지 않습니다. [OpenJDK JMH 안내](https://github.com/openjdk/jmh)
 
 ## 6 Iceberg와 Trino
 
@@ -172,7 +174,7 @@ CKA 학습은 Lab과 연결합니다. context·RBAC·Service와 DNS·probe·requ
 
 ## 내부 접수 간격 후보 검증
 
-DB의 기본 30초 승인 간격은 구현·격리 검증을 완료했습니다. 기본 157개·실제 MariaDB/Garage 19개·외부 인증 SQL 복원본의 이전 binary 호환 8개와 같은 source CI 성공을 확인했습니다. [근거](evidence/admission-cooldown/README.md), [전환·원복 절차](runbooks/admission-cooldown.md)를 따릅니다. 운영은 아직 source `6c5aff94`·schema V3이며 다음은 새 이미지의 API V4 migration→worker 교체·기존 자료 보존입니다. 구형 stage는 정책을 우회하므로 혼용하지 않습니다. 지속 부하·HTTP QPS 제한·전체 RuntimeMain의 충전된 cooldown 재시작은 별도 미검증입니다.
+DB의 기본 30초 승인 간격을 실제 V4 API→worker 순서로 배포했습니다. 기본 157개·격리 MariaDB/Garage 19개·복원본 이전 binary 호환 8개는 [기존 근거](evidence/admission-cooldown/README.md)에 보존합니다. source `202ab6806130cfb37e8829ce7d52c89990d8a54a`의 [실제 전환](evidence/admission-v4-deployment/README.md)은 API·웹 32/32와 worker 35/35, 기존 7작업·파일 정보 14개 보존을 확인했습니다. Kubernetes Ready와 runtime 준비는 구분하며 첫 32/35 관측·이전 exit UNOBSERVED를 남깁니다. 11:40:08.792Z의 정기 V4 수집은 [Pages 실행](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38728965840) 성공 후 공개 JSON 전체 일치를 확인했습니다: [정기 게시 후속](evidence/admission-v4-deployment/PUBLICATION.md). 다음은 새 V4 fixture 접수·거부·슬롯 해제·자료 보존이며 아직 수행하지 않았습니다. [전환·원복 절차](runbooks/admission-cooldown.md)를 따르고 구형 stage와 혼용하지 않습니다. 지속 부하·HTTP QPS 제한·전체 RuntimeMain의 충전된 cooldown 재시작은 별도 미검증입니다.
 
 ## 바로 다음 작업
 

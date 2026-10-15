@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "status": "VERIFIED",
+  "scope": "PUBLISHED_SOURCE_BYTE_EQUIVALENCE_ONLY",
+  "checkedAt": "2026-10-15T12:17:07.391446Z",
+  "measuredSourceCommit": null,
+  "measuredSourceProvenance": "UNCOMMITTED_PRIVATE_OVERLAY",
+  "measuredSourceManifestSha256": "3f4a5f710d78464214e823bdf8581bdde9dfc015cf08315a40d67fd78fb3c21e",
+  "publishedEquivalentCommit": "554839313f5b19311dbd00ab8631d47d36e30777",
+  "verifiedFiles": 16,
+  "allMeasuredSourceBytesIdenticalInGit": true,
+  "benchmarkRerunPerformed": false,
+  "publishedBuildJarIdenticalClaimed": false,
+  "humanReview": "PENDING",
+  "files": [
+    {
+      "path": "examples/java-window-analysis/.gitignore",
+      "bytes": 38,
+      "sha256": "a0e3f21dda9ee8c605691c4d3f0339dc24e0766c6201255f75b4ebefc38b9cc9",
+      "gitBlobSha1": "f223947a08ca85d971aa660430b8dfcdbd71b102"
+    },
+    {
+      "path": "examples/java-window-analysis/DESIGN.md",
+      "bytes": 4732,
+      "sha256": "24e46c1a15ef9527189d32a92264479f27e524f01cb62e524e12cc5a9866abd0",
+      "gitBlobSha1": "507564a7778df680e0d735c5741ad3804b9cd2eb"
+    },
+    {
+      "path": "examples/java-window-analysis/pom.xml",
+      "bytes": 2280,
+      "sha256": "e6b6fcf777e764fc512049df2c52671f6184755131ae744e4ed49ad6e6f6fe56",
+      "gitBlobSha1": "fdf66fef8e157697521f037ad4163ccd1a94b445"
+    },
+    {
+      "path": "examples/java-window-analysis/PROVENANCE.md",
+      "bytes": 1906,
+      "sha256": "3e9a19cc438671116ec705daeab2aed29539a2cc32c1f0091d1194e6e7ddad32",
+      "gitBlobSha1": "55e227e8a07567f9e9717d736be81ce8c3241214"
+    },
+    {
+      "path": "examples/java-window-analysis/README.md",
+      "bytes": 5070,
+      "sha256": "ed32aab85c0963693d0fba77be534f70392be84383ff93d27e42865f65fda7cb",
+      "gitBlobSha1": "3fb30aad001b08b73f007fc8b28b673d31a794a7"
+    },
+    {
+      "path": "examples/java-window-analysis/scripts/run_jmh.py",
+      "bytes": 9509,
+      "sha256": "0c730feaa7f8be44fe26acd9b76d135f05842c06e8663bc9ef71458f2d55a235",
+      "gitBlobSha1": "4b36b2f46a0d5074887f8717c984e0635eb5e6cf"
+    },
+    {
+      "path": "examples/java-window-analysis/scripts/test_run_jmh.py",
+      "bytes": 2937,
+      "sha256": "8e6f6f34c98788f6c8888b159ec45c8b8cf726526ae7fd504504388098057741",
+      "gitBlobSha1": "b8d46f84514cea416e05546d8b03ac4e65cba57e"
+    },
+    {
+      "path": "examples/java-window-analysis/src/main/java/io/github/devdooly/examples/window/DeliberatelyBrokenUtcNormalizer.java",
+      "bytes": 740,
+      "sha256": "1d556666a9498f73e481f05791b079d70358d6182d1b81c323332fb62e4b8716",
+      "gitBlobSha1": "6f0adc38dfea7c6c30e75656a95129dc2a4b11a5"
+    },
+    {
+      "path": "examples/java-window-analysis/src/main/java/io/github/devdooly/examples/window/FixtureManifest.java",
+      "bytes": 1725,
+      "sha256": "3919e970d7a719cf353673ad21ca50c9775031939228b844cdf96155ec159333",
+      "gitBlobSha1": "47c3d8615271d30f4a3abb7363f9d1d2a132a6a7"
+    },
+    {
+      "path": "examples/java-window-analysis/src/main/java/io/github/devdooly/examples/window/QuadraticBoundaryScan.java",
+      "bytes": 1239,
+      "sha256": "915ee3a9c9a4865df6c7f81b40bd0b62385633f234180e357c9d0e869e56a9ab",
+      "gitBlobSha1": "66176ce8713c400be27c982f56d4b423bad5f15c"
+    },
+    {
+      "path": "examples/java-window-analysis/src/main/java/io/github/devdooly/examples/window/SweepLineAnalysis.java",
+      "bytes": 1223,
+      "sha256": "fbadadfb16c8cb78b9e2234b210ed94c94b1916523edd3eebdd39032ddfac861",
+      "gitBlobSha1": "74565a4fd10001746524d7ae160933437c6053bb"
+    },
+    {
+      "path": "examples/java-window-analysis/src/main/java/io/github/devdooly/examples/window/SyntheticFixtures.java",
+      "bytes": 2912,
+      "sha256": "a18009eb471ccbca9eeeb502d464b8c2935afe744a6d4041e2f2ecf7d2776759",
+      "gitBlobSha1": "a23ff094a0449a1df03fc4222e3769a03e1ce24c"
+    },
+    {
+      "path": "examples/java-window-analysis/src/main/java/io/github/devdooly/examples/window/UtcNormalizer.java",
+      "bytes": 2649,
+      "sha256": "136d671c966484e6372308771fabb5791e5b5db0b4fbf1a06e6b7267defe6d0b",
+      "gitBlobSha1": "5e499c866cf1fce6418298e9312f90b5448b647b"
+    },
+    {
+      "path": "examples/java-window-analysis/src/main/java/io/github/devdooly/examples/window/WindowAnalysis.java",
+      "bytes": 2816,
+      "sha256": "d696c3ad9b4b5a3667b87aed4baa3149895f120f9b462c506d3ab65e61426064",
+      "gitBlobSha1": "0afbc1724f358c594c61887e8cc52b251da1d0ec"
+    },
+    {
+      "path": "examples/java-window-analysis/src/main/java/io/github/devdooly/examples/window/WindowBenchmark.java",
+      "bytes": 2098,
+      "sha256": "f9a403648962fd14e6b15b9c2037ec3387b29c19896b454e4e0195dc6a10201b",
+      "gitBlobSha1": "61fb3b5f9f599f93849b34d2042e2c8e208d62aa"
+    },
+    {
+      "path": "examples/java-window-analysis/src/test/java/io/github/devdooly/examples/window/WindowAnalysisTest.java",
+      "bytes": 10655,
+      "sha256": "e667fdc5b07297568d1687f54d1776f06fc85d70c6cddc69562daee42fd817a3",
+      "gitBlobSha1": "2bfe3511baa9984892225e1d55920f5431e15940"
+    }
+  ]
+}

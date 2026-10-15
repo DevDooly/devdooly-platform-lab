@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 1,
+  "scope": "INDEPENDENT_SYNTHETIC_WINDOWS_JAVA21",
+  "sourceCommit": null,
+  "sourceTreeSha256": "3f4a5f710d78464214e823bdf8581bdde9dfc015cf08315a40d67fd78fb3c21e",
+  "jarSha256": "983019bbb4a06cc5011433e31233bb713fc8e5a297e32f8936ad4d2d18145e68",
+  "fixtureManifestSha256": "c998b73ee69673632576e40d8947a05fff27411231b0e0bdef59929af609c524",
+  "rawResultSha256": "85305fe40f5a58ce23e69a7566f40b81628a5355ac1517d47ee318b4d60c5c82",
+  "measuredAt": "2026-10-15T11:11:33.912606Z",
+  "humanReview": "PENDING",
+  "conditions": {
+    "jmhVersion": "1.37",
+    "javaVersion": "Microsoft OpenJDK 21.0.9+10-LTS",
+    "os": "Windows",
+    "forks": 3,
+    "threads": 1,
+    "warmupIterations": 2,
+    "warmupMillis": 500,
+    "measurementIterations": 5,
+    "measurementMillis": 500,
+    "heapMiB": 256,
+    "gc": "G1",
+    "timezone": "Asia/Seoul"
+  },
+  "measurements": [
+    {
+      "profile": "sparse",
+      "size": 128,
+      "quadratic": {
+        "meanMicros": 77.33837965434289,
+        "errorMicros": 42.42464981153435,
+        "allocationBytesPerOp": 28291.718605714093
+      },
+      "sweep": {
+        "meanMicros": 4.918369308918011,
+        "errorMicros": 0.27293691281709176,
+        "allocationBytesPerOp": 16472.066852940006
+      },
+      "ratio": 15.724394569987364,
+      "rawSha256": "32651675149dea9ecbe2dbfab2f743b7aa18d8fcc1b2e107bfbb83949ce7cba7",
+      "normalizedSha256": "9a5c5e972c2dd991cddbfc48540eb85a2f01f1b70e893ca7765e1f0461f06a05",
+      "resultSha256": "8bda412640682401becb8301d2a5f7ffd4935ea19c8c48e62692c59a4821e004",
+      "coveredNanos": 1408000000,
+      "peakConcurrentSessions": 1
+    },
+    {
+      "profile": "sparse",
+      "size": 512,
+      "quadratic": {
+        "meanMicros": 1303.4119927206227,
+        "errorMicros": 678.1868954193129,
+        "allocationBytesPerOp": 112281.80503379254
+      },
+      "sweep": {
+        "meanMicros": 25.501934261244067,
+        "errorMicros": 0.6505839949612887,
+        "allocationBytesPerOp": 65624.3548959289
+      },
+      "ratio": 51.11031890241561,
+      "rawSha256": "d6216333c9b25130274ec34d152b73705b72d391d052cabf9c3167f5d4455572",
+      "normalizedSha256": "74fa3846d36525c2122c453b888de2f6eea550ef4c21f1f4d413b32f18083878",
+      "resultSha256": "afbf2c3b933ddb3a619931eeccf7b46ef0f1c725868481feaf54dd9d574012f4",
+      "coveredNanos": 5632000000,
+      "peakConcurrentSessions": 1
+    },
+    {
+      "profile": "sparse",
+      "size": 2048,
+      "quadratic": {
+        "meanMicros": 11933.210299731545,
+        "errorMicros": 10205.116114962379,
+        "allocationBytesPerOp": 404575.0879016586
+      },
+      "sweep": {
+        "meanMicros": 250.9232573366065,
+        "errorMicros": 11.674169433598426,
+        "allocationBytesPerOp": 262235.4778193305
+      },
+      "ratio": 47.55721102298413,
+      "rawSha256": "14ef04d20f7910e5c2b268c2c25711ea86344696e08d49e023c82eb6f8c8d19a",
+      "normalizedSha256": "0a56b383bd673f2618a8b2f4ecc6d41ba33adda66ba9bda1e2ef7b647d9295aa",
+      "resultSha256": "6a4f4f7bcd0fadbcc1a285cd9fe08177d22335411b1a298dd3a4200070fe9198",
+      "coveredNanos": 22528000000,
+      "peakConcurrentSessions": 1
+    },
+    {
+      "profile": "sparse",
+      "size": 4096,
+      "quadratic": {
+        "meanMicros": 30221.97695559835,
+        "errorMicros": 7982.476805018555,
+        "allocationBytesPerOp": 721544.2462364689
+      },
+      "sweep": {
+        "meanMicros": 632.1134879554742,
+        "errorMicros": 12.280300146722086,
+        "allocationBytesPerOp": 524384.7060732287
+      },
+      "ratio": 47.81099839104711,
+      "rawSha256": "fe35539095d9f3edd7e4449a5621d5fb05108474a411e8a36ae56bf93d1adcb2",
+      "normalizedSha256": "d5ee42515d93267d814316835dbf69ea1841b3c40ae8f4c7ed0afd8ca028c03c",
+      "resultSha256": "9094e9a83be3413a1c6c05f6991b66b7722f773195274d53280920cc1cb61f21",
+      "coveredNanos": 45056000000,
+      "peakConcurrentSessions": 1
+    },
+    {
+      "profile": "nested",
+      "size": 128,
+      "quadratic": {
+        "meanMicros": 13.720377477675942,
+        "errorMicros": 0.9289880785961305,
+        "allocationBytesPerOp": 11512.186812983486
+      },
+      "sweep": {
+        "meanMicros": 2.833798618416006,
+        "errorMicros": 0.07280244987330756,
+        "allocationBytesPerOp": 8336.038453653917
+      },
+      "ratio": 4.841691074486143,
+      "rawSha256": "7a77ca1925affd5d203793a291213b1095f7fafd7153f3e9b5a8e2da2f3d2a3f",
+      "normalizedSha256": "eee5350aa6d9df95fd248861221f9b54114723f58fb180dc11b62615a92b0b86",
+      "resultSha256": "6064948cf35069760a0e2168229e01165ee85419311b672060c83153a2ba38cc",
+      "coveredNanos": 128000000,
+      "peakConcurrentSessions": 128
+    },
+    {
+      "profile": "nested",
+      "size": 512,
+      "quadratic": {
+        "meanMicros": 209.58603250354352,
+        "errorMicros": 6.801957963070858,
+        "allocationBytesPerOp": 45306.896008646596
+      },
+      "sweep": {
+        "meanMicros": 14.714648700885217,
+        "errorMicros": 0.4219203694892264,
+        "allocationBytesPerOp": 39056.204590776
+      },
+      "ratio": 14.243359577516456,
+      "rawSha256": "e8ba5bb215c60b836d3af485fd658e3274ba71201d39fbdb5f185358fc549da7",
+      "normalizedSha256": "edb4ac4cbfa114fabb423ef843a30053dad6cee441587250db3a790c2373269e",
+      "resultSha256": "484d1c1ddae363fbdb123c22d9d3381ab1830656115900244de63ee5d703827d",
+      "coveredNanos": 512000000,
+      "peakConcurrentSessions": 512
+    },
+    {
+      "profile": "nested",
+      "size": 2048,
+      "quadratic": {
+        "meanMicros": 2973.312063295027,
+        "errorMicros": 57.83105514093491,
+        "allocationBytesPerOp": 180512.6680837785
+      },
+      "sweep": {
+        "meanMicros": 98.15591308263178,
+        "errorMicros": 9.2254297035279,
+        "allocationBytesPerOp": 161937.35003232813
+      },
+      "ratio": 30.291726396472598,
+      "rawSha256": "0f5509ace691b5f09023361189a60608bc401a977afe31170c42cb460fc5fe82",
+      "normalizedSha256": "1f837acd9421089784e7b4f64cbffbb498bb2db3333be42abd39d18c13975a5c",
+      "resultSha256": "74761fa3d65558ee05ee5d2b5f99a30ae3792c42f9f2abdd5830bdedb26f2afc",
+      "coveredNanos": 2048000000,
+      "peakConcurrentSessions": 2048
+    },
+    {
+      "profile": "nested",
+      "size": 4096,
+      "quadratic": {
+        "meanMicros": 12918.556177858116,
+        "errorMicros": 2139.630211385086,
+        "allocationBytesPerOp": 360869.92660882074
+      },
+      "sweep": {
+        "meanMicros": 331.891127796807,
+        "errorMicros": 7.542173749168681,
+        "allocationBytesPerOp": 325780.5984243453
+      },
+      "ratio": 38.92407809637869,
+      "rawSha256": "3b74af83b3c35d53d1e3ee5d685fc62545d2c2fee334e83d30886665dfc6a905",
+      "normalizedSha256": "85f7e9076fb2f9d13db4b4c4634e802780ee3693ebd9bce30b24cb97e7e9db2f",
+      "resultSha256": "0a3eee338749695a48bc4ee69dbc82ef99f5b568ebeb5d256c8a03f228a29c44",
+      "coveredNanos": 4096000000,
+      "peakConcurrentSessions": 4096
+    }
+  ],
+  "evidenceLinks": {
+    "readme": "https://github.com/DevDooly/devdooly-platform-lab/blob/main/docs/evidence/ai-window-analysis/README.md",
+    "source": "https://github.com/DevDooly/devdooly-platform-lab/tree/main/examples/java-window-analysis"
+  }
+}

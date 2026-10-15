@@ -1,0 +1,933 @@
+{
+  "schemaVersion": 1,
+  "status": "VERIFIED",
+  "scope": "INDEPENDENT_SYNTHETIC_WINDOWS_JAVA21",
+  "source": {
+    "sourceCommit": null,
+    "sourceCommitProvenance": "UNCOMMITTED_PRIVATE_OVERLAY",
+    "sourceTreeSha256": "3f4a5f710d78464214e823bdf8581bdde9dfc015cf08315a40d67fd78fb3c21e",
+    "sourceTreeHashDefinition": "SHA-256 of canonical JSON file manifest (relative path,size,sha256); not a Git tree SHA",
+    "files": [
+      {
+        "path": ".gitignore",
+        "size": 38,
+        "sha256": "a0e3f21dda9ee8c605691c4d3f0339dc24e0766c6201255f75b4ebefc38b9cc9"
+      },
+      {
+        "path": "DESIGN.md",
+        "size": 4732,
+        "sha256": "24e46c1a15ef9527189d32a92264479f27e524f01cb62e524e12cc5a9866abd0"
+      },
+      {
+        "path": "pom.xml",
+        "size": 2280,
+        "sha256": "e6b6fcf777e764fc512049df2c52671f6184755131ae744e4ed49ad6e6f6fe56"
+      },
+      {
+        "path": "PROVENANCE.md",
+        "size": 1906,
+        "sha256": "3e9a19cc438671116ec705daeab2aed29539a2cc32c1f0091d1194e6e7ddad32"
+      },
+      {
+        "path": "README.md",
+        "size": 5070,
+        "sha256": "ed32aab85c0963693d0fba77be534f70392be84383ff93d27e42865f65fda7cb"
+      },
+      {
+        "path": "scripts/run_jmh.py",
+        "size": 9509,
+        "sha256": "0c730feaa7f8be44fe26acd9b76d135f05842c06e8663bc9ef71458f2d55a235"
+      },
+      {
+        "path": "scripts/test_run_jmh.py",
+        "size": 2937,
+        "sha256": "8e6f6f34c98788f6c8888b159ec45c8b8cf726526ae7fd504504388098057741"
+      },
+      {
+        "path": "src/main/java/io/github/devdooly/examples/window/DeliberatelyBrokenUtcNormalizer.java",
+        "size": 740,
+        "sha256": "1d556666a9498f73e481f05791b079d70358d6182d1b81c323332fb62e4b8716"
+      },
+      {
+        "path": "src/main/java/io/github/devdooly/examples/window/FixtureManifest.java",
+        "size": 1725,
+        "sha256": "3919e970d7a719cf353673ad21ca50c9775031939228b844cdf96155ec159333"
+      },
+      {
+        "path": "src/main/java/io/github/devdooly/examples/window/QuadraticBoundaryScan.java",
+        "size": 1239,
+        "sha256": "915ee3a9c9a4865df6c7f81b40bd0b62385633f234180e357c9d0e869e56a9ab"
+      },
+      {
+        "path": "src/main/java/io/github/devdooly/examples/window/SweepLineAnalysis.java",
+        "size": 1223,
+        "sha256": "fbadadfb16c8cb78b9e2234b210ed94c94b1916523edd3eebdd39032ddfac861"
+      },
+      {
+        "path": "src/main/java/io/github/devdooly/examples/window/SyntheticFixtures.java",
+        "size": 2912,
+        "sha256": "a18009eb471ccbca9eeeb502d464b8c2935afe744a6d4041e2f2ecf7d2776759"
+      },
+      {
+        "path": "src/main/java/io/github/devdooly/examples/window/UtcNormalizer.java",
+        "size": 2649,
+        "sha256": "136d671c966484e6372308771fabb5791e5b5db0b4fbf1a06e6b7267defe6d0b"
+      },
+      {
+        "path": "src/main/java/io/github/devdooly/examples/window/WindowAnalysis.java",
+        "size": 2816,
+        "sha256": "d696c3ad9b4b5a3667b87aed4baa3149895f120f9b462c506d3ab65e61426064"
+      },
+      {
+        "path": "src/main/java/io/github/devdooly/examples/window/WindowBenchmark.java",
+        "size": 2098,
+        "sha256": "f9a403648962fd14e6b15b9c2037ec3387b29c19896b454e4e0195dc6a10201b"
+      },
+      {
+        "path": "src/test/java/io/github/devdooly/examples/window/WindowAnalysisTest.java",
+        "size": 10655,
+        "sha256": "e667fdc5b07297568d1687f54d1776f06fc85d70c6cddc69562daee42fd817a3"
+      }
+    ],
+    "jarSha256": "983019bbb4a06cc5011433e31233bb713fc8e5a297e32f8936ad4d2d18145e68",
+    "jarBytes": 2892528,
+    "humanReview": "PENDING"
+  },
+  "tests": {
+    "java": {
+      "tests": 20,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "oracleSeedCases": 2000,
+      "eachCaseAlsoShuffled": true,
+      "surefireXmlSha256": "c787edf717ac808591153401b37094c184d63baa58a92b9c3fe905ef03a5ae21"
+    },
+    "pythonResultValidator": {
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "actualRun": {
+    "startedAt": "2026-10-15T11:08:12.086233Z",
+    "completedAt": "2026-10-15T11:11:33.912606Z",
+    "elapsedSeconds": 201.826373,
+    "conditions": {
+      "jmhVersion": "1.37",
+      "javaVersion": "Microsoft OpenJDK 21.0.9+10-LTS",
+      "os": "Windows",
+      "forks": 3,
+      "threads": 1,
+      "warmupIterations": 2,
+      "warmupMillis": 500,
+      "measurementIterations": 5,
+      "measurementMillis": 500,
+      "heapMiB": 256,
+      "gc": "G1",
+      "timezone": "Asia/Seoul"
+    },
+    "host": {
+      "system": "Windows",
+      "release": "11",
+      "version": "10.0.26300",
+      "architecture": "AMD64",
+      "processor": "AMD64 Family 25 Model 97 Stepping 2, AuthenticAMD",
+      "logicalCpuCount": 16
+    },
+    "benchmarkParameterMethodRecords": 16,
+    "jvmForksTotal": 48,
+    "measurementIntervalsTotal": 240,
+    "primaryScoreUnit": "us/op",
+    "allocationScoreUnit": "B/op",
+    "errorMeaning": "JMH mean scoreError: Student t(N-1) * sample standard deviation / sqrt(N), 99.9% confidence interval half-width",
+    "rawResultSha256": "85305fe40f5a58ce23e69a7566f40b81628a5355ac1517d47ee318b4d60c5c82",
+    "rawResultBytes": 129818,
+    "fixtureManifestSha256": "c998b73ee69673632576e40d8947a05fff27411231b0e0bdef59929af609c524",
+    "sourceAndJarUnchangedDuringMeasurement": true,
+    "fullResultsValidatorPassed": true,
+    "cpuMemoryCgroupIsolationApplied": false,
+    "allocationIsRssOrPeakMemory": false,
+    "privateReceiptHashes": {
+      "metadata-before.json": "daa072dcb2a8a6bc0ed1da0ec35f6fa92d504f636189ce00409b445d82bf8036",
+      "metadata-after.json": "ed82615e256ace8f0133442356b6f32f806940dc03ee06522f5da41ecdae4d02",
+      "stdout.log": "ebcbed614ead9f973f79dacead0e098a64836ef08577f981be197081fb9cb234",
+      "stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "measurements": [
+    {
+      "profile": "sparse",
+      "size": 128,
+      "quadratic": {
+        "meanMicros": 77.33837965434289,
+        "errorMicros": 42.42464981153435,
+        "allocationBytesPerOp": 28291.718605714093
+      },
+      "sweep": {
+        "meanMicros": 4.918369308918011,
+        "errorMicros": 0.27293691281709176,
+        "allocationBytesPerOp": 16472.066852940006
+      },
+      "ratio": 15.724394569987364,
+      "rawSha256": "32651675149dea9ecbe2dbfab2f743b7aa18d8fcc1b2e107bfbb83949ce7cba7",
+      "normalizedSha256": "9a5c5e972c2dd991cddbfc48540eb85a2f01f1b70e893ca7765e1f0461f06a05",
+      "resultSha256": "8bda412640682401becb8301d2a5f7ffd4935ea19c8c48e62692c59a4821e004",
+      "coveredNanos": 1408000000,
+      "peakConcurrentSessions": 1
+    },
+    {
+      "profile": "sparse",
+      "size": 512,
+      "quadratic": {
+        "meanMicros": 1303.4119927206227,
+        "errorMicros": 678.1868954193129,
+        "allocationBytesPerOp": 112281.80503379254
+      },
+      "sweep": {
+        "meanMicros": 25.501934261244067,
+        "errorMicros": 0.6505839949612887,
+        "allocationBytesPerOp": 65624.3548959289
+      },
+      "ratio": 51.11031890241561,
+      "rawSha256": "d6216333c9b25130274ec34d152b73705b72d391d052cabf9c3167f5d4455572",
+      "normalizedSha256": "74fa3846d36525c2122c453b888de2f6eea550ef4c21f1f4d413b32f18083878",
+      "resultSha256": "afbf2c3b933ddb3a619931eeccf7b46ef0f1c725868481feaf54dd9d574012f4",
+      "coveredNanos": 5632000000,
+      "peakConcurrentSessions": 1
+    },
+    {
+      "profile": "sparse",
+      "size": 2048,
+      "quadratic": {
+        "meanMicros": 11933.210299731545,
+        "errorMicros": 10205.116114962379,
+        "allocationBytesPerOp": 404575.0879016586
+      },
+      "sweep": {
+        "meanMicros": 250.9232573366065,
+        "errorMicros": 11.674169433598426,
+        "allocationBytesPerOp": 262235.4778193305
+      },
+      "ratio": 47.55721102298413,
+      "rawSha256": "14ef04d20f7910e5c2b268c2c25711ea86344696e08d49e023c82eb6f8c8d19a",
+      "normalizedSha256": "0a56b383bd673f2618a8b2f4ecc6d41ba33adda66ba9bda1e2ef7b647d9295aa",
+      "resultSha256": "6a4f4f7bcd0fadbcc1a285cd9fe08177d22335411b1a298dd3a4200070fe9198",
+      "coveredNanos": 22528000000,
+      "peakConcurrentSessions": 1
+    },
+    {
+      "profile": "sparse",
+      "size": 4096,
+      "quadratic": {
+        "meanMicros": 30221.97695559835,
+        "errorMicros": 7982.476805018555,
+        "allocationBytesPerOp": 721544.2462364689
+      },
+      "sweep": {
+        "meanMicros": 632.1134879554742,
+        "errorMicros": 12.280300146722086,
+        "allocationBytesPerOp": 524384.7060732287
+      },
+      "ratio": 47.81099839104711,
+      "rawSha256": "fe35539095d9f3edd7e4449a5621d5fb05108474a411e8a36ae56bf93d1adcb2",
+      "normalizedSha256": "d5ee42515d93267d814316835dbf69ea1841b3c40ae8f4c7ed0afd8ca028c03c",
+      "resultSha256": "9094e9a83be3413a1c6c05f6991b66b7722f773195274d53280920cc1cb61f21",
+      "coveredNanos": 45056000000,
+      "peakConcurrentSessions": 1
+    },
+    {
+      "profile": "nested",
+      "size": 128,
+      "quadratic": {
+        "meanMicros": 13.720377477675942,
+        "errorMicros": 0.9289880785961305,
+        "allocationBytesPerOp": 11512.186812983486
+      },
+      "sweep": {
+        "meanMicros": 2.833798618416006,
+        "errorMicros": 0.07280244987330756,
+        "allocationBytesPerOp": 8336.038453653917
+      },
+      "ratio": 4.841691074486143,
+      "rawSha256": "7a77ca1925affd5d203793a291213b1095f7fafd7153f3e9b5a8e2da2f3d2a3f",
+      "normalizedSha256": "eee5350aa6d9df95fd248861221f9b54114723f58fb180dc11b62615a92b0b86",
+      "resultSha256": "6064948cf35069760a0e2168229e01165ee85419311b672060c83153a2ba38cc",
+      "coveredNanos": 128000000,
+      "peakConcurrentSessions": 128
+    },
+    {
+      "profile": "nested",
+      "size": 512,
+      "quadratic": {
+        "meanMicros": 209.58603250354352,
+        "errorMicros": 6.801957963070858,
+        "allocationBytesPerOp": 45306.896008646596
+      },
+      "sweep": {
+        "meanMicros": 14.714648700885217,
+        "errorMicros": 0.4219203694892264,
+        "allocationBytesPerOp": 39056.204590776
+      },
+      "ratio": 14.243359577516456,
+      "rawSha256": "e8ba5bb215c60b836d3af485fd658e3274ba71201d39fbdb5f185358fc549da7",
+      "normalizedSha256": "edb4ac4cbfa114fabb423ef843a30053dad6cee441587250db3a790c2373269e",
+      "resultSha256": "484d1c1ddae363fbdb123c22d9d3381ab1830656115900244de63ee5d703827d",
+      "coveredNanos": 512000000,
+      "peakConcurrentSessions": 512
+    },
+    {
+      "profile": "nested",
+      "size": 2048,
+      "quadratic": {
+        "meanMicros": 2973.312063295027,
+        "errorMicros": 57.83105514093491,
+        "allocationBytesPerOp": 180512.6680837785
+      },
+      "sweep": {
+        "meanMicros": 98.15591308263178,
+        "errorMicros": 9.2254297035279,
+        "allocationBytesPerOp": 161937.35003232813
+      },
+      "ratio": 30.291726396472598,
+      "rawSha256": "0f5509ace691b5f09023361189a60608bc401a977afe31170c42cb460fc5fe82",
+      "normalizedSha256": "1f837acd9421089784e7b4f64cbffbb498bb2db3333be42abd39d18c13975a5c",
+      "resultSha256": "74761fa3d65558ee05ee5d2b5f99a30ae3792c42f9f2abdd5830bdedb26f2afc",
+      "coveredNanos": 2048000000,
+      "peakConcurrentSessions": 2048
+    },
+    {
+      "profile": "nested",
+      "size": 4096,
+      "quadratic": {
+        "meanMicros": 12918.556177858116,
+        "errorMicros": 2139.630211385086,
+        "allocationBytesPerOp": 360869.92660882074
+      },
+      "sweep": {
+        "meanMicros": 331.891127796807,
+        "errorMicros": 7.542173749168681,
+        "allocationBytesPerOp": 325780.5984243453
+      },
+      "ratio": 38.92407809637869,
+      "rawSha256": "3b74af83b3c35d53d1e3ee5d685fc62545d2c2fee334e83d30886665dfc6a905",
+      "normalizedSha256": "85f7e9076fb2f9d13db4b4c4634e802780ee3693ebd9bce30b24cb97e7e9db2f",
+      "resultSha256": "0a3eee338749695a48bc4ee69dbc82ef99f5b568ebeb5d256c8a03f228a29c44",
+      "coveredNanos": 4096000000,
+      "peakConcurrentSessions": 4096
+    }
+  ],
+  "allowlistedForkResults": [
+    {
+      "method": "quadratic",
+      "profile": "sparse",
+      "size": 128,
+      "meanMicros": 77.33837965434289,
+      "errorMicros": 42.42464981153435,
+      "confidenceIntervalMicros": [
+        34.913729842808536,
+        119.76302946587724
+      ],
+      "allocationBytesPerOp": 28291.718605714093,
+      "forkSamplesMicros": [
+        [
+          23.985902379384935,
+          22.822777902035337,
+          22.929358168761222,
+          22.776999955383037,
+          23.860003744091355
+        ],
+        [
+          109.38410014979671,
+          107.54069009046918,
+          106.17916406737368,
+          107.52500525762355,
+          108.37332485156912
+        ],
+        [
+          101.81730615507594,
+          100.4894094488189,
+          101.17010901883053,
+          100.27921161011963,
+          100.94233201581028
+        ]
+      ]
+    },
+    {
+      "method": "sweep",
+      "profile": "sparse",
+      "size": 128,
+      "meanMicros": 4.918369308918011,
+      "errorMicros": 0.27293691281709176,
+      "confidenceIntervalMicros": [
+        4.64543239610092,
+        5.191306221735103
+      ],
+      "allocationBytesPerOp": 16472.066852940006,
+      "forkSamplesMicros": [
+        [
+          4.555948541564301,
+          4.507519315429359,
+          4.741773680982735,
+          4.53861510279576,
+          4.563779886351453
+        ],
+        [
+          5.070768619662363,
+          5.045173974037264,
+          5.070765532176988,
+          5.039458482685073,
+          5.167019761887932
+        ],
+        [
+          5.065264627817613,
+          5.049131680331917,
+          5.205389795918367,
+          5.094078691079081,
+          5.060851941049961
+        ]
+      ]
+    },
+    {
+      "method": "quadratic",
+      "profile": "sparse",
+      "size": 512,
+      "meanMicros": 1303.4119927206227,
+      "errorMicros": 678.1868954193129,
+      "confidenceIntervalMicros": [
+        625.2250973013098,
+        1981.5988881399358
+      ],
+      "allocationBytesPerOp": 112281.80503379254,
+      "forkSamplesMicros": [
+        [
+          1701.9724252491694,
+          1708.2541806020067,
+          1794.720350877193,
+          1698.6318936877076,
+          1786.9608391608392
+        ],
+        [
+          446.3187937062937,
+          462.1948416289593,
+          443.45854293148307,
+          420.33827160493826,
+          419.8709120788825
+        ],
+        [
+          1676.3954098360655,
+          1800.5452296819788,
+          1708.3083612040134,
+          1783.165505226481,
+          1700.0443333333333
+        ]
+      ]
+    },
+    {
+      "method": "sweep",
+      "profile": "sparse",
+      "size": 512,
+      "meanMicros": 25.501934261244067,
+      "errorMicros": 0.6505839949612887,
+      "confidenceIntervalMicros": [
+        24.85135026628278,
+        26.152518256205354
+      ],
+      "allocationBytesPerOp": 65624.3548959289,
+      "forkSamplesMicros": [
+        [
+          26.41874643874644,
+          26.50718930447901,
+          25.410571329123364,
+          24.926869819600196,
+          26.416840852649006
+        ],
+        [
+          24.900009744689143,
+          25.98746039856924,
+          25.400949587352095,
+          25.078803066037736,
+          24.931643160411888
+        ],
+        [
+          25.210441132932004,
+          24.981850725774812,
+          25.00869437509179,
+          26.114242748636386,
+          25.2347012345679
+        ]
+      ]
+    },
+    {
+      "method": "quadratic",
+      "profile": "sparse",
+      "size": 2048,
+      "meanMicros": 11933.210299731545,
+      "errorMicros": 10205.116114962379,
+      "confidenceIntervalMicros": [
+        1728.0941847691665,
+        22138.326414693925
+      ],
+      "allocationBytesPerOp": 404575.0879016586,
+      "forkSamplesMicros": [
+        [
+          5396.038947368421,
+          5444.235106382978,
+          5384.156382978724,
+          5543.310869565217,
+          5388.875789473685
+        ],
+        [
+          5539.093548387097,
+          5332.445263157895,
+          5340.519791666667,
+          5390.575789473684,
+          5384.331578947368
+        ],
+        [
+          24650.6,
+          24493.157142857144,
+          25369.942857142858,
+          24816.77142857143,
+          25524.1
+        ]
+      ]
+    },
+    {
+      "method": "sweep",
+      "profile": "sparse",
+      "size": 2048,
+      "meanMicros": 250.9232573366065,
+      "errorMicros": 11.674169433598426,
+      "confidenceIntervalMicros": [
+        239.24908790300807,
+        262.59742677020495
+      ],
+      "allocationBytesPerOp": 262235.4778193305,
+      "forkSamplesMicros": [
+        [
+          252.70426164519327,
+          241.1439659252248,
+          245.15528961225468,
+          239.19827021972884,
+          253.48223325062034
+        ],
+        [
+          276.6262987012987,
+          257.8080506329114,
+          258.303488372093,
+          264.023784901758,
+          247.7155113911779
+        ],
+        [
+          247.97278020378457,
+          249.5367156862745,
+          243.26116135173726,
+          231.87945454545454,
+          255.03759360958563
+        ]
+      ]
+    },
+    {
+      "method": "quadratic",
+      "profile": "sparse",
+      "size": 4096,
+      "meanMicros": 30221.97695559835,
+      "errorMicros": 7982.476805018555,
+      "confidenceIntervalMicros": [
+        22239.500150579795,
+        38204.4537606169
+      ],
+      "allocationBytesPerOp": 721544.2462364689,
+      "forkSamplesMicros": [
+        [
+          23289.381818181817,
+          23130.430434782607,
+          22696.678260869565,
+          23117.869565217392,
+          22705.852173913045
+        ],
+        [
+          22602.36086956522,
+          22330.960869565217,
+          30211.644444444446,
+          37744.21428571428,
+          40550.269230769234
+        ],
+        [
+          38669.65714285714,
+          37120.4,
+          35218.00666666667,
+          37044.53571428572,
+          36897.392857142855
+        ]
+      ]
+    },
+    {
+      "method": "sweep",
+      "profile": "sparse",
+      "size": 4096,
+      "meanMicros": 632.1134879554742,
+      "errorMicros": 12.280300146722086,
+      "confidenceIntervalMicros": [
+        619.8331878087521,
+        644.3937881021963
+      ],
+      "allocationBytesPerOp": 524384.7060732287,
+      "forkSamplesMicros": [
+        [
+          630.4275308641975,
+          655.4228498074455,
+          631.3598765432099,
+          640.3399749373434,
+          624.4508557457212
+        ],
+        [
+          627.7141104294478,
+          619.6797807551766,
+          631.5766666666667,
+          617.7357142857143,
+          643.4685138539043
+        ],
+        [
+          649.2875476493011,
+          621.7833130328867,
+          637.1704856787048,
+          616.8872135102533,
+          634.3978855721393
+        ]
+      ]
+    },
+    {
+      "method": "quadratic",
+      "profile": "nested",
+      "size": 128,
+      "meanMicros": 13.720377477675942,
+      "errorMicros": 0.9289880785961305,
+      "confidenceIntervalMicros": [
+        12.791389399079812,
+        14.649365556272073
+      ],
+      "allocationBytesPerOp": 11512.186812983486,
+      "forkSamplesMicros": [
+        [
+          13.249512549263638,
+          13.917106376012878,
+          13.083006385696041,
+          13.329765729060565,
+          13.464224240031584
+        ],
+        [
+          14.002890997860552,
+          14.242316831129623,
+          13.412461663477417,
+          13.735652920962199,
+          13.303286837037422
+        ],
+        [
+          13.082057569024085,
+          12.790923447134908,
+          16.265641791993897,
+          14.737274774774775,
+          13.189540051679586
+        ]
+      ]
+    },
+    {
+      "method": "sweep",
+      "profile": "nested",
+      "size": 128,
+      "meanMicros": 2.833798618416006,
+      "errorMicros": 0.07280244987330756,
+      "confidenceIntervalMicros": [
+        2.7609961685426985,
+        2.906601068289314
+      ],
+      "allocationBytesPerOp": 8336.038453653917,
+      "forkSamplesMicros": [
+        [
+          2.8328796688785816,
+          2.8645071593481592,
+          2.898651260051796,
+          2.8297413530671776,
+          2.813779555761273
+        ],
+        [
+          2.8754725366215883,
+          2.8205128488471676,
+          2.83712379787648,
+          2.8618259192392657,
+          2.9878043646059926
+        ],
+        [
+          2.7409098966978775,
+          2.8876588412664224,
+          2.7804906083849037,
+          2.745954500920533,
+          2.72966696467288
+        ]
+      ]
+    },
+    {
+      "method": "quadratic",
+      "profile": "nested",
+      "size": 512,
+      "meanMicros": 209.58603250354352,
+      "errorMicros": 6.801957963070858,
+      "confidenceIntervalMicros": [
+        202.78407454047266,
+        216.38799046661438
+      ],
+      "allocationBytesPerOp": 45306.896008646596,
+      "forkSamplesMicros": [
+        [
+          209.23925348646432,
+          210.79080791426216,
+          207.08902834008097,
+          213.63397409109905,
+          217.27714893617022
+        ],
+        [
+          204.0591616766467,
+          208.1155383360522,
+          202.61004765687053,
+          203.48679696848822,
+          201.6123617693523
+        ],
+        [
+          226.85234929078015,
+          209.89794661190965,
+          208.34507328990227,
+          210.70140148392414,
+          210.07959770114942
+        ]
+      ]
+    },
+    {
+      "method": "sweep",
+      "profile": "nested",
+      "size": 512,
+      "meanMicros": 14.714648700885217,
+      "errorMicros": 0.4219203694892264,
+      "confidenceIntervalMicros": [
+        14.29272833139599,
+        15.136569070374444
+      ],
+      "allocationBytesPerOp": 39056.204590776,
+      "forkSamplesMicros": [
+        [
+          14.566526087823782,
+          14.24852357250713,
+          14.503499701729966,
+          15.50112629022465,
+          15.452203931500241
+        ],
+        [
+          14.510736955964818,
+          14.86453859378187,
+          14.838905527608967,
+          14.413748203263719,
+          14.311204967554263
+        ],
+        [
+          14.295998208988639,
+          14.831375970683187,
+          14.448948158215124,
+          15.054151677773191,
+          14.878242665658709
+        ]
+      ]
+    },
+    {
+      "method": "quadratic",
+      "profile": "nested",
+      "size": 2048,
+      "meanMicros": 2973.312063295027,
+      "errorMicros": 57.83105514093491,
+      "confidenceIntervalMicros": [
+        2915.4810081540923,
+        3031.143118435962
+      ],
+      "allocationBytesPerOp": 180512.6680837785,
+      "forkSamplesMicros": [
+        [
+          2952.747976878613,
+          2955.5191860465115,
+          2949.5132947976876,
+          2937.4402298850573,
+          2910.5090395480224
+        ],
+        [
+          2978.6453488372094,
+          2933.469540229885,
+          3076.155421686747,
+          3080.115662650602,
+          3032.7922619047617
+        ],
+        [
+          2950.9344827586206,
+          2910.421714285714,
+          3001.05,
+          2934.0691428571427,
+          2996.2976470588237
+        ]
+      ]
+    },
+    {
+      "method": "sweep",
+      "profile": "nested",
+      "size": 2048,
+      "meanMicros": 98.15591308263178,
+      "errorMicros": 9.2254297035279,
+      "confidenceIntervalMicros": [
+        88.93048337910389,
+        107.38134278615968
+      ],
+      "allocationBytesPerOp": 161937.35003232813,
+      "forkSamplesMicros": [
+        [
+          127.9378100726635,
+          99.82045053868757,
+          100.32263891615943,
+          94.9883556547619,
+          95.59060213843557
+        ],
+        [
+          94.05787633419213,
+          94.08910799852562,
+          96.3729877474081,
+          92.45596529284165,
+          95.84481467615126
+        ],
+        [
+          95.21558369018804,
+          93.68905591200733,
+          93.66088628456326,
+          97.35733079122974,
+          100.93523019166173
+        ]
+      ]
+    },
+    {
+      "method": "quadratic",
+      "profile": "nested",
+      "size": 4096,
+      "meanMicros": 12918.556177858116,
+      "errorMicros": 2139.630211385086,
+      "confidenceIntervalMicros": [
+        10778.92596647303,
+        15058.186389243201
+      ],
+      "allocationBytesPerOp": 360869.92660882074,
+      "forkSamplesMicros": [
+        [
+          15632.339393939394,
+          15508.082352941177,
+          15720.981818181817,
+          15726.60606060606,
+          15479.70294117647
+        ],
+        [
+          10994.270212765958,
+          11158.493478260869,
+          11150.258695652174,
+          11380.876086956521,
+          11714.297674418605
+        ],
+        [
+          12382.873170731707,
+          11756.490697674419,
+          11818.352272727272,
+          11537.03409090909,
+          11817.683720930232
+        ]
+      ]
+    },
+    {
+      "method": "sweep",
+      "profile": "nested",
+      "size": 4096,
+      "meanMicros": 331.891127796807,
+      "errorMicros": 7.542173749168681,
+      "confidenceIntervalMicros": [
+        324.3489540476383,
+        339.43330154597567
+      ],
+      "allocationBytesPerOp": 325780.5984243453,
+      "forkSamplesMicros": [
+        [
+          332.0371836469825,
+          335.0937007874016,
+          332.3145276872964,
+          324.31539923954375,
+          328.09678869621064
+        ],
+        [
+          327.69263292761053,
+          328.30012845215157,
+          331.151715210356,
+          333.31614379084965,
+          335.50078843626807
+        ],
+        [
+          328.95028827674565,
+          326.9701090442591,
+          329.08801546391754,
+          330.7068564036222,
+          354.8326388888889
+        ]
+      ]
+    }
+  ],
+  "preservedFailedAttempts": [
+    {
+      "receipt": "build-first.log",
+      "stage": "MAVEN_ARGUMENT_PARSE",
+      "reason": "PowerShell quoting failed before tests/build",
+      "sha256": "b3222f58ffac9a11c2b722022e7586e016af81abb316928630920d44721b44f7",
+      "bytes": 1664,
+      "jmhForksStarted": 0
+    },
+    {
+      "receipt": "build-second.log",
+      "stage": "JAR_PACKAGE",
+      "reason": "20 tests passed; inherited shade transformer merge failed",
+      "sha256": "a2810ee937165c7b29dff444c7c5f9a3b186985fd96aa352e53c89b48c8a0d4f",
+      "bytes": 1484,
+      "jmhForksStarted": 0
+    },
+    {
+      "receipt": "jmh-run-1-launch.log",
+      "stage": "RUNNER_METADATA",
+      "reason": "TypeError before fixture/JMH launch; measured forks 0",
+      "sha256": "bbc2ec8a2cb5b35c4a46e957f5ca9c1f2f11d1f854c980aa83903a9e0964aba6",
+      "bytes": 1862,
+      "jmhForksStarted": 0
+    }
+  ],
+  "limitations": {
+    "companyDataOrFormulasUsed": false,
+    "productionEtlChanged": false,
+    "miniPcBenchmark": false,
+    "productionSpeedupEstablished": false,
+    "slaOrCapacityEstablished": false,
+    "medianOrTailLatencyMeasured": false,
+    "systemClockChanged": false,
+    "normalizationIncludedInTimedWork": false,
+    "normalizationAccuracySeparatelyTested": true,
+    "shortWarmupGuaranteesJitStability": false,
+    "highVariancePresent": true,
+    "highVarianceExample": "sparse/2048 quadratic mean 11933.210us, JMH scoreError 10205.116us"
+  },
+  "evidenceLinks": {
+    "readme": "https://github.com/DevDooly/devdooly-platform-lab/blob/main/docs/evidence/ai-window-analysis/README.md",
+    "source": "https://github.com/DevDooly/devdooly-platform-lab/tree/main/examples/java-window-analysis"
+  },
+  "officialReferences": [
+    "https://github.com/openjdk/jmh/tree/1.37",
+    "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/time/OffsetDateTime.html",
+    "https://github.com/openjdk/jmh/blob/1.37/jmh-samples/src/main/java/org/openjdk/jmh/samples/JMHSample_08_DeadCode.java",
+    "https://github.com/openjdk/jmh/blob/1.37/jmh-samples/src/main/java/org/openjdk/jmh/samples/JMHSample_12_Forking.java"
+  ]
+}

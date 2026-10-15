@@ -77,6 +77,23 @@ chmod +x mvnw
                 }
             }
         }
+        stage('Verify Java example') {
+            steps {
+                container('maven') {
+                    sh label: 'Build and test the independent Java 21 example; do not benchmark in CI', script: '''#!/bin/sh
+set -eu
+mkdir -p "$MAVEN_USER_HOME"
+chmod +x apps/api/mvnw
+./apps/api/mvnw -B -ntp -Dmaven.repo.local="$MAVEN_USER_HOME/repository" -f examples/java-window-analysis/pom.xml verify
+'''
+                }
+            }
+            post {
+                always {
+                    junit testResults: 'examples/java-window-analysis/target/surefire-reports/TEST-*.xml', allowEmptyResults: false
+                }
+            }
+        }
         stage('Verify web') {
             steps {
                 container('node') {
@@ -99,17 +116,18 @@ npm run build
         stage('Archive verified CI') {
             steps {
                 container('node') {
-                    sh label: 'Require the API jar, web entry point and exact source metadata', script: '''#!/bin/sh
+                    sh label: 'Require both Java jars, web entry point and exact source metadata', script: '''#!/bin/sh
 set -eu
 set -- apps/api/target/platform-lab-api-*.jar
 test "$#" -eq 1
 test -s "$1"
+test -s examples/java-window-analysis/target/benchmarks.jar
 test -s apps/lab-web/dist/index.html
 test -s ci-build-info.txt
 test -s artifacts/jenkins/status-pending.json
 '''
                 }
-                archiveArtifacts artifacts: 'apps/api/target/platform-lab-api-*.jar,apps/lab-web/dist/**,ci-build-info.txt,artifacts/jenkins/status-pending.json', allowEmptyArchive: false, fingerprint: true
+                archiveArtifacts artifacts: 'apps/api/target/platform-lab-api-*.jar,examples/java-window-analysis/target/benchmarks.jar,apps/lab-web/dist/**,ci-build-info.txt,artifacts/jenkins/status-pending.json', allowEmptyArchive: false, fingerprint: true
             }
         }
         stage('Record success CI') {

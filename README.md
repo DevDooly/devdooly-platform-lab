@@ -8,8 +8,8 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 | 영역 | 확인한 결과 | 근거 |
 | --- | --- | --- |
-| Java 21·Spring Boot | JPA·Flyway, 작업/outbox·export, 기본 verify 140개 | [API 계약](docs/contracts/demo-api.md), [실제 배포](docs/evidence/runtime-deployment/README.md) |
-| Astro·React | 결과·실패 필터·차트, 웹 테스트 34개, 작업/export 관측 | [기존 화면 검증](apps/lab-web/VALIDATION.md), [작업 관측 계약](apps/lab-web/JOB_OBSERVATION.md) |
+| Java 21·Spring Boot | JPA·Flyway, 작업/outbox·export, 기본 verify 157개 | [API 계약](docs/contracts/demo-api.md), [실제 배포](docs/evidence/runtime-deployment/README.md) |
+| Astro·React | 결과·실패 필터·차트, 웹 테스트 41개, 작업/export 관측·AI 예제 | [기존 화면 검증](apps/lab-web/VALIDATION.md), [작업 관측 계약](apps/lab-web/JOB_OBSERVATION.md) |
 | GitHub Actions·GHCR | Linux 컨테이너 통합 검증 후 immutable digest 이미지 게시 | [컨테이너 근거](docs/evidence/compose-ci/README.md), [이미지 게시](docs/runbooks/image-publication.md) |
 | K3s·Helm·Argo CD | 미니 PC에서 앱 자동 동기화, Synced·Healthy, MariaDB PVC | [실제 서버 근거](docs/evidence/mini-pc/README.md), [GitOps 선언](gitops/README.md) |
 | Jenkins·Actions 게시 gate | 같은 source SHA의 두 CI 성공 후 이미지·draft GitOps PR, 실제 테스트 실패 차단 | [연결 검증](docs/evidence/cicd-gate/README.md), [CI 절차](docs/runbooks/cicd-publication.md) |
@@ -18,9 +18,12 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 | 관리자 접속 | ClusterIP 관리 화면과 SSH 접속 도우미 | [접속 방법](docs/runbooks/admin-access.md) |
 | 백업과 복구 | 외부 암호화 사본의 Kafka/Garage PVC 격리 복원·별도 물리 블록 복원, 이전 DB/재부팅 검증 | [PVC 복원](docs/evidence/runtime-pvc-restore/README.md), [기존 복구 검증](docs/evidence/recovery/README.md) |
 | 보존·자원 예산 | 삭제 없는 보존 계획기·별도 합성 PVC 정리, 실제 cgroup 설정과 작은 작업 3회 관측 | [운영 기준](docs/runbooks/retention-resource-budget.md), [실제 근거](docs/evidence/retention-resource-budget/README.md) |
+| AI를 활용한 Java 개선 | UTC 오류 회귀·동일 결과 알고리즘·독립 Windows JMH와 정적 기록 UI | [예제](examples/java-window-analysis/README.md), [측정 조건·한계](docs/evidence/ai-window-analysis/README.md) |
 | 입력·동시 접수 | 격리 최대 1,000개·동시 2/8개 접수 검증, 실제 K3s의 1,000건 처리·파일 보존 | [격리 조건](docs/evidence/input-concurrency-load/README.md), [실제 배포·게시](docs/evidence/input-v2-deployment/README.md) |
 
-현재 미니 PC의 API·worker는 V2 지원 소스 `6c5aff948770982dd44c8d44547131b3ccf6ddd9`를 실행합니다. 실제 1,000건 작업이 성공 500·실패 300·중복 200·대기 0으로 끝났고, 신규 파일 3개와 기존 파일 18개를 전체 GET으로 검증했습니다. 전체 7개 작업·export 정보 14개와 Kafka offset 7/lag 0을 확인했으며, [공개 화면](https://devdooly.github.io/devdooly-platform-lab/#job-observation)의 전체 관측 JSON도 실제 수집 응답과 일치했습니다. [배포·보존·게시 근거](docs/evidence/input-v2-deployment/README.md)를 따릅니다.
+개인 합성 [Java 시간창 예제](examples/java-window-analysis/README.md)에서 UTC offset 오류를 재현·수정하고, 같은 답을 내는 O(n²) 기준 구현과 O(n log n) sweep을 비교했습니다. Java 테스트 20개·runner 검사 3개와 Windows Java 21의 JMH 16조합·48 fork·240 interval 측정을 완료했습니다. [실제 근거](docs/evidence/ai-window-analysis/README.md)와 [포트폴리오의 코드·기록 선택 화면](https://devdooly.github.io/devdooly-platform-lab/#ai-window)을 연결합니다. 일부 sparse 측정의 오차가 크며 회사 코드·수율 공식·운영 ETL 성능을 뜻하지 않습니다. 측정 당시 미커밋 소스 해시와 사람 검토 대기 상태를 유지합니다. [CI 연결의 검증 범위](docs/evidence/ai-window-analysis/ci-validation.md)는 성능 측정과 구분합니다.
+
+현재 미니 PC의 API·worker는 소스 `202ab6806130cfb37e8829ce7d52c89990d8a54a`·schema V4를 실행합니다. [실제 V4 전환](docs/evidence/admission-v4-deployment/README.md)은 API·웹 32/32, worker 35/35를 통과했고 기존 7개 작업·파일 정보 14개를 보존했습니다. 새 V4 fixture 접수·거부 검증은 아직 수행하지 않았습니다. 앞선 V2 배포에서는 소스 `6c5aff948770982dd44c8d44547131b3ccf6ddd9`로 고정 1,000건 입력을 처리했습니다. 실제 1,000건 작업이 성공 500·실패 300·중복 200·대기 0으로 끝났고, 신규 파일 3개와 기존 파일 18개를 전체 GET으로 검증했습니다. 전체 7개 작업·export 정보 14개와 Kafka offset 7/lag 0을 확인했으며, [공개 화면](https://devdooly.github.io/devdooly-platform-lab/#job-observation)의 전체 관측 JSON도 실제 수집 응답과 일치했습니다. [배포·보존·게시 근거](docs/evidence/input-v2-deployment/README.md)를 따릅니다.
 
 앞선 [격리 입력·동시성 시험](docs/evidence/input-concurrency-load/README.md)에서는 정확한 1MiB 경계·동시 2/8개 접수의 단일 슬롯과 별도 Linux 1 CPU·768MiB worker의 1,000건 작업 3회를 검증했습니다. 당시 약 74.39초의 자원·지연 관측은 별도 시험 조건이며 운영 처리 용량이나 SLA로 표시하지 않습니다.
 
@@ -48,7 +51,7 @@ Kafka·Garage 전용 PVC 3개를 정상 정지 구간에서 보관하고 AES-256
 
 별도 Linux worker의 1,000건 작업은 결과 파일 저장·GET 후 실패 파일 PUT을 Garage에 전달하기 직전에 SIGKILL 1회로 중단했습니다. 동일 JAR의 새 worker가 재계산 없이 export를 완료했고 첫 결과 파일·기존 4개 작업/12개 객체를 보존했습니다. 격리 검사 12/12·후속 운영 보존 18/18을 통과했으며 [정확한 중단 경계·준비 실패·회복 근거](docs/evidence/maximum-export-crash/README.md)를 제공합니다. 운영 worker 강제 종료나 진행 중 호스트 재부팅 결과는 아닙니다.
 
-새 작업 승인 간격을 DB에 보관하는 V4 후보를 구현했습니다. 기본 API 157개·실제 MariaDB/Garage 19개와 외부 암호화 SQL 복원본의 이전 binary 호환 검사 8개를 통과했습니다. [검증 근거](docs/evidence/admission-cooldown/README.md)에 실제 JAR·CI·우회 위험을 구분합니다. 운영은 아직 source `6c5aff94`·schema V3이며 새 immutable 이미지 확인 후 API→worker 순서로 전환합니다.
+새 작업 승인 간격을 DB에 보관하는 V4를 실제 API→worker 순서로 배포했습니다. 기본 API 157개·격리 MariaDB/Garage 19개·복원본 이전 binary 호환 8개는 [기존 조건](docs/evidence/admission-cooldown/README.md)에 보존하고, [실제 전환](docs/evidence/admission-v4-deployment/README.md)은 별도로 연결합니다. 첫 worker 관측은 Kubernetes Ready 직후 runtime 초기화 전이라 32/35였고, 후속 동일 JVM의 RUNNING·heartbeat와 전체 35/35를 확인했습니다. 이전 컨테이너 exit는 UNOBSERVED이며 TERM을 추정하지 않습니다. 새 V4 stage는 아직 수행하지 않았습니다. 기존 timer가 11:40:08.792Z에 수집한 V4 기록은 [Pages 실행](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38728965840) 성공 후 12:01:58 UTC에 job·platform JSON 전체의 서버 원본 일치를 확인했습니다. [정기 게시 후속 근거](docs/evidence/admission-v4-deployment/PUBLICATION.md)를 별도로 연결합니다.
 
 ## 로컬 실행
 
