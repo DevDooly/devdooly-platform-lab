@@ -37,6 +37,62 @@ PYTHON_EXCEPTIONS = frozenset(('Py4JJavaError', 'Py4JNetworkError', 'Py4JError',
     'FileNotFoundError', 'RuntimeError', 'ValueError', 'OSError', 'TypeError', 'AssertionError', 'OTHER'))
 JAVA_CLASS = re.compile(r'(?:org\.apache\.(?:spark|iceberg)|java|org\.postgresql|software\.amazon)'
                         r'(?:\.[A-Za-z_$][A-Za-z0-9_$]*){1,12}')
+INITIALIZER_CHECK_FIELDS = ('inspectionObserved', 'fullIdVerified', 'nameVerified', 'projectLabelVerified',
+    'imageVerified', 'entrypointVerified', 'commandVerified', 'networkNoneVerified', 'unprivilegedVerified',
+    'noHostPortsVerified', 'memoryLimitVerified', 'cpuLimitVerified', 'requestedBindsVerified')
+
+
+def initializer_binds_verified(binds, project):
+    """Exactly two requested named-volume rw binds; ordering is immaterial.
+
+    HostConfig.Binds represents requested mounts. Image-declared anonymous
+    volumes in Mounts are deliberately outside this existing two-bind guard.
+    """
+    if not isinstance(binds, list) or len(binds) != 2:
+        return False
+    expected = {(project + '_garage-meta', '/meta', 'rw'), (project + '_garage-data', '/data', 'rw')}
+    actual = []
+    for value in binds:
+        if not isinstance(value, str) or len(value) > 512:
+            return False
+        parts = value.split(':')
+        if len(parts) == 2:
+            parts.append('rw')
+        if len(parts) != 3 or parts[2] != 'rw':
+            return False
+        actual.append(tuple(parts))
+    return len(set(actual)) == 2 and set(actual) == expected
+
+
+def initializer_identity_checks(raw, project, name):
+    """Only fixed verification booleans may leave the private inspect boundary."""
+    checks = {key: False for key in INITIALIZER_CHECK_FIELDS}
+    if not isinstance(raw, dict):
+        return checks
+    checks['inspectionObserved'] = True
+    config = raw.get('Config'); config = config if isinstance(config, dict) else {}
+    host = raw.get('HostConfig'); host = host if isinstance(host, dict) else {}
+    labels = config.get('Labels'); labels = labels if isinstance(labels, dict) else {}
+    cid = raw.get('Id')
+    checks.update(fullIdVerified=isinstance(cid, str) and re.fullmatch('[a-f0-9]{64}', cid) is not None,
+        nameVerified=raw.get('Name') == '/' + name,
+        projectLabelVerified=labels.get('devdooly.io.spark-ci-project') == project,
+        imageVerified=config.get('Image') == POSTGRES,
+        entrypointVerified=config.get('Entrypoint') == ['/bin/chown'],
+        commandVerified=config.get('Cmd') == ['1000:1000', '/meta', '/data'],
+        networkNoneVerified=host.get('NetworkMode') == 'none',
+        unprivilegedVerified='Privileged' in host and not host['Privileged'],
+        noHostPortsVerified='PortBindings' in host and not host['PortBindings'],
+        memoryLimitVerified=host.get('Memory') == 64*1024**2,
+        cpuLimitVerified=host.get('NanoCpus') == 100000000,
+        requestedBindsVerified=initializer_binds_verified(host.get('Binds'), project))
+    return checks
+
+
+def safe_initializer_checks(value):
+    require(isinstance(value, dict) and set(value) == set(INITIALIZER_CHECK_FIELDS)
+        and all(type(item) is bool for item in value.values()), 'FIXED_INITIALIZER_VERIFICATION_BOOLEANS_ONLY')
+    return dict(value)
 
 
 def require(value, code):
@@ -128,6 +184,7 @@ class Attempt:
         self.compose = ['docker', 'compose', '-p', project, '-f', str(root / 'compose.json')]
         self.initializer_intended = False
         self.initializer_name = project + '-volume-init'
+        self.initializer_identity_checks = {key: False for key in INITIALIZER_CHECK_FIELDS}
 
     def command(self, args, timeout=60, sensitive=False, check=True):
         self.sequence += 1
@@ -172,14 +229,8 @@ class Attempt:
             require(ids == [], 'INITIALIZER_IDENTITY_LOOKUP_UNRESOLVED')
             return None
         raw = json.loads(value.stdout)[0]
-        require(re.fullmatch('[a-f0-9]{64}', raw['Id']) and raw['Name'] == '/' + self.initializer_name
-            and raw['Config']['Labels'].get('devdooly.io.spark-ci-project') == self.project
-            and raw['Config']['Image'] == POSTGRES and raw['Config']['Entrypoint'] == ['/bin/chown']
-            and raw['Config']['Cmd'] == ['1000:1000', '/meta', '/data']
-            and raw['HostConfig']['NetworkMode'] == 'none' and not raw['HostConfig']['Privileged']
-            and not raw['HostConfig'].get('PortBindings') and raw['HostConfig']['Memory'] == 64*1024**2
-            and raw['HostConfig']['NanoCpus'] == 100000000
-            and raw['HostConfig']['Binds'] == [self.project + '_garage-meta:/meta', self.project + '_garage-data:/data'], 'EXACT_FRESH_INITIALIZER_IDENTITY_AND_SCOPE')
+        self.initializer_identity_checks = initializer_identity_checks(raw, self.project, self.initializer_name)
+        require(all(self.initializer_identity_checks.values()), 'EXACT_FRESH_INITIALIZER_IDENTITY_AND_SCOPE')
         return {'id': raw['Id'], 'running': raw['State']['Running'], 'exitCode': raw['State']['ExitCode'], 'oom': raw['State']['OOMKilled']}
 
 
@@ -431,6 +482,7 @@ def main():
         'sourceCommit': source, 'result': results, 'failure': failure, 'ownedComposeContainersStopped': stopped,
         'sparkDiagnostic': diagnostics,
         'ownedInitializerCreationAttempted': attempt.initializer_intended, 'ownedInitializerStoppedOrNotCreated': initializer_stopped,
+        'initializerIdentityChecks': safe_initializer_checks(attempt.initializer_identity_checks),
         'fixedImagePlan': {'postgres': POSTGRES, 'garage': GARAGE, 'sparkBase': SPARK}, 'plannedJarCount': 3, 'plannedJarBytes': 112793760,
         'localImageOnly': True, 'imagePushed': False, 'plannedHostPublishedPortCount': 0, 'checks': checks,
         'plannedSparkCpuLimit': 1, 'plannedSparkMemoryLimitBytes': 3*1024**3, 'plannedPostgresAndGarageEachMemoryLimitBytes': 512*1024**2,

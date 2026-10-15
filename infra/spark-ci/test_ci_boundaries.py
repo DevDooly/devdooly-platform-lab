@@ -26,6 +26,15 @@ def sample():
             'priorFailureSoleCauseProven': False}}
 
 
+def initializer_inspect(project='fresh-project'):
+    return {'Id':'c'*64,'Name':'/'+project+'-volume-init',
+        'Config':{'Labels':{'devdooly.io.spark-ci-project':project},'Image':r.POSTGRES,
+            'Entrypoint':['/bin/chown'],'Cmd':['1000:1000','/meta','/data'],'Env':['SECRET=private-value']},
+        'HostConfig':{'NetworkMode':'none','Privileged':False,'PortBindings':None,'Memory':64*1024**2,
+            'NanoCpus':100000000,'Binds':[project+'_garage-meta:/meta',project+'_garage-data:/data']},
+        'State':{'Running':False,'ExitCode':0,'OOMKilled':False}}
+
+
 class CiBoundaries(unittest.TestCase):
     def test_network_and_aliases_are_internal_only_with_no_host_routes_or_ports(self):
         plan = p.plan('spark-isolated-ci:'+'a'*32)
@@ -261,6 +270,79 @@ class CiBoundaries(unittest.TestCase):
         self.assertEqual('UNOBSERVED',b.tmp_mount_flag(b'private invalid\n'))
         self.assertEqual('UNOBSERVED',b.tmp_mount_flag(b'x'*(1024**2+1)))
         self.assertEqual('UNOBSERVED',b.tmp_mount_flag(noexec+noexec.replace(b'noexec',b'exec')))
+
+    def test_initializer_accepts_reversed_requested_binds_and_explicit_rw_via_actual_inspect_path(self):
+        original=initializer_inspect()
+        for binds in (list(reversed(original['HostConfig']['Binds'])),
+                      [value+':rw'for value in reversed(original['HostConfig']['Binds'])],
+                      [original['HostConfig']['Binds'][0]+':rw',original['HostConfig']['Binds'][1]]):
+            raw=copy.deepcopy(original);raw['HostConfig']['Binds']=binds
+            attempt=r.Attempt(Path('/synthetic'),'fresh-project');attempt.initializer_intended=True
+            attempt.command=lambda *a,**k:SimpleNamespace(returncode=0,stdout=json.dumps([raw]).encode())
+            self.assertEqual('c'*64,attempt.initializer()['id'])
+            self.assertTrue(all(attempt.initializer_identity_checks.values()))
+
+    def test_initializer_rejects_foreign_duplicate_extra_readonly_and_nonexact_bind_modes(self):
+        good=initializer_inspect()['HostConfig']['Binds']
+        for binds in ([good[0],good[0]],[*good,'fresh-project_extra:/extra'],
+                      ['foreign_garage-meta:/meta',good[1]],[good[0]+':ro',good[1]],
+                      [good[0]+':rw,z',good[1]],['/private/host:/meta',good[1]],
+                      ['fresh-project_garage-data:/meta',good[1]],None):
+            raw=initializer_inspect();raw['HostConfig']['Binds']=binds
+            attempt=r.Attempt(Path('/synthetic'),'fresh-project');attempt.initializer_intended=True
+            attempt.command=lambda *a,**k:SimpleNamespace(returncode=0,stdout=json.dumps([raw]).encode())
+            with self.assertRaisesRegex(RuntimeError,'EXACT_FRESH_INITIALIZER'):
+                attempt.initializer()
+            checks=r.safe_initializer_checks(attempt.initializer_identity_checks)
+            self.assertFalse(checks['requestedBindsVerified']);self.assertTrue(checks['imageVerified'])
+            self.assertNotIn('/private',json.dumps(checks))
+
+    def test_initializer_public_projection_is_exact_boolean_only_without_private_inspect(self):
+        raw=initializer_inspect();raw['Config']['Image']='private/image'
+        checks=r.initializer_identity_checks(raw,'fresh-project','fresh-project-volume-init')
+        projected=r.safe_initializer_checks(checks)
+        self.assertEqual(set(r.INITIALIZER_CHECK_FIELDS),set(projected));self.assertFalse(projected['imageVerified'])
+        self.assertTrue(all(type(value)is bool for value in projected.values()))
+        for private in ('SECRET','private-value','private/image','fresh-project','c'*64,'/meta'):
+            self.assertNotIn(private,json.dumps(projected))
+        for changed in ({**checks,'private':'secret'},{**checks,'imageVerified':'false'}):
+            with self.assertRaises(RuntimeError):r.safe_initializer_checks(changed)
+        attempt=r.Attempt(Path('/synthetic'),'fresh-project')
+        self.assertFalse(any(r.safe_initializer_checks(attempt.initializer_identity_checks).values()))
+        for raw in ({},{'HostConfig':{}}):
+            incomplete=r.initializer_identity_checks(raw,'fresh-project','fresh-project-volume-init')
+            self.assertTrue(incomplete['inspectionObserved'])
+            self.assertFalse(any(value for key,value in incomplete.items()if key!='inspectionObserved'))
+
+    def test_image_declared_anonymous_volume_does_not_change_two_requested_bind_guard(self):
+        raw=initializer_inspect()
+        raw['Mounts']=[{'Type':'volume','Name':'image-anonymous','Destination':'/var/lib/postgresql/data','RW':True},
+            {'Type':'volume','Name':'fresh-project_garage-data','Destination':'/data','RW':True},
+            {'Type':'volume','Name':'fresh-project_garage-meta','Destination':'/meta','RW':True}]
+        attempt=r.Attempt(Path('/synthetic'),'fresh-project');attempt.initializer_intended=True
+        attempt.command=lambda *a,**k:SimpleNamespace(returncode=0,stdout=json.dumps([raw]).encode())
+        self.assertEqual('c'*64,attempt.initializer()['id'])
+        self.assertTrue(attempt.initializer_identity_checks['requestedBindsVerified'])
+
+    def test_other_initializer_identity_and_spec_requirements_remain_required(self):
+        mutations={
+            'fullIdVerified':lambda v:v.update(Id='short'),
+            'nameVerified':lambda v:v.update(Name='/foreign'),
+            'projectLabelVerified':lambda v:v['Config']['Labels'].update({'devdooly.io.spark-ci-project':'foreign'}),
+            'imageVerified':lambda v:v['Config'].update(Image='foreign'),
+            'entrypointVerified':lambda v:v['Config'].update(Entrypoint=['/bin/sh']),
+            'commandVerified':lambda v:v['Config'].update(Cmd=['different']),
+            'networkNoneVerified':lambda v:v['HostConfig'].update(NetworkMode='host'),
+            'unprivilegedVerified':lambda v:v['HostConfig'].update(Privileged=True),
+            'noHostPortsVerified':lambda v:v['HostConfig'].update(PortBindings={'80/tcp':[{'HostPort':'80'}]}),
+            'memoryLimitVerified':lambda v:v['HostConfig'].update(Memory=0),
+            'cpuLimitVerified':lambda v:v['HostConfig'].update(NanoCpus=0)}
+        for field,mutate in mutations.items():
+            raw=initializer_inspect();mutate(raw)
+            attempt=r.Attempt(Path('/synthetic'),'fresh-project');attempt.initializer_intended=True
+            attempt.command=lambda *a,**k:SimpleNamespace(returncode=0,stdout=json.dumps([raw]).encode())
+            with self.subTest(field=field),self.assertRaises(RuntimeError):attempt.initializer()
+            self.assertFalse(attempt.initializer_identity_checks[field])
 
 
 if __name__ == '__main__':
