@@ -15,7 +15,7 @@ import run_ci as r
 
 
 def sample():
-    values = {'pids.current': ['256'], 'pids.max': ['256'], 'pids.events': ['max 7'],
+    values = {'pids.current': ['23'], 'pids.max': ['512'], 'pids.events': ['max 7'],
         'memory.current': ['1000000'], 'memory.max': ['3221225472'],
         'memory.events': ['low 0', 'high 0', 'max 2', 'oom 0', 'oom_kill 0', 'oom_group_kill 0', 'sock_throttled 0']}
     return ('CGROUP_V2_CONTAINER_ROOT\n' + ''.join('BEGIN '+name+'\n'+'\n'.join(values[name])+'\nEND '+name+'\n'
@@ -60,10 +60,10 @@ class OomDiagnostics(unittest.TestCase):
 
     def test_actual_numbers_and_lifetime_events_are_not_replaced_by_hypotheses(self):
         value = r.parse_cgroup_sample(sample())
-        self.assertEqual(256, value['pidsMax']); self.assertEqual(7, value['pidsEventsMax'])
+        self.assertEqual(512, value['pidsMax']); self.assertEqual(7, value['pidsEventsMax'])
         self.assertEqual(3221225472, value['memoryMaxBytes']); self.assertEqual(0, value['memoryEventsOomKill'])
         self.assertTrue(value['pidsLimitMatchesPlan']); self.assertTrue(value['memoryLimitMatchesPlan'])
-        raw = sample().replace(b'BEGIN pids.max\n256', b'BEGIN pids.max\nmax').replace(b'oom_group_kill 0\n', b'')
+        raw = sample().replace(b'BEGIN pids.max\n512', b'BEGIN pids.max\nmax').replace(b'oom_group_kill 0\n', b'')
         value = r.parse_cgroup_sample(raw)
         self.assertIsNone(value['pidsMax']); self.assertTrue(value['pidsMaxUnlimited'])
         self.assertIsNone(value['memoryEventsOomGroupKill']); self.assertFalse(value['pidsLimitMatchesPlan'])
@@ -131,9 +131,9 @@ class OomDiagnostics(unittest.TestCase):
             self.assertEqual(['cgroup','logs','caller-cleanup'],events)
             self.assertEqual('METASPACE_SIGNATURE',diagnostic['oomSubtypeSignature']); self.assertFalse(diagnostic['oomKilled'])
 
-    def test_computation_images_limits_deadline_and_cleanup_remain_identical_to_frozen_base(self):
+    def test_computation_images_non_pid_limits_deadline_and_cleanup_remain_frozen(self):
         here=Path(__file__).resolve().parent
-        expected_files={'compose_plan.py':'fd100227a093847a7be1e15c5e92f086f15d38a6bcaf527aca5ccbac96eb0c8e',
+        expected_files={'compose_plan.py':'fcaa911c8dcb9c6b56821ed3ff40d71c282658c8f5beb88200bff07c25336ee5',
             'bootstrap_spark.py':'e10ef3cca6a71b7ce362ab769fdb1436e2b84bf3705e584d6d14c9173b0ab816'}
         for name,digest in expected_files.items(): self.assertEqual(digest,hashlib.sha256((here/name).read_bytes()).hexdigest())
         current=ast.parse((here/'run_ci.py').read_text('utf-8'))

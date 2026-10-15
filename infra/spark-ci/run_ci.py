@@ -216,6 +216,8 @@ class Attempt:
             require(len(raw['NetworkSettings']['Networks']) == 1 and list(raw['NetworkSettings']['Networks']) == [self.project + '_trial'], 'ONLY_OWN_INTERNAL_NETWORK')
             expected_cpu, expected_memory = (1000000000, 3*1024**3) if role == 'spark' else (500000000, 512*1024**2)
             require(raw['HostConfig']['NanoCpus'] == expected_cpu and raw['HostConfig']['Memory'] == expected_memory, 'ACTUAL_CONTAINER_LIMITS')
+            expected_pids = 512 if role == 'spark' else 256
+            require(type(raw['HostConfig'].get('PidsLimit')) is int and raw['HostConfig']['PidsLimit'] == expected_pids, 'ACTUAL_ROLE_PID_LIMITS')
             result.append({'id': cid, 'role': role, 'running': raw['State']['Running'], 'exitCode': raw['State']['ExitCode'], 'oom': raw['State']['OOMKilled']})
         require(len({v['role'] for v in result}) == len(result), 'UNIQUE_OWN_CONTAINER_ROLES')
         return result
@@ -369,7 +371,7 @@ def parse_cgroup_sample(raw):
         'pidsEventsMax': pids['max'], 'memoryCurrentBytes': scalar('memory.current'), 'memoryMaxBytes': memory_max,
         'memoryMaxUnlimited': memory_max is None, 'memoryEventsLow': memory['low'], 'memoryEventsHigh': memory['high'],
         'memoryEventsMax': memory['max'], 'memoryEventsOom': memory['oom'], 'memoryEventsOomKill': memory['oom_kill'],
-        'memoryEventsOomGroupKill': memory.get('oom_group_kill'), 'pidsLimitMatchesPlan': pid_max == 256,
+        'memoryEventsOomGroupKill': memory.get('oom_group_kill'), 'pidsLimitMatchesPlan': pid_max == 512,
         'memoryLimitMatchesPlan': memory_max == 3*1024**3}
 
 

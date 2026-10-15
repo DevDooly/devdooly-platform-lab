@@ -25,7 +25,7 @@ def plan(local_image):
                 'entrypoint': ['/garage'], 'command': ['-c', '/etc/garage.toml', 'server'],
                 'volumes': ['./garage.toml:/etc/garage.toml:ro', 'garage-meta:/var/lib/garage/meta', 'garage-data:/var/lib/garage/data'],
                 'tmpfs': ['/tmp:size=32m'], 'networks': {'trial': {'aliases': [GARAGE_ALIAS]}}},
-            'spark': {**limits, 'image': local_image, 'platform': 'linux/amd64', 'user': '185:185', 'cpus': 1, 'mem_limit': '3g',
+            'spark': {**limits, 'pids_limit': 512, 'image': local_image, 'platform': 'linux/amd64', 'user': '185:185', 'cpus': 1, 'mem_limit': '3g',
                 'command': ['/usr/bin/tini', '-s', '--', '/opt/spark/bin/spark-submit', '--master', 'local[1]', '--driver-memory', '1536m', '/opt/silver/bootstrap_spark.py'],
                 'entrypoint': [], 'environment': {'JAVA_TOOL_OPTIONS': '-XX:ActiveProcessorCount=1 -XX:MaxMetaspaceSize=384m -XX:ReservedCodeCacheSize=128m',
                     'SPARK_LOCAL_DIRS': '/tmp/spark-local', 'PYTHONHASHSEED': '0', 'HOME': '/tmp/spark-home'},
