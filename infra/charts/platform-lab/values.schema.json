@@ -705,6 +705,9 @@
             "enabled": {
               "type": "boolean"
             },
+            "progressProbeEnabled": {
+              "type": "boolean"
+            },
             "replicaCount": {
               "type": "integer",
               "const": 1

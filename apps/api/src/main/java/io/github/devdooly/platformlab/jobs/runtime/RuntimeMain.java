@@ -105,13 +105,15 @@ public final class RuntimeMain {
         var credentials = StaticCredentialsProvider.create(AwsBasicCredentials.create(
             required("LAB_RUNTIME_S3_ACCESS_KEY_ID"), required("LAB_RUNTIME_S3_SECRET_ACCESS_KEY")));
         // Client construction and close occur on the same owning thread as all worker actions.
-        try (var clients = openClients(endpoint, region, credentials, bootstrap, group)) {
+        try (var progress = LocalRuntimeProgress.fromEnvironment(sourceCommit)) {
+            progress.starting();
+            try (var clients = openClients(endpoint, region, credentials, bootstrap, group)) {
             var actions = new JobRuntimeActions(jobs, new DispatchPublisher(jobs, clients.producer(), topic),
                 new DispatchWorker(jobs, new S3RawSourceStore(clients.s3(), bucket), clients.consumer(), topic),
                 new ResultExportService(jobs, new S3ResultExportStore(clients.s3(), bucket)));
             var resources = clients.resources();
             var runner = new ContinuousJobRunner(states, lease, actions, resources, sourceCommit,
-                Duration.ofMillis(500), Duration.ofMillis(500));
+                Duration.ofMillis(500), Duration.ofMillis(500), progress);
             var closed = new CountDownLatch(1);
             var hook = new Thread(() -> {
                 runner.requestStop();
@@ -130,6 +132,7 @@ public final class RuntimeMain {
                 closed.countDown();
                 try { Runtime.getRuntime().removeShutdownHook(hook); }
                 catch (IllegalStateException shutdownAlreadyRunning) { /* The registered hook is already waiting for completion. */ }
+            }
             }
         }
     }

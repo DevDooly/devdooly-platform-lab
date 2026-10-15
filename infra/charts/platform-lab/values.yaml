@@ -98,6 +98,8 @@ runtime:
       limits: {cpu: "1", memory: 1536Mi, ephemeral-storage: 128Mi}
   worker:
     enabled: false
+    # Enable only with an image that includes the local owner-progress writer/probe.
+    progressProbeEnabled: false
     replicaCount: 1
     # Explicit published API image with the runtime CLI; old API pins cannot be reused by accident.
     image: {repository: "", digest: ""}

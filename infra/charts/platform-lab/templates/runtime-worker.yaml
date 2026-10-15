@@ -46,8 +46,24 @@ spec:
             readOnlyRootFilesystem: true
             capabilities:
               drop: [ALL]
-          # No HTTP listener, Service, fake health file, public execution endpoint or migration.
+          # Progress records come only from this PID 1 owner after journal commits.
+          # No listener, Service, background heartbeat, public execution or liveness restart.
+          {{- if .Values.runtime.worker.progressProbeEnabled }}
+          readinessProbe:
+            exec:
+              command: ["java", "-Xms8m", "-Xmx16m", "-XX:MaxMetaspaceSize=24m", "-XX:ReservedCodeCacheSize=16m", "-XX:+UseSerialGC", "-XX:ActiveProcessorCount=1", "-cp", "/app/runtime-probe", "io.github.devdooly.platformlab.jobs.runtime.health.RuntimeReadyProbe"]
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+          {{- end }}
           env:
+            {{- if .Values.runtime.worker.progressProbeEnabled }}
+            - {name: LAB_RUNTIME_PROGRESS_FILE, value: /tmp/lab-runtime/ready}
+            - name: LAB_RUNTIME_POD_UID
+              valueFrom:
+                fieldRef: {apiVersion: v1, fieldPath: metadata.uid}
+            {{- end }}
             - name: DB_URL
               value: {{ printf "jdbc:mariadb://db.%s.svc.cluster.local:3306/platform_lab" .Release.Namespace | quote }}
             - {name: DB_USERNAME, value: platform_lab}

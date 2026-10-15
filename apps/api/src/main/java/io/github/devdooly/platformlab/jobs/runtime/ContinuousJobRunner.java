@@ -22,19 +22,27 @@ public final class ContinuousJobRunner {
     private final String sourceCommit;
     private final Duration pollTimeout;
     private final Duration idleDelay;
+    private final RuntimeProgress progress;
     private final AtomicBoolean stopRequested = new AtomicBoolean();
     private final AtomicBoolean invoked = new AtomicBoolean();
 
     public ContinuousJobRunner(RuntimeStateStore states, RuntimeLease lease, Actions actions,
                                AutoCloseable resources, String sourceCommit, Duration pollTimeout, Duration idleDelay) {
+        this(states, lease, actions, resources, sourceCommit, pollTimeout, idleDelay, RuntimeProgress.NONE);
+    }
+
+    public ContinuousJobRunner(RuntimeStateStore states, RuntimeLease lease, Actions actions,
+                               AutoCloseable resources, String sourceCommit, Duration pollTimeout, Duration idleDelay,
+                               RuntimeProgress progress) {
         this.states = Objects.requireNonNull(states); this.lease = Objects.requireNonNull(lease);
         this.actions = Objects.requireNonNull(actions); this.resources = Objects.requireNonNull(resources);
         RuntimeStateStore.validateCommit(sourceCommit); this.sourceCommit = sourceCommit;
         this.pollTimeout = bounded(pollTimeout); this.idleDelay = bounded(idleDelay);
+        this.progress = Objects.requireNonNull(progress);
     }
 
     /** Safe from a shutdown hook; all client calls, including close, remain on the run thread. */
-    public void requestStop() { stopRequested.set(true); }
+    public void requestStop() { stopRequested.set(true); progress.notReady(); }
 
     public State run() {
         if (!invoked.compareAndSet(false, true)) { throw new IllegalStateException("A runtime object may run only once"); }
@@ -45,27 +53,29 @@ public final class ContinuousJobRunner {
         State finalState = null;
         try {
             requireNoTransaction();
-            states.start(lease, sourceCommit); started = true;
+            states.start(lease, sourceCommit); started = true; progress.starting();
             while (!stopRequested.get()) {
-                stage = Stage.EXPORT; states.stage(lease, stage);
+                stage = Stage.EXPORT; states.stage(lease, stage); progress.committed(stage.name());
                 boolean worked = actions.exportOne();
                 if (stopRequested.get()) { break; }
-                stage = Stage.PUBLISH; states.stage(lease, stage);
+                stage = Stage.PUBLISH; states.stage(lease, stage); progress.committed(stage.name());
                 worked |= actions.publishOne();
                 if (stopRequested.get()) { break; }
-                stage = Stage.CONSUME; states.stage(lease, stage);
+                stage = Stage.CONSUME; states.stage(lease, stage); progress.committed(stage.name());
                 worked |= actions.receiveOne(pollTimeout);
                 if (stopRequested.get()) { break; }
-                stage = Stage.IDLE; states.stage(lease, stage);
+                stage = Stage.IDLE; states.stage(lease, stage); progress.committed(stage.name());
                 if (!worked) { Thread.sleep(idleDelay.toMillis()); }
             }
         } catch (Exception failure) {
+            progress.notReady();
             if (failure instanceof InterruptedException) { Thread.currentThread().interrupt(); }
             if (started) {
                 try { states.pause(lease, stage, failureCode(stage, failure)); paused = true; }
                 catch (RuntimeException journalFailure) { terminal = new IllegalStateException("Runtime stopped without a verified journal update"); }
             } else { terminal = safeStartupFailure(failure); }
         } finally {
+            progress.notReady();
             try { resources.close(); }
             catch (Exception closeFailure) {
                 if (started && !paused) {
@@ -92,6 +102,7 @@ public final class ContinuousJobRunner {
     }
     private static FailureCode failureCode(Stage stage, Exception failure) {
         if (failure instanceof RuntimeLease.LeaseLostException) { return FailureCode.LEASE_LOST; }
+        if (failure instanceof RuntimeProgress.ProgressUnavailableException) { return FailureCode.RUNTIME_FAILED; }
         if (failure instanceof InterruptedException || Thread.currentThread().isInterrupted()) { return FailureCode.INTERRUPTED; }
         if (failure instanceof DispatchWorker.DeliveryPausedException delivery) { return FailureCode.valueOf(delivery.code().name()); }
         return switch (stage) {
