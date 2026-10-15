@@ -1,8 +1,10 @@
 # 현재 상태에서 이어서 구축하기
 
-Java API·포트폴리오와 K3s·Jenkins·Argo CD를 Ubuntu 미니 PC에서 운영합니다. 2026-10-15에는 Kafka·Garage·상시 worker를 GitOps로 배포하고 두 합성 작업의 자동 처리·파일 확인·슬롯 해제와 공개 Pages의 실제 job 관측을 확인했습니다. [현재 배포·게시 근거](evidence/runtime-deployment/README.md)를 먼저 확인합니다. 초기 설치는 [미니 PC 근거](evidence/mini-pc/README.md), CI/CD는 [Jenkins 근거](evidence/jenkins-ci/README.md), 이전 플랫폼 collector의 실패 보존·반복 게시 11회는 [플랫폼 수집 근거](evidence/platform-observation/README.md)에 구분해 기록했습니다. 전체 단계는 [진행 목록](ROADMAP.md)을 따릅니다.
+최신 배포 검증(2026-10-15): API·worker의 실제 V2 지원 이미지 확인 후 고정 1,000건 작업을 처리했습니다. 총 7개 EXPORTED 작업·파일 정보 14개·Kafka lag 0과 기존 18개 객체 보존을 확인했고, 공개 JSON 전체가 실제 수집 원본과 일치했습니다. [최신 배포·게시 근거](evidence/input-v2-deployment/README.md)를 먼저 확인하세요. 아래 단계별 기록은 각각 당시의 검증 조건을 보존합니다.
 
-새 후보판의 최대 1,000개 입력·단일 슬롯 동시 2/8개 접수·초과 입력 거부는 격리 통합 검사 5개로 확인했습니다. 별도 Linux Docker worker에서도 1 CPU·768MiB 제한으로 1,000개 작업 3회와 원본·export 파일 9개의 전체 GET을 검증했습니다. [입력·동시 접수 검증](evidence/input-concurrency-load/README.md)은 현재 운영판과 구분합니다. 운영 source `ed5815e7`·기존 6개 작업과 서비스는 보존했으며, 운영 처리 용량이나 SLA를 검증한 결과는 아닙니다.
+Java API·포트폴리오와 K3s·Jenkins·Argo CD를 Ubuntu 미니 PC에서 운영합니다. 2026-10-15 최초 Kafka·Garage·상시 worker 배포에서는 두 합성 작업의 자동 처리·파일 확인·슬롯 해제와 공개 Pages의 실제 job 관측을 확인했습니다. [최초 배포·게시 근거](evidence/runtime-deployment/README.md)를 보존합니다. 초기 설치는 [미니 PC 근거](evidence/mini-pc/README.md), CI/CD는 [Jenkins 근거](evidence/jenkins-ci/README.md), 이전 플랫폼 collector의 실패 보존·반복 게시 11회는 [플랫폼 수집 근거](evidence/platform-observation/README.md)에 구분해 기록했습니다. 전체 단계는 [진행 목록](ROADMAP.md)을 따릅니다.
+
+실제 V2 배포 전 후보판의 최대 1,000개 입력·단일 슬롯 동시 2/8개 접수·초과 입력 거부는 격리 통합 검사 5개로 확인했습니다. 별도 Linux Docker worker에서도 1 CPU·768MiB 제한으로 1,000개 작업 3회와 원본·export 파일 9개의 전체 GET을 검증했습니다. [입력·동시 접수 검증](evidence/input-concurrency-load/README.md)은 현재 운영판과 구분합니다. 그 시험 당시 운영 source `ed5815e7`·기존 6개 작업과 서비스는 보존했으며, 운영 처리 용량이나 SLA를 검증한 결과는 아닙니다.
 
 ## 확인한 결과
 
@@ -47,7 +49,7 @@ Jenkins의 첫 빌드는 플러그인 충돌로 단계가 실행되지 않아 �
 
 ## 지금 접속하기
 
-공개 결과는 [포트폴리오](https://devdooly.github.io/devdooly-platform-lab/)에서 볼 수 있습니다. 새 작업/export 카드는 실제 배포 환경 `MINI_PC / DEPLOYED_RUNTIME`의 마지막 HTTP 관측을 표시합니다. 두 번째 원래 주기 게시에서 고정 fixture 3개 작업의 EXPORTED·새 worker 시작 시각·저장 확인 시각과 파일 정보 6개를 확인했습니다. 공개 JSON은 실제 수집 원본과 일치하며 미니 PC 실시간 API를 브라우저에 연결한 화면은 아닙니다. 수집은 약 30분 주기로 구성했고 heartbeat 경고 기준은 5분입니다. 새 job의 원래 timer 자동 수집·게시 2회와 완료 간격 1개(1809.371239초)를 확인했습니다. [후속 검증 근거](evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다.
+공개 결과는 [포트폴리오](https://devdooly.github.io/devdooly-platform-lab/)에서 볼 수 있습니다. 새 작업/export 카드는 실제 배포 환경 `MINI_PC / DEPLOYED_RUNTIME`의 마지막 HTTP 관측을 표시합니다. 앞선 재시작 검증의 두 번째 원래 주기 게시에서는 고정 fixture 3개 작업의 EXPORTED·새 worker 시작 시각·저장 확인 시각과 파일 정보 6개를 확인했습니다. 공개 JSON은 실제 수집 원본과 일치하며 미니 PC 실시간 API를 브라우저에 연결한 화면은 아닙니다. 수집은 약 30분 주기로 구성했고 heartbeat 경고 기준은 5분입니다. 새 job의 원래 timer 자동 수집·게시 2회와 완료 간격 1개(1809.371239초)를 확인했습니다. [후속 검증 근거](evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다.
 
 기존 플랫폼 관측의 초기 공개·반복 실행 기록은 다음과 같습니다. 기존 **미니 PC에서 확인한 마지막 기록**은 정적 앱 관측본이며 실시간 상태는 아닙니다. 새 플랫폼 관측본은 공개 브라우저와 게시 순서 보존을 검증했습니다. 최초 timer 자동 수집 `2026-10-12T01:38:38.790231Z`의 전체 JSON과 브라우저 표시가 일치했습니다. 이후 서비스 실행 완료 시각 기준 01:38:40~06:45:29 UTC의 11회가 모두 Pages build·deploy success였고 약 30~31분 간격을 확인했습니다. 당시 추가 수집 `2026-10-12T07:16:23.800530Z`도 전체 공개 JSON·브라우저 재조회로 확인했습니다. timer는 enabled·active이며 장기간 운영과 자격증명 만료·회전은 후속입니다. API의 플랫폼 `NOT_CONFIGURED`는 조회 API 내부의 상태 수집이 연결되지 않았음을 뜻하며 별도 정적 collector의 결과로 이 값을 바꾸지 않습니다.
 
@@ -55,7 +57,7 @@ Jenkins의 첫 빌드는 플러그인 충돌로 단계가 실행되지 않아 �
 
 Argo CD 자체 서명 인증서는 접속 안내에 따라 서버 인증서 지문을 대조합니다. 오래된 CA가 남아 있던 사용자 kubeconfig는 원본을 백업하고, 사용자 승인 후 현재 K3s 전용 0600 설정으로 교정했습니다. 현재 context는 `devdooly-platform-lab`이며 시스템 Helm·Docker·프록시는 유지합니다.
 
-DB 작업/outbox·단일 슬롯 → Garage 원본 보관 → Kafka 전달·DB 처리·수동 offset → 결과/실패 두 파일 확인·슬롯 해제를 단계별 격리 검증한 뒤 실제 K3s에 배포했습니다. 이전 검증은 [DB](evidence/db-job-foundation/README.md), [원본 S3](evidence/s3-source-storage/README.md), [MariaDB/Garage 결합](evidence/mariadb-s3/README.md), [Kafka 중단·재전달](evidence/kafka-redelivery/README.md), [export](evidence/result-export/README.md), [상시 실행·영속 정지/재개](evidence/continuous-runtime/README.md)에 보존했습니다. 현재 배포 API와 worker의 source commit·image digest, 두 작업·파일·offset과 기존 환경 보존은 [실제 배포 근거](evidence/runtime-deployment/README.md)를 따릅니다. 공개 실행·POST는 없으며 fixture 접수는 내부 `--lab-runtime=stage` 명령으로 제한합니다.
+DB 작업/outbox·단일 슬롯 → Garage 원본 보관 → Kafka 전달·DB 처리·수동 offset → 결과/실패 두 파일 확인·슬롯 해제를 단계별 격리 검증한 뒤 실제 K3s에 배포했습니다. 이전 검증은 [DB](evidence/db-job-foundation/README.md), [원본 S3](evidence/s3-source-storage/README.md), [MariaDB/Garage 결합](evidence/mariadb-s3/README.md), [Kafka 중단·재전달](evidence/kafka-redelivery/README.md), [export](evidence/result-export/README.md), [상시 실행·영속 정지/재개](evidence/continuous-runtime/README.md)에 보존했습니다. 최초 배포 API와 worker의 source commit·image digest, 당시 두 작업·파일·offset과 기존 환경 보존은 [최초 배포 근거](evidence/runtime-deployment/README.md)에 남겼습니다. 공개 실행·POST는 없으며 fixture 접수는 내부 `--lab-runtime=stage` 명령으로 제한합니다.
 
 실제 K3s worker의 작업 없는 정상 재시작도 검증했습니다. 기존 Pod를 UID 조건으로만 삭제해 STOPPED·정상 TERM 종료를 관측했고 같은 image/source의 새 Pod가 RUNNING·새 시작 시각·전진하는 heartbeat를 남겼습니다. 기존 두 작업의 전체 행·시각과 파일 4개·Kafka offset을 보존했습니다. [재시작 근거](evidence/runtime-recovery/README.md), [관측·실행 절차](runbooks/continuous-runtime.md)를 따릅니다. 진행 중 작업의 강제 종료나 전체 PVC 복원을 검증한 결과는 아닙니다.
 
@@ -83,7 +85,7 @@ CI/CD의 정상 배포·실패 차단·이전 digest 복구를 확인했으며, 
 - [화면 검증](../apps/lab-web/VALIDATION.md), [관측 기록 계약](../apps/lab-web/OBSERVATION.md)
 - [플랫폼 관측 계약](../apps/lab-web/PLATFORM_OBSERVATION.md), [실제 수집 검증](evidence/platform-observation/README.md)
 - [플랫폼 관측 수집·게시 운영](runbooks/platform-observation.md)
-- [상시 worker 실행](runbooks/continuous-runtime.md), [현재 배포·job 공개 관측](evidence/runtime-deployment/README.md)
+- [상시 worker 실행](runbooks/continuous-runtime.md), [최신 V2 배포·job 공개 관측](evidence/input-v2-deployment/README.md)
 - [보존 정책과 자원 예산](runbooks/retention-resource-budget.md), [실제 정리·측정 근거](evidence/retention-resource-budget/README.md)
 - [최대 입력·동시 접수와 별도 Linux 자원/지연 검증](evidence/input-concurrency-load/README.md)
 - [Kafka/Garage PVC 격리 복원](runbooks/runtime-pvc-recovery.md), [외부 사본·블록 복원 근거](evidence/runtime-pvc-restore/README.md)

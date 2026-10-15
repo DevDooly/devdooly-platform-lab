@@ -14,13 +14,15 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 | K3s·Helm·Argo CD | 미니 PC에서 앱 자동 동기화, Synced·Healthy, MariaDB PVC | [실제 서버 근거](docs/evidence/mini-pc/README.md), [GitOps 선언](gitops/README.md) |
 | Jenkins·Actions 게시 gate | 같은 source SHA의 두 CI 성공 후 이미지·draft GitOps PR, 실제 테스트 실패 차단 | [연결 검증](docs/evidence/cicd-gate/README.md), [CI 절차](docs/runbooks/cicd-publication.md) |
 | 플랫폼 관측 수집 | 최소 읽기 수집·실패 보존·게시 순서 교정과 timer 자동 게시 11회 성공 | [수집 검증과 남은 범위](docs/evidence/platform-observation/README.md), [공개 필드 계약](apps/lab-web/PLATFORM_OBSERVATION.md) |
-| Kafka·Garage·상시 worker | 정상 재시작·총 6개 EXPORTED 작업/파일 정보 12개·lag 0·고정 fixture 3회 자원 관측 | [최초 배포](docs/evidence/runtime-deployment/README.md), [재시작·후속 처리](docs/evidence/runtime-recovery/README.md) |
+| Kafka·Garage·상시 worker | V2 지원 소스 배포·총 7개 EXPORTED 작업/파일 정보 14개·lag 0 | [최신 V2 배포](docs/evidence/input-v2-deployment/README.md), [재시작·후속 처리](docs/evidence/runtime-recovery/README.md) |
 | 관리자 접속 | ClusterIP 관리 화면과 SSH 접속 도우미 | [접속 방법](docs/runbooks/admin-access.md) |
 | 백업과 복구 | 외부 암호화 사본의 Kafka/Garage PVC 격리 복원·별도 물리 블록 복원, 이전 DB/재부팅 검증 | [PVC 복원](docs/evidence/runtime-pvc-restore/README.md), [기존 복구 검증](docs/evidence/recovery/README.md) |
 | 보존·자원 예산 | 삭제 없는 보존 계획기·별도 합성 PVC 정리, 실제 cgroup 설정과 작은 작업 3회 관측 | [운영 기준](docs/runbooks/retention-resource-budget.md), [실제 근거](docs/evidence/retention-resource-budget/README.md) |
-| 입력·동시 접수 | 격리 환경의 최대 1,000개 입력·동시 2/8개 접수, 통합 검사 5개와 별도 Linux 작업 3회 | [조건과 결과](docs/evidence/input-concurrency-load/README.md) |
+| 입력·동시 접수 | 격리 최대 1,000개·동시 2/8개 접수 검증, 실제 K3s의 1,000건 처리·파일 보존 | [격리 조건](docs/evidence/input-concurrency-load/README.md), [실제 배포·게시](docs/evidence/input-v2-deployment/README.md) |
 
-별도 격리 환경에서 최대 1,000개 입력, 동시 2·8개 접수 중 한 작업만 허용하는 단일 슬롯, 초과 입력 거부를 통합 검사 5개로 확인했습니다. 미니 PC의 격리 Docker worker에서도 1 CPU·768MiB 제한으로 1,000개 작업을 세 번 처리하고 원본·결과·실패 파일 9개를 전체 GET으로 검증했습니다. 약 74.39초·72개 샘플에서 작업 구간 평균 CPU는 0.1011 core, 관측 간격별 최대는 0.9503 core, 전체 구간 `memory.current` 최대는 261.75MiB였습니다. DB 작업 생성부터 export 확인까지 평균 2.19초·최대 3.58초이며 CLI 기동 시간은 포함하지 않습니다. 운영 source `ed5815e7`와 기존 6개 작업·Pod·PVC·Docker는 그대로 보존했습니다. 이는 운영 처리 용량이나 SLA 검증이 아니며 [검증 조건과 한계](docs/evidence/input-concurrency-load/README.md)를 함께 기록합니다.
+현재 미니 PC의 API·worker는 V2 지원 소스 `6c5aff948770982dd44c8d44547131b3ccf6ddd9`를 실행합니다. 실제 1,000건 작업이 성공 500·실패 300·중복 200·대기 0으로 끝났고, 신규 파일 3개와 기존 파일 18개를 전체 GET으로 검증했습니다. 전체 7개 작업·export 정보 14개와 Kafka offset 7/lag 0을 확인했으며, [공개 화면](https://devdooly.github.io/devdooly-platform-lab/#job-observation)의 전체 관측 JSON도 실제 수집 응답과 일치했습니다. [배포·보존·게시 근거](docs/evidence/input-v2-deployment/README.md)를 따릅니다.
+
+앞선 [격리 입력·동시성 시험](docs/evidence/input-concurrency-load/README.md)에서는 정확한 1MiB 경계·동시 2/8개 접수의 단일 슬롯과 별도 Linux 1 CPU·768MiB worker의 1,000건 작업 3회를 검증했습니다. 당시 약 74.39초의 자원·지연 관측은 별도 시험 조건이며 운영 처리 용량이나 SLA로 표시하지 않습니다.
 
 미니 PC의 웹을 통해 API·MariaDB를 조회하고 합성 입력 12건의 결과를 확인했습니다. 기대 결과는 성공 7·실패 3·중복 2·대기 0입니다. 공개 Pages는 **미니 PC에서 확인한 마지막 기록**과 수집 시각·source commit을 표시합니다. 현재 공개 홈에 미니 PC 실시간 API는 연결하지 않았습니다.
 
