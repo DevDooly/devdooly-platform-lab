@@ -41,6 +41,8 @@
 
 측정 대상은 아직 커밋하지 않은 private overlay였습니다. 따라서 `sourceCommit`은 **null**이며 기존 운영 앱 commit을 예제 출처로 사용하지 않았습니다. 상대 경로·크기·각 파일 SHA-256 manifest를 canonical JSON으로 만든 hash가 아래 source tree hash입니다. Git tree SHA가 아니며 실제 통합 commit은 후속 PR에서 별도로 연결해야 합니다. AI 제안과 agent 검토를 저장소 소유자의 **사람 검토 완료**로 표현하지 않습니다.
 
+후속 Git 통합에서는 [게시 소스 일치 검사](published-source-equivalence.json)로 commit [`55483931`](https://github.com/DevDooly/devdooly-platform-lab/tree/554839313f5b19311dbd00ab8631d47d36e30777/examples/java-window-analysis)의 16개 파일 전체 바이트가 측정 manifest와 같음을 확인했습니다. 이는 소스의 일치 근거이며 해당 commit에서 JMH를 다시 실행하거나 미래 CI의 JAR이 측정 JAR과 같다고 주장하는 기록은 아닙니다. 측정 당시 `sourceCommit:null`과 사람 검토 `PENDING`은 유지합니다.
+
 | 증거 | SHA-256 |
 |---|---|
 | 측정 소스 manifest | `3f4a5f710d78464214e823bdf8581bdde9dfc015cf08315a40d67fd78fb3c21e` |
