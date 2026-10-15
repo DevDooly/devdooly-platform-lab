@@ -1,43 +1,48 @@
-# Apache5와 실제 Garage의 격리 검증 후보
+# Apache5 격리 Garage 검증 — 명시적 loopback TCP relay 실험
 
-이번 포트 진단 파생 실행기는 준비 상태이며 아직 GitHub Linux에서 실행하지 않았습니다. AWS SDK 2.55.16의 Apache5 전환 후, 기존 실제 IO 테스트를 새 GitHub-hosted runner의 MariaDB 11.8.9·Garage 2.4.1에서 선택합니다. 미니 PC·운영 endpoint·SSH·운영 credentials를 사용하지 않습니다.
+상태: **SOURCE_PREPARED_NOT_RUN**. 이 파생본으로 Docker·GitHub Cloud·미니 PC를 실행하지 않았습니다. Windows 로컬의 순수 검사와 loopback TCP fixture 검사는 실제 MariaDB/Garage 호환성 증거가 아닙니다. 원본 Apache5 소스 세 파일과 기존 다섯 IT의 코드·선택은 바꾸지 않습니다.
 
-기본 `verify`가 통과한 뒤 별도 수동 `run_s3_trial` job으로 실행합니다. 기존 `lab-ci.yml`에 boolean input과 선택 job을 추가하며, 별도 workflow를 만들지 않아 아직 default branch에 없는 새 workflow의 dispatch 문제를 피합니다. Heavy job은 일반 push/PR에서 자동으로 실행하지 않습니다.
+## 이전 실패와 새 연결 조건
 
-## 첫 Garage 시도의 포트 경계 실패와 새 진단 범위
+첫 GitHub run `38797343522` / source `ccb0e1b6f91f5fdaa8bd15ec465908841e209335`는 `NUMERIC_LOOPBACK_ONLY_EPHEMERAL_PORT`로 실패했지만 실제 port map은 미관측이었습니다. 두 번째 run `38799502058` / source `27cb082a198b99117b37f8da44f253491b2a2fd9`의 공개 진단은 **DB와 Garage 모두** 요청한 `HostConfig`의 단일 loopback·빈/0 host port와 실행 중 상태를 확인했으나, 실제 `NetworkSettings.Ports`는 `TARGET_MISSING`이라고 기록했습니다. 두 시도 모두 API 빌드/IT 전에 실패했고 tests/JAR는 null, 자기 소유 컨테이너 세 개는 중지됐습니다. 두 번째 관측은 활성 mapping 부재의 증거이며 Docker `--internal`이 유일한 원인이라는 증거는 아닙니다.
 
-첫 실제 격리 시도는 GitHub run `38797343522`, source `ccb0e1b6f91f5fdaa8bd15ec465908841e209335`에서 `NUMERIC_LOOPBACK_ONLY_EPHEMERAL_PORT`로 실패했습니다. API 빌드와 다섯 IT 실행 전이므로 테스트와 API artifact는 `null`입니다. 생성한 자기 소유 컨테이너 세 개는 모두 정상 중지로 기록됐습니다. 당시 실제 Docker inspect는 공개 artifact에 없으므로, port map의 부재·형태·주소·숫자 중 어느 조건이 실패했는지와 그 원인은 **미관측**입니다. `--internal`이 원인이라고 확정하지 않습니다.
+새 profile은 처음부터 `OWNED_INTERNAL_BRIDGE_HOST_LOOPBACK_TCP_RELAYS`입니다. 실제 Docker `--publish`를 제거하고 다음 경로만 사용합니다.
 
-새 파생본은 full ID와 기존 소유권·이미지·네트워크·bind·자원 검사를 통과한 DB/Garage의 **시작 후** inspect에서 다음 두 층을 각각 고정 enum과 boolean으로 투영합니다. 두 서비스의 투영을 먼저 저장한 뒤 기존 actual-port gate를 평가합니다.
+```text
+host Java IT → 127.0.0.1:임시포트 → 표준 라이브러리 TCP relay
+            → 실제 소유 internal bridge의 DB:3306 / Garage:3900
+```
 
-- `HostConfig.PortBindings`: 요청 map의 관측 여부, 대상 bind가 하나인지, loopback 요청인지, host port가 비어 있거나 0인지, 추가 요청이 없는지.
-- `NetworkSettings.Ports`: 실제 map/대상 항목의 관측 상태, 단일 loopback 주소, 유효한 숫자 포트, 추가 publish의 유무.
+요청한 Docker 포트나 임의 DNS/IP로 fallback하지 않습니다. 외부 연결 가능한 네트워크·전체 인터페이스 bind·운영 endpoint·SSH·production credential을 추가하지 않습니다. Docker 공식 문서는 internal bridge에서 host가 container IP에 직접 접근할 수 있다고 설명합니다. 이 기능을 **새 시도의 실제 TCP positive control**로 확인해야 하며 실패하면 더 넓은 경로를 만들지 않습니다. [Docker internal network](https://docs.docker.com/reference/cli/docker/network/create/#network-internal-mode---internal)
 
-`UNOBSERVED`, `MALFORMED`, `TARGET_MISSING`, `TARGET_UNPUBLISHED`, `TARGET_INVALID_COUNT`, `TARGET_MALFORMED`, `SINGLE_BINDING`만 내보냅니다. 미관측/비정상 필드의 검증 boolean은 `false`입니다. raw inspect, 실제 주소·포트·container ID/name·환경·credentials는 공개하지 않습니다. 새 `portBindingDiagnostics`는 연결 성공이나 실제 listener의 건강 상태를 증명하지 않습니다. 이전 실패의 원인을 확인했다는 표시도 하지 않습니다.
+## 소유권과 전송 한도
 
-**연결 경계는 유지합니다.** 요청한 HostConfig만으로 실제 포트를 추측하거나 fallback하지 않습니다. 활성 numeric loopback mapping이 없으면 기존 코드로 실패하며, `--internal`, `127.0.0.1` publish, 자원 한도, 원본 Apache5 소스 세 파일과 다섯 IT 선택, 종료/unknown-outcome 규칙은 그대로입니다. 이 파생본은 관측 공백을 줄이는 진단 변경이며 실제 Garage 호환성 수정·검증 완료가 아닙니다. 새 실행은 운영자가 별도 fresh GitHub 시도로 수행해야 하며 이전 시도를 자동 재실행하지 않습니다.
+fresh GitHub run/attempt 이름으로 만든 internal network, 새 DB/meta/data volume 세 개와 컨테이너 세 개만 사용합니다. DB는 1 CPU/1GiB, Garage는 0.5 CPU/512MiB입니다. 기존 짧은 initializer의 network none·0.1 CPU/64MiB, Garage UID1000·read-only root·tmpfs32MiB, 원본 IT의 연결 guard를 유지합니다.
 
-Docker의 [port publishing 설명](https://docs.docker.com/engine/network/port-publishing/)은 loopback publish와 gateway mode에 따른 host-port 차이를 설명하고, [internal network 설명](https://docs.docker.com/reference/cli/docker/network/create/#network-internal-mode---internal)은 외부 통신 제한과 host의 직접 접근을 구분합니다. 이것은 설계 참고이며 첫 runner의 Docker 버전/설정을 관측한 증거가 아닙니다.
+각 relay는 시작 전에, 그리고 **매 연결을 대상에 전달하기 전에** 실제 full CID/name/label/image·전체 Config/HostConfig/mount object·PID/StartedAt·restart0을 대조합니다. container endpoint와 실제 network의 ID/endpoint ID/name/IP/subnet이 일치하고, 소유 local bridge가 Internal=true이며 Docker host publish가 없음을 확인합니다. 대상은 그때 고정한 numeric private IPv4와 DB3306/Garage3900뿐입니다. 후속 read-only inspect는 shared `Attempt.command`의 sequence나 파일을 쓰지 않고, 각 CLI는 최대 2초·응답 8MiB로 제한합니다. 검사 결과 원문은 RAM에만 두며 출력/기록하지 않습니다.
 
-## 실제 실행 전 확인할 범위
+Listener는 `127.0.0.1:0`에만 bind합니다. 서비스별로 최대 active 연결16·전체 연결512·연결당 16MiB·전체 양방향 64MiB·idle60초·연결180초·relay360초입니다. 각 방향의 pending buffer는 64KiB입니다. byte 한도 초과 시도는 최대 1바이트까지 읽어 관측한 뒤 더 전달하지 않고 실패합니다. target connect는 3초 이내입니다. HTTP/SQL payload를 해석하거나 저장/출력하지 않습니다. EOF의 half-close와 양방향 bytes를 그대로 전달합니다. 단순 TCP positive control은 SQL/S3 명령의 성공을 뜻하지 않습니다.
 
-- 새 internal Docker network와 DB/meta/data named volume 세 개, 새 bucket·read/write/nonowner key를 만듭니다. MariaDB·Garage는 각각 1 CPU/1GiB, 0.5 CPU/512MiB입니다. Garage는 UID1000, 읽기 전용 root와 `/tmp` 32MiB를 사용합니다. 짧은 root chown initializer는 network none·0.1 CPU·64MiB이며 새 Garage 두 volume만 바꿉니다. MariaDB는 공식 bootstrap entrypoint를 사용합니다.
-- 기존 테스트가 numeric loopback을 요구하므로 두 서비스 포트는 **127.0.0.1에만** 임시 publish합니다. 공개 bind와 추가 published port는 거절합니다. 운영 endpoint guard를 확대하지 않습니다.
-- 세 Apache5 변경 파일 SHA와 checkout SHA를 확인하고 API JAR를 빌드합니다. JAR의 실제 Apache5 2.55.16 의존성과 factory/raw/export class bytes가 IT classpath의 compiled bytes와 같은지 전후 비교합니다. 이 검사는 별도 컨테이너 production loop를 실행했다는 뜻이 아닙니다.
-- 기존 `GarageRawSourceIT`의 일반 네 메서드를 명시적으로 선택합니다. persistence marker 시험은 선택하지 않아 skip을 성공으로 셈하지 않습니다. 실제 SDK PUT/전체 GET·HEAD·LIST·자신의 key DELETE, staging/repeat, 손상 원본 보존, DB mark 진입 전 오류 후 재검증을 확인합니다. 이 클래스의 DB는 H2이며 MariaDB 증거로 표시하지 않습니다.
-- 기존 `VerifiedResultExportIT`의 `actualResultAndFailuresAreVerifiedBeforeReleaseAndRepeatsCannotReleaseNextJobsSlot` 하나를 선택합니다. 이 클래스만 새 MariaDB schema `platform_lab_export_it`를 사용합니다. 원본 업로드·전체 검증, 고정12 처리, 결과·실패 파일 두 개의 실제 PUT·전체 bytes/크기/SHA·실패 이유, EXPORTED/슬롯 해제, 반복 요청의 추가 export PUT 0, 다음 작업 슬롯 보존을 확인합니다.
-- 실제 Surefire XML의 정확한 다섯 메서드·5 pass/0 failure/0 error/0 skip·Asia/Seoul을 확인합니다. DB의 테스트 job/outbox/run/outcome과 점유 슬롯도 모두 0이어야 합니다. Kafka·동시성·성능·운영 배포 검증으로 확대하지 않습니다.
+Maven package와 실제 JAR/class 일치 검사를 마친 뒤 relay를 시작하고, 두 경로의 실제 TCP 연결을 확인한 다음 기존 IT를 실행합니다. 전체 시도900초·Maven IT300초·API의 기존 connect/read/attempt/call timeout은 바꾸지 않습니다. 검사/연결이 늦거나 연결·byte·시간 한도를 넘으면 시도를 실패로 남깁니다. 자동 재접수는 없습니다.
 
-## 실패·종료·공개 자료
+## 그대로 검증하는 다섯 IT
 
-각 intent/log는 새 private 디렉터리에 O_EXCL로 남깁니다. DB/S3 credentials와 원본 Maven/Docker 로그는 `0600`, 상위 디렉터리는 `0700`입니다. Garage RPC config만 nonroot container가 읽도록 private 디렉터리 안에서 `0444`로 둡니다. S3 key·DB 비밀번호는 config에 넣지 않습니다.
+- `GarageRawSourceIT`의 일반 메서드 네 개: 실제 SDK PUT·whole GET·HEAD·LIST·등록한 자기 key DELETE, staging/repeat, 손상 원본 유지, DB mark 전 오류 후 재검증입니다. 이 클래스의 DB는 **H2**, 객체 저장소는 실제 Garage입니다.
+- `VerifiedResultExportIT.actualResultAndFailuresAreVerifiedBeforeReleaseAndRepeatsCannotReleaseNextJobsSlot`: 새 MariaDB schema `platform_lab_export_it`와 실제 Garage를 사용합니다. 고정12 입력의 결과/실패 whole bytes·크기·SHA·사유·EXPORTED/슬롯 해제·반복 export PUT0·다음 슬롯 보존을 확인합니다.
 
-기존 IT의 teardown은 실패 시에도 등록한 UUID 객체와 DB 행만 정리할 수 있습니다. 이 실행기는 그 동작을 바꾸지 않으므로 실패한 객체/행을 반드시 보존한다고 주장하지 않습니다. Docker volume과 private 진단 로그는 남기고, 기록된 full ID/name/label/image/network/bind/limit을 확인한 자기 컨테이너에만 TERM을 보냅니다. 종료되지 않으면 실패로 남기며 강제 kill·재시도·컨테이너/volume 삭제는 하지 않습니다. GitHub가 실행 후 disposable runner 전체를 폐기하는 것과 별개입니다.
+Java 21 / AWS SDK Apache5 2.55.16과 원본 POM·factory·deadline test 세 파일의 hash, 실제 API JAR의 factory/raw/export class bytes 일치, 정확한 Surefire 다섯 사례/0 failure/error/skip/Asia-Seoul, 자기 DB 행/슬롯0을 요구합니다. 원본 IT teardown은 등록한 UUID 객체와 행을 실패 때도 지울 수 있으므로 이 실행기가 모든 실패 데이터를 보존한다고 주장하지 않습니다. Kafka·지속성·중단 복구 검증은 이번 범위가 아닙니다.
 
-공개 artifact는 `.local/s3-ci-public/summary.json` 하나뿐입니다. 실제 source/JAR SHA, 선택 테스트 집계, 제한된 종료·실패 코드만 포함하며 XML·원본 로그·환경·endpoint·bucket/key·credentials·Docker ID는 업로드하지 않습니다. Windows의 이전 느린 read 성공이나 이번 후보 준비만으로 Linux 실패의 원인·해결 완료를 주장하지 않습니다.
+## 종료와 공개 자료
+
+모든 경로에서 등록한 자기 relay listener/socket을 shutdown하고 최대 12초 내 threads join을 확인합니다. 각 relay의 종료 실패는 다음 relay와 기존 exact-ID 컨테이너 TERM 시도를 막지 않습니다. relay 정리 뒤 Docker 정리를 수행하며, 강제 컨테이너 kill·volume 삭제·재생성·자동 재시도는 없습니다. unknown create/command outcome, relay 실패/미종료, 컨테이너 미종료는 성공이 아닙니다. 새 연결 조건에서 통과하려면 두 positive control·정확한5 IT·JAR binding·모든 relay/container 종료가 함께 확인돼야 합니다.
+
+공개 artifact는 기존 `.local/s3-ci-public/summary.json` 하나뿐입니다. source/JAR 해시·고정 scope/profile·테스트 집계·종료 bool·safe failure code·relay 연결/byte 집계와 고정 한도만 추가합니다. 실제 target/listener IP·포트·Docker ID/name·환경·credential·HTTP/SQL bytes·원문 로그는 게시하지 않습니다. DB/S3 credentials와 기존 Docker/Maven 원문 로그는 private `0700`/`0600`에 둡니다. 새 read-only callback의 stdout/stderr는 별도 로그로 남기지 않습니다.
 
 ```sh
+# 순수 fixture + 실제 로컬 loopback TCP 검사, Docker/서버 접속 없음
 python3 -B -m unittest discover -s infra/s3-ci -p 'test_*.py' -v
-# 실행은 SOURCE_COMMIT=${GITHUB_SHA}를 지정한 전용 GitHub Linux job에서만 허용
+# 실제 서비스 실행은 별도 fresh GitHub Linux run에만, 기존 optional job 사용
 python3 -B infra/s3-ci/run_s3_ci.py
 ```
+
+로컬 TCP fixture는 test-only로 in-memory target을 자기 loopback server로 대체해 전송·half-close·byte/idle/동시접속 한도·thread 종료를 검증합니다. production에는 그 대체를 켜는 env/CLI 옵션이 없습니다. Docker 소유권·network/IP·동일 process/spec 검사는 별도의 순수 거부 사례로 검증합니다. 이 준비본의 실제 Cloud/Garage 결과는 아직 없습니다.

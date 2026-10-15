@@ -1,6 +1,7 @@
 import copy
 import json
 import tempfile
+import time
 from pathlib import Path
 import unittest
 from unittest import mock
@@ -163,6 +164,62 @@ class Boundaries(unittest.TestCase):
                 self.assertTrue(attempt.stop())
             self.assertTrue(all(call.kwargs == {'bounded': False} for call in guard.call_args_list))
             command.assert_called_once_with(['docker', 'kill', '--signal=TERM', 'a'*64], bounded=False, timeout=10)
+
+    def relay_scope(self):
+        value = self.container()
+        value['HostConfig'].update(Memory=1024, MemorySwap=1024, NanoCpus=1000000000, PortBindings={}, PublishAllPorts=False)
+        value['NetworkSettings']['Ports'] = {'3306/tcp': None}
+        value['NetworkSettings']['Networks']['own'] = {'NetworkID':'b'*64, 'EndpointID':'c'*64, 'IPAddress':'172.25.0.2'}
+        value['State'].update(Running=True, Pid=123, StartedAt='fixed')
+        value['RestartCount'] = 0
+        item = {'id':'a'*64, 'name':'own-db', 'imageId':'sha256:fixed', 'network':'own',
+                'binds':[('new-db','/var/lib/mysql','rw')], 'memory':1024, 'nanoCpus':1000000000}
+        network = {'Name':'own', 'Id':'b'*64, 'Internal':True, 'Driver':'bridge', 'Scope':'local',
+                   'Labels':{c.LABEL:'own'}, 'IPAM':{'Config':[{'Subnet':'172.25.0.0/16'}]},
+                   'Containers':{'a'*64:{'Name':'own-db','EndpointID':'c'*64,'IPv4Address':'172.25.0.2/16'}}}
+        return value, network, item
+
+    def test_relay_target_requires_exact_internal_endpoint_and_unrestarted_process(self):
+        value, network, item = self.relay_scope()
+        self.assertEqual(c.verified_internal_target(value,network,item,'own',3306), ('172.25.0.2',3306))
+        mutations = [lambda v,n:v['NetworkSettings']['Networks']['own'].update(NetworkID='d'*64),
+                     lambda v,n:n.update(Internal=False), lambda v,n:n['IPAM']['Config'][0].update(Subnet='172.26.0.0/16'),
+                     lambda v,n:v.update(RestartCount=1), lambda v,n:v['State'].update(Running=False),
+                     lambda v,n:n['Containers']['a'*64].update(IPv4Address='172.25.0.3/16'),
+                     lambda v,n:v['HostConfig'].update(PortBindings={'3306/tcp':[{'HostIp':'127.0.0.1','HostPort':''}]})]
+        for mutate in mutations:
+            v,n,i = self.relay_scope(); mutate(v,n)
+            with self.assertRaises(RuntimeError):c.verified_internal_target(v,n,i,'own',3306)
+
+    def test_relay_target_does_not_accept_foreign_id_image_spec_or_ports(self):
+        for mutate in (lambda v:v.update(Id='d'*64), lambda v:v.update(Image='sha256:foreign'),
+                       lambda v:v['HostConfig'].update(Memory=2048), lambda v:v['HostConfig'].update(NanoCpus=2),
+                       lambda v:v['HostConfig'].update(Binds=['foreign:/var/lib/mysql:rw'])):
+            value, network, item = self.relay_scope();mutate(value)
+            with self.assertRaises(RuntimeError):c.verified_internal_target(value,network,item,'own',3306)
+        value,network,item=self.relay_scope()
+        with self.assertRaises(RuntimeError):c.verified_internal_target(value,network,item,'own',22)
+
+    def test_relay_fresh_callbacks_are_bounded_independent_readonly_and_bind_same_process_spec(self):
+        initial, network, item = self.relay_scope()
+        initial['Mounts'] = [{'Source':'new-db','Destination':'/var/lib/mysql'}]
+        attempt = mock.Mock(project='own')
+        attempt.guard.return_value = initial
+        attempt.command.return_value = (0,json.dumps([network]).encode())
+        value = c.create_owned_relay(attempt,item,3306,time.monotonic()+100)
+        live = copy.deepcopy(initial)
+        response = lambda obj: mock.Mock(returncode=0,stdout=json.dumps([obj]).encode())
+        with mock.patch.object(c.subprocess,'run',side_effect=[response(live),response(network)]) as read:
+            self.assertEqual(value.verify_target(),('172.25.0.2',3306))
+            self.assertTrue(all(0 < call.kwargs['timeout'] <= 2 for call in read.call_args_list))
+            self.assertEqual([call.args[0][:2] for call in read.call_args_list],[['docker','inspect'],['docker','network']])
+        self.assertEqual(attempt.guard.call_count,1)
+        self.assertEqual(attempt.command.call_count,1)
+        for mutate in (lambda v:v['State'].update(Pid=124),lambda v:v['State'].update(StartedAt='different'),
+                       lambda v:v['Config'].update(Env=['foreign']),lambda v:v['Mounts'][0].update(Source='foreign')):
+            live=copy.deepcopy(initial);mutate(live)
+            with mock.patch.object(c.subprocess,'run',side_effect=[response(live),response(network)]):
+                with self.assertRaises(RuntimeError):value.verify_target()
 
 
 if __name__ == '__main__':

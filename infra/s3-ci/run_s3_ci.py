@@ -1,6 +1,7 @@
 """One GitHub-hosted MariaDB/Garage compatibility attempt using existing ITs."""
 import datetime as dt
 import hashlib
+import ipaddress
 import json
 import os
 from pathlib import Path
@@ -13,6 +14,7 @@ import sys
 import time
 import xml.etree.ElementTree as ET
 import zipfile
+from loopback_relay import LoopbackRelay
 
 sys.dont_write_bytecode = True
 MARIADB = 'mariadb:11.8.9@sha256:6422478cb8e159f080fb1d8ccf65101e26fe51385787fde7d16c3b165a331f15'
@@ -32,6 +34,7 @@ RAW_CASES = (
 EXPORT_CASE = 'actualResultAndFailuresAreVerifiedBeforeReleaseAndRepeatsCannotReleaseNextJobsSlot'
 SELECTION = 'GarageRawSourceIT#' + '+'.join(RAW_CASES) + ',VerifiedResultExportIT#' + EXPORT_CASE
 SCOPE = 'ISOLATED_GITHUB_RUNNER_APACHE5_MARIADB_GARAGE'
+CONNECTIVITY_PROFILE = 'OWNED_INTERNAL_BRIDGE_HOST_LOOPBACK_TCP_RELAYS'
 
 
 def require(value, code):
@@ -146,6 +149,64 @@ def bound_port(value, container_port):
     require(all(key == str(container_port) + '/tcp' or value is None
                 for key, value in value['NetworkSettings']['Ports'].items()), 'ONLY_ONE_REQUIRED_PRIVATE_PORT')
     return int(entries[0]['HostPort'])
+
+
+def verified_internal_target(value, network, item, project, target_port):
+    """Read-only ownership proof; neither requested ports nor DNS are a route."""
+    container_guard(value, item['id'], item['name'], project, item['imageId'], item['network'], item['binds'])
+    host = value['HostConfig']
+    require(host['Memory'] == host['MemorySwap'] == item['memory'] and host['NanoCpus'] == item['nanoCpus'],
+            'ACTUAL_RELAY_TARGET_LIMITS')
+    require(value['State']['Running'] is True and value['State']['Pid'] > 0 and value['RestartCount'] == 0,
+            'NEW_RUNNING_UNRESTARTED_RELAY_TARGET')
+    require(host.get('PortBindings') in (None, {}) and not host.get('PublishAllPorts')
+            and all(entry is None for entry in value['NetworkSettings']['Ports'].values()), 'NO_DOCKER_HOST_PORTS_FOR_RELAY_PROFILE')
+    require(network['Name'] == item['network'] == project and network['Internal'] is True
+            and network['Driver'] == 'bridge' and network['Scope'] == 'local'
+            and network['Labels'].get(LABEL) == project and re.fullmatch('[a-f0-9]{64}', network['Id']),
+            'EXACT_OWNED_INTERNAL_LOCAL_BRIDGE')
+    endpoint = value['NetworkSettings']['Networks'][project]
+    registered = network['Containers'][item['id']]
+    require(endpoint['NetworkID'] == network['Id'] and registered['Name'] == item['name']
+            and endpoint['EndpointID'] == registered['EndpointID'], 'CONTAINER_AND_NETWORK_ENDPOINT_IDENTITY')
+    address = ipaddress.ip_address(endpoint['IPAddress'])
+    member = ipaddress.ip_interface(registered['IPv4Address'])
+    subnets = [ipaddress.ip_network(row['Subnet']) for row in network['IPAM']['Config'] if row.get('Subnet')]
+    require(address.version == 4 and address.is_private and not address.is_loopback and not address.is_multicast
+            and not address.is_unspecified and address == member.ip
+            and any(net.version == 4 and address in net for net in subnets), 'EXACT_NETWORK_MEMBER_PRIVATE_IPV4')
+    require(target_port in (3306, 3900), 'ONLY_FIXED_SERVICE_PORTS')
+    return str(address), target_port
+
+
+def create_owned_relay(attempt, item, target_port, deadline):
+    initial = attempt.guard(item)
+    network = json.loads(attempt.command(['docker', 'network', 'inspect', item['network']])[1])[0]
+    target = verified_internal_target(initial, network, item, attempt.project, target_port)
+    # No shared Attempt.command/sequence/logging from worker threads. Fresh
+    # read-only CLI output stays in RAM and is never published, printed or logged.
+    def read_json(argv):
+        remaining = deadline-time.monotonic()
+        require(remaining > 0, 'RELAY_SCOPE_READ_DEADLINE')
+        result = subprocess.run(argv, capture_output=True, timeout=min(2, remaining))
+        require(result.returncode == 0 and len(result.stdout) <= 8*1024**2, 'BOUNDED_RELAY_SCOPE_READ_REQUIRED')
+        values = json.loads(result.stdout)
+        require(isinstance(values, list) and len(values) == 1, 'ONE_RELAY_SCOPE_OBJECT_REQUIRED')
+        return values[0]
+
+    def verifier():
+        live = read_json(['docker', 'inspect', item['id']])
+        active_network = read_json(['docker', 'network', 'inspect', item['network']])
+        require(live['Config'] == initial['Config'] and live['HostConfig'] == initial['HostConfig']
+                and live['State']['Pid'] == initial['State']['Pid'] and live['State']['StartedAt'] == initial['State']['StartedAt']
+                and sorted(live['Mounts'], key=lambda x: json.dumps(x, sort_keys=True))
+                    == sorted(initial['Mounts'], key=lambda x: json.dumps(x, sort_keys=True)), 'SAME_RELAY_TARGET_PROCESS_AND_FULL_SPEC')
+        actual = verified_internal_target(live, active_network, item, attempt.project, target_port)
+        require(actual == target and active_network['Id'] == network['Id'], 'SAME_FIXED_RELAY_ENDPOINT_AND_NETWORK')
+        return actual
+
+    require(0 < deadline-time.monotonic() <= 360, 'BOUNDED_RELAY_SESSION_WINDOW')
+    return LoopbackRelay(*target, verifier, lifetime=deadline-time.monotonic())
 
 
 def test_summary(directory):
@@ -277,7 +338,7 @@ def run():
     require(not public_dir.exists(), 'NEW_PUBLIC_SUMMARY_DIRECTORY'); public_dir.mkdir(mode=0o700)
     attempt = Attempt(folder, project)
     passed = stopped = False; failure = None; totals = None; artifact = None
-    port_diagnostics = {'database': None, 'garage': None}
+    relays = []; relay_reports = []; relays_stopped = True
     try:
         actual_source = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, check=True, timeout=10).stdout.decode().strip()
         require(actual_source == source, 'CHECKOUT_SHA_MISMATCH')
@@ -316,12 +377,12 @@ def run():
         # the container runs UID1000. S3/DB credentials and command logs remain 0600.
         os.chmod(garage_config, 0o444)
         db = attempt.create('db', MARIADB, ['--env-file', str(db_env), '-v', volumes[0]+':/var/lib/mysql:rw',
-            '--publish', '127.0.0.1::3306', '--security-opt=no-new-privileges:true'],
+            '--security-opt=no-new-privileges:true'],
             [(volumes[0], '/var/lib/mysql', 'rw')], 1024**3, 1)
         garage = attempt.create('garage', GARAGE, ['--user=1000:1000', '--read-only', '--cap-drop=ALL',
             '--security-opt=no-new-privileges:true', '--tmpfs=/tmp:size=32m', '--entrypoint=/garage',
             '-v', volumes[1]+':/meta:rw', '-v', volumes[2]+':/data:rw', '-v', str(garage_config)+':/etc/garage.toml:ro',
-            '--publish', '127.0.0.1::3900'], [(volumes[1], '/meta', 'rw'), (volumes[2], '/data', 'rw'),
+            ], [(volumes[1], '/meta', 'rw'), (volumes[2], '/data', 'rw'),
             (str(garage_config), '/etc/garage.toml', 'ro')], 512*1024**2, .5, command=('-c', '/etc/garage.toml', 'server'))
         for item in (db, garage):
             attempt.command(['docker', 'start', item['id']]); attempt.guard(item)
@@ -354,22 +415,23 @@ def run():
         require(acl['accessKeyId'] == key['accessKeyId'] and acl['permissions']['createBucket'] is False and len(acl['buckets']) == 1
                 and acl['buckets'][0]['id'] == bucket['id'] and acl['buckets'][0]['permissions'] == {'read': True, 'write': True, 'owner': False},
                 'ACTUAL_ONLY_NEW_BUCKET_NONOWNER_READ_WRITE_KEY')
-        # Both full-ID-bound post-start projections are captured before either gate.
-        # Requested HostConfig bindings cannot substitute for an active published port.
-        db_live, garage_live = attempt.guard(db), attempt.guard(garage)
-        port_diagnostics = {'database': port_binding_diagnostic(db_live, 3306),
-                            'garage': port_binding_diagnostic(garage_live, 3900)}
-        db_port, garage_port = bound_port(db_live, 3306), bound_port(garage_live, 3900)
+        # Build before relay lifetime starts. This is a new explicit connectivity
+        # profile, never a fallback to a missing Docker published port.
+        maven = api / 'mvnw'; os.chmod(maven, maven.stat().st_mode | stat.S_IXUSR)
+        build_env = os.environ.copy(); build_env['MAVEN_OPTS'] = '-Xmx768m'
+        attempt.command([str(maven), '-B', '-ntp', '-f', str(api/'pom.xml'), '-DskipTests', 'package'], env=build_env, timeout=300)
+        artifact = jar_identity(api)
+        relay_deadline = min(attempt.deadline, time.monotonic()+360)
+        db_relay = create_owned_relay(attempt, db, 3306, relay_deadline)
+        relays.append(db_relay); db_port = db_relay.start(); db_relay.probe()
+        garage_relay = create_owned_relay(attempt, garage, 3900, relay_deadline)
+        relays.append(garage_relay); garage_port = garage_relay.start(); garage_relay.probe()
         env = os.environ.copy()
         env.update({'MAVEN_OPTS': '-Xmx768m', 'DB_TEST_URL': 'jdbc:mariadb://127.0.0.1:'+str(db_port)+'/platform_lab_export_it',
             'DB_TEST_USERNAME': 'exportit', 'DB_TEST_PASSWORD': db_password, 'LAB_S3_TEST_BUCKET': bucket_name,
             'LAB_S3_TEST_ENDPOINT': 'http://127.0.0.1:'+str(garage_port),
             'LAB_S3_TEST_ACCESS_KEY': key['accessKeyId'], 'LAB_S3_TEST_SECRET_KEY': key['secretAccessKey']})
         del key, db_password, root_password
-        maven = api / 'mvnw'; os.chmod(maven, maven.stat().st_mode | stat.S_IXUSR)
-        build_env = os.environ.copy(); build_env['MAVEN_OPTS'] = '-Xmx768m'
-        attempt.command([str(maven), '-B', '-ntp', '-f', str(api/'pom.xml'), '-DskipTests', 'package'], env=build_env, timeout=300)
-        artifact = jar_identity(api)
         # This is the existing real-IO code, not a new test that mirrors the adapter.
         attempt.command([str(maven), '-B', '-ntp', '-f', str(api/'pom.xml'), '-Dlab.s3.tests=true', '-Dlab.export.tests=true',
             '-DargLine=-Duser.timezone=Asia/Seoul -Xmx768m', '-Dtest='+SELECTION, 'test'], env=env, timeout=300)
@@ -390,8 +452,20 @@ def run():
         text = str(error)
         failure = {'type': type(error).__name__, 'code': text if re.fullmatch('[A-Z0-9_]{1,128}', text) else 'ISOLATED_ATTEMPT_FAILED_OR_UNKNOWN'}
     finally:
+        # Each relay is joined before container TERM, and a failed relay close
+        # cannot skip the other relay or the original container cleanup.
+        for relay in reversed(relays):
+            try:
+                relays_stopped = relay.close() and relays_stopped
+                relay_reports.append(relay.summary())
+            except Exception:
+                relays_stopped = False
         stopped = attempt.stop()
-        passed = passed and stopped
+        relay_ok = relays_stopped and len(relay_reports) == 2 and all(
+            v['tcpPositiveControlPassed'] and v['failureCode'] is None for v in relay_reports)
+        if passed and not relay_ok:
+            failure = {'type': 'RelayError', 'code': 'OWNED_RELAY_RUNTIME_OR_SHUTDOWN_UNVERIFIED'}
+        passed = passed and stopped and relay_ok
         summary = {'schemaVersion': 1, 'passed': passed, 'scope': SCOPE, 'capturedAt': utc(),
             'sourceCommit': source, 'sdk': '2.55.16', 'transport': 'APACHE5', 'tests': totals, 'apiArtifact': artifact,
             'plannedCases': 5, 'createdContainerCount': len(attempt.created), 'ownedContainersStopped': stopped,
@@ -400,7 +474,9 @@ def run():
             'forcedKillPerformed': False, 'automaticAttemptRetryPerformed': False,
             'ownVolumesRetainedUntilRunnerDisposal': True, 'miniPcContacted': False,
             'rawLogsCredentialsOrConnectionValuesPublished': False,
-            'portBindingDiagnostics': port_diagnostics, 'historicalPortGuardFailureCauseObserved': False, 'failure': failure}
+            'connectivityProfile': CONNECTIVITY_PROFILE, 'dockerPortsPublished': False,
+            'ownedRelaysStoppedAndJoined': relays_stopped, 'relays': relay_reports,
+            'historicalPortGuardFailureCauseObserved': False, 'failure': failure}
         save_json(public_dir / 'summary.json', summary)
         print(json.dumps(summary, sort_keys=True))
     return 0 if passed else 1
