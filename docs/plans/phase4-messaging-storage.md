@@ -1,8 +1,10 @@
 # 4단계 준비 조사: Kafka와 원본 객체 보관
 
-최초 조사: 2026-10-12 KST. DB 작업/outbox·단일 슬롯을 격리 MariaDB에서 검증한 뒤, 2026-10-14에는 Garage 2.4.1·Java SDK 2.55.16 원본 adapter를 추가했다. 기본 checksum의 실제 실패와 Garage 전용 설정의 교정, 전체 원본 검증·재시도·컨테이너 재생성 후 Get-only 보존을 확인했다. [DB 기반 근거](../evidence/db-job-foundation/README.md), [S3 검증 근거](../evidence/s3-source-storage/README.md), [선정 ADR](../adr/0005-verified-raw-source-storage.md)을 연결한다. 2026-10-15에는 Kafka 발행·수신·수동 offset과 실제 중단 후 재전달을 격리 검증했다. 기본 78개·실제 IT 4개와 기존 운영 보존 결과는 [Kafka 근거](../evidence/kafka-redelivery/README.md), plain client 선택과 현재 envelope는 [ADR 0006](../adr/0006-explicit-kafka-dispatch.md)을 따른다. 같은 날 결과·실패 파일 export와 두 파일 검증 뒤 슬롯 해제도 구현했고 기본 97개·실제 IT 6개 및 두 JVM 중단 후 회복을 통과했다. [export 근거](../evidence/result-export/README.md), [ADR 0007](../adr/0007-verified-result-export.md)을 연결한다. 같은 날 명시적 상시 실행기·V3 영속 정지/재개·작업/export 관측을 추가하고 기본 120개·실제 IT 4개·웹 34개를 통과했다. [상시 실행/관측 근거](../evidence/continuous-runtime/README.md), [ADR 0008](../adr/0008-continuous-runtime-observation.md)을 연결한다. 운영 image·DB·공개 Pages는 갱신하지 않았고 운영 배치·배포와 자동 관측 게시가 후속이다. 아래 제품 조사는 최초 시점의 기록이며 이후 확정한 조합은 ADR을 따른다.
+최초 조사: 2026-10-12 KST. DB 작업/outbox·단일 슬롯을 격리 MariaDB에서 검증한 뒤, 2026-10-14에는 Garage 2.4.1·Java SDK 2.55.16 원본 adapter를 추가했다. 기본 checksum의 실제 실패와 Garage 전용 설정의 교정, 전체 원본 검증·재시도·컨테이너 재생성 후 Get-only 보존을 확인했다. [DB 기반 근거](../evidence/db-job-foundation/README.md), [S3 검증 근거](../evidence/s3-source-storage/README.md), [선정 ADR](../adr/0005-verified-raw-source-storage.md)을 연결한다. 2026-10-15에는 Kafka 발행·수신·수동 offset과 실제 중단 후 재전달을 격리 검증했다. 기본 78개·실제 IT 4개와 기존 운영 보존 결과는 [Kafka 근거](../evidence/kafka-redelivery/README.md), plain client 선택과 현재 envelope는 [ADR 0006](../adr/0006-explicit-kafka-dispatch.md)을 따른다. 같은 날 결과·실패 파일 export와 두 파일 검증 뒤 슬롯 해제도 구현했고 기본 97개·실제 IT 6개 및 두 JVM 중단 후 회복을 통과했다. [export 근거](../evidence/result-export/README.md), [ADR 0007](../adr/0007-verified-result-export.md)을 연결한다. 같은 날 명시적 상시 실행기·V3 영속 정지/재개·작업/export 관측을 추가하고 기본 120개·실제 IT 4개·웹 34개를 통과했다. [상시 실행/관측 근거](../evidence/continuous-runtime/README.md), [ADR 0008](../adr/0008-continuous-runtime-observation.md)을 연결한다. 이는 격리 검증 당시의 범위다. 이후 사용자 요청으로 미니 PC K3s에 Kafka·Garage·상시 worker를 배포하고 고정 fixture 두 작업·파일 4개 확인·슬롯 해제·Kafka lag 0과 실제 배포 job 관측의 Pages 게시를 확인했다. 현재 결과와 source/image·기존 환경 보존은 [실제 배포 근거](../evidence/runtime-deployment/README.md)를 따른다. 아래 제품 조사는 최초 시점의 기록이며 이후 확정한 조합은 ADR을 따른다.
 
-## 권장 범위
+새 job 관측은 실제 systemd service 실행·Pages 게시와 공개 JSON의 원본 전체 일치를 확인했습니다. timer는 기존 30분 주기·최대 60초 임의 지연 설정으로 enabled·active를 복구했습니다. 새 job 수집 코드의 다음 정기 회차·반복 실행은 아직 관측하지 않았습니다. 공개 화면은 실시간 API가 아니라 약 30분 주기의 기록이며 heartbeat 5분 경고를 별도로 표시한다. 공개 POST는 없고 내부 `--lab-runtime=stage`로 `lab-fixture-` run ID의 고정 12개만 접수한다. 단일 노드·partition 1/RF1이며 Kafka/Garage PVC 전체 복원·최대 1,000개·장기간 운영은 후속이다.
+
+## 최초 권장 범위
 
 **Apache Kafka JVM 브로커 1개와 Garage 객체 저장소 1개를 우선 후보로 삼는다.** 기존 Java 처리 코드를 재사용하고, 합성 원본의 보관 → Kafka 작업 전달 → MariaDB 결과 저장 → 같은 원본 재처리까지 구현한다. Garage는 필요한 Java SDK 기능을 실제 검증한 뒤 ADR로 확정한다.
 
@@ -31,9 +33,9 @@ Flyway V1에는 `(run_id, input_sequence)` unique 제약과 전체 건수 CHECK�
 
 `GET /api/demo/runs`와 상세 조회는 완료된 결과 계약을 유지한다. 진행 중 작업은 향후 별도 job 조회 계약으로 분리한다. 이번 foundation에는 job HTTP 조회를 추가하지 않았다. 기존 웹의 `isRun()`은 유효한 `completedAt`을 요구하며, `lab-observation v1`은 `synthetic-v1-seed-42`·seed 42·12/7/3/2/0과 입력별 판정을 고정 검증한다. 새 비동기 작업을 이 정적 샘플 관측본에 넣거나 nullable 완료 시각을 기존 run 응답에 섞지 않는다. 별도 job 관측 계약을 만들고, 기존 고정 샘플 조회·`lab-observation v1`·`platform-observation v1`을 유지한다. 공개 POST는 계속 제공하지 않는다.
 
-최초 조사 당시 `SampleBootstrap`은 모든 profile에서 실행됐다. 이번 foundation은 `worker`·`admin` profile에서 자동 bootstrap을 제외했고, `DemoRun`에 별도 작업 메타데이터 생성 경로와 공유 결과 저장 경로를 추가해 기존 seed 경로를 유지했다. 현재 작업도 같은 고정 시나리오이므로 detail 설명은 유지한다. 범용 시나리오 설명 분리, 조회 API만의 migration 주체 설정, worker의 Flyway·웹 서버 비활성화와 실제 worker·관리자 실행기는 후속 구현이다. profile로 bootstrap을 제외했다고 migration이나 웹 서버가 자동 비활성화되는 것은 아니다.
+최초 조사 당시 `SampleBootstrap`은 모든 profile에서 실행됐다. 이번 foundation은 `worker`·`admin` profile에서 자동 bootstrap을 제외했고, `DemoRun`에 별도 작업 메타데이터 생성 경로와 공유 결과 저장 경로를 추가해 기존 seed 경로를 유지했다. 현재 작업도 같은 고정 시나리오이므로 detail 설명은 유지한다. foundation 당시에는 실행기와 migration 주체 설정이 후속이었다. 이후 명시적 runtime 명령은 worker profile·비웹 실행·Flyway 비활성화·사전 V3 확인을 강제했고 내부 고정 fixture stage 명령을 추가했다. 기본 API는 migration을 적용하지만 worker/profile 선택만으로 자동 실행기를 만들지는 않는다. 범용 시나리오 설명 분리는 후속이다.
 
-잠금·트랜잭션의 합격 근거는 **실제 MariaDB 격리 검증**으로 남긴다. 동시 제출 2개, 같은 run+같은 hash 재요청, 같은 run+다른 hash 거부, 결과 commit 전 rollback, commit 뒤 같은 작업 재전달에서 DB 효과 1회와 기존 완료 시각·seed 전체 행 보존을 확인한다. H2 결과만으로 MariaDB 동시성·잠금까지 검증했다고 기록하지 않는다. 이번 foundation에서 기존 V1 업그레이드·빈 DB 초기화·반복 시작 조건 각각의 실제 MariaDB 17개 검증을 통과했다. 비UTC JVM 완료 시각 일치와 이전 image 호환성도 확인했다. [실제 결과와 검증 실패·교정 기록](../evidence/db-job-foundation/README.md)을 연결한다. 이후 실제 MariaDB·Garage 결합의 rollback·원본 보존과 Kafka 발행·수신·offset 중단 후 재전달을 별도 격리 검증했다. [결합 근거](../evidence/mariadb-s3/README.md), [Kafka 근거](../evidence/kafka-redelivery/README.md)를 연결하며 운영 배포·결과 export는 후속 관문이다.
+잠금·트랜잭션의 합격 근거는 **실제 MariaDB 격리 검증**으로 남긴다. 동시 제출 2개, 같은 run+같은 hash 재요청, 같은 run+다른 hash 거부, 결과 commit 전 rollback, commit 뒤 같은 작업 재전달에서 DB 효과 1회와 기존 완료 시각·seed 전체 행 보존을 확인한다. H2 결과만으로 MariaDB 동시성·잠금까지 검증했다고 기록하지 않는다. 이번 foundation에서 기존 V1 업그레이드·빈 DB 초기화·반복 시작 조건 각각의 실제 MariaDB 17개 검증을 통과했다. 비UTC JVM 완료 시각 일치와 이전 image 호환성도 확인했다. [실제 결과와 검증 실패·교정 기록](../evidence/db-job-foundation/README.md)을 연결한다. 이후 실제 MariaDB·Garage 결합의 rollback·원본 보존과 Kafka 발행·수신·offset 중단 후 재전달을 별도 격리 검증했다. [결합 근거](../evidence/mariadb-s3/README.md), [Kafka 근거](../evidence/kafka-redelivery/README.md)를 연결한다. 결과 export·상시 실행기와 실제 운영 배포는 이후 단계의 [현재 근거](../evidence/runtime-deployment/README.md)로 구분한다.
 
 ## 제품과 공식 배포 상태
 
@@ -71,7 +73,7 @@ SeaweedFS도 한 프로세스의 `weed mini` 구성이 있지만 내부에 maste
 1. 관리자 전용 1회 실행 경로에서 허용한 합성 시나리오와 run ID를 만든다. JSON/NDJSON 원본은 입력 순번을 유지하고 잘못된 시각과 중복 ID까지 그대로 포함한다.
 2. MariaDB에 `runId + payloadSha256 + scenarioVersion`을 갖는 작업을 `STAGING`으로 등록한다. 같은 run ID에 다른 hash가 들어오면 거부한다. 전체 진행 작업은 DB 제약·잠금으로 1개만 허용한다.
 3. 전용 비공개 bucket에 원본을 Put하고, Get으로 읽어 SHA-256과 입력 수를 확인한다. 성공한 뒤 DB 트랜잭션에서 작업을 `QUEUED`로 바꾸고 outbox 행을 함께 등록한다. S3 실패 때 완료·접수 성공이나 Kafka 발행 성공으로 기록하지 않는다.
-4. 최초 계획은 원본 object key·hash·입력 수·scenarioVersion·run ID 전달이었으나, 실제 구현은 [ADR 0006](../adr/0006-explicit-kafka-dispatch.md)에 따라 schemaVersion·run ID·scenarioVersion·sourceSha256 네 필드만 보낸다. object key·입력 수는 불변 DB 작업에서 대조한다. 향후 운영 topic은 `lab.sensor-runs.v1`을 후보로 두며 실제 시험은 UUID 전용 topic을 사용했다. partition 1, key run ID, consumer 1로 시작한다. 발행 ACK 뒤 outbox 표시 전에 중단되면 같은 작업이 재전달될 수 있게 설계한다.
+4. 최초 계획은 원본 object key·hash·입력 수·scenarioVersion·run ID 전달이었으나, 실제 구현은 [ADR 0006](../adr/0006-explicit-kafka-dispatch.md)에 따라 schemaVersion·run ID·scenarioVersion·sourceSha256 네 필드만 보낸다. object key·입력 수는 불변 DB 작업에서 대조한다. 격리 시험은 UUID 전용 topic을 사용했고 실제 배포 topic은 `platform-lab-dispatch-v1`로 명시 생성했다. partition 1, key run ID, consumer 1로 시작한다. 발행 ACK 뒤 outbox 표시 전에 중단되면 같은 작업이 재전달될 수 있게 설계한다.
 5. worker는 DB의 고유 run과 row lock으로 선점하고, S3 원본 hash를 검증한 뒤 기존 `SensorProcessor`로 전체 묶음을 판정한다. 결과와 12개 outcome, 작업 완료 상태를 같은 DB 트랜잭션으로 저장한다. 그 뒤 Kafka offset을 commit한다.
 6. 이미 완료된 run의 재전달은 hash를 대조하고 결과를 추가하지 않는다. 저장 당시 처리 시각도 덮어쓰지 않는다. Kafka 전달 횟수와 재전달 억제 횟수는 업무상 중복 2건과 다른 항목으로 기록한다.
 7. 결과 JSON과 실패 입력·실패 이유 JSON은 DB 완료 후 별도 export outbox로 S3에 저장한다. 연산 완료와 export 상태를 분리하고, export 장애를 연산 실패로 바꾸지 않고 `RESULT_EXPORT_PENDING`으로 드러낸다. 같은 hash·결과 버전의 결정적 key로 재시도하고, 실제 export 확인 뒤에만 결과 파일 보관 완료로 표시한다. **최초 정책은 결과·실패 파일의 export 완료까지 전체 실행 슬롯을 보유**한다. export 대기·운영자 정지 중에는 후속 작업을 받지 않아 미완료 작업 누적을 억제한다. 복구 불가능한 작업의 슬롯 해제는 원본·결과 보존을 확인한 명시적 운영자 종료 절차에서만 수행한다.
@@ -86,7 +88,7 @@ Kafka idempotent producer와 ACK 설정은 사용하되 **Kafka·MariaDB·S3 전
 
 ## 구현 전 Java S3 호환성 관문
 
-AWS SDK for Java v2의 S3 client 하나로 아래를 확인한다. endpointOverride와 region을 명시하고 path-style·SigV4를 사용한다. SDK/BOM 버전은 구현 시 공식 릴리스를 확인해 고정한다. 현재 Boot에는 공식 권장 방식의 `spring-boot-starter-kafka`를 버전 없이 추가하고 실제 dependency tree의 Spring Kafka·Kafka client 버전을 기록한다. 브로커와 client 버전을 같은 숫자로 억지 고정하지 않는다. [Spring Kafka 의존성 안내](https://docs.spring.io/spring-kafka/reference/quick-tour.html), [AWS Java v2 endpoint·region 안내](https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/endpoint-config.html).
+AWS SDK for Java v2의 S3 client 하나로 아래를 확인한다. endpointOverride와 region을 명시하고 path-style·SigV4를 사용한다. SDK/BOM 버전은 구현 시 공식 릴리스를 확인해 고정한다. 최초 조사에서는 `spring-boot-starter-kafka`를 검토했으나 실제 구현은 [ADR 0006](../adr/0006-explicit-kafka-dispatch.md)에 따라 자동 listener 없이 plain `kafka-clients`를 Boot BOM으로 관리한다. 브로커와 client 버전을 같은 숫자로 억지 고정하지 않는다. [Spring Kafka 의존성 안내](https://docs.spring.io/spring-kafka/reference/quick-tour.html), [AWS Java v2 endpoint·region 안내](https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/endpoint-config.html).
 
 | 시험 | 합격 기준 |
 | --- | --- |
@@ -102,7 +104,7 @@ AWS SDK for Java v2의 S3 client 하나로 아래를 확인한다. endpointOverr
 
 ## 단일 미니 PC 자원과 보존
 
-현재 조건은 RAM 32 GiB 단일 노드와 실행 중인 기존 Docker 컨테이너 23개다. 아래는 **미측정 초기 제안값**으로, 신규 구성의 실사용량이나 처리 성능 수치가 아니다. 뒤의 자원 사전 점검은 현재 여유를 한 시점에 관측한 결과이며 이 제안 예산의 부하 검증이나 자원 예약을 뜻하지 않는다.
+최초 조사 조건은 RAM 32 GiB 단일 노드와 실행 중인 기존 Docker 컨테이너 23개였다. 아래는 **미측정 초기 제안값**으로, 신규 구성의 실사용량이나 처리 성능 수치가 아니다. 뒤의 자원 사전 점검은 현재 여유를 한 시점에 관측한 결과이며 이 제안 예산의 부하 검증이나 자원 예약을 뜻하지 않는다.
 
 | 추가 구성 | 초기 CPU request / limit 제안 | 메모리 request / limit 제안 | 영속 디스크 제안 |
 | --- | --- | --- | --- |
@@ -150,7 +152,7 @@ lag는 묶음 작업 메시지 수이며 센서 입력 건수가 아니다. 화�
 1. 3단계의 outbound 게시·실제 공개 화면·실패 보존·중단 후 회복 근거를 현재 검증 문서와 일치시킨다. 정적 관측과 실시간 연결을 계속 구분한다.
 2. 로컬/격리 CI에서 원본 schema·V2 작업/outbox·singleton 실행 슬롯·멱등 키·보존 정책을 먼저 확정한다. 실제 MariaDB에서 잠금·동시 제출·rollback·재전달을 검증하고, 기존 V1·seed 전체 행과 처리 시각·12개 판정·read-only API를 보존한다. bootstrap/profile을 구분하고 새 job 조회/관측 계약을 기존 고정 샘플 계약과 분리한다.
 3. Garage Java SDK 관문을 통과한 뒤 S3 선정 ADR을 작성한다. 고정 Kafka image/client 조합, 저장소 image, 태그·digest·라이선스와 필요한 권한을 기록한다.
-4. 읽기 전용 자원 재점검과 새 볼륨·백업 범위를 확정하고, 기존 Helm/GitOps 흐름으로 새 Lab 전용 구성을 배포한다. 설치·배포는 이번 준비 작업에서 실행하지 않는다.
+4. 읽기 전용 자원 재점검과 새 볼륨·백업 범위를 확정하고, 기존 Helm/GitOps 흐름으로 새 Lab 전용 구성을 배포한다. 최초 준비 조사에서는 설치하지 않았고, 이후 명시적 사용자 요청에 따라 실제 K3s 배포·기존 환경 보존을 별도로 검증했다.
 5. 12건 정상 → 재전달 → 각 장애 경계 → 재시작 → 원본 replay → 1,000건 제한 순서로 한 번씩 검증한다. 실제 실패와 회복을 포함한 근거만 공개한다.
 6. 정적 관측에 허용한 처리 요약·실측 시각·출처만 추가한다. 비공개 endpoint·관리 주소·credentials·Pod 이름·raw error를 public JSON에 넣지 않는다. 기존 platform-observation v1에 임의 필드를 끼우지 않고 별도 계약으로 추가한다.
 7. 공개 실행은 모든 상한·동시성·인증/빈도 제한·중단/정리 시험 후 별도 판단한다. 4단계 원본·재처리 증명을 위해 공개 POST를 먼저 열 필요는 없다.

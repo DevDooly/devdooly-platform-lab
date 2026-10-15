@@ -1,8 +1,8 @@
 # Platform Lab 다음 개발 계획
 
-초기 계획: 2026년 10월 12일 · 최근 상시 실행·관측 검증: 2026년 10월 15일
+초기 계획: 2026년 10월 12일 · 최근 실제 runtime 배포·관측 게시: 2026년 10월 15일
 
-Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접 확인할 수 있는 포트폴리오로 발전시킵니다. 외부 백업·격리 DB 복원·재부팅과 CI/CD의 정상 배포·실패 차단·이전 image digest 복구를 확인했습니다. **3단계의 실제 수집·실패 후 보존·Pages 게시·공개 화면과 자동 운영 기본 경로·반복 게시 11회를 검증**했습니다. 게시 순서 회귀 교정, API·웹 중단 후 같은 정상 B 복원에 이어 전용 Pages 자격증명으로 수동 host cycle·실제 systemd service·timer 자동 실행을 확인했습니다. 실제 완료 간격은 약 30~31분이었고 자격증명 만료·회전과 장기간 운영은 별도 후속입니다. 이후 합성 데이터를 Kafka와 객체 저장소로 확장하고, AI를 활용한 코드 개선과 데이터 플랫폼 사례를 추가합니다.
+Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접 확인할 수 있는 포트폴리오로 발전시킵니다. 외부 백업·격리 DB 복원·재부팅과 CI/CD의 정상 배포·실패 차단·이전 image digest 복구를 확인했습니다. **기존 플랫폼 관측의 2026-10-12 수집·실패 보존·Pages 게시·공개 화면과 자동 운영·반복 게시 11회를 검증**했습니다. 게시 순서 회귀 교정, API·웹 중단 후 같은 정상 B 복원에 이어 전용 Pages 자격증명으로 수동 host cycle·실제 systemd service·timer 자동 실행을 확인했습니다. 실제 완료 간격은 약 30~31분이었고 자격증명 만료·회전과 장기간 운영은 별도 후속입니다. Kafka·Garage·상시 worker의 실제 배포와 두 작업의 처리·export·슬롯 해제도 확인했습니다. 이후 복원·보존·자원 한도를 검증하고 AI 개선과 데이터 플랫폼 사례를 추가합니다.
 
 [공개 Lab](https://devdooly.github.io/devdooly-platform-lab/) · [전체 진행 목록](ROADMAP.md) · [현재 접속 안내](START_HERE.md)
 
@@ -10,8 +10,8 @@ Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접
 
 | 영역 | 확인한 내용 | 다음에 채울 부분 |
 | --- | --- | --- |
-| Java API | 테스트 15개, MariaDB 저장, 합성 입력 12건 검증 | 메시지 수신과 재처리 |
-| 포트폴리오 | 앱·플랫폼 관측 공개, 1280px·390px 확인, 로컬 웹 테스트 26개, 자동 Pages 게시 11회·실제 간격 | 자격증명 만료·회전과 장기간 운영 |
+| Java API·worker | 기본 128개, Kafka·Garage K3s 연동, 두 작업 처리·파일 4개 확인·슬롯 해제·lag 0 | 운영 재시작·PVC 복원·보존/자원 한도 |
+| 포트폴리오 | 웹 34개, 기존 플랫폼 관측 11회와 새 job의 실제 systemd 게시·공개 JSON 확인 | 새 job 정기 회차·반복 운영·자격증명 회전 |
 | Jenkins·Actions | 같은 SHA의 두 CI 성공·게시·draft GitOps PR·정상 B 배포·실제 실패 차단, main의 공개 status 수집 | credential 만료·회전과 게시 이력 보존 운영 |
 | Argo CD와 Helm | 정상 A → B → A GitOps 복구, Synced·Healthy·데이터 보존과 제한된 실제 상태 수집 | 주기 관측의 반복 운영과 실패 대응 |
 | 운영 | 외부 암호화 백업·격리 DB 복원·호스트 재부팅, 사용자 kubectl 복구 | 초기 비밀번호 교체, 추가 장치 사본·전체 archive 복원 |
@@ -65,6 +65,8 @@ GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins 
 
 ## 3 관측 공개
 
+아래 11회는 2026-10-12 기존 플랫폼 수집기의 검증이며 새 job 수집 코드의 정기 실행 증거와 구분합니다.
+
 검증한 JSON을 outbound dispatch로 Pages에 반영하고 공개 브라우저를 확인했습니다. 실제 순서 역전 게시의 seed 회귀는 교정 후 공개 JSON·브라우저·이전 artifact로 보존을 재검증했습니다. 초기 자동화 비활성 설치와 정적 검증에 이어, 전용 Pages 자격증명으로 수동 host cycle·실제 systemd service·timer 최초 자동 실행의 Pages 게시와 전체 공개 JSON 일치를 확인했습니다. 이후 최초 자동 실행을 포함한 11회가 모두 Pages build·deploy success였고 10개 실제 서비스 완료 간격은 1825.569287~1875.101367초였습니다. timer는 enabled·active입니다. 이후 실시간 조회가 필요한 항목에 한해 공개 읽기 API를 연결합니다. 이번 단계에서 새 inbound 경로를 열지 않았고, Jenkins·Argo CD 관리 화면은 인증된 관리 경로를 유지합니다.
 
 - [x] 전용 읽기 권한으로 main의 Jenkins 공개 status, 지정 Argo CD sync·health와 실제 Lab Pod 준비 수를 수집했습니다.
@@ -89,22 +91,24 @@ GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins 
 
 ## 4 Kafka와 객체 저장소
 
-[구현 전 조사와 작은 처리 흐름](plans/phase4-messaging-storage.md)에 제품 후보, 원본 보관·재전달·DB 멱등 처리와 장애 검증 순서를 정리했습니다. 이는 최초 계획이며, 이후 Garage·SDK의 격리 검증과 한정 채택을 아래 근거에 추가했습니다. 운영 설치는 후속 단계입니다.
+[최초 계획](plans/phase4-messaging-storage.md)의 DB·원본·Kafka·export 경계를 격리 검증한 뒤, 2026-10-15 미니 PC K3s에 Kafka·Garage·상시 worker를 GitOps로 배포했습니다. 내부 고정 fixture 두 작업이 각 12/7/3/2/0으로 완료됐고 결과·실패 파일 총 4개를 전체 Get·크기·SHA-256으로 확인했습니다. 실행 슬롯은 비었으며 Kafka offset 2·log end 2·lag 0을 확인했습니다. 기존 seed·V1 처리 시각·PVC와 Docker 전체 38개·실행 26개를 보존했습니다. [현재 배포·게시 근거](evidence/runtime-deployment/README.md)를 연결합니다.
 
-[읽기 전용 자원 사전 점검](evidence/messaging-storage/README.md)에서 잠정 메모리·디스크 관문을 통과했습니다. 한 시점의 여유이며 신규 구성의 부하 검증이나 설치 완료를 뜻하지 않습니다. V2 작업/outbox·단일 실행 슬롯과 실제 MariaDB의 잠금·동시 제출·rollback·재전달·시간대 일치를 격리 검증했습니다. 기본 verify 35개와 실제 DB 세 조건 각각 17개가 통과했으며 이전 image 호환성·기존 운영 보존도 확인했습니다. [DB 기반 코드의 결과와 한계](evidence/db-job-foundation/README.md)를 연결합니다. 운영에는 미배포입니다. 이후 Garage 원본 adapter의 기본 verify 54개·실제 SDK 4개·컨테이너 재생성 전후 각 1개를 통과했습니다. 기본 checksum 실패의 교정과 기존 운영 보존은 [S3 근거](evidence/s3-source-storage/README.md), 한정 선정은 [ADR 0005](adr/0005-verified-raw-source-storage.md)에 있습니다. 이후 Kafka 전달·수동 offset과 실제 JVM 중단 세 경계·손상 원본 복구를 검증했습니다. 기본 78개와 별도 실제 IT 4개가 통과했고 모든 최종 lag 0, DB 결과·처리 시각 보존을 확인했습니다. [Kafka 실제 근거](evidence/kafka-redelivery/README.md), [ADR 0006](adr/0006-explicit-kafka-dispatch.md)을 연결합니다. 이후 결정적 결과·실패 파일의 전체 Get 확인 후 슬롯 해제를 구현하고 기본 verify 97개·실제 MariaDB/Garage IT 6개와 두 JVM 중단 후 회복을 통과했습니다. [export 실제 근거](evidence/result-export/README.md)를 연결합니다. 상시 실행기·영속 정지와 명시적 재개·작업/export 관측도 구현해 기본 120개·실제 IT 4개·웹 34개를 통과했습니다. [실제 실행/HTTP/화면 근거](evidence/continuous-runtime/README.md)를 연결하며 다음은 운영용 배치·접속·인증 조건과 제한된 GitOps 배포 검증입니다.
+이전 단계의 [DB](evidence/db-job-foundation/README.md), [원본 S3](evidence/s3-source-storage/README.md), [실제 결합](evidence/mariadb-s3/README.md), [Kafka 중단·재전달](evidence/kafka-redelivery/README.md), [export](evidence/result-export/README.md), [상시 실행기](evidence/continuous-runtime/README.md) 검증은 각각 당시 조건과 한계를 유지합니다. 이번 실제 배포는 기본 API 128개·웹 34개와 별도로 확인했으며, 새 수집·게시 코드는 실제 Ubuntu 검사 135개를 통과했습니다.
 
-기존 합성 센서 시나리오에 메시지 수신과 원본 보관을 추가합니다. 최대 이벤트 수, 동시 실행 수, 보존 기간부터 제한하고 하나의 worker로 시작합니다. 객체 저장소는 유지보수 상태·라이선스·S3 호환 기능을 확인한 Garage로 한정 채택했으며 운영 배포 조건은 별도로 검증합니다.
+- [x] 고정 12개 fixture의 시간 역순·잘못된 값·업무상 중복 처리와 독립 기대 결과를 명시했습니다.
+- [x] 격리 Kafka·MariaDB·Garage에서 ACK 뒤·DB commit 전후 JVM 강제 종료·재전달 멱등·offset을 검증했습니다.
+- [x] 실제 K3s의 별도 worker가 연속 두 작업을 처리하고 두 파일 확인 뒤 슬롯을 해제했습니다.
+- [x] 별도 작업 관측에 상태·시각·입력 회계식·예상 파일 SHA/크기를 연결하고 실제 배포 기록을 Pages에 게시했습니다.
+- [x] 새 job 관측의 실제 systemd service 성공·Pages 게시·공개 JSON 전체 일치, private 0600·임시 SA token 정리를 확인했습니다.
+- [x] 기존 timer의 enabled·active와 30분 주기·최대 60초 임의 지연 설정을 복구했습니다.
+- [ ] 새 job 코드의 다음 정기 회차·반복 게시와 실제 간격을 검증합니다.
+- [ ] 운영 worker의 재시작 정책과 Kafka/Garage PVC 전체 복원·새 외부 백업을 검증합니다.
+- [ ] 실패 데이터 재처리와 미완료 객체를 보존하는 명시적 정리 절차를 만듭니다.
+- [ ] consumer lag의 자동 공개 관측·지연/자원 지표·최대 1,000개와 부하 한도를 검증합니다.
 
-- [ ] 동일 이벤트 재전송, 센서별 시간 역순, 잘못된 값의 처리 규칙을 명시합니다.
-- [x] 격리 실제 Kafka·MariaDB·Garage에서 ACK 뒤·DB commit 전후 JVM을 강제 종료해 rollback·재전달 멱등·offset/lag를 확인했습니다. 운영 worker Pod 검증은 별도입니다.
-- [ ] 재시도 횟수와 실패 메시지 보관 정책을 정하고 실패 데이터의 재처리 경로를 만듭니다.
-- [x] 원본·결과/실패 파일을 run/source hash로 연결하고 격리 실제 저장소에서 검증했습니다. 결과 두 파일 확인 뒤에만 export 완료와 슬롯 해제를 확정합니다. 자동 보존/정리는 후속입니다.
-- [x] 별도 작업 관측 화면에 입력·성공·실패·중복·대기 건수, 작업/export 상태·확인 시각·파일 예상 hash/크기를 연결했습니다.
-- [ ] consumer lag의 별도 읽기 수집·공개 관측과 지연/자원 지표를 연결합니다.
+실제 job·플랫폼 공개 JSON은 수집 원본과 일치했습니다. 새 job 관측은 실제 systemd service 실행·Pages 게시와 공개 JSON의 원본 전체 일치를 확인했습니다. timer는 기존 30분 주기·최대 60초 임의 지연 설정으로 enabled·active를 복구했습니다. 새 job 수집 코드의 다음 정기 회차·반복 실행은 아직 관측하지 않았습니다. 공개 화면은 약 30분 주기의 마지막 기록이며 실시간 조회가 아닙니다. 5분 heartbeat 경고는 마지막 실행 신호의 나이이고 프로세스 중단 판정이 아닙니다. 공개 POST는 없고 내부 `--lab-runtime=stage`가 고정 fixture만 접수합니다.
 
-**완료 조건:** 메시지 전송의 멱등성과 DB의 업무 중복 방지를 나눠 검증합니다. producer 설정만으로 전체 처리의 exactly-once를 주장하지 않습니다. [Kafka producer 설정](https://kafka.apache.org/42/configuration/producer-configs/)
-
-**공개 결과:** 장애가 발생한 지점과 재처리 후에도 유지되는 결과를 재현 가능한 작은 데이터로 설명합니다.
+**완료 조건:** producer ACK·DB 멱등 처리·offset·export 확인을 각각 설명하고 실제 운영 한계를 기록합니다. 단일 노드·partition 1/RF1을 고가용성이나 전체 exactly-once로 표현하지 않습니다. [Kafka producer 설정](https://kafka.apache.org/42/configuration/producer-configs/)
 
 ## 5 AI를 활용한 Java 개선
 
@@ -144,6 +148,6 @@ CKA 학습은 Lab과 연결합니다. context·RBAC·Service와 DNS·probe·requ
 1. 외부 백업·격리 DB 복원·호스트 재부팅 검증을 완료했습니다. 초기 관리자 비밀번호 교체는 별도로 남아 있습니다.
 2. CI/CD의 정상 B 배포·실제 실패 차단·이전 정상 A 복구를 완료했습니다. 전용 credential의 만료·회전은 운영 후속으로 관리합니다.
 3. 게시 순서 보존과 API·웹 중단 시 공개 기록 유지·같은 정상 B 복원을 검증했습니다. 전용 자격증명의 수동 host cycle·실제 systemd service·timer 자동 실행과 반복 Pages 게시 11회·실제 간격까지 확인했습니다. 이후 장기간 운영과 credential 만료·회전을 별도로 확인합니다.
-4. DB 작업/outbox·멱등 경계의 격리 검증을 마쳤습니다. Garage Java SDK 호환성·원본 보관·hash 확인과 컨테이너 재생성 후 Get-only 보존도 검증했습니다. [실제 MariaDB·Garage 결합](evidence/mariadb-s3/README.md)의 세 시험과 같은 DB 반복도 통과했습니다. 연결 실패·소유 데이터 복구와 운영 보존을 별도로 기록했습니다. Kafka 발행·수신과 실제 중단 후 재전달까지 [격리 검증](evidence/kafka-redelivery/README.md)을 통과했습니다. 결과·실패 export와 두 파일 저장 확인 후 슬롯 해제·실패/중단 후 재시도까지 [격리 검증](evidence/result-export/README.md)을 통과했습니다. 상시 실행기·영속 정지/재개·job/export 관측과 실제 기록 화면까지 [격리 검증](evidence/continuous-runtime/README.md)을 통과했습니다. 다음은 운영용 Kafka/Garage/worker 배치·자원·접속/인증 조건과 제한된 GitOps 배포, job 관측의 outbound 자동 게시 검증입니다. DB foundation은 검토용 변경이며 운영 image pin은 유지합니다. AI 개선 사례는 이후 5단계로 연결합니다.
+4. Kafka·Garage·상시 worker의 [실제 배포](evidence/runtime-deployment/README.md), 두 작업 처리·파일 4개 확인·슬롯 해제·lag 0과 실제 job 관측의 Pages 게시를 완료했습니다. 새 job의 실제 systemd 게시와 timer 활성 설정도 확인했습니다. 다음은 새 job 수집 코드의 정기 회차·반복 게시, Kafka/Garage 외부 백업·PVC 복원과 보존/자원 한도입니다. 합성 작업 접수는 계속 내부 명령으로 제한하며 AI 개선 사례는 5단계에 연결합니다.
 
 각 결과는 소스 변경, 실행 방법, 실제 검증 결과, TIL 설명, 포트폴리오 링크로 연결합니다. 작업 완료 시 [진행 목록](ROADMAP.md)을 갱신하고 프로필에는 구현한 범위만 반영합니다.

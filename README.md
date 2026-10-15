@@ -8,12 +8,13 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 | 영역 | 확인한 결과 | 근거 |
 | --- | --- | --- |
-| Java 21·Spring Boot | 데이터 검증·조회, JPA·Flyway, 기존 배포본 테스트 15개 | [API 계약](docs/contracts/demo-api.md), [API 검증](docs/evidence/api-mvp/README.md) |
-| Astro·React | 결과·실패 필터·차트, 테스트 13개, 실제 관측 기록 fallback | [화면 검증](apps/lab-web/VALIDATION.md), [관측 계약](apps/lab-web/OBSERVATION.md) |
+| Java 21·Spring Boot | JPA·Flyway, 작업/outbox·export, 기본 verify 128개 | [API 계약](docs/contracts/demo-api.md), [실제 배포](docs/evidence/runtime-deployment/README.md) |
+| Astro·React | 결과·실패 필터·차트, 웹 테스트 34개, 작업/export 관측 | [기존 화면 검증](apps/lab-web/VALIDATION.md), [작업 관측 계약](apps/lab-web/JOB_OBSERVATION.md) |
 | GitHub Actions·GHCR | Linux 컨테이너 통합 검증 후 immutable digest 이미지 게시 | [컨테이너 근거](docs/evidence/compose-ci/README.md), [이미지 게시](docs/runbooks/image-publication.md) |
 | K3s·Helm·Argo CD | 미니 PC에서 앱 자동 동기화, Synced·Healthy, MariaDB PVC | [실제 서버 근거](docs/evidence/mini-pc/README.md), [GitOps 선언](gitops/README.md) |
 | Jenkins·Actions 게시 gate | 같은 source SHA의 두 CI 성공 후 이미지·draft GitOps PR, 실제 테스트 실패 차단 | [연결 검증](docs/evidence/cicd-gate/README.md), [CI 절차](docs/runbooks/cicd-publication.md) |
 | 플랫폼 관측 수집 | 최소 읽기 수집·실패 보존·게시 순서 교정과 timer 자동 게시 11회 성공 | [수집 검증과 남은 범위](docs/evidence/platform-observation/README.md), [공개 필드 계약](apps/lab-web/PLATFORM_OBSERVATION.md) |
+| Kafka·Garage·상시 worker | K3s에서 두 작업 처리·파일 4개 저장 확인·슬롯 해제, 최종 lag 0 | [실제 배포·보존 근거](docs/evidence/runtime-deployment/README.md) |
 | 관리자 접속 | ClusterIP 관리 화면과 SSH 접속 도우미 | [접속 방법](docs/runbooks/admin-access.md) |
 | 백업과 복구 | 외부 암호화 백업·격리 DB 복원·호스트 재부팅 | [실제 검증과 한계](docs/evidence/recovery/README.md) |
 
@@ -21,9 +22,11 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 API의 Jenkins·Argo CD·Kubernetes `NOT_CONFIGURED`는 **조회 API 내부의 상태 수집 연결 전**을 뜻합니다. 별도의 정적 플랫폼 collector는 실제 서버 수집과 인증 실패 후 이전 성공 기록·수집 시각 보존 및 회복을 확인했습니다. 이 결과로 API 값을 정상으로 바꾸지 않으며, releases는 현재 JVM 정보입니다.
 
-새 플랫폼 관측본은 Jenkins 대상 SHA·Argo GitOps revision·API 배포 선언 소스와 image digest를 구분합니다. 읽기 권한의 허용·거부와 출력 `0600`, 인증 실패 후 이전 성공 보존을 확인했습니다. 공개 화면은 1280px·390px에서 가로 넘침 없이 확인했습니다. 실제 게시 순서 역전에서 발견한 seed 회귀도 교정 후 재검증했습니다. **API·웹을 0개로 내린 동안에도 공개 홈·마지막 기록이 유지됐고 같은 정상 B로 복원했습니다. 전용 Pages 자격증명으로 수동 호스트 수집·실제 systemd service·timer 자동 실행과 Pages 게시를 확인했습니다. 최초 자동 실행을 포함한 11회의 Pages build·deploy가 모두 성공했고, 실제 서비스 완료 간격은 약 30분 26초~31분 15초였습니다.** timer는 enabled·active이며 자격증명 만료·회전과 장기간 운영은 아직 검증하지 않았습니다. [초기 공개 화면과 반복 실행의 근거](docs/evidence/platform-observation/README.md)를 구분해 기록합니다.
+기존 플랫폼 관측의 2026-10-12 검증에서는 Jenkins 대상 SHA·Argo GitOps revision·API 배포 선언 소스와 image digest를 구분했습니다. 읽기 권한의 허용·거부와 출력 `0600`, 인증 실패 후 이전 성공 보존을 확인했습니다. 공개 화면은 1280px·390px에서 가로 넘침 없이 확인했습니다. 실제 게시 순서 역전에서 발견한 seed 회귀도 교정 후 재검증했습니다. **API·웹을 0개로 내린 동안에도 공개 홈·마지막 기록이 유지됐고 같은 정상 B로 복원했습니다. 전용 Pages 자격증명으로 수동 호스트 수집·실제 systemd service·timer 자동 실행과 Pages 게시를 확인했습니다. 최초 자동 실행을 포함한 11회의 Pages build·deploy가 모두 성공했고, 실제 서비스 완료 간격은 약 30분 26초~31분 15초였습니다.** timer는 enabled·active이며 자격증명 만료·회전과 장기간 운영은 아직 검증하지 않았습니다. [초기 공개 화면과 반복 실행의 근거](docs/evidence/platform-observation/README.md)를 구분해 기록합니다.
 
-4단계 내부 코드에는 작업/outbox·단일 슬롯, 원본 보관, Kafka 전달·수동 offset, 결과·실패 파일 확인 뒤 슬롯 해제가 있습니다. 명시적 상시 실행기와 영속 운영자 정지·재개, 읽기 전용 작업/export 관측 API·화면도 구현했습니다. 기본 verify 120개·실제 상시 실행 IT 4개·웹 34개를 통과했고, 같은 daemon의 두 작업·중단 후 회복·정지 재시작 거부·경쟁 lock 거부와 실제 HTTP 기록을 확인했습니다. [상시 실행·관측 근거](docs/evidence/continuous-runtime/README.md), [실행 절차](docs/runbooks/continuous-runtime.md), [관측 계약](docs/contracts/job-observation.md)을 따릅니다. 기능 코드는 검토 브랜치이며 운영 image/DB·공개 Pages 배포는 갱신하지 않았습니다.
+4단계의 Kafka·Garage·상시 worker를 미니 PC K3s에 GitOps로 배포했습니다. 내부 `--lab-runtime=stage` 명령으로 고정 합성 입력 12개를 두 번 접수했고, 각 작업이 성공 7·실패 3·업무상 중복 2·대기 0으로 완료됐습니다. 결과·실패 파일 총 4개의 전체 Get·크기·SHA-256을 확인한 뒤 실행 슬롯이 비었으며 Kafka offset 2·log end 2·lag 0을 확인했습니다. 기존 seed·V1 행과 처리 시각, 기존 PVC와 Docker 전체 38개·실행 중 26개의 상태를 보존했습니다. [실제 배포·게시 근거](docs/evidence/runtime-deployment/README.md), [실행 절차](docs/runbooks/continuous-runtime.md), [관측 계약](docs/contracts/job-observation.md)을 연결합니다.
+
+실제 미니 PC의 작업 관측과 플랫폼 관측을 Pages에 게시하고 공개 JSON 전체가 수집 원본과 일치함을 확인했습니다. 공개 화면은 실시간 API 대신 마지막 수집 기록을 읽으며, 약 30분 수집 주기·수집 시각과 5분 heartbeat 경고를 구분합니다. 새 job 관측은 실제 systemd service 실행·Pages 게시와 공개 JSON의 원본 전체 일치를 확인했습니다. timer는 기존 30분 주기·최대 60초 임의 지연 설정으로 enabled·active를 복구했습니다. 새 job 수집 코드의 다음 정기 회차·반복 실행은 아직 관측하지 않았습니다. 공개 POST는 제공하지 않고 고정 fixture 접수는 내부 명령으로만 수행합니다. 단일 노드·partition 1/RF1의 Lab이며 Kafka/Garage PVC 전체 복원과 장기간 운영은 후속입니다.
 
 기반 검증은 [DB](docs/evidence/db-job-foundation/README.md), [원본 S3](docs/evidence/s3-source-storage/README.md), [실제 MariaDB/Garage 결합](docs/evidence/mariadb-s3/README.md), [Kafka 중단·재전달](docs/evidence/kafka-redelivery/README.md), [결과 export](docs/evidence/result-export/README.md)에 구분해 기록했습니다.
 
@@ -62,9 +65,9 @@ flowchart LR
   R --> D[draft GitOps PR]
   D --> M[검토 후 main 반영]
   M --> A[Argo CD와 Helm]
-  A --> K[K3s API 웹 MariaDB]
+  A --> K[K3s API 웹 MariaDB Kafka Garage worker]
   K --> O
-  K --> S[읽기 권한 플랫폼 수집기]
+  K --> S[읽기 권한 플랫폼·작업 수집기]
   S -. outbound Pages 게시 .-> O
 ```
 
@@ -81,7 +84,7 @@ apps/api/                 Spring Boot, JPA·Flyway, 데이터·HTTP 테스트
 apps/lab-web/             Astro·React 포트폴리오와 Lab 조회 화면
 tests/scenarios/          합성 데이터의 독립 기대 결과
 infra/containers/         API·웹 이미지와 Nginx 설정
-infra/charts/             API·웹·MariaDB Helm chart
+infra/charts/             API·웹·MariaDB·Kafka·Garage·worker Helm chart
 infra/jenkins/            Kubernetes CI agent 정의
 infra/platform/           기반 도구의 버전과 설치 값
 infra/scripts/            점검·bootstrap·관리 접속 도우미

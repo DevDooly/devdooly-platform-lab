@@ -19,7 +19,7 @@
 
 ## 실제 관측과 화면
 
-[등록한 HTTP 기록](../../../apps/lab-web/public/observations/jobs.latest.json)은 실제 별도 조회 API의 응답과 전체 JSON이 같고 strict validator를 통과했다. 소스는 `81cc95174d400544ed949997c0782492c3a3843d`, capturedAt은 JSON의 실제 시각이다. 기능 코드를 먼저 커밋해 이 SHA로 실행했고 문서·기록 등록은 후속 커밋으로 분리했다. API/실행기 Java 소스 지문은 동일하다.
+[당시 등록한 HTTP 기록](https://github.com/DevDooly/devdooly-platform-lab/blob/4208911fbe433743ef98a712c023646f81b21ea8/apps/lab-web/public/observations/jobs.latest.json)은 실제 별도 조회 API의 응답과 전체 JSON이 같고 strict validator를 통과했다. 소스는 `81cc95174d400544ed949997c0782492c3a3843d`, capturedAt은 JSON의 실제 시각이다. 기능 코드를 먼저 커밋해 이 SHA로 실행했고 문서·기록 등록은 후속 커밋으로 분리했다. API/실행기 Java 소스 지문은 동일하다.
 
 화면은 격리 Lab 기록·실시간 아님·STOPPED·빈 슬롯·두 EXPORTED 작업과 입력 회계식, 저장 확인 시각, 파일 예상 hash/크기를 표시했다. SHA/크기는 불변 DB 결과에서 재계산하며 관측 API의 현재 S3 재조회가 아니다. 1280×900·390×844에서 document 가로 넘침이 없었고 본문·주석은 17px이었다. 모바일 SHA 펼침도 확인했고 임시 viewport override를 복원했다.
 

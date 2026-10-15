@@ -8,6 +8,6 @@
 
 runtime heartbeat 5분과 전체 기록 capturedAt 2시간의 경고를 구분한다. RUNNING은 마지막 DB 신호이며 현재 process 생존·Kafka/S3 가용성 보장이 아니다. client 정리 실패의 `PAUSED_OPERATOR / STOPPED / RESOURCE_CLOSE_FAILED`는 유효한 조합이다.
 
-Pages는 별도 `observations/jobs.latest.json`, container/root 화면은 same-origin API 10초 조회를 사용한다. 정적 기록은 실제 HTTP 응답을 validator로 확인해 등록하며 자동 수집/게시 기능은 아직 추가하지 않았다. 실패·오래된 응답은 이전 유효 기록과 capturedAt을 덮어쓰지 않는다. 격리 환경은 `ISOLATED_LAB`으로 표시하고 실제 운영 배포와 구분한다.
+Pages는 별도 `observations/jobs.latest.json`, container/root 화면은 same-origin API 10초 조회를 사용한다. 정적 기록은 실제 미니 PC의 HTTP 응답을 validator로 확인하고 Pages v2의 별도 artifact에서 보존한다. 실제 수동·systemd 수집/게시와 공개 JSON 일치를 확인했고, 기존 30분 timer는 enabled·active로 복구했다. 새 코드의 다음 정기 회차·반복 실행은 별도 미관측 범위다. 실패·오래된 응답은 이전 유효 기록과 capturedAt을 덮어쓰지 않는다. 격리 환경은 `ISOLATED_LAB`으로 표시하고 실제 운영 배포와 구분한다.
 
-기존 `lab-observation v1`·`platform-observation v1`과 고정 seed 결과는 변경하지 않았다. 실제 [검증 수치·등록 기록·화면](../evidence/continuous-runtime/README.md)을 연결한다.
+기존 `lab-observation v1`·`platform-observation v1`과 고정 seed 결과는 변경하지 않았다. 현재 [미니 PC 배포·게시 근거](../evidence/runtime-deployment/README.md)와 이전 [격리 검증](../evidence/continuous-runtime/README.md)을 구분한다.
