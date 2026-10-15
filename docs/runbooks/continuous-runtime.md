@@ -105,7 +105,7 @@ Deployment Recreate는 template rollout 정책이며 수동 Pod 삭제 때 종�
 
 관측한 서비스 완료 간격은 **1개·1809.371239초**이고 첫 service 비활성 뒤 다음 trigger까지는 1805.060428초였다. OnUnitInactiveSec 30분, RandomizedDelaySec 60초, AccuracySec 1분을 유지했다. service 비활성 시점·임의 지연·실행 시간과 Pages 완료 시각을 구분하며 정확히 1800초마다 게시된다고 표현하지 않는다. 두 자동 실행·한 간격을 확인한 결과이며 과거 플랫폼 collector 11회와 합산하거나 장기간 운영·자격증명 회전으로 확대하지 않는다.
 
-이후 전용 PVC의 외부 사본 격리 복원도 아래와 같이 검증했다. 다음은 미완료 원본의 보존/정리와 자원 한도·장기간 운영 검증이다.
+이후 전용 PVC의 외부 사본 격리 복원도 아래와 같이 검증했다. 이어진 보존 정책·합성 정리와 제한된 자원 관측은 [별도 기준](retention-resource-budget.md)을 따른다. 객체 GC·최대 입력/과부하·장기간 운영은 후속이다.
 
 ## Kafka·Garage 전용 PVC 격리 복원
 
@@ -116,3 +116,9 @@ Deployment Recreate는 template rollout 정책이며 수동 Pod 삭제 때 종�
 복제 Kafka도 UID 조건으로 정상 TERM 종료·exit 143을 확인하고 같은 PVC·spec·digest의 새 Ready Pod에서 같은 record/offset을 재검증했다. 이 관측 절차는 12.71초였으며 복구 SLA가 아니다. 애플리케이션 image/source는 변경하지 않았다. 운영 PVC 덮어쓰기·원본 디스크 손실·진행 중 쓰기의 crash 복원·다중 노드 HA·K3s/Jenkins 전체 복원은 이 시험 범위가 아니다.
 
 시험을 마친 clone StatefulSet 3개는 정상 종료하고 Pod를 남기지 않았으며, 원본과 분리한 PVC 5개는 Retain으로 보관했다. 최종 28개 검사에서 원래 6PVC·6개 Ready Pod, 업무 SQL 전체와 3개 작업/6개 파일 정보, 기존 Docker 전체 38개/실행 26개의 상태·시작 시각·mount를 확인했다. 원본 객체 9개도 별도 GET으로 전체 bytes를 대조했다. 원래 PVC에 덮어쓰거나 시험 볼륨을 삭제한 결과는 아니다.
+
+## 보존과 제한된 자원 관측
+
+[보존·자원 기준](retention-resource-budget.md)과 [실제 근거](../evidence/retention-resource-budget/README.md)를 따른다. 검증한 백업을 복구 호환 단위별로 보호하고 trial은 최소 7일 유지한다. 계획기는 삭제 없는 dry-run이며 STAGING·QUEUED·export PENDING·PAUSED와 키/불명 자료를 보호한다. EXPORTED도 S3 객체 삭제의 충분조건은 아니다. 이번 정리 증거는 기존 trial을 삭제하지 않고 새 합성 PVC 하나를 별도 60초 validation TTL로 시험한 결과다.
+
+기존 cgroup limit과 6개 상시 container를 유지한 채 고정 12개 입력 3회를 추가했다. 총 6개 EXPORTED 작업·파일 12개 전체 Get·Kafka offset 6/lag 0과 기존 세 작업의 기록을 확인했다. 약 63초·64개 샘플은 작은 실제 관측이며 transient stage container 자체의 사용량·최대 입력/동시 부하·SLA는 검증하지 않았다. CPU 평균과 약 1초 관측 최대, memory.current·process RSS/PSS·reset하지 않은 lifetime peak, DB 생성 이후 지연과 cold stage 요청 이후 지연을 구분한다. 실제 디스크 snapshot은 약 11분으로 더 넓고 heartbeat/WAL 영향을 포함하므로 작업당 순수 증가량으로 나누지 않는다. 최종 25개 검사에서 기존 11PVC/PV·원본 Pod 6개·Docker 38개/실행 26개·기존 업무 SQL/원본 객체·host와 timer 정적 설정/주기를 보존했다.

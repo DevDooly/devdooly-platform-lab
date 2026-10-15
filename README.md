@@ -14,9 +14,10 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 | K3s·Helm·Argo CD | 미니 PC에서 앱 자동 동기화, Synced·Healthy, MariaDB PVC | [실제 서버 근거](docs/evidence/mini-pc/README.md), [GitOps 선언](gitops/README.md) |
 | Jenkins·Actions 게시 gate | 같은 source SHA의 두 CI 성공 후 이미지·draft GitOps PR, 실제 테스트 실패 차단 | [연결 검증](docs/evidence/cicd-gate/README.md), [CI 절차](docs/runbooks/cicd-publication.md) |
 | 플랫폼 관측 수집 | 최소 읽기 수집·실패 보존·게시 순서 교정과 timer 자동 게시 11회 성공 | [수집 검증과 남은 범위](docs/evidence/platform-observation/README.md), [공개 필드 계약](apps/lab-web/PLATFORM_OBSERVATION.md) |
-| Kafka·Garage·상시 worker | 정상 재시작 후 새 fixture까지 총 3개 작업·파일 6개 확인·슬롯 해제·lag 0 | [최초 배포](docs/evidence/runtime-deployment/README.md), [재시작·후속 처리](docs/evidence/runtime-recovery/README.md) |
+| Kafka·Garage·상시 worker | 정상 재시작·총 6개 EXPORTED 작업/파일 정보 12개·lag 0·고정 fixture 3회 자원 관측 | [최초 배포](docs/evidence/runtime-deployment/README.md), [재시작·후속 처리](docs/evidence/runtime-recovery/README.md) |
 | 관리자 접속 | ClusterIP 관리 화면과 SSH 접속 도우미 | [접속 방법](docs/runbooks/admin-access.md) |
 | 백업과 복구 | 외부 암호화 사본의 Kafka/Garage PVC 격리 복원·별도 물리 블록 복원, 이전 DB/재부팅 검증 | [PVC 복원](docs/evidence/runtime-pvc-restore/README.md), [기존 복구 검증](docs/evidence/recovery/README.md) |
+| 보존·자원 예산 | 삭제 없는 보존 계획기·별도 합성 PVC 정리, 실제 cgroup 설정과 작은 작업 3회 관측 | [운영 기준](docs/runbooks/retention-resource-budget.md), [실제 근거](docs/evidence/retention-resource-budget/README.md) |
 
 미니 PC의 웹을 통해 API·MariaDB를 조회하고 합성 입력 12건의 결과를 확인했습니다. 기대 결과는 성공 7·실패 3·중복 2·대기 0입니다. 공개 Pages는 **미니 PC에서 확인한 마지막 기록**과 수집 시각·source commit을 표시합니다. 현재 공개 홈에 미니 PC 실시간 API는 연결하지 않았습니다.
 
@@ -35,6 +36,8 @@ API의 Jenkins·Argo CD·Kubernetes `NOT_CONFIGURED`는 **조회 API 내부의 �
 Kafka·Garage 전용 PVC 3개를 정상 정지 구간에서 보관하고 AES-256-GCM 외부 사본의 인증·전체 해시를 확인한 뒤, 새 namespace·PVC에 복원했습니다. 전체 파일의 bytes·소유자·mode·나노초 mtime과 Kafka 3개 record의 key/value/시각·offset 3·lag 0, Garage의 원본 입력 3개·export 6개 GET을 대조했습니다. 원본 접근이 가능했던 probe가 격리 정책 적용 후 두 회차 모두 차단되고 DNS는 허용됨을 확인했습니다. [실제 PVC 복원 근거](docs/evidence/runtime-pvc-restore/README.md), [복원 절차](docs/runbooks/runtime-pvc-recovery.md)를 연결합니다.
 
 기존 객체 9개는 모두 3,072 bytes 미만으로 metadata DB에 inline 저장돼 있었습니다. 별도 clone에만 128KiB canary를 한 번 PUT해 실제 data 블록 1개를 만든 뒤, 두 개의 추가 PVC로 cold 복원하고 Pod 교체 전후 각 10개 객체를 GET했습니다. 복제 Kafka도 UID 조건의 정상 TERM 교체 후 같은 PVC에서 3개 record와 offset을 보존했습니다. 원본 객체에는 쓰지 않았고 실행 image/source도 바꾸지 않았습니다. 시험용 workload 3개를 정상 종료해 Pod 0개·Retain PVC 5개를 남겼습니다. 최종 보존 검사 28개에서 원본 SQL·작업/파일 정보·PVC 6개·Ready Pod 6개와 기존 Docker 38개/실행 26개의 상태를 확인했습니다.
+
+백업은 복구 호환 단위별 최신 검증본과 일 7개 날짜·주 4개 구간, trial은 최소 7일을 보호하는 [dry-run 정책](infra/maintenance/README.md)을 추가했습니다. 새 실제 inventory의 dry-run은 백업·trial 삭제 후보가 각각 0개였고 기존 보관 자료는 지우지 않았습니다. 새 64Mi 요청 PVC의 16KiB 합성 파일로 UID 거부·Retain/Released·정확한 파일/디렉터리 정리 경계를 검증했습니다. 이어 고정 12개 입력 3회로 총 6개 EXPORTED 작업·파일 12개 전체 Get·Kafka offset 6/lag 0을 확인했습니다. 약 63초·64개 샘플에서 worker 작업 구간 평균 CPU는 0.04235 core, 약 1초 관측 최대는 0.66622 core, `memory.current` 최대는 253.215MiB였습니다. 기존 limit을 바꾸거나 최대 부하를 시험한 결과는 아니며 [수치의 범위와 운영 기준](docs/runbooks/retention-resource-budget.md)을 함께 제공합니다. 최종 25개 검사에서 기존 PVC/PV 11개·원본 Pod 6개·Docker 38개/실행 26개·기존 SQL/원본 객체와 timer 설정·주기 보존도 확인했습니다.
 
 기반 검증은 [DB](docs/evidence/db-job-foundation/README.md), [원본 S3](docs/evidence/s3-source-storage/README.md), [실제 MariaDB/Garage 결합](docs/evidence/mariadb-s3/README.md), [Kafka 중단·재전달](docs/evidence/kafka-redelivery/README.md), [결과 export](docs/evidence/result-export/README.md)에 구분해 기록했습니다.
 

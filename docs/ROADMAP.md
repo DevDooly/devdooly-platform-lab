@@ -118,13 +118,17 @@
 - [x] Garage·Java SDK의 필요한 API·기본 checksum 실패와 호환성 교정 검증 후 한정 선정: [ADR 0005](adr/0005-verified-raw-source-storage.md)
 - [x] 원본 전체 bytes·크기·SHA-256, 상태 전환 전 실패·재시도와 컨테이너 재생성 후 Get-only 보존: [근거](evidence/s3-source-storage/README.md)
 - [x] 실제 MariaDB·Garage 결합의 정상·손상·DB statement 오류 rollback과 원본 보존·재시도, 같은 DB 반복 및 운영 보존: [근거](evidence/mariadb-s3/README.md)
-- [ ] 미완료 원본 보존·정리 정책과 CPU/RSS/디스크 증가량·지연 한도 검증
+- [x] 검증 백업·trial·미완료/키를 보호하는 삭제 없는 계획기와 새 합성 PVC만의 실제 정리 경계 검증: [기준](runbooks/retention-resource-budget.md)
+- [x] 기존 cgroup 설정 일치·고정 입력 12개 3회의 CPU/RSS/PSS·디스크 snapshot·지연 관측: [근거](evidence/retention-resource-budget/README.md)
+- [ ] 객체 tombstone/GC와 최대 입력·과부하의 자원 한도 검증
 - [ ] 최대 1,000개 이벤트·전체 동시 작업 1개·요청 빈도 제한 검증
 - [ ] 제한을 검증한 뒤 공개 샘플 실행 기능 추가
 
 완료 조건: 입력 건수가 성공·실패·중복·대기로 설명되고, 데이터 유실이나 무제한 실행 없이 결과를 확인할 수 있습니다.
 
 새 job의 원래 timer 자동 수집·게시 2회와 완료 간격 1개(1809.371239초)를 확인했습니다. [후속 검증 근거](evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다. 공개 페이지는 약 30분 주기로 수집하는 마지막 기록이며 heartbeat 5분 경고와 구분합니다. 현재 단일 노드·partition 1/RF1, 고정 12개 fixture와 내부 stage 명령만 검증했고 공개 POST는 제공하지 않습니다. 전용 PVC의 격리 복원은 [별도 근거](evidence/runtime-pvc-restore/README.md)로 확인했습니다. 운영 PVC 덮어쓰기·진행 중 crash·최대 1,000개·장기간 운영은 검증하지 않았습니다.
+
+보존 정책은 dry-run만 제공하며 실제 백업·기존 trial은 삭제하지 않았습니다. 별도 60초 validation TTL의 새 합성 PVC만 정리했고 기존 11PVC/PV를 보존했습니다. 약 63초의 작은 작업 관측에서는 기존 6개 container/image/source와 limit을 유지했고 총 6개 EXPORTED 작업·파일 12개 전체 Get·offset 6/lag 0을 확인했습니다. 최종 25개 검사에서 기존 11PVC/PV·6개 원본 Pod·Docker 38개/실행 26개·기존 업무 SQL/객체와 timer 설정·주기를 보존했습니다. 이는 운영 처리 용량·최대 입력·SLA 검증이 아닙니다. [관측 방법과 한계](runbooks/retention-resource-budget.md)를 따릅니다.
 
 ## 5 LLM 개선 사례와 복구
 
