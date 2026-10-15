@@ -1,6 +1,12 @@
 # GitHub 실행기에서 분리해 확인하는 Spark 호환성
 
-현재 상태는 **SOURCE_ONLY_NOT_RUN**입니다. 이 실험은 Spark·JDBC·Garage의 조합만 확인할 후보입니다. 미니 PC의 Trino 검증, Kubernetes 배포, 운영 자료 보존을 대신하지 않습니다.
+현재는 **첫 실제 실행 실패 후 진단 보강 준비** 상태입니다. 첫 실행 [38778209166](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38778209166)은 이미지·JAR·격리 네트워크·제한 검사를 통과한 뒤 `ACTUAL_SPARK_CLEAN_EXIT_WITHOUT_OOM`에서 실패했습니다. 당시 공개 요약에는 실제 종료 코드와 OOM 상태가 없어 원인을 판단할 수 없습니다. 첫 실패 기록과 사용한 소스는 보존하며, 이 수정만으로 Spark 호환성 문제를 해결했다고 표시하지 않습니다. 이 실험은 Spark·JDBC·Garage의 조합만 확인합니다. 미니 PC의 Trino 검증, Kubernetes 배포, 운영 자료 보존을 대신하지 않습니다.
+
+새 소스는 같은 고정 이미지·JAR·연산·제한·정리 범위를 유지하고 실패 관측만 보강합니다. 실제 컨테이너 ID를 대조한 뒤 종료 코드와 Docker의 OOM 상태를 먼저 기록하고, 정상 종료 조건을 검사하기 전에 마지막 200줄의 로그를 비공개 폴더에 저장합니다. 공개 요약의 `sparkDiagnostic.logSignature`는 최대 256KiB에서 확인한 고정 문자열 분류이며 원인 확정이나 OOM 판정이 아닙니다. 원본 로그·메시지·SQL·환경·자격증명은 업로드하지 않습니다.
+
+Python import와 Spark session 생성도 오류 처리 범위에 포함했습니다. bootstrap 진단은 고정 단계 이름, 허용한 Python 예외 분류, 최대 8개의 허용된 Java 예외 클래스 이름만 기록합니다. 예외 메시지와 stack trace는 공개 진단에 넣지 않습니다. JVM이 Python 진단 파일을 쓰기 전에 종료하거나 실행 제한에 도달하면 bootstrap은 미관측일 수 있습니다. 없는 파일이나 인식하지 못한 로그를 성공으로 바꾸지 않습니다.
+
+이 준비본의 오프라인 테스트 16개는 기존 10개와 초기 session 실패·예외 정보 제한·실제 종료/OOM 구분·잘못된 진단 거부·진단 읽기 실패 시 종료 상태 유지·session 종료 실패를 확인합니다. Docker·PySpark·JAR·원격 실행은 하지 않았습니다. 후속 실제 실행은 별도의 명시적 workflow dispatch가 필요하며 자동 재실행하지 않습니다.
 
 기존 `lab-ci.yml`에 선택 입력 `run_spark_trial`을 추가합니다. 기본값은 `false`이며, 별도 작업은 **수동 실행이면서 입력이 true인 경우에만** 실행됩니다. 기존 verify 작업과 자동 실행 조건은 보존합니다. 권한은 `contents: read`이고 checkout 인증 정보를 유지하지 않습니다. SSH·kubeconfig·운영 Secret·GHCR 로그인/푸시·배포 단계는 없습니다.
 
@@ -32,6 +38,6 @@ Spark는 1 CPU·3GiB, driver heap 1536MiB로 제한합니다. PostgreSQL과 Gara
 python3 -B -m unittest discover -s infra/spark-ci -p 'test_*.py' -v
 ```
 
-오프라인 경계 테스트 10개이며 Docker·네트워크·PySpark를 실행하지 않습니다. 기존 `infra/spark-silver/`의 소스와 미니 PC 실행 조건도 변경하지 않습니다. 실제 결과는 명시적으로 실행한 GitHub 작업이 통과한 뒤 별도 증거로 기록해야 합니다. Trino·운영/Kubernetes 보존·동시 writer·재시작/강제 종료 복구·compaction·Airflow는 범위 밖입니다.
+오프라인 경계 테스트 16개이며 Docker·네트워크·PySpark를 실행하지 않습니다. 기존 `infra/spark-silver/`의 소스와 미니 PC 실행 조건도 변경하지 않습니다. 실제 결과는 명시적으로 실행한 GitHub 작업이 통과한 뒤 별도 증거로 기록해야 합니다. Trino·운영/Kubernetes 보존·동시 writer·재시작/강제 종료 복구·compaction·Airflow는 범위 밖입니다.
 
 공식 근거: [Compose 내부 네트워크](https://docs.docker.com/reference/compose-file/networks/#internal), [Spark 4.1.1 실행 방법](https://spark.apache.org/docs/4.1.1/submitting-applications.html).

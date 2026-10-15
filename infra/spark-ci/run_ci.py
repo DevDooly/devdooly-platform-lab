@@ -29,6 +29,14 @@ JARS = {
     'iceberg-spark-runtime-4.1_2.13-1.11.0.jar': ('org/apache/iceberg/iceberg-spark-runtime-4.1_2.13/1.11.0/', 47959591, 'd6ea6c5d099288daeb7d5a92061bd3d7d8f296492632b42378e5f2f0e3066242'),
     'iceberg-aws-bundle-1.11.0.jar': ('org/apache/iceberg/iceberg-aws-bundle/1.11.0/', 63613165, '38f01da7e96850cdd05e6616d758b77b43314b712a8808e3f9a824d56976162f'),
     'postgresql-42.7.14.jar': ('org/postgresql/postgresql/42.7.14/', 1221004, '73914527305a40cce504b0d3d90b23caf565136912d607ae8ae7c5895512332c')}
+BOOTSTRAP_PHASES = frozenset(('PYTHON_START', 'IMPORT_SILVER', 'SESSION', 'VERSIONS', 'FRESH_TABLES',
+    'CREATE_BRONZE', 'APPEND_FIRST', 'APPEND_SECOND', 'VERIFY_BRONZE', 'SILVER_RUN', 'VERIFY_RESULT',
+    'WRITE_RESULT', 'STOP_SESSION', 'COMPLETED'))
+PYTHON_EXCEPTIONS = frozenset(('Py4JJavaError', 'Py4JNetworkError', 'Py4JError', 'AnalysisException',
+    'IllegalArgumentException', 'SparkRuntimeException', 'ImportError', 'ModuleNotFoundError', 'PermissionError',
+    'FileNotFoundError', 'RuntimeError', 'ValueError', 'OSError', 'TypeError', 'AssertionError', 'OTHER'))
+JAVA_CLASS = re.compile(r'(?:org\.apache\.(?:spark|iceberg)|java|org\.postgresql|software\.amazon)'
+                        r'(?:\.[A-Za-z_$][A-Za-z0-9_$]*){1,12}')
 
 
 def require(value, code):
@@ -194,6 +202,65 @@ def safe_spark_result(value):
     return value
 
 
+def safe_bootstrap_diagnostic(value):
+    fields = {'schemaVersion', 'scope', 'passed', 'lastPhase', 'milestones', 'pythonExceptionClass', 'javaCauseClasses', 'sessionStopFailed'}
+    require(isinstance(value, dict) and set(value) == fields and type(value['schemaVersion']) is int and value['schemaVersion'] == 1
+        and value['scope'] == 'ISOLATED_SPARK_BOOTSTRAP_DIAGNOSTIC' and type(value['passed']) is bool
+        and value['lastPhase'] in BOOTSTRAP_PHASES and type(value['sessionStopFailed']) is bool, 'BOUNDED_MESSAGE_FREE_BOOTSTRAP_DIAGNOSTIC')
+    milestones, causes = value['milestones'], value['javaCauseClasses']
+    require(isinstance(milestones, list) and 1 <= len(milestones) <= 32 and all(v in BOOTSTRAP_PHASES for v in milestones)
+        and milestones[0] == 'PYTHON_START' and isinstance(causes, list) and len(causes) <= 8
+        and all(isinstance(v, str) and len(v) <= 160 and JAVA_CLASS.fullmatch(v) for v in causes), 'ONLY_FIXED_MILESTONES_AND_JAVA_CLASS_NAMES')
+    if value['passed']:
+        require(value['lastPhase'] == milestones[-1] == 'COMPLETED' and value['pythonExceptionClass'] is None
+            and causes == [] and value['sessionStopFailed'] is False, 'SUCCESSFUL_BOOTSTRAP_DIAGNOSTIC')
+    else:
+        require(value['pythonExceptionClass'] in PYTHON_EXCEPTIONS and value['lastPhase'] in milestones, 'FAILED_BOOTSTRAP_CLASS_ONLY')
+    return value
+
+
+def log_signature(raw):
+    # Categories indicate signatures in a bounded tail, never a proven cause.
+    raw = raw[-262144:]
+    signatures = (
+        ('JAVA_OUT_OF_MEMORY_SIGNATURE', rb'java\.lang\.OutOfMemoryError'),
+        ('JAVA_CLASS_LOADING_SIGNATURE', rb'(?:ClassNotFoundException|NoClassDefFoundError|UnsupportedClassVersionError)'),
+        ('PYTHON_IMPORT_SIGNATURE', rb'(?:ModuleNotFoundError|ImportError):'),
+        ('EXECUTABLE_NOT_FOUND_SIGNATURE', rb'(?:exec:.*(?:no such file or directory|not found)|tini:.*No such file)'),
+        ('PERMISSION_DENIED_SIGNATURE', rb'(?:PermissionError:|[Pp]ermission denied)'),
+        ('SPARK_ARGUMENT_SIGNATURE', rb'(?:Error: Unrecognized option|Unknown option:|Missing application resource)'))
+    return next((name for name, pattern in signatures if re.search(pattern, raw)), 'NO_RECOGNIZED_SIGNATURE')
+
+
+def spark_diagnostics(attempt, expected, diagnostic):
+    before = next(v for v in attempt.containers() if v['role'] == 'spark')
+    require(before['id'] == expected['id'], 'SAME_EXACT_SPARK_CONTAINER_FOR_DIAGNOSTICS')
+    require(type(before['running']) is bool and type(before['oom']) is bool and type(before['exitCode']) is int,
+        'ACTUAL_SPARK_STATE_TYPES')
+    diagnostic.update(stateObserved=True, runningAtCapture=before['running'],
+        exitCode=None if before['running'] else before['exitCode'], oomKilled=before['oom'])
+    logs = attempt.command(['docker', 'logs', '--tail', '200', before['id']], sensitive=True, check=False)
+    # These files remain in the private runner directory and are never artifacts.
+    save(attempt.root / 'spark-diagnostic.stdout', logs.stdout)
+    save(attempt.root / 'spark-diagnostic.stderr', logs.stderr)
+    after = next(v for v in attempt.containers() if v['role'] == 'spark')
+    require(after['id'] == before['id'], 'SAME_EXACT_SPARK_CONTAINER_AFTER_DIAGNOSTICS')
+    require(type(after['running']) is bool and type(after['oom']) is bool and type(after['exitCode']) is int,
+        'ACTUAL_SPARK_STATE_TYPES')
+    diagnostic.update(runningAtCapture=after['running'], exitCode=None if after['running'] else after['exitCode'],
+        oomKilled=after['oom'], logCollection='COLLECTED' if logs.returncode == 0 else 'UNAVAILABLE',
+        logSignature=log_signature(logs.stdout + b'\n' + logs.stderr) if logs.returncode == 0 else 'LOG_UNAVAILABLE')
+    bootstrap = None
+    path = attempt.root / 'proof/bootstrap-diagnostic.json'
+    if path.exists() or path.is_symlink():
+        info = path.lstat()
+        require(not path.is_symlink() and path.is_file() and 0 < info.st_size <= 16384, 'BOUNDED_REGULAR_BOOTSTRAP_DIAGNOSTIC')
+        raw = path.read_bytes()
+        require(len(raw) == info.st_size, 'STABLE_BOOTSTRAP_DIAGNOSTIC_BYTES')
+        bootstrap = safe_bootstrap_diagnostic(json.loads(raw))
+    diagnostic['bootstrap'] = bootstrap
+
+
 def main():
     require(sys.platform == 'linux' and os.environ.get('GITHUB_ACTIONS') == 'true' and os.environ.get('RUNNER_ENVIRONMENT') == 'github-hosted', 'GITHUB_HOSTED_LINUX_ONLY')
     source = os.environ.get('SOURCE_COMMIT', '')
@@ -212,6 +279,8 @@ def main():
     project, image = 'spark-ci-' + nonce, 'spark-isolated-ci:' + nonce
     attempt = Attempt(root, project)
     results, failure, passed, stopped, initializer_stopped = {}, None, False, False, False
+    diagnostics = {'stateObserved': False, 'runningAtCapture': None, 'exitCode': None, 'oomKilled': None,
+        'logCollection': 'NOT_CAPTURED', 'logSignature': 'LOG_UNAVAILABLE', 'bootstrap': None}
     checks = {'vendorBytesVerified': False, 'pinnedImagesPulled': False, 'internalNetworkVerified': False, 'containerLimitsVerified': False}
     try:
         require(shutil.disk_usage(root).free >= 6*1024**3, 'GITHUB_RUNNER_DISK_RESERVE')
@@ -309,10 +378,11 @@ def main():
             require(time.monotonic() < until, 'ONE_SPARK_PROCESS_DEADLINE')
             current = next(v for v in attempt.containers() if v['role'] == 'spark')
             if not current['running']:
+                spark_diagnostics(attempt, current, diagnostics)
                 require(current['exitCode'] == 0 and current['oom'] is False, 'ACTUAL_SPARK_CLEAN_EXIT_WITHOUT_OOM')
+                require(diagnostics['bootstrap'] is not None and diagnostics['bootstrap']['passed'] is True, 'ACTUAL_BOOTSTRAP_COMPLETION_DIAGNOSTIC')
                 break
             time.sleep(2)
-        attempt.cli('logs', '--no-color', 'spark', check=False)
         raw = (root / 'proof/spark-result.json').read_bytes()
         require(0 < len(raw) <= 16384, 'BOUNDED_SPARK_PUBLIC_PROOF')
         results = safe_spark_result(json.loads(raw))
@@ -344,6 +414,7 @@ def main():
             passed = False
     summary = {'schemaVersion': 1, 'passed': passed, 'scope': 'ISOLATED_GITHUB_RUNNER_SPARK_JDBC_GARAGE', 'capturedAt': utc(),
         'sourceCommit': source, 'result': results, 'failure': failure, 'ownedComposeContainersStopped': stopped,
+        'sparkDiagnostic': diagnostics,
         'ownedInitializerCreationAttempted': attempt.initializer_intended, 'ownedInitializerStoppedOrNotCreated': initializer_stopped,
         'fixedImagePlan': {'postgres': POSTGRES, 'garage': GARAGE, 'sparkBase': SPARK}, 'plannedJarCount': 3, 'plannedJarBytes': 112793760,
         'localImageOnly': True, 'imagePushed': False, 'plannedHostPublishedPortCount': 0, 'checks': checks,

@@ -2,11 +2,14 @@
 import copy
 import json
 from pathlib import Path
+import sys
+import tempfile
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 import compose_plan as p
 import run_ci as r
+import bootstrap_spark as b
 
 
 def sample():
@@ -100,6 +103,91 @@ class CiBoundaries(unittest.TestCase):
         attempt.command = command
         with self.assertRaisesRegex(RuntimeError, 'DOCKER_READ_UNAVAILABLE'):
             attempt.initializer()
+
+    def test_session_failure_is_caught_before_any_synthetic_table_operation(self):
+        def session():
+            raise PermissionError('private-host credential=never-public')
+        silver = SimpleNamespace(session=session)
+        contract = SimpleNamespace(FIELDS=(), SOURCE_SHA='a'*64, golden_bronze=None, require=None, row_sha=None)
+        with tempfile.TemporaryDirectory() as folder, patch.object(b, 'PROOF', Path(folder)), patch.object(b.os, 'O_NOFOLLOW', 0, create=True), \
+             patch.dict(sys.modules, {'spark_silver': silver, 'silver_contract': contract}):
+            self.assertEqual(1, b.main())
+            value = json.loads((Path(folder)/'bootstrap-diagnostic.json').read_bytes())
+            self.assertEqual('SESSION', value['lastPhase'])
+            self.assertEqual('PermissionError', value['pythonExceptionClass'])
+            self.assertEqual(['PYTHON_START', 'IMPORT_SILVER', 'SESSION'], value['milestones'])
+            self.assertFalse((Path(folder)/'spark-result.json').exists())
+            self.assertNotIn('private-host', json.dumps(value))
+            self.assertIs(value, r.safe_bootstrap_diagnostic(value))
+
+    def test_java_cause_projection_never_serializes_error_messages_or_unknown_classes(self):
+        class Node:
+            def __init__(self, name, cause=None): self.name, self.cause = name, cause
+            def getClass(self): return SimpleNamespace(getName=lambda: self.name)
+            def getCause(self): return self.cause
+        error = RuntimeError('jdbc://private/password=secret')
+        error.java_exception = Node('org.apache.spark.SparkException', Node('org.postgresql.util.PSQLException', Node('private.Secret')))
+        value = b.exception_classes(error)
+        self.assertEqual(['org.apache.spark.SparkException', 'org.postgresql.util.PSQLException'], value['javaCauseClasses'])
+        self.assertNotIn('jdbc', json.dumps(value))
+        self.assertNotIn('Secret', json.dumps(value))
+
+    def test_actual_exit_oom_and_private_tail_are_recorded_without_inferred_cause(self):
+        cid = 'c'*64
+        state = {'id': cid, 'role': 'spark', 'running': False, 'exitCode': 137, 'oom': False}
+        calls = []
+        with tempfile.TemporaryDirectory() as folder, patch.object(r, 'save', side_effect=lambda path, raw: path.write_bytes(raw)):
+            def command(argv, **kwargs):
+                calls.append((argv, kwargs))
+                return SimpleNamespace(returncode=0, stdout=b'java.lang.OutOfMemoryError: private-secret', stderr=b'')
+            attempt = SimpleNamespace(root=Path(folder), containers=lambda: [state], command=command)
+            value = {}
+            r.spark_diagnostics(attempt, state, value)
+            self.assertEqual(137, value['exitCode'])
+            self.assertIs(False, value['oomKilled'])
+            self.assertEqual('JAVA_OUT_OF_MEMORY_SIGNATURE', value['logSignature'])
+            self.assertNotIn(cid, json.dumps(value))
+            self.assertNotIn('private-secret', json.dumps(value))
+            self.assertEqual(['docker', 'logs', '--tail', '200', cid], calls[0][0])
+            self.assertTrue(calls[0][1]['sensitive'])
+            self.assertIn(b'private-secret', (Path(folder)/'spark-diagnostic.stdout').read_bytes())
+
+    def test_diagnostic_rejects_extra_fields_messages_and_unknown_class_names(self):
+        value = {'schemaVersion':1, 'scope':'ISOLATED_SPARK_BOOTSTRAP_DIAGNOSTIC', 'passed':False, 'lastPhase':'SESSION',
+            'milestones':['PYTHON_START','SESSION'], 'pythonExceptionClass':'RuntimeError', 'javaCauseClasses':[], 'sessionStopFailed':False}
+        self.assertIs(value, r.safe_bootstrap_diagnostic(value))
+        for change in ({'message':'secret'}, {'javaCauseClasses':['private.Credential']}, {'pythonExceptionClass':'private-password'},
+                       {'milestones':['PYTHON_START']*33}, {'lastPhase':'arbitrary-host'}):
+            with self.subTest(change=change), self.assertRaises(RuntimeError):
+                r.safe_bootstrap_diagnostic({**value, **change})
+
+    def test_diagnostic_parse_failure_preserves_actual_state_and_does_not_repeat_work(self):
+        state = {'id':'c'*64,'role':'spark','running':False,'exitCode':1,'oom':False}
+        with tempfile.TemporaryDirectory() as folder, patch.object(r, 'save', side_effect=lambda path, raw: path.write_bytes(raw)):
+            root=Path(folder);(root/'proof').mkdir();(root/'proof/bootstrap-diagnostic.json').write_text('{"message":"secret"}')
+            attempt=SimpleNamespace(root=root, containers=lambda:[state], command=lambda *a,**k:SimpleNamespace(returncode=0,stdout=b'',stderr=b''))
+            value={}
+            with self.assertRaises((RuntimeError, KeyError)):
+                r.spark_diagnostics(attempt,state,value)
+            self.assertTrue(value['stateObserved'])
+            self.assertEqual(1,value['exitCode'])
+            self.assertFalse(value['oomKilled'])
+
+    def test_session_stop_failure_cannot_publish_successful_completion_diagnostic(self):
+        def stop(): raise RuntimeError('secret cleanup details')
+        spark=SimpleNamespace(stop=stop)
+        silver=SimpleNamespace(session=lambda:spark)
+        contract=SimpleNamespace(FIELDS=(),SOURCE_SHA='a'*64,golden_bronze=None,require=None,row_sha=None)
+        with tempfile.TemporaryDirectory() as folder, patch.object(b,'PROOF',Path(folder)), \
+             patch.object(b.os,'O_NOFOLLOW',0,create=True), patch.object(b,'execute'), \
+             patch.dict(sys.modules,{'spark_silver':silver,'silver_contract':contract}):
+            self.assertEqual(1,b.main())
+            value=json.loads((Path(folder)/'bootstrap-diagnostic.json').read_bytes())
+            self.assertFalse(value['passed'])
+            self.assertTrue(value['sessionStopFailed'])
+            self.assertEqual('STOP_SESSION',value['lastPhase'])
+            self.assertNotIn('secret',json.dumps(value))
+            r.safe_bootstrap_diagnostic(value)
 
 
 if __name__ == '__main__':
