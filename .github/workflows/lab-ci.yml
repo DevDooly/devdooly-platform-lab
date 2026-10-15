@@ -10,6 +10,7 @@ on:
       - tests/**
       - infra/containers/**
       - infra/maintenance/**
+      - infra/s3-ci/**
       - infra/iceberg-lab/**
       - infra/image-lock.json
       - infra/scripts/prepare-local-env.py
@@ -25,6 +26,12 @@ on:
       - infra/scripts/propose_gitops_pr.py
       - infra/scripts/validate_gitops_pr.py
   workflow_dispatch:
+    inputs:
+      run_s3_trial:
+        description: Run the separate isolated Apache5 MariaDB Garage trial
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -55,6 +62,9 @@ jobs:
 
       - name: Validate retention plans without credentials
         run: python3 -m unittest discover -s tests/maintenance -p 'test_*.py' -v
+
+      - name: Validate isolated S3 harness without services
+        run: python3 -B -m unittest discover -s infra/s3-ci -p 'test_*.py' -v
 
       - name: Validate Iceberg plans without services
         run: python3 -B -m unittest discover -s infra/iceberg-lab/tests -p 'test_*.py' -v
@@ -156,4 +166,38 @@ jobs:
             artifacts/compose-before.json
             artifacts/compose-after.json
           if-no-files-found: warn
+          retention-days: 7
+
+  isolated-s3:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_s3_trial == true }}
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout isolated S3 trial
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Java 21 for existing integration tests
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: apps/api/pom.xml
+      - name: Validate isolated S3 harness boundaries
+        run: python3 -B -m unittest discover -s infra/s3-ci -p 'test_*.py' -v
+      - name: Run one isolated real Garage attempt
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: python3 -B infra/s3-ci/run_s3_ci.py
+      - name: Upload safe S3 summary only
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: isolated-s3-summary-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .local/s3-ci-public/summary.json
+          if-no-files-found: error
           retention-days: 7

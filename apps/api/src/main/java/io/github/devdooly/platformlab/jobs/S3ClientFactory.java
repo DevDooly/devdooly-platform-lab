@@ -5,7 +5,7 @@ import java.time.Duration;
 import java.util.Objects;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.core.checksums.RequestChecksumCalculation;
-import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
+import software.amazon.awssdk.http.apache5.Apache5HttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.retries.StandardRetryStrategy;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -62,7 +62,7 @@ public final class S3ClientFactory {
         var builder = S3Client.builder().endpointOverride(endpoint).region(Region.of(region))
             .credentialsProvider(credentials)
             .serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build())
-            .httpClientBuilder(UrlConnectionHttpClient.builder()
+            .httpClientBuilder(Apache5HttpClient.builder()
                 .connectionTimeout(timeouts.connect()).socketTimeout(timeouts.read()))
             .overrideConfiguration(override -> override.apiCallTimeout(timeouts.apiCall())
                 .apiCallAttemptTimeout(timeouts.attempt())
