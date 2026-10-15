@@ -96,6 +96,48 @@ def container_guard(value, cid, name, project, image_id, network, binds):
     require(value['State']['OOMKilled'] is False, 'OWNED_CONTAINER_OOM_FORBIDDEN')
 
 
+def port_binding_diagnostic(value, container_port):
+    """Public fixed fields only: requested configuration is never a live-port fallback."""
+    target = str(container_port) + '/tcp'
+
+    def projection(parent, key):
+        if not isinstance(parent, dict) or key not in parent:
+            return 'UNOBSERVED', None, None
+        ports = parent[key]
+        if not isinstance(ports, dict):
+            return 'MALFORMED', None, None
+        if target not in ports:
+            return 'TARGET_MISSING', ports, None
+        entries = ports[target]
+        if entries is None:
+            return 'TARGET_UNPUBLISHED', ports, None
+        if not isinstance(entries, list) or len(entries) != 1:
+            return 'TARGET_INVALID_COUNT', ports, None
+        entry = entries[0]
+        if not isinstance(entry, dict) or not isinstance(entry.get('HostIp'), str) or not isinstance(entry.get('HostPort'), str):
+            return 'TARGET_MALFORMED', ports, None
+        return 'SINGLE_BINDING', ports, entry
+
+    request_state, requested, request = projection(value.get('HostConfig'), 'PortBindings')
+    active_state, active, actual = projection(value.get('NetworkSettings'), 'Ports')
+    requested_loopback = request is not None and request['HostIp'] == '127.0.0.1'
+    active_loopback = actual is not None and actual['HostIp'] == '127.0.0.1'
+    port = actual['HostPort'] if actual is not None else ''
+    active_numeric = 1 <= len(port) <= 5 and port.isascii() and port.isdecimal() and 0 < int(port) <= 65535
+    return {
+        'schemaVersion': 1, 'scope': 'POST_START_OWN_CONTAINER_PORT_BINDING_PROJECTION',
+        'containerRunningObserved': isinstance(value.get('State'), dict) and value['State'].get('Running') is True,
+        'requestedMapState': request_state, 'activeMapState': active_state,
+        'requestedSingleLoopbackBinding': requested_loopback,
+        'requestedEmptyOrZeroHostPort': request is not None and request['HostPort'] in ('', '0'),
+        'requestedOnlyRequiredPort': request is not None and isinstance(requested, dict) and set(requested) == {target},
+        'activeSingleLoopbackBinding': active_loopback, 'activeNumericHostPort': active_numeric,
+        'activeOnlyRequiredPublishedPort': actual is not None and isinstance(active, dict)
+            and all(key == target or item is None for key, item in active.items()),
+        'requestedAndActiveLoopbackConsistent': requested_loopback and active_loopback,
+    }
+
+
 def bound_port(value, container_port):
     entries = value['NetworkSettings']['Ports'].get(str(container_port) + '/tcp')
     require(isinstance(entries, list) and len(entries) == 1 and entries[0]['HostIp'] == '127.0.0.1'
@@ -235,6 +277,7 @@ def run():
     require(not public_dir.exists(), 'NEW_PUBLIC_SUMMARY_DIRECTORY'); public_dir.mkdir(mode=0o700)
     attempt = Attempt(folder, project)
     passed = stopped = False; failure = None; totals = None; artifact = None
+    port_diagnostics = {'database': None, 'garage': None}
     try:
         actual_source = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, check=True, timeout=10).stdout.decode().strip()
         require(actual_source == source, 'CHECKOUT_SHA_MISMATCH')
@@ -311,10 +354,16 @@ def run():
         require(acl['accessKeyId'] == key['accessKeyId'] and acl['permissions']['createBucket'] is False and len(acl['buckets']) == 1
                 and acl['buckets'][0]['id'] == bucket['id'] and acl['buckets'][0]['permissions'] == {'read': True, 'write': True, 'owner': False},
                 'ACTUAL_ONLY_NEW_BUCKET_NONOWNER_READ_WRITE_KEY')
+        # Both full-ID-bound post-start projections are captured before either gate.
+        # Requested HostConfig bindings cannot substitute for an active published port.
+        db_live, garage_live = attempt.guard(db), attempt.guard(garage)
+        port_diagnostics = {'database': port_binding_diagnostic(db_live, 3306),
+                            'garage': port_binding_diagnostic(garage_live, 3900)}
+        db_port, garage_port = bound_port(db_live, 3306), bound_port(garage_live, 3900)
         env = os.environ.copy()
-        env.update({'MAVEN_OPTS': '-Xmx768m', 'DB_TEST_URL': 'jdbc:mariadb://127.0.0.1:'+str(bound_port(attempt.guard(db), 3306))+'/platform_lab_export_it',
+        env.update({'MAVEN_OPTS': '-Xmx768m', 'DB_TEST_URL': 'jdbc:mariadb://127.0.0.1:'+str(db_port)+'/platform_lab_export_it',
             'DB_TEST_USERNAME': 'exportit', 'DB_TEST_PASSWORD': db_password, 'LAB_S3_TEST_BUCKET': bucket_name,
-            'LAB_S3_TEST_ENDPOINT': 'http://127.0.0.1:'+str(bound_port(attempt.guard(garage), 3900)),
+            'LAB_S3_TEST_ENDPOINT': 'http://127.0.0.1:'+str(garage_port),
             'LAB_S3_TEST_ACCESS_KEY': key['accessKeyId'], 'LAB_S3_TEST_SECRET_KEY': key['secretAccessKey']})
         del key, db_password, root_password
         maven = api / 'mvnw'; os.chmod(maven, maven.stat().st_mode | stat.S_IXUSR)
@@ -350,7 +399,8 @@ def run():
             'unknownOwnedCommandProcessGroup': attempt.unknown_command_group,
             'forcedKillPerformed': False, 'automaticAttemptRetryPerformed': False,
             'ownVolumesRetainedUntilRunnerDisposal': True, 'miniPcContacted': False,
-            'rawLogsCredentialsOrConnectionValuesPublished': False, 'failure': failure}
+            'rawLogsCredentialsOrConnectionValuesPublished': False,
+            'portBindingDiagnostics': port_diagnostics, 'historicalPortGuardFailureCauseObserved': False, 'failure': failure}
         save_json(public_dir / 'summary.json', summary)
         print(json.dumps(summary, sort_keys=True))
     return 0 if passed else 1

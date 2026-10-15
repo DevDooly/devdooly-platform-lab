@@ -1,4 +1,5 @@
 import copy
+import json
 import tempfile
 from pathlib import Path
 import unittest
@@ -43,6 +44,66 @@ class Boundaries(unittest.TestCase):
         value = self.container(); value['NetworkSettings']['Ports']['3901/tcp'] = None
         self.assertEqual(c.bound_port(value, 3306), 12345)
         value['NetworkSettings']['Ports']['3901/tcp'] = [{'HostIp': '127.0.0.1', 'HostPort': '12346'}]
+        with self.assertRaises(RuntimeError): c.bound_port(value, 3306)
+
+    def requested_and_active(self):
+        value = self.container()
+        value['HostConfig']['PortBindings'] = {'3306/tcp': [{'HostIp': '127.0.0.1', 'HostPort': ''}]}
+        value['State']['Running'] = True
+        return value
+
+    def test_port_projection_separates_ephemeral_request_from_active_allocation(self):
+        value = self.requested_and_active()
+        result = c.port_binding_diagnostic(value, 3306)
+        self.assertEqual(result['requestedMapState'], 'SINGLE_BINDING')
+        self.assertEqual(result['activeMapState'], 'SINGLE_BINDING')
+        self.assertTrue(all(result[key] for key in ('containerRunningObserved', 'requestedSingleLoopbackBinding',
+            'requestedEmptyOrZeroHostPort', 'requestedOnlyRequiredPort', 'activeSingleLoopbackBinding',
+            'activeNumericHostPort', 'activeOnlyRequiredPublishedPort', 'requestedAndActiveLoopbackConsistent')))
+        self.assertEqual(c.bound_port(value, 3306), 12345)
+
+    def test_requested_loopback_port_never_substitutes_for_missing_or_unpublished_active_port(self):
+        for ports, expected in (({}, 'TARGET_MISSING'), ({'3306/tcp': None}, 'TARGET_UNPUBLISHED'),
+                                 ({'3306/tcp': []}, 'TARGET_INVALID_COUNT')):
+            value = self.requested_and_active(); value['NetworkSettings']['Ports'] = ports
+            result = c.port_binding_diagnostic(value, 3306)
+            self.assertTrue(result['requestedSingleLoopbackBinding'])
+            self.assertEqual(result['activeMapState'], expected)
+            self.assertFalse(result['activeNumericHostPort'])
+            self.assertFalse(result['activeOnlyRequiredPublishedPort'])
+            with self.assertRaises(RuntimeError): c.bound_port(value, 3306)
+
+    def test_partial_inspect_fields_are_unobserved_not_verified(self):
+        for value in ({}, {'HostConfig': {}, 'NetworkSettings': {}, 'State': {}},
+                      {'HostConfig': {'PortBindings': None}, 'NetworkSettings': {'Ports': None}}):
+            result = c.port_binding_diagnostic(value, 3306)
+            self.assertIn(result['requestedMapState'], ('UNOBSERVED', 'MALFORMED'))
+            self.assertIn(result['activeMapState'], ('UNOBSERVED', 'MALFORMED'))
+            self.assertTrue(all(item is False for item in result.values() if isinstance(item, bool)))
+
+    def test_port_projection_is_bounded_and_contains_no_raw_connection_or_container_fields(self):
+        value = self.requested_and_active()
+        value['Config']['Env'] = ['SECRET=never-publish-this-value']
+        value['NetworkSettings']['Ports']['3306/tcp'][0]['HostPort'] = '9'*10000
+        result = c.port_binding_diagnostic(value, 3306)
+        self.assertFalse(result['activeNumericHostPort'])
+        self.assertEqual(set(result), {'schemaVersion', 'scope', 'containerRunningObserved', 'requestedMapState',
+            'activeMapState', 'requestedSingleLoopbackBinding', 'requestedEmptyOrZeroHostPort',
+            'requestedOnlyRequiredPort', 'activeSingleLoopbackBinding', 'activeNumericHostPort',
+            'activeOnlyRequiredPublishedPort', 'requestedAndActiveLoopbackConsistent'})
+        encoded = json.dumps(result)
+        for private in ('never-publish-this-value', '127.0.0.1', 'own-db', 'new-db', 'a'*64, '9'*100):
+            self.assertNotIn(private, encoded)
+
+    def test_public_port_diagnostic_does_not_accept_nonloopback_or_extra_active_binding(self):
+        value = self.requested_and_active()
+        value['NetworkSettings']['Ports']['3306/tcp'][0]['HostIp'] = '0.0.0.0'
+        result = c.port_binding_diagnostic(value, 3306)
+        self.assertFalse(result['activeSingleLoopbackBinding'])
+        with self.assertRaises(RuntimeError): c.bound_port(value, 3306)
+        value = self.requested_and_active()
+        value['NetworkSettings']['Ports']['other/tcp'] = [{'HostIp': '127.0.0.1', 'HostPort': '12346'}]
+        self.assertFalse(c.port_binding_diagnostic(value, 3306)['activeOnlyRequiredPublishedPort'])
         with self.assertRaises(RuntimeError): c.bound_port(value, 3306)
 
     def xml(self, directory, name, methods):
