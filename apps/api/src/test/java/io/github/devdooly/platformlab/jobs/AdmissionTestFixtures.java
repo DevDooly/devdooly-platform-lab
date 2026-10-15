@@ -11,7 +11,8 @@ public final class AdmissionTestFixtures {
         jdbc.execute((ConnectionCallback<Void>) connection -> {
             String url = connection.getMetaData().getURL();
             if (!url.startsWith("jdbc:h2:mem:") && !url.matches(
-                "jdbc:mariadb://127\\.0\\.0\\.1:[0-9]{1,5}/platform_lab_(?:foundation(?:_fresh)?|s3_it(?:_fresh)?|runtime_it|admission_it)(?:\\?.*)?")) {
+                "jdbc:mariadb://127\\.0\\.0\\.1:[0-9]{1,5}/platform_lab_(?:foundation(?:_fresh)?|s3_it(?:_fresh)?|runtime_it|admission_it)(?:\\?.*)?")
+                && !url.matches("jdbc:mariadb://127\\.0\\.0\\.1:[0-9]{1,5}/platform_lab_export_it")) {
                 throw new SQLException("Admission test fixture requires an owned disposable database");
             }
             return null;
