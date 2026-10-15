@@ -1,5 +1,7 @@
 # 공개 플랫폼 수집기와 호스트 자동화
 
+작업·export의 실제 배포 기록은 선택적 [작업 관측 자동화](JOBS_AUTOMATION.md)로 같은 outbound Pages 주기에 연결한다. 기존 플랫폼 관측 계약과 파일은 별도로 보존한다.
+
 Python 표준 라이브러리만 사용하는 읽기 전용 수집기입니다. 공개 GitHub main의 Jenkins commit status와 K3s의 제한된 리소스를 읽고, platform-observation v1의 허용 필드만 저장합니다. 실제 RBAC 적용·수집·인증 실패 후 이전 성공 보존·Pages 게시를 검증했습니다. 전용 Pages 자격증명 등록 후 수동 host cycle·실제 systemd service·timer 최초 자동 실행의 게시와 전체 공개 JSON 일치도 확인했습니다. [실행 근거와 남은 범위](../../docs/evidence/platform-observation/README.md)를 함께 확인합니다.
 
 ## 통합 파일

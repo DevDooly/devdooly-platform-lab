@@ -1,0 +1,109 @@
+{{- if .Values.runtime.garage.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: garage
+  labels:
+    {{- include "platform-lab.labels" . | nindent 4 }}
+    app.kubernetes.io/component: garage
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "platform-lab.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: garage
+  ports:
+    - name: s3
+      port: 3900
+      targetPort: s3
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "platform-lab.fullname" . }}-garage
+  labels:
+    {{- include "platform-lab.labels" . | nindent 4 }}
+    app.kubernetes.io/component: garage
+spec:
+  serviceName: garage
+  replicas: {{ .Values.runtime.garage.replicaCount }}
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  selector:
+    matchLabels:
+      {{- include "platform-lab.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: garage
+  template:
+    metadata:
+      labels:
+        {{- include "platform-lab.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: garage
+    spec:
+      serviceAccountName: {{ include "platform-lab.fullname" . }}
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 120
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: garage
+          image: {{ include "platform-lab.image" .Values.runtime.garage.image | quote }}
+          imagePullPolicy: IfNotPresent
+          command: ["/garage"]
+          args: ["-c", "/etc/garage/garage.toml", "server"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          ports:
+            - {name: s3, containerPort: 3900}
+          startupProbe:
+            tcpSocket: {port: s3}
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            tcpSocket: {port: s3}
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: {port: s3}
+            periodSeconds: 15
+            failureThreshold: 6
+          resources:
+            {{- toYaml .Values.runtime.garage.resources | nindent 12 }}
+          volumeMounts:
+            - {name: config, mountPath: /etc/garage, readOnly: true}
+            - {name: metadata, mountPath: /var/lib/garage/meta}
+            - {name: data, mountPath: /var/lib/garage/data}
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - name: config
+          secret:
+            secretName: {{ required "runtime.garage.existingConfigSecret must name a pre-created Secret" .Values.runtime.garage.existingConfigSecret | quote }}
+            defaultMode: 288 # 0440 in octal; explicit decimal avoids YAML version ambiguity.
+            items:
+              - key: {{ .Values.runtime.garage.configKey | quote }}
+                path: garage.toml
+        - name: tmp
+          emptyDir: {sizeLimit: 32Mi}
+  volumeClaimTemplates:
+    - metadata: {name: metadata}
+      spec:
+        accessModes: [ReadWriteOnce]
+        storageClassName: {{ .Values.runtime.garage.persistence.storageClass | quote }}
+        resources:
+          requests:
+            storage: {{ .Values.runtime.garage.persistence.metadataSize | quote }}
+    - metadata: {name: data}
+      spec:
+        accessModes: [ReadWriteOnce]
+        storageClassName: {{ .Values.runtime.garage.persistence.storageClass | quote }}
+        resources:
+          requests:
+            storage: {{ .Values.runtime.garage.persistence.dataSize | quote }}
+{{- end }}

@@ -1,5 +1,7 @@
 # 상태 수집과 Pages 게시 자동화
 
+작업·export의 실제 배포 관측 자동 게시를 추가하는 선택 기능은 [JOBS_AUTOMATION.md](JOBS_AUTOMATION.md)를 따른다. `jobs_enabled`가 없으면 기존 플랫폼 전용 동작을 유지한다. Pages v2는 선택적 작업 입력과 별도 presence artifact를 사용하며, 아래 기존 플랫폼 검증 이력과 새 기능의 실제 전환 검증을 구분한다.
+
 이 자동화는 **호스트에서 상태를 수집하고 게시를 요청하는 작업**입니다. K3s, Jenkins, Argo CD, API, 웹 서비스를 재시작하거나 배포하지 않습니다.
 
 초기 Ubuntu 격리 환경의 자동화 검사 33개를 통과한 뒤 root 소유 실행 파일·private 설정·systemd unit을 비활성 상태로 설치했습니다. 당시 `systemd-analyze verify`와 `daemon-reload`까지만 완료했고 timer는 disabled·inactive, 전용 Pages 자격증명은 미등록이었습니다. 설치 단계에서 토큰 내용 읽기·host cycle dispatch·timer enable/start를 수행하지 않았다는 이력은 보존합니다.

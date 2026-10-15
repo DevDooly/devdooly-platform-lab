@@ -80,8 +80,10 @@ public final class S3ClientFactory {
         boolean https = "https".equalsIgnoreCase(endpoint.getScheme());
         boolean loopbackHttp = "http".equalsIgnoreCase(endpoint.getScheme())
             && ("127.0.0.1".equals(endpoint.getHost()) || "[::1]".equals(endpoint.getHost()) || "::1".equals(endpoint.getHost()));
-        if (!https && !loopbackHttp) {
-            throw new IllegalArgumentException("S3 endpoint requires HTTPS; plain HTTP is limited to numeric loopback experiments");
+        boolean serviceHttp = "http".equalsIgnoreCase(endpoint.getScheme())
+            && LabClientEndpoints.isKubernetesService(endpoint.getHost()) && endpoint.getPort() > 0;
+        if (!https && !loopbackHttp && !serviceHttp) {
+            throw new IllegalArgumentException("S3 endpoint requires HTTPS, numeric-loopback HTTP, or explicit-port Kubernetes service HTTP");
         }
         if (endpoint.getPort() == 0 || endpoint.getPort() < -1 || endpoint.getPort() > 65535) {
             throw new IllegalArgumentException("S3 endpoint has an invalid port");

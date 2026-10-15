@@ -1,0 +1,15 @@
+# Runtime settings are separate from the strict image-only values.yaml publication gate.
+# API environment changes only when root coordinates the real rollout.
+api:
+  environment: mini-pc
+# Root coordinates staged enablement after backup, migration and private bootstrap.
+runtime:
+  kafka:
+    enabled: true
+    existingSecret: platform-lab-kafka
+  garage:
+    enabled: true
+    existingConfigSecret: platform-lab-garage-config
+  worker:
+    enabled: false
+    existingS3Secret: platform-lab-runtime-s3

@@ -60,7 +60,7 @@ spec:
                   name: {{ required "database.existingSecret must name a pre-created Secret" .Values.database.existingSecret | quote }}
                   key: {{ .Values.database.appPasswordKey | quote }}
             - name: LAB_ENVIRONMENT
-              value: k3s
+              value: {{ .Values.api.environment | quote }}
             - name: SOURCE_COMMIT
               value: {{ .Values.api.sourceCommit | quote }}
             - name: IMAGE_DIGEST

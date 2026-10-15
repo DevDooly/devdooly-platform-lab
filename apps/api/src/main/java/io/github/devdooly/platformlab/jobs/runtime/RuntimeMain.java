@@ -4,6 +4,7 @@ import io.github.devdooly.platformlab.PlatformLabApplication;
 import io.github.devdooly.platformlab.jobs.LabJobService;
 import io.github.devdooly.platformlab.jobs.S3ClientFactory;
 import io.github.devdooly.platformlab.jobs.S3RawSourceStore;
+import io.github.devdooly.platformlab.jobs.SourceStagingService;
 import io.github.devdooly.platformlab.jobs.exporting.ResultExportService;
 import io.github.devdooly.platformlab.jobs.exporting.S3ResultExportStore;
 import io.github.devdooly.platformlab.jobs.messaging.DispatchPublisher;
@@ -36,8 +37,8 @@ public final class RuntimeMain {
     }
 
     public static void run(String[] args) {
-        if (args.length != 1 || (!args[0].equals("--lab-runtime=run") && !args[0].equals("--lab-runtime=resume"))) {
-            throw new IllegalArgumentException("Use only --lab-runtime=run or --lab-runtime=resume; connection settings belong in environment variables");
+        if (args.length != 1 || (!args[0].equals("--lab-runtime=run") && !args[0].equals("--lab-runtime=resume") && !args[0].equals("--lab-runtime=stage"))) {
+            throw new IllegalArgumentException("Use only --lab-runtime=run, --lab-runtime=resume or --lab-runtime=stage; connection settings belong in environment variables");
         }
         boolean resume = args[0].equals("--lab-runtime=resume");
         var application = new SpringApplication(PlatformLabApplication.class);
@@ -51,6 +52,12 @@ public final class RuntimeMain {
         try (var context = application.run()) {
             var states = new RuntimeStateStore(context.getBean(JdbcTemplate.class), context.getBean(Clock.class));
             states.requireSchemaV3();
+            if (args[0].equals("--lab-runtime=stage")) {
+                if (states.read().status() == RuntimeStateStore.Status.PAUSED_OPERATOR) {
+                    throw new RuntimeStateStore.OperatorResumeRequiredException();
+                }
+                stageFixture(states, context.getBean(LabJobService.class)); return;
+            }
             var dataSource = context.getBean(DataSource.class);
             try (var lease = MariaDbRuntimeLease.acquire(dataSource)) {
                 if (resume) {
@@ -66,6 +73,21 @@ public final class RuntimeMain {
         } catch (RuntimeException failure) {
             // Private connection values and credentials must not be added to console diagnostics.
             throw new IllegalStateException("Explicit runtime command failed; inspect the private host diagnostics");
+        }
+    }
+
+    private static void stageFixture(RuntimeStateStore states, LabJobService jobs) {
+        String runId = required("LAB_RUNTIME_STAGE_RUN_ID"); FixedFixtureStager.validateRunId(runId);
+        URI endpoint = URI.create(required("LAB_RUNTIME_S3_ENDPOINT"));
+        String region = required("LAB_RUNTIME_S3_REGION"), bucket = required("LAB_RUNTIME_S3_BUCKET");
+        var credentials = StaticCredentialsProvider.create(AwsBasicCredentials.create(
+            required("LAB_RUNTIME_S3_ACCESS_KEY_ID"), required("LAB_RUNTIME_S3_SECRET_ACCESS_KEY")));
+        // Staging uses only DB admission and raw-object credentials. It neither acquires the runtime lock
+        // nor creates Kafka/export clients, so an already-running worker may process the admitted job.
+        try (var s3 = S3ClientFactory.createGarage(endpoint, region, credentials)) {
+            var stager = new FixedFixtureStager(states, new SourceStagingService(jobs, new S3RawSourceStore(s3, bucket)));
+            var job = stager.stage(runId);
+            System.out.println("RUNTIME_FIXTURE_STAGED " + job.runId() + " " + job.status().name() + " INPUTS_12");
         }
     }
 

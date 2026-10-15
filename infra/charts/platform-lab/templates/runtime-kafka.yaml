@@ -1,0 +1,130 @@
+{{- if .Values.runtime.kafka.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+  labels:
+    {{- include "platform-lab.labels" . | nindent 4 }}
+    app.kubernetes.io/component: kafka
+spec:
+  type: ClusterIP
+  clusterIP: None
+  # The one static KRaft voter must resolve itself before its listener is ready.
+  publishNotReadyAddresses: true
+  selector:
+    {{- include "platform-lab.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: kafka
+  ports:
+    - name: broker
+      port: 9092
+      targetPort: broker
+    - name: controller
+      port: 9093
+      targetPort: controller
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "platform-lab.fullname" . }}-kafka
+  labels:
+    {{- include "platform-lab.labels" . | nindent 4 }}
+    app.kubernetes.io/component: kafka
+spec:
+  serviceName: kafka
+  replicas: {{ .Values.runtime.kafka.replicaCount }}
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  selector:
+    matchLabels:
+      {{- include "platform-lab.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: kafka
+  template:
+    metadata:
+      labels:
+        {{- include "platform-lab.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: kafka
+    spec:
+      serviceAccountName: {{ include "platform-lab.fullname" . }}
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 120
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: kafka
+          image: {{ include "platform-lab.image" .Values.runtime.kafka.image | quote }}
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            # Official configure/launch generates /opt/kafka/config; no root user is needed.
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: [ALL]
+          ports:
+            - {name: broker, containerPort: 9092}
+            - {name: controller, containerPort: 9093}
+          env:
+            - {name: KAFKA_NODE_ID, value: "1"}
+            - {name: KAFKA_PROCESS_ROLES, value: "broker,controller"}
+            - {name: KAFKA_LISTENERS, value: "BROKER://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093"}
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: {{ printf "BROKER://kafka.%s.svc.cluster.local:9092" .Release.Namespace | quote }}
+            - name: KAFKA_CONTROLLER_QUORUM_VOTERS
+              value: {{ printf "1@kafka.%s.svc.cluster.local:9093" .Release.Namespace | quote }}
+            - {name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP, value: "BROKER:PLAINTEXT,CONTROLLER:PLAINTEXT"}
+            - {name: KAFKA_INTER_BROKER_LISTENER_NAME, value: "BROKER"}
+            - {name: KAFKA_CONTROLLER_LISTENER_NAMES, value: "CONTROLLER"}
+            - name: CLUSTER_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "runtime.kafka.existingSecret must name a pre-created Secret" .Values.runtime.kafka.existingSecret | quote }}
+                  key: {{ .Values.runtime.kafka.clusterIdKey | quote }}
+            - {name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR, value: "1"}
+            - {name: KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS, value: "1"}
+            - {name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR, value: "1"}
+            - {name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR, value: "1"}
+            - {name: KAFKA_SHARE_COORDINATOR_STATE_TOPIC_REPLICATION_FACTOR, value: "1"}
+            - {name: KAFKA_SHARE_COORDINATOR_STATE_TOPIC_MIN_ISR, value: "1"}
+            - {name: KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS, value: "0"}
+            - {name: KAFKA_AUTO_CREATE_TOPICS_ENABLE, value: "false"}
+            - {name: KAFKA_NUM_PARTITIONS, value: "1"}
+            - {name: KAFKA_DEFAULT_REPLICATION_FACTOR, value: "1"}
+            - {name: KAFKA_MIN_INSYNC_REPLICAS, value: "1"}
+            - {name: KAFKA_LOG_DIRS, value: "/var/lib/kafka/data/logs"}
+            - {name: KAFKA_METADATA_LOG_DIR, value: "/var/lib/kafka/data/metadata"}
+            - {name: KAFKA_LOG_RETENTION_HOURS, value: "168"}
+            - {name: KAFKA_LOG_RETENTION_BYTES, value: "134217728"}
+            - {name: KAFKA_LOG_SEGMENT_BYTES, value: "16777216"}
+            - {name: KAFKA_HEAP_OPTS, value: "-Xms512m -Xmx512m"}
+            - {name: KAFKA_JVM_PERFORMANCE_OPTS, value: "-XX:+ExitOnOutOfMemoryError"}
+          startupProbe:
+            tcpSocket: {port: broker}
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            tcpSocket: {port: broker}
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: {port: broker}
+            periodSeconds: 15
+            failureThreshold: 6
+          resources:
+            {{- toYaml .Values.runtime.kafka.resources | nindent 12 }}
+          volumeMounts:
+            - {name: data, mountPath: /var/lib/kafka/data}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        storageClassName: {{ .Values.runtime.kafka.persistence.storageClass | quote }}
+        resources:
+          requests:
+            storage: {{ .Values.runtime.kafka.persistence.size | quote }}
+{{- end }}

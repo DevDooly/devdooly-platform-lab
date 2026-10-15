@@ -13,6 +13,7 @@ spec:
       releaseName: lab
       valueFiles:
         - ../../../gitops/environments/home-lab/values.yaml
+        - ../../../gitops/environments/home-lab/runtime.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: platform-lab

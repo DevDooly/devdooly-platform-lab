@@ -1,5 +1,7 @@
 # 설치와 운영 전환 검증
 
+기존 활성 서버에 작업·export 관측을 추가할 때는 아래의 초기 설치를 반복하지 않고 [작업 관측 전환 절차](JOBS_AUTOMATION.md)를 따른다. 새 Pages v2 workflow를 먼저 반영하고 실제 MINI_PC HTTP 응답을 확인한 뒤 root 코드와 선택 설정을 함께 갱신한다. unit·PAT·RBAC를 확대하지 않는다.
+
 초기 설치에서는 root 소유 실행 파일·private 설정·unit의 비활성 배치와 `systemd-analyze verify`, `daemon-reload`까지만 완료했습니다. 당시 timer는 disabled·inactive이고 전용 Pages 자격증명은 없었으며 토큰 내용 읽기·host cycle dispatch·timer enable/start를 수행하지 않았습니다. 초기 Ubuntu 격리 환경의 자동화 검사 33개 통과 이후, 정책 검사 2개를 추가한 35개가 root·일반 사용자 환경에서 각각 모두 통과했고 제외 항목은 0개였습니다.
 
 2026년 10월 12일 KST에 전용 Pages 자격증명을 등록해 수동 host cycle·실제 systemd service·timer 최초 자동 실행의 Pages 게시와 전체 공개 JSON 일치를 확인했습니다. 이후 최초 자동 실행을 포함한 11회가 모두 Pages build·deploy success였고 실제 서비스 완료 간격 1825.569287~1875.101367초를 확인했습니다. timer는 enabled·active입니다. 초기 설치·최초 실행·후속 반복 검증을 [공개 검증 기록](../../docs/evidence/platform-observation/README.md)에 구분합니다. 자격증명 scope 조회·만료·회전과 장기간 운영은 별도 검증으로 남아 있습니다.

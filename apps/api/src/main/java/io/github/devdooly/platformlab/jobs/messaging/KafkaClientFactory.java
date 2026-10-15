@@ -2,7 +2,7 @@ package io.github.devdooly.platformlab.jobs.messaging;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.regex.Pattern;
+import io.github.devdooly.platformlab.jobs.LabClientEndpoints;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -13,9 +13,8 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 
-/** Explicit opt-in clients for a loopback-only isolated PLAINTEXT lab, never application beans. */
+/** Explicit opt-in PLAINTEXT clients for numeric loopback or a full Kubernetes ClusterIP service DNS. */
 public final class KafkaClientFactory {
-    private static final Pattern LOOPBACK = Pattern.compile("127\\.0\\.0\\.1:([0-9]{1,5})");
     private KafkaClientFactory() {}
 
     public static Producer<String, String> producer(String bootstrap) {
@@ -74,11 +73,7 @@ public final class KafkaClientFactory {
     }
 
     private static LinkedHashMap<String, Object> baseProperties(String bootstrap) {
-        var match = bootstrap == null ? null : LOOPBACK.matcher(bootstrap);
-        if (match == null || !match.matches() || Integer.parseInt(match.group(1)) < 1
-            || Integer.parseInt(match.group(1)) > 65535) {
-            throw new IllegalArgumentException("This isolated lab requires one explicit 127.0.0.1 bootstrap port");
-        }
+        LabClientEndpoints.requireKafkaBootstrap(bootstrap);
         var properties = new LinkedHashMap<String, Object>();
         properties.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, bootstrap);
         properties.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "PLAINTEXT");

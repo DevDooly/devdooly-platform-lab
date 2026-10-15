@@ -6,6 +6,15 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.*;
 
 class KafkaClientFactoryTest {
+    @Test void fullKubernetesServiceDnsPreservesAcknowledgementAndManualOffsetConfiguration() {
+        String address = "kafka.platform-lab.svc.cluster.local:9092";
+        assertThat(KafkaClientFactory.producerProperties(address)).containsEntry("bootstrap.servers", address)
+            .containsEntry(ProducerConfig.ACKS_CONFIG, "all").containsEntry(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
+        assertThat(KafkaClientFactory.runtimeConsumerProperties(address, "platform-lab-runtime"))
+            .containsEntry(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false).containsEntry(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1)
+            .containsEntry(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 600000);
+    }
+
     @Test void continuousRuntimeChangesOnlyTheBoundedPollInterval() {
         var baseline = new java.util.LinkedHashMap<>(KafkaClientFactory.consumerProperties("127.0.0.1:19092", "unit-runtime"));
         var runtime = KafkaClientFactory.runtimeConsumerProperties("127.0.0.1:19092", "unit-runtime");

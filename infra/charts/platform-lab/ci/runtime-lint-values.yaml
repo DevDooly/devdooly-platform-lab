@@ -1,0 +1,15 @@
+# LINT/RENDER ONLY: fake worker image and Secret names; never deploy this fixture.
+runtime:
+  kafka:
+    enabled: true
+    existingSecret: lint-kafka-do-not-install
+  garage:
+    enabled: true
+    existingConfigSecret: lint-garage-do-not-install
+  worker:
+    enabled: true
+    image:
+      repository: example.invalid/lint-only/worker
+      digest: sha256:3333333333333333333333333333333333333333333333333333333333333333
+    sourceCommit: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    existingS3Secret: lint-s3-do-not-install
