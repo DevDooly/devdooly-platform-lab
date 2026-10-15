@@ -27,6 +27,8 @@ class SourceStagingIntegrationTest {
     @Autowired ApplicationContext context;
     private final byte[] bytes = CanonicalSource.fixtureBytes();
 
+    @org.junit.jupiter.api.BeforeEach void resetOwnAdmissionClock() { AdmissionTestFixtures.makeEligible(jdbc); }
+
     @AfterEach void cleanOwnFixtures() {
         new TransactionTemplate(transactionManager).executeWithoutResult(ignored -> {
             var occupied = jdbc.queryForObject("SELECT occupied_run_id FROM lab_job_slot WHERE id = 1 FOR UPDATE", String.class);
@@ -141,6 +143,7 @@ class SourceStagingIntegrationTest {
         assertThatThrownBy(() -> stage.stage(RUN, SyntheticScenario.NAME, bytes)).isInstanceOf(LabJobService.JobStateException.class);
         verifyNoInteractions(sources);
         cleanOwnFixtures();
+        AdmissionTestFixtures.makeEligible(jdbc);
         prepared = jobs.prepareSource(RUN, SyntheticScenario.NAME, bytes);
         jobs.markSourceVerified(RUN, prepared.sourceSha256()); jobs.process(RUN, prepared.sourceSha256());
         jobs.terminate(RUN, prepared.sourceSha256());

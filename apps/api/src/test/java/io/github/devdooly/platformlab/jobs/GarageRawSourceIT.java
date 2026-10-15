@@ -69,7 +69,7 @@ class GarageRawSourceIT {
         store = new S3RawSourceStore(s3, bucket);
     }
 
-    @BeforeEach void ownUniqueRunPrefix() { runId = "s3-it-" + UUID.randomUUID(); }
+    @BeforeEach void ownUniqueRunPrefix() { io.github.devdooly.platformlab.jobs.AdmissionTestFixtures.makeEligible(jdbc); runId = "s3-it-" + UUID.randomUUID(); }
 
     @Test void realSdkPutGetHeadListDeleteAndStoreRetryVerifyActualBytes() {
         var job = jobs.prepareSource(runId, SyntheticScenario.NAME, bytes);

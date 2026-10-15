@@ -29,6 +29,7 @@ class FixedFixtureStagerTest {
         @Override public void close() {}
     };
     @BeforeEach void resetOwnJournal() {
+        io.github.devdooly.platformlab.jobs.AdmissionTestFixtures.makeEligible(jdbc);
         states = new RuntimeStateStore(jdbc, Clock.systemUTC());
         jdbc.update("UPDATE lab_runtime SET status='NOT_STARTED',stage='IDLE',failure_code=NULL,source_commit='unknown',started_at=NULL,heartbeat_at=NULL,stopped_at=NULL WHERE id=1");
     }

@@ -76,6 +76,7 @@ public class LabJobService {
             if (jdbc.queryForObject("SELECT COUNT(*) FROM demo_run WHERE id = ?", Long.class, runId) != 0) {
                 throw new SourceConflictException();
             }
+            reserveAdmissionCooldown();
             update("""
                 INSERT INTO lab_job (run_id, scenario_version, source_sha256, source_bytes, source_size,
                     status, export_status, created_at) VALUES (?, ?, ?, ?, ?, 'STAGING', 'NOT_REQUESTED', ?)
@@ -209,6 +210,31 @@ public class LabJobService {
         return jdbc.query("SELECT * FROM lab_outbox WHERE status = 'PENDING' ORDER BY id LIMIT ?", this::mapOutbox, limit);
     }
 
+    /** Called only after slot/job locks and validation; no external I/O occurs in this transaction.
+     * Existing run retries and occupied-slot rejection never spend a new admission. The policy is
+     * durable DB configuration, not a per-process setting. Use a fresh SQL statement after all locks
+     * so a contender cannot decide eligibility from a timestamp captured before waiting.
+     */
+    private void reserveAdmissionCooldown() {
+        var policies = jdbc.query("SELECT cooldown_seconds, last_admitted_at, next_admission_at FROM lab_admission_policy WHERE id = 1 FOR UPDATE",
+            (rows, index) -> new AdmissionPolicy(rows.getInt("cooldown_seconds"), instant(rows, "last_admitted_at"), instant(rows, "next_admission_at")));
+        if (policies.size() != 1) { throw new IllegalStateException("Singleton admission policy is missing"); }
+        var policy = policies.getFirst();
+        if (policy.cooldownSeconds() < 1 || policy.cooldownSeconds() > 3600
+            || (policy.lastAdmittedAt() == null) != (policy.nextAdmissionAt() == null)
+            || (policy.lastAdmittedAt() != null && !policy.nextAdmissionAt().isAfter(policy.lastAdmittedAt()))) {
+            throw new IllegalStateException("Admission policy is invalid");
+        }
+        int changed = jdbc.update("""
+            UPDATE lab_admission_policy
+            SET last_admitted_at = CURRENT_TIMESTAMP(6),
+                next_admission_at = TIMESTAMPADD(SECOND, cooldown_seconds, CURRENT_TIMESTAMP(6))
+            WHERE id = 1 AND (next_admission_at IS NULL OR next_admission_at <= CURRENT_TIMESTAMP(6))
+            """);
+        if (changed != 1) { throw new AdmissionCooldownException(); }
+    }
+    private record AdmissionPolicy(int cooldownSeconds, Instant lastAdmittedAt, Instant nextAdmissionAt) {}
+
     private String lockSlot() {
         List<String> rows = jdbc.query("SELECT occupied_run_id FROM lab_job_slot WHERE id = 1 FOR UPDATE", (rs, index) -> rs.getString(1));
         if (rows.size() != 1) { throw new IllegalStateException("Singleton admission slot is missing"); }
@@ -277,6 +303,10 @@ public class LabJobService {
     private static Calendar utcCalendar() { return Calendar.getInstance(TimeZone.getTimeZone("UTC")); }
     public static class SourceConflictException extends RuntimeException {}
     public static class SlotBusyException extends RuntimeException {}
+    /** A fixed internal CLI rejection; callers must not sleep/resubmit automatically. */
+    public static final class AdmissionCooldownException extends RuntimeException {
+        public AdmissionCooldownException() { super("ADMISSION_COOLDOWN"); }
+    }
     public static class JobNotFoundException extends RuntimeException {}
     public static class JobStateException extends RuntimeException {}
 }

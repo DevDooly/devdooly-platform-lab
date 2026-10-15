@@ -51,6 +51,7 @@ class JobObservationIntegrationTest {
         jdbc.update("DELETE FROM lab_outbox"); jdbc.update("DELETE FROM lab_job");
         jdbc.update("DELETE FROM demo_outcome"); jdbc.update("DELETE FROM demo_run");
         jdbc.update("UPDATE lab_runtime SET status = 'NOT_STARTED', stage = 'IDLE', failure_code = NULL, started_at = NULL, heartbeat_at = NULL, stopped_at = NULL, source_commit = 'unknown' WHERE id = 1");
+        io.github.devdooly.platformlab.jobs.AdmissionTestFixtures.makeEligible(jdbc);
     }
 
     @Test void defaultHttpDoesNotCreateKafkaS3OrRuntimeAndHasNoPublicWrite() throws Exception {
@@ -108,6 +109,7 @@ class JobObservationIntegrationTest {
     @Test void cancelledCompletedJobDoesNotClaimVerifiedFilesAndNextSlotOwnerRemainsVisible() throws Exception {
         var job = jobs.prepareSource("observe-cancel", SyntheticScenario.NAME, sourceBytes());
         jobs.markSourceVerified(job.runId(), job.sourceSha256()); jobs.process(job.runId(), job.sourceSha256()); jobs.terminate(job.runId(), job.sourceSha256());
+        io.github.devdooly.platformlab.jobs.AdmissionTestFixtures.makeEligible(jdbc);
         jobs.prepareSource("observe-next", SyntheticScenario.NAME, sourceBytes());
         var document = json.readTree(get().body());
         assertThat(document.get("slot").get("occupiedRunId").asText()).isEqualTo("observe-next");
@@ -120,6 +122,7 @@ class JobObservationIntegrationTest {
 
     @Test void latestListIsBoundedAndDoesNotMutatePastJobRows() throws Exception {
         for (int index = 0; index < 23; index++) {
+            io.github.devdooly.platformlab.jobs.AdmissionTestFixtures.makeEligible(jdbc);
             var job = jobs.prepareSource("observe-bounded-" + String.format("%02d", index), SyntheticScenario.NAME, sourceBytes());
             jobs.terminate(job.runId(), job.sourceSha256());
         }
