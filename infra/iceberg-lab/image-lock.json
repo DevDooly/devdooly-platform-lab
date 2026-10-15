@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "scope": "REGISTRY_METADATA_ONLY",
+  "capturedAt": "2026-10-15T12:04:30.652984+00:00",
+  "images": {
+    "trino": {
+      "repository": "trinodb/trino",
+      "versionTag": "483",
+      "reference": "docker.io/trinodb/trino@sha256:db58cc93e593a2706553745f276bb119c9810e69918be56ecde088ba7ccb0534",
+      "indexDigest": "sha256:db58cc93e593a2706553745f276bb119c9810e69918be56ecde088ba7ccb0534",
+      "amd64ManifestDigest": "sha256:fca43d1fdfdcd45f36b791f7117a47f8ce69c58232e5398bfdb8539cd28e778b",
+      "configDigest": "sha256:1a95bd13a3771179e2859fba98fc5831091a82f65ca12d193144be40d3bbd921",
+      "platform": "linux/amd64",
+      "configUser": "trino:trino",
+      "entrypoint": null,
+      "command": [
+        "/usr/lib/trino/bin/run-trino"
+      ],
+      "labels": {
+        "architecture": "x86_64",
+        "build-date": "2026-06-30T05:26:23Z",
+        "com.redhat.component": "ubi10-micro-container",
+        "com.redhat.license_terms": "https://www.redhat.com/en/about/red-hat-end-user-license-agreements#UBI",
+        "cpe": "cpe:/o:redhat:enterprise_linux:10.2",
+        "description": "Very small image which doesn't install the package manager.",
+        "distribution-scope": "public",
+        "io.buildah.version": "1.44.0",
+        "io.k8s.description": "Very small image which doesn't install the package manager.",
+        "io.k8s.display-name": "Red Hat Universal Base Image 10 Micro",
+        "io.openshift.expose-services": "",
+        "maintainer": "Red Hat, Inc.",
+        "name": "ubi10/ubi-micro",
+        "org.opencontainers.image.created": "2026-06-30T05:26:23Z",
+        "org.opencontainers.image.revision": "361d6894432a9d546c936ce96df22f5bf0601fe0",
+        "release": "1782797142",
+        "summary": "ubi10 micro image",
+        "url": "https://catalog.redhat.com/en/search?searchType=containers",
+        "vcs-ref": "361d6894432a9d546c936ce96df22f5bf0601fe0",
+        "vcs-type": "git",
+        "vendor": "Red Hat, Inc.",
+        "version": "10.2"
+      },
+      "declaredEnvironment": {
+        "JAVA_HOME": "/usr/lib/jvm/jdk-25.0.3+9",
+        "CATALOG_MANAGEMENT": "static"
+      },
+      "anonymousRegistryRead": true,
+      "layersPulled": false,
+      "containerStarted": false
+    },
+    "postgres": {
+      "repository": "library/postgres",
+      "versionTag": "17.11-bookworm",
+      "reference": "docker.io/library/postgres@sha256:3645570cccdfa447589da9f57dd740faa29b30938e861289a5574b6ca6b03826",
+      "indexDigest": "sha256:3645570cccdfa447589da9f57dd740faa29b30938e861289a5574b6ca6b03826",
+      "amd64ManifestDigest": "sha256:66aafa11cf15800a3c94763f7e11d1e7b2e37e5e84bc4ce027cb6e1e4bfaf4df",
+      "configDigest": "sha256:589f742565e4f6d22149176b032974f55f8201a8a37b71ed587ec5c6902e689f",
+      "platform": "linux/amd64",
+      "configUser": "",
+      "entrypoint": [
+        "docker-entrypoint.sh"
+      ],
+      "command": [
+        "postgres"
+      ],
+      "labels": {},
+      "declaredEnvironment": {
+        "PG_MAJOR": "17",
+        "PG_VERSION": "17.11-1.pgdg12+2",
+        "PGDATA": "/var/lib/postgresql/data"
+      },
+      "anonymousRegistryRead": true,
+      "layersPulled": false,
+      "containerStarted": false
+    }
+  },
+  "runtimeCompatibilityVerified": false
+}

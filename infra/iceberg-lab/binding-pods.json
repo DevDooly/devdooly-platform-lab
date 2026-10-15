@@ -1,0 +1,168 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "bind-postgres",
+        "labels": {
+          "devdooly.io/purpose": "iceberg-jdbc-trial",
+          "devdooly.io/operation": "20261016-plan2",
+          "app.kubernetes.io/component": "binding"
+        },
+        "namespace": "platform-lab-iceberg-plan2-20261016"
+      },
+      "spec": {
+        "automountServiceAccountToken": false,
+        "enableServiceLinks": false,
+        "serviceAccountName": "iceberg-trial",
+        "terminationGracePeriodSeconds": 300,
+        "securityContext": {
+          "runAsNonRoot": true,
+          "runAsUser": 999,
+          "runAsGroup": 999,
+          "fsGroup": 999,
+          "fsGroupChangePolicy": "OnRootMismatch",
+          "seccompProfile": {
+            "type": "RuntimeDefault"
+          }
+        },
+        "containers": [
+          {
+            "name": "bind",
+            "image": "docker.io/library/postgres@sha256:3645570cccdfa447589da9f57dd740faa29b30938e861289a5574b6ca6b03826",
+            "imagePullPolicy": "IfNotPresent",
+            "command": [
+              "/bin/bash",
+              "-c",
+              "exit 0"
+            ],
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "readOnlyRootFilesystem": true,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              }
+            },
+            "resources": {
+              "requests": {
+                "cpu": "100m",
+                "memory": "64Mi",
+                "ephemeral-storage": "256Mi"
+              },
+              "limits": {
+                "cpu": "100m",
+                "memory": "64Mi",
+                "ephemeral-storage": "1Gi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "data",
+                "mountPath": "/volume"
+              }
+            ]
+          }
+        ],
+        "volumes": [
+          {
+            "name": "data",
+            "persistentVolumeClaim": {
+              "claimName": "postgres-data"
+            }
+          }
+        ],
+        "nodeSelector": {
+          "kubernetes.io/arch": "amd64",
+          "kubernetes.io/os": "linux"
+        },
+        "restartPolicy": "Never"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "bind-trino",
+        "labels": {
+          "devdooly.io/purpose": "iceberg-jdbc-trial",
+          "devdooly.io/operation": "20261016-plan2",
+          "app.kubernetes.io/component": "binding"
+        },
+        "namespace": "platform-lab-iceberg-plan2-20261016"
+      },
+      "spec": {
+        "automountServiceAccountToken": false,
+        "enableServiceLinks": false,
+        "serviceAccountName": "iceberg-trial",
+        "terminationGracePeriodSeconds": 300,
+        "securityContext": {
+          "runAsNonRoot": true,
+          "runAsUser": 1000,
+          "runAsGroup": 1000,
+          "fsGroup": 1000,
+          "fsGroupChangePolicy": "OnRootMismatch",
+          "seccompProfile": {
+            "type": "RuntimeDefault"
+          }
+        },
+        "containers": [
+          {
+            "name": "bind",
+            "image": "docker.io/trinodb/trino@sha256:db58cc93e593a2706553745f276bb119c9810e69918be56ecde088ba7ccb0534",
+            "imagePullPolicy": "IfNotPresent",
+            "command": [
+              "/bin/bash",
+              "-c",
+              "exit 0"
+            ],
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "readOnlyRootFilesystem": true,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              }
+            },
+            "resources": {
+              "requests": {
+                "cpu": "100m",
+                "memory": "64Mi",
+                "ephemeral-storage": "256Mi"
+              },
+              "limits": {
+                "cpu": "100m",
+                "memory": "64Mi",
+                "ephemeral-storage": "1Gi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "data",
+                "mountPath": "/volume"
+              }
+            ]
+          }
+        ],
+        "volumes": [
+          {
+            "name": "data",
+            "persistentVolumeClaim": {
+              "claimName": "trino-data"
+            }
+          }
+        ],
+        "nodeSelector": {
+          "kubernetes.io/arch": "amd64",
+          "kubernetes.io/os": "linux"
+        },
+        "restartPolicy": "Never"
+      }
+    }
+  ]
+}

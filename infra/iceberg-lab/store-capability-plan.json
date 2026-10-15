@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "PREPARED_NOT_RUN",
+  "bucket": "platform-lab-iceberg-plan2-20261016",
+  "region": "garage",
+  "requestRetries": 0,
+  "smallObject": {
+    "key": "capability/metadata.json",
+    "body": "{\"fixture\":\"phase6\",\"schemaVersion\":1}\n"
+  },
+  "multipart": {
+    "key": "capability/multipart-6m.bin",
+    "bytes": 6291456,
+    "sha256": "e338caefa380bafe02a98dac6b2865a8c4783d80f5d813906abd01c250463d70",
+    "parts": [
+      {
+        "number": 1,
+        "bytes": 5242880,
+        "sha256": "2e7cab6314e9614b6f2da12630661c3038e5592025f6534ba5823c3b340a1cb6"
+      },
+      {
+        "number": 2,
+        "bytes": 1048576,
+        "sha256": "fbbab289f7f94b25736c58be46a994c441fd02552cc6022352e3d86d2fab7c83"
+      }
+    ]
+  },
+  "ranges": [
+    {
+      "start": 0,
+      "endInclusive": 255,
+      "expectedStatus": 206,
+      "contentRange": "bytes 0-255/6291456",
+      "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+    },
+    {
+      "start": 5242864,
+      "endInclusive": 5242895,
+      "expectedStatus": 206,
+      "contentRange": "bytes 5242864-5242895/6291456",
+      "sha256": "b92e87964e56e1bd6dff0c29cc1fbd767cc76084ee6c3e393c130ecfbe904807"
+    }
+  ],
+  "requiredMethods": [
+    "PutObject",
+    "HeadObject",
+    "GetObject",
+    "CreateMultipartUpload",
+    "UploadPart",
+    "CompleteMultipartUpload",
+    "ListObjectsV2"
+  ],
+  "etagIsSha256": false,
+  "deleteOrAbortPlanned": false,
+  "trinoNativePathVerified": false
+}
