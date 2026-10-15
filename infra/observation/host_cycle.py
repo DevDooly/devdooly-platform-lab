@@ -15,7 +15,7 @@ import sys
 import tempfile
 from urllib.parse import urlsplit
 
-from pages_uploader import (AutomationError, dispatch, load_snapshot, path_chain, public_report, regular_private)
+from pages_uploader import (AutomationError, atomic_private_json, dispatch, load_job_snapshot, load_snapshot, path_chain, public_report, regular_private)
 
 CONFIG_KEYS={'k3s_path','kubeconfig','server','ca_file','collector_path','state_directory',
              'runtime_directory','pages_token_file'}
@@ -44,14 +44,18 @@ def read_config(path: Path) -> dict:
     try:
         with path.open('rb') as handle:raw=handle.read(8193)
         config=json.loads(raw)
-        if len(raw)>8192 or not isinstance(config,dict) or set(config)!=CONFIG_KEYS:raise ValueError
+        if len(raw)>8192 or not isinstance(config,dict) or set(config) not in (CONFIG_KEYS,CONFIG_KEYS|{'jobs_enabled'}):raise ValueError
         if any(not isinstance(value,str) or not value or '\n' in value for value in config.values()):raise ValueError
+        if config.get('jobs_enabled','false') not in {'true','false'}:raise ValueError
         loopback_server(config['server'])
         for key in CONFIG_KEYS-{'server'}:
             if not Path(config[key]).is_absolute():raise ValueError
         if Path(config['k3s_path']).name!='k3s':raise ValueError
         for key in ('k3s_path','collector_path'):root_code(Path(config[key]))
         root_code(Path(config['collector_path']).with_name('platform_contract.py'))
+        if config.get('jobs_enabled')=='true':
+            for name in ('job_collector.py','job_contract.py','pages_uploader.py'):
+                root_code(Path(config['collector_path']).with_name(name))
         regular_private(Path(config['kubeconfig']),owner_root=True)
         # The public CA is still supplied explicitly; no insecure TLS fallback.
         root_code(Path(config['ca_file']))
@@ -116,8 +120,29 @@ def run_cycle(config: dict, *, runner=subprocess.run, uploader=dispatch, lock_cl
             snapshot=load_snapshot(output,datetime.now(timezone.utc))
             completed=datetime.fromisoformat(snapshot['latestAttempt']['attemptedAt'].replace('Z','+00:00'))
             if completed<started:return public_report('CAPTURE_FAILED')
+            jobs=None
+            if config.get('jobs_enabled')=='true':
+                job_output=state/'jobs-observation.json'
+                code='JOB_CAPTURE_FAILED'
+                try:
+                    job_capture=runner([sys.executable,'-B',str(Path(config['collector_path']).with_name('job_collector.py')),
+                        '--server',config['server'],'--ca-file',config['ca_file'],
+                        '--token-file',str(token_path),'--output',str(job_output),'--deadline-seconds','15'],
+                        stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=20,check=False,env=SAFE_ENV)
+                    if job_capture.returncode==0:
+                        candidate=load_job_snapshot(job_output,datetime.now(timezone.utc))
+                        captured_at=datetime.fromisoformat(candidate['capturedAt'].replace('Z','+00:00'))
+                        if captured_at>=started:jobs=candidate;code='NONE'
+                except Exception:pass
+                # Failure does not rewrite the last job record or block a valid
+                # platform envelope. Missing input makes Pages retain last-good.
+                atomic_private_json(state/'jobs-capture.json',{'attemptedAt':datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),
+                    'status':'success' if jobs is not None else 'failure','errorCode':code,
+                    'capturedAt':jobs['capturedAt'] if jobs is not None else None})
             # A valid collection-failure envelope is publishable: it preserves
             # lastSuccess and honestly shows the most recent failed attempt.
+            if jobs is not None:
+                return uploader(snapshot,Path(config['pages_token_file']),state/'pages-dispatch.json',job_snapshot=jobs)
             return uploader(snapshot,Path(config['pages_token_file']),state/'pages-dispatch.json')
         except subprocess.TimeoutExpired:return public_report('CAPTURE_TIMEOUT')
         finally:

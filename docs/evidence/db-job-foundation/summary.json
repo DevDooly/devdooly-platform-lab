@@ -1,0 +1,187 @@
+{
+  "schemaVersion": 1,
+  "verifiedAt": "2026-10-12T07:40:20.326176Z",
+  "scope": "internal DB job/outbox foundation; isolated validation; not deployed",
+  "baseCommit": "47f479bb4d572a67bc51910b35c14201af95f934",
+  "validatedFilesSha256Utf8Lf": {
+    "apps/api/src/main/java/io/github/devdooly/platformlab/demo/DemoRun.java": "fae3e1f921b61bd80e42507d65cd17230159b62feb0b3d8815e48042639cab39",
+    "apps/api/src/main/java/io/github/devdooly/platformlab/demo/DemoService.java": "1d4e16a5d8d3139ace6f4027791f15188a218f326c715f94da85491d65f66c5d",
+    "apps/api/src/main/java/io/github/devdooly/platformlab/demo/SampleBootstrap.java": "0b3763a3774f7f9c2e7742ddb667a2574c9e4364c1072467bc8c2bca727fcb85",
+    "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/CanonicalSource.java": "ca13afe5fc57a062cf913bddafe1a496715569ea6dacca49692af999a7ff10c4",
+    "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/LabJobService.java": "75098ab8371320417bfdd08cabe9336a6b2e856c98a3f8c22d262895665af121",
+    "apps/api/src/main/resources/db/migration/V2__create_lab_job_outbox.sql": "a461ddd8fe62067e19ddc7b2fc32577aa253b0981f6f5ac5cfb50233b1b12bc0",
+    "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/CanonicalSourceTest.java": "f421afab05db59269412386633f5544aea9b1c58ae44011873be7d0e2e325079",
+    "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/LabJobContractTests.java": "a845906c67f972ecda89caac13c0295f9218e5eab6fe4f5e5e00930647897c81",
+    "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/LabJobIntegrationTest.java": "744d28dc2cab7f51e40875744af01f536a5aeb75a44f3fbebe3e7ef3f837d92c",
+    "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/MariaDbLabJobIT.java": "85d3011a8e52d3ba1b8a2d81b3223c22f2c7a917933fa8d646d2d9e4ff6501b4",
+    "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/SampleBootstrapProfileTest.java": "2ca5bdb31277f51fac37836163d269b902f2167e5e20de434a20988fd9cacdc8",
+    "apps/api/src/test/resources/application-db-test.yml": "c0208e26c36861e77e042e859e69147fce2fb723b9d0bcbda2c5587778c64a9a"
+  },
+  "runtime": {
+    "javaMajor": 21,
+    "jvmTimezone": "Asia/Seoul",
+    "mariaDbVersion": "11.8.9-MariaDB-ubu2404",
+    "mariaDbImageDigest": "sha256:6422478cb8e159f080fb1d8ccf65101e26fe51385787fde7d16c3b165a331f15"
+  },
+  "defaultVerify": {
+    "tests": 35,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "jarPackaged": true
+  },
+  "mariaDbTestExecutions": [
+    {
+      "database": "MariaDB",
+      "databaseVariant": "upgrade",
+      "jvmTimezone": "Asia/Seoul",
+      "tests": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": true,
+      "failedTests": []
+    },
+    {
+      "database": "MariaDB",
+      "databaseVariant": "fresh",
+      "jvmTimezone": "Asia/Seoul",
+      "tests": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": true,
+      "failedTests": []
+    },
+    {
+      "database": "MariaDB",
+      "databaseVariant": "repeat-retry",
+      "jvmTimezone": "Asia/Seoul",
+      "tests": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": true,
+      "failedTests": []
+    }
+  ],
+  "interruptedExecution": {
+    "databaseVariant": "repeat",
+    "tests": 17,
+    "failures": 0,
+    "errors": 11,
+    "skipped": 0,
+    "passed": false,
+    "reason": "SSH_CONNECTION_RESET",
+    "retryPassed": true
+  },
+  "migrationAndSeed": {
+    "seedAndV1MigrationUnchanged": true,
+    "databaseVersion": "11.8.9-MariaDB-ubu2404",
+    "databases": {
+      "upgrade": {
+        "migrationsOneAndTwoSuccessfulOnce": true,
+        "singletonSlotFree": true,
+        "testJobsAndOutboxRemoved": true,
+        "oneSeedWithTwelveOutcomes": true
+      },
+      "fresh": {
+        "migrationsOneAndTwoSuccessfulOnce": true,
+        "singletonSlotFree": true,
+        "testJobsAndOutboxRemoved": true,
+        "oneSeedWithTwelveOutcomes": true
+      }
+    }
+  },
+  "oldImageCompatibility": {
+    "oldProductionImageStartsAfterV2": true,
+    "seedSqlAndPersistedApiUnchanged": true,
+    "onlyApiObservationTimeExcluded": true,
+    "publicPostStill405": true,
+    "v2SuccessfulOnce": true
+  },
+  "productionPreservation": {
+    "observedBefore": "2026-10-12T07:15:15.466924+00:00",
+    "observedAfter": "2026-10-12T07:40:06.060333+00:00",
+    "sourceCommit": "41897dbb9d2a38537f1d06928dcd01273d64be4d",
+    "gitopsRevision": "47f479bb4d572a67bc51910b35c14201af95f934",
+    "apiImageDigest": "sha256:57c7fcbaf266eda7402831df95a12d4cabfab250071a75eaf4d8d1855f1296cb",
+    "webImageDigest": "sha256:012f955d4d85178c95c09c2dfee4b4ec858b3b87a1ac5216f53e81aca9e591f8",
+    "labPodCount": 3,
+    "productionPvcCount": 2,
+    "existingRunningDockerCount": 23,
+    "existingDockerTotalCount": 35,
+    "counts": {
+      "inputCount": 12,
+      "successCount": 7,
+      "failureCount": 3,
+      "duplicateCount": 2,
+      "pendingCount": 0
+    },
+    "checks": {
+      "threeLabPodsReady": true,
+      "canonicalTwelveResults": true,
+      "persistedRunAndEventTimesPresent": true,
+      "argoSyncedHealthyAtExpectedRevision": true,
+      "apiSourceAndDigestMatch": true,
+      "podSpecsMatchPins": true,
+      "ociContentDigestsAndAmd64Relationship": true,
+      "criConfigMatchesAmd64Manifest": true,
+      "sqlStableDuringObservation": true,
+      "dockerAllRunning": true,
+      "productionPvcUidsBindingsAndStorageUnchanged": true,
+      "databasePodImageAndMountsUnchanged": true,
+      "allSqlRowsTimestampsAndFlywayUnchanged": true,
+      "allPersistedApiFieldsExceptObservedAtUnchanged": true,
+      "existingDockerIdsMountsStartTimesUnchanged": true,
+      "hostBootUnchanged": true,
+      "nodesUnchanged": true,
+      "ufwUnchanged": true,
+      "originalApiWebPinsAndSourceRestored": true
+    },
+    "checkScope": {
+      "dockerAllRunning": "the 23 originally running containers; total existing containers are 35",
+      "originalApiWebPinsAndSourceRestored": "same production pins before and after isolated tests; no deployment or rollback performed"
+    }
+  },
+  "cleanup": {
+    "isolatedTestResourcesRemoved": true,
+    "allExistingDockerContainerIdsUnchanged": true,
+    "existingContainerCount": 35,
+    "privateEvidenceRetained": true
+  },
+  "externalAdapterVerification": {
+    "kafka": false,
+    "s3": false,
+    "offsetCommit": false,
+    "resultFilesExported": false
+  },
+  "productionV2Applied": false,
+  "continuousIntegration": {
+    "runId": 38219180199,
+    "runUrl": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38219180199",
+    "testedSourceCommit": "c5c1e8589f34e42b99576c935a00c868f26ff407",
+    "branch": "feat/db-job-foundation",
+    "status": "completed",
+    "conclusion": "success",
+    "apiTests": 35,
+    "jobConclusion": "success",
+    "composeBeforeCapturedAt": "2026-10-12T07:43:09.398Z",
+    "composeAfterCapturedAt": "2026-10-12T07:43:20.628Z",
+    "counts": {
+      "inputCount": 12,
+      "successCount": 7,
+      "failureCount": 3,
+      "duplicateCount": 2,
+      "pendingCount": 0
+    },
+    "publicPostStatus": 405,
+    "checks": {
+      "apiContainerRecreated": true,
+      "apiAddressChanged": true,
+      "nginxContainerUnchanged": true,
+      "persistedSampleUnchanged": true
+    },
+    "scope": "branch CI container validation; no production rollout; later documentation-only changes retain the same implementation fingerprints"
+  }
+}

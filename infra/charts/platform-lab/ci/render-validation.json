@@ -1,5 +1,5 @@
 {
-  "verifiedAt": "2026-10-11",
+  "verifiedAt": "2026-10-15",
   "scope": "LOCAL_FIXTURE_HELM_RENDER_ONLY",
   "helmVersion": "v4.3.0+gbec5b06",
   "kubernetesVersionForRendering": "1.36.5",
@@ -42,7 +42,7 @@
     "public ingress enabled",
     "reuse another storage class"
   ],
-  "renderedFixtureSha256": "bdb5070d55a256fccd0e50252934cef1be16af357697f274188bb652e4f6f2ee",
+  "renderedFixtureSha256": "1d0424193c1fd61bfe1810398b0c7a2e3b69d8e5b5cead3cd14bc80ea1a34be1",
   "appImagesPublished": false,
   "containerRuntimeVerified": false,
   "mariadbIntegrationVerified": false,

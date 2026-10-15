@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 
 @Service
 public class DemoService {
@@ -18,8 +19,16 @@ public class DemoService {
         if (runs.existsById(SyntheticScenario.RUN_ID)) { return; }
         var started = clock.instant();
         var result = new SensorProcessor().process(SyntheticScenario.events());
-        runs.saveAndFlush(new DemoRun(result, started, clock.instant()));
-        outcomes.saveAll(result.outcomes().stream().map(outcome -> new DemoOutcome(SyntheticScenario.RUN_ID, outcome)).toList());
+        persistProcessedRun(SyntheticScenario.RUN_ID, "합성 센서 품질 검증", SyntheticScenario.NAME,
+            SyntheticScenario.SEED, result, started, clock.instant());
+    }
+
+    /** Persist one complete result inside the caller's job transaction. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void persistProcessedRun(String runId, String runName, String scenarioVersion, long seed,
+                                    SensorProcessor.Result result, Instant started, Instant completed) {
+        runs.saveAndFlush(new DemoRun(runId, runName, scenarioVersion, seed, result, started, completed));
+        outcomes.saveAllAndFlush(result.outcomes().stream().map(outcome -> new DemoOutcome(runId, outcome)).toList());
     }
 
     @Transactional(readOnly = true)

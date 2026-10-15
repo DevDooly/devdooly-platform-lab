@@ -7,7 +7,8 @@
     "web",
     "database",
     "imagePullSecrets",
-    "ingress"
+    "ingress",
+    "runtime"
   ],
   "properties": {
     "api": {
@@ -17,7 +18,8 @@
         "replicaCount",
         "image",
         "sourceCommit",
-        "resources"
+        "resources",
+        "environment"
       ],
       "properties": {
         "replicaCount": {
@@ -105,6 +107,13 @@
               }
             }
           }
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "k3s",
+            "mini-pc"
+          ]
         }
       }
     },
@@ -369,6 +378,522 @@
           ]
         }
       }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kafka",
+        "garage",
+        "worker"
+      ],
+      "properties": {
+        "kafka": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "replicaCount",
+            "image",
+            "existingSecret",
+            "clusterIdKey",
+            "persistence",
+            "resources"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "replicaCount": {
+              "type": "integer",
+              "const": 1
+            },
+            "image": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "repository",
+                "digest",
+                "tag"
+              ],
+              "properties": {
+                "repository": {
+                  "type": "string",
+                  "const": "apache/kafka"
+                },
+                "digest": {
+                  "type": "string",
+                  "const": "sha256:ccd1314e47ec76909e01f86308b4dcf2064f19f7c89759234322314b0e319e26"
+                },
+                "tag": {
+                  "type": "string",
+                  "const": "4.3.1"
+                }
+              }
+            },
+            "existingSecret": {
+              "type": "string",
+              "maxLength": 253,
+              "pattern": "^$|^[a-z0-9]([-a-z0-9.]*[a-z0-9])?$"
+            },
+            "clusterIdKey": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9._-]+$"
+            },
+            "persistence": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "storageClass",
+                "size"
+              ],
+              "properties": {
+                "storageClass": {
+                  "type": "string",
+                  "const": "local-path"
+                },
+                "size": {
+                  "type": "string",
+                  "pattern": "^[1-9][0-9]*(Gi|Mi)$"
+                }
+              }
+            },
+            "resources": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "requests",
+                "limits"
+              ],
+              "properties": {
+                "requests": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "cpu",
+                    "memory",
+                    "ephemeral-storage"
+                  ],
+                  "properties": {
+                    "cpu": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "memory": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "ephemeral-storage": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                },
+                "limits": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "cpu",
+                    "memory",
+                    "ephemeral-storage"
+                  ],
+                  "properties": {
+                    "cpu": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "memory": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "ephemeral-storage": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "enabled": {
+                    "const": true
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "existingSecret": {
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "garage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "replicaCount",
+            "image",
+            "existingConfigSecret",
+            "configKey",
+            "persistence",
+            "resources"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "replicaCount": {
+              "type": "integer",
+              "const": 1
+            },
+            "image": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "repository",
+                "digest"
+              ],
+              "properties": {
+                "repository": {
+                  "type": "string",
+                  "const": "dxflrs/garage"
+                },
+                "digest": {
+                  "type": "string",
+                  "const": "sha256:0d7c74fc8ca6fef68a5a941c0e7558c8b1e92ba3588fa7505400e1350456c796"
+                }
+              }
+            },
+            "existingConfigSecret": {
+              "type": "string",
+              "maxLength": 253,
+              "pattern": "^$|^[a-z0-9]([-a-z0-9.]*[a-z0-9])?$"
+            },
+            "configKey": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9._-]+$"
+            },
+            "persistence": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "storageClass",
+                "metadataSize",
+                "dataSize"
+              ],
+              "properties": {
+                "storageClass": {
+                  "type": "string",
+                  "const": "local-path"
+                },
+                "metadataSize": {
+                  "type": "string",
+                  "pattern": "^[1-9][0-9]*(Gi|Mi)$"
+                },
+                "dataSize": {
+                  "type": "string",
+                  "pattern": "^[1-9][0-9]*(Gi|Mi)$"
+                }
+              }
+            },
+            "resources": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "requests",
+                "limits"
+              ],
+              "properties": {
+                "requests": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "cpu",
+                    "memory",
+                    "ephemeral-storage"
+                  ],
+                  "properties": {
+                    "cpu": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "memory": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "ephemeral-storage": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                },
+                "limits": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "cpu",
+                    "memory",
+                    "ephemeral-storage"
+                  ],
+                  "properties": {
+                    "cpu": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "memory": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "ephemeral-storage": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "enabled": {
+                    "const": true
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "existingConfigSecret": {
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "worker": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "replicaCount",
+            "image",
+            "sourceCommit",
+            "environment",
+            "terminationGracePeriodSeconds",
+            "topic",
+            "group",
+            "bucket",
+            "region",
+            "existingS3Secret",
+            "accessKeyIdKey",
+            "secretAccessKeyKey",
+            "resources"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "replicaCount": {
+              "type": "integer",
+              "const": 1
+            },
+            "image": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "repository",
+                "digest"
+              ],
+              "properties": {
+                "repository": {
+                  "type": "string",
+                  "pattern": "^$|^[^\\s@:]+(?:/[^\\s@:]+)*$"
+                },
+                "digest": {
+                  "type": "string",
+                  "pattern": "^$|^sha256:[a-f0-9]{64}$"
+                }
+              }
+            },
+            "sourceCommit": {
+              "type": "string",
+              "pattern": "^unknown$|^[a-f0-9]{40}$"
+            },
+            "environment": {
+              "type": "string",
+              "const": "mini-pc"
+            },
+            "terminationGracePeriodSeconds": {
+              "type": "integer",
+              "minimum": 250,
+              "maximum": 600
+            },
+            "topic": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,248}$"
+            },
+            "group": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$"
+            },
+            "bucket": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$"
+            },
+            "region": {
+              "type": "string",
+              "const": "garage"
+            },
+            "existingS3Secret": {
+              "type": "string",
+              "maxLength": 253,
+              "pattern": "^$|^[a-z0-9]([-a-z0-9.]*[a-z0-9])?$"
+            },
+            "accessKeyIdKey": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9._-]+$"
+            },
+            "secretAccessKeyKey": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9._-]+$"
+            },
+            "resources": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "requests",
+                "limits"
+              ],
+              "properties": {
+                "requests": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "cpu",
+                    "memory",
+                    "ephemeral-storage"
+                  ],
+                  "properties": {
+                    "cpu": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "memory": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "ephemeral-storage": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                },
+                "limits": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "cpu",
+                    "memory",
+                    "ephemeral-storage"
+                  ],
+                  "properties": {
+                    "cpu": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "memory": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "ephemeral-storage": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "enabled": {
+                    "const": true
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "image": {
+                    "properties": {
+                      "repository": {
+                        "minLength": 1
+                      },
+                      "digest": {
+                        "minLength": 1
+                      }
+                    }
+                  },
+                  "sourceCommit": {
+                    "pattern": "^[a-f0-9]{40}$"
+                  },
+                  "existingS3Secret": {
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "worker": {
+                "properties": {
+                  "enabled": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "kafka": {
+                "properties": {
+                  "enabled": {
+                    "const": true
+                  }
+                }
+              },
+              "garage": {
+                "properties": {
+                  "enabled": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }

@@ -18,7 +18,11 @@ public class DemoRun {
     @Column(nullable = false) Instant completedAt;
     protected DemoRun() {}
     DemoRun(SensorProcessor.Result result, Instant started, Instant completed) {
-        id = SyntheticScenario.RUN_ID; name = "합성 센서 품질 검증"; scenario = SyntheticScenario.NAME; seed = SyntheticScenario.SEED;
+        this(SyntheticScenario.RUN_ID, "합성 센서 품질 검증", SyntheticScenario.NAME, SyntheticScenario.SEED, result, started, completed);
+    }
+    DemoRun(String runId, String runName, String scenarioVersion, long scenarioSeed,
+            SensorProcessor.Result result, Instant started, Instant completed) {
+        id = runId; name = runName; scenario = scenarioVersion; seed = scenarioSeed;
         inputCount = result.inputCount(); successCount = result.successCount(); failureCount = result.failureCount();
         duplicateCount = result.duplicateCount(); pendingCount = result.pendingCount(); startedAt = started; completedAt = completed;
     }

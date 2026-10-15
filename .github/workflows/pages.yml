@@ -1,5 +1,5 @@
 name: Publish portfolio
-run-name: Portfolio snapshot v1 · ${{ github.event_name }}
+run-name: Portfolio snapshots v2 · ${{ github.event_name }}
 
 on:
   push:
@@ -9,11 +9,16 @@ on:
       - tests/scenarios/sensor-validation-v1.json
       - tests/observation/**
       - infra/scripts/prepare-pages-observation.py
+      - infra/observation/**
       - .github/workflows/pages.yml
   workflow_dispatch:
     inputs:
       platform_snapshot:
         description: 검증할 플랫폼 관측 JSON (최대 16KiB, 생략 시 이전 기록 유지)
+        required: false
+        type: string
+      jobs_snapshot:
+        description: 실제 배포 작업 관측 JSON (최대 32KiB, 생략 시 이전 기록 유지)
         required: false
         type: string
 
@@ -64,11 +69,21 @@ jobs:
           --repository "$GITHUB_WORKSPACE"
           --output-directory dist/data
           --seed-file public/data/platform-observation.json
+          --job-output-directory dist/observations
+          --job-artifact-directory "$RUNNER_TEMP/job-observation-publication"
+          --job-seed-file public/observations/jobs.latest.json
       - name: Retain the exact published observation per attempt
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: platform-observation-${{ github.run_id }}-a${{ github.run_attempt }}
           path: apps/lab-web/dist/data/platform-observation.json
+          if-no-files-found: error
+          retention-days: 90
+      - name: Retain exact job publication presence and record
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: job-observation-${{ github.run_id }}-a${{ github.run_attempt }}
+          path: ${{ runner.temp }}/job-observation-publication
           if-no-files-found: error
           retention-days: 90
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0

@@ -17,6 +17,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import HTTPRedirectHandler, HTTPSHandler, ProxyHandler, Request, build_opener
 
 from platform_contract import SAFE_INTEGER, validate_snapshot
+from job_contract import MAX_JOB_SNAPSHOT, validate_job_snapshot
 
 REPOSITORY = 'DevDooly/devdooly-platform-lab'
 ENDPOINT = 'https://api.github.com/repos/' + REPOSITORY + '/actions/workflows/pages.yml/dispatches'
@@ -135,6 +136,24 @@ def load_snapshot(path: Path, now: datetime) -> dict:
         raise AutomationError('SNAPSHOT_INVALID') from None
 
 
+def load_job_snapshot(path: Path, now: datetime) -> dict:
+    regular_private(path)
+    try:
+        with path.open('rb') as handle: data=handle.read(MAX_JOB_SNAPSHOT+1)
+        if len(data)>MAX_JOB_SNAPSHOT:raise ValueError
+        return validate_job_snapshot(json.loads(data,object_pairs_hook=unique_object),now)
+    except Exception:
+        raise AutomationError('JOB_SNAPSHOT_INVALID') from None
+
+
+def unique_object(pairs):
+    result={}
+    for key,value in pairs:
+        if key in result:raise AutomationError('JOB_SNAPSHOT_INVALID')
+        result[key]=value
+    return result
+
+
 def atomic_private_json(path: Path, value: dict) -> None:
     path_chain(path,leaf_kind='file',allow_missing_leaf=True)
     if path.exists() or path.is_symlink():regular_private(path)
@@ -202,19 +221,31 @@ class DispatchLock:
 
 
 def dispatch(snapshot: dict, token_file: Path, journal: Path, *, sender=send_once,
-             now: datetime | None = None) -> dict:
+             now: datetime | None = None, job_snapshot: dict | None = None) -> dict:
     with DispatchLock(journal.with_name(journal.name+'.lock')):
-        return _dispatch(snapshot,token_file,journal,sender=sender,now=now)
+        return _dispatch(snapshot,token_file,journal,sender=sender,now=now,job_snapshot=job_snapshot)
 
 
 def _dispatch(snapshot: dict, token_file: Path, journal: Path, *, sender=send_once,
-             now: datetime | None = None) -> dict:
+             now: datetime | None = None, job_snapshot: dict | None = None) -> dict:
     clock=now or datetime.now(timezone.utc)
     try:validate_snapshot(snapshot,clock)
     except Exception:raise AutomationError('SNAPSHOT_INVALID') from None
     encoded=json.dumps(snapshot,separators=(',',':'),sort_keys=True,ensure_ascii=True,allow_nan=False)
     if len(encoded.encode('ascii'))>MAX_SNAPSHOT:raise AutomationError('SNAPSHOT_INVALID')
-    fingerprint=hashlib.sha256(encoded.encode('ascii')).hexdigest()
+    inputs={'platform_snapshot':encoded}
+    fingerprint_source=encoded
+    if job_snapshot is not None:
+        try:validate_job_snapshot(job_snapshot,clock)
+        except Exception:raise AutomationError('JOB_SNAPSHOT_INVALID') from None
+        jobs_encoded=json.dumps(job_snapshot,separators=(',',':'),sort_keys=True,ensure_ascii=True,allow_nan=False)
+        if len(jobs_encoded.encode('ascii'))>MAX_JOB_SNAPSHOT:raise AutomationError('JOB_SNAPSHOT_INVALID')
+        inputs['jobs_snapshot']=jobs_encoded
+        fingerprint_source=json.dumps(inputs,separators=(',',':'),sort_keys=True)
+    payload={'ref':'main','inputs':inputs}
+    payload_bytes=json.dumps(payload).encode('utf-8')
+    if len(payload_bytes)>65536:raise AutomationError('SNAPSHOT_INVALID')
+    fingerprint=hashlib.sha256(fingerprint_source.encode('ascii')).hexdigest()
     if journal.exists() or journal.is_symlink():
         regular_private(journal)
         try:
@@ -229,10 +260,9 @@ def _dispatch(snapshot: dict, token_file: Path, journal: Path, *, sender=send_on
     # Persist before POST. A timeout, process crash or ambiguous success may
     # have created a run; this exact intent is never blindly sent twice.
     atomic_private_json(journal,intent)
-    payload={'ref':'main','inputs':{'platform_snapshot':encoded}}
     # API 2026-03-10 always returns run details. return_run_details was removed
     # in this version; the older API's boolean must not be sent here.
-    request=Request(ENDPOINT,data=json.dumps(payload).encode('utf-8'),method='POST',headers={
+    request=Request(ENDPOINT,data=payload_bytes,method='POST',headers={
         'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json',
         'Content-Type':'application/json','X-GitHub-Api-Version':API_VERSION,
         'User-Agent':'devdooly-platform-observer-pages/1'})

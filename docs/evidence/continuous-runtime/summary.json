@@ -1,0 +1,210 @@
+{
+  "schemaVersion": 1,
+  "verifiedOn": "2026-10-15",
+  "timezone": "Asia/Seoul",
+  "scope": "isolated-services-and-Windows-JVM-processes",
+  "baseCommit": "fca812997deffd85aa3bdcd481d5edf03304f5e0",
+  "functionalSourceCommit": "81cc95174d400544ed949997c0782492c3a3843d",
+  "versions": {
+    "java": 21,
+    "springBoot": "4.1.1",
+    "kafkaClient": "4.2.1",
+    "kafkaBroker": "4.3.1",
+    "mariaDb": "11.8.9",
+    "garage": "2.4.1",
+    "awsSdk": "2.55.16"
+  },
+  "topology": {
+    "containers": 3,
+    "publishedHostPorts": 0,
+    "internalNetwork": true,
+    "dbMemoryLimitBytes": 1073741824,
+    "garageMemoryLimitBytes": 1610612736,
+    "kafkaMemoryLimitBytes": 2147483648,
+    "brokerHeapMiB": 512
+  },
+  "defaultVerify": {
+    "totals": {
+      "tests": 120,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "jarBuilt": true,
+    "sameFinalApiSourceAsActualIt": true
+  },
+  "actualServiceIt": {
+    "totals": {
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "cases": [
+      {
+        "case": "durable-pause-refused-restart-explicit-resume",
+        "sourceCommit": "81cc95174d400544ed949997c0782492c3a3843d",
+        "completedRuns": 1,
+        "forcedKills": 0,
+        "verifiedFiles": 2,
+        "logEnd": 1,
+        "committedOffset": 1,
+        "lag": 0,
+        "outcomeRows": 12,
+        "runtimeStatus": "STOPPED",
+        "slotFree": true,
+        "actualHttpGet": false,
+        "gracefulResourcesClosed": true
+      },
+      {
+        "case": "sequential-jobs-http-and-graceful-stop",
+        "sourceCommit": "81cc95174d400544ed949997c0782492c3a3843d",
+        "completedRuns": 2,
+        "forcedKills": 0,
+        "verifiedFiles": 4,
+        "logEnd": 2,
+        "committedOffset": 2,
+        "lag": 0,
+        "outcomeRows": 24,
+        "runtimeStatus": "STOPPED",
+        "slotFree": true,
+        "actualHttpGet": true,
+        "gracefulResourcesClosed": true
+      },
+      {
+        "case": "forced-kill-first-export-and-restart",
+        "sourceCommit": "81cc95174d400544ed949997c0782492c3a3843d",
+        "completedRuns": 1,
+        "forcedKills": 1,
+        "verifiedFiles": 2,
+        "logEnd": 1,
+        "committedOffset": 1,
+        "lag": 0,
+        "outcomeRows": 12,
+        "runtimeStatus": "STOPPED",
+        "slotFree": true,
+        "actualHttpGet": false,
+        "gracefulResourcesClosed": true
+      },
+      {
+        "case": "competing-daemon-refused-real-db-lock",
+        "sourceCommit": "81cc95174d400544ed949997c0782492c3a3843d",
+        "completedRuns": 1,
+        "forcedKills": 0,
+        "verifiedFiles": 2,
+        "logEnd": 1,
+        "committedOffset": 1,
+        "lag": 0,
+        "outcomeRows": 12,
+        "runtimeStatus": "STOPPED",
+        "slotFree": true,
+        "actualHttpGet": false,
+        "gracefulResourcesClosed": true
+      }
+    ],
+    "distinctScenarios": 4,
+    "completedRunsAcrossScenarios": 5,
+    "distinctVerifiedFilesAcrossScenarios": 10,
+    "forcedJvmTerminations": 1,
+    "normalRunnerMode": "Helper wires production runner/actions/resources for atomic checkpoints and requestStop; not the full normal run CLI.",
+    "actualCliPaths": "Real run CLI pause-rejection and competing-lock rejection; real resume CLI succeeds.",
+    "gracefulResourcesClosedMeaning": "Final successful owner closed production client resources and released lock; force-killed first process was not gracefully closed."
+  },
+  "readOnlyHttpRecord": {
+    "path": "../../../apps/lab-web/public/observations/jobs.latest.json",
+    "capturedAt": "2026-10-15T01:51:02.339869600Z",
+    "sourceCommit": "81cc95174d400544ed949997c0782492c3a3843d",
+    "runtimeSourceCommit": "81cc95174d400544ed949997c0782492c3a3843d",
+    "scope": "ISOLATED_LAB",
+    "runtimeStatus": "STOPPED",
+    "jobs": 2,
+    "allExported": true,
+    "publicRecordEqualsActualHttp": true,
+    "strictValidatorPassed": true,
+    "currentS3ProbePerformedByObservation": false
+  },
+  "web": {
+    "tests": 34,
+    "failures": 0,
+    "typeErrors": 0,
+    "typeWarnings": 0,
+    "pagesBase": "/devdooly-platform-lab/",
+    "buildRecordEqualsActualHttp": true
+  },
+  "browserQa": {
+    "desktopViewport": {
+      "width": 1280,
+      "height": 900,
+      "documentScrollWidth": 1265
+    },
+    "mobileViewport": {
+      "width": 390,
+      "height": 844,
+      "documentScrollWidth": 375
+    },
+    "bodyAndNoteFontPixels": 17,
+    "actualJobCards": 2,
+    "mobileHashDetailsOpened": true,
+    "temporaryViewportReset": true,
+    "desktopScreenshot": "desktop.jpg",
+    "mobileScreenshot": "mobile.jpg"
+  },
+  "fixtureInspection": {
+    "singletonSlotFree": true,
+    "ownedRowsRemoved": true,
+    "noTriggersRemain": true,
+    "migrationsOneTwoThreeSuccessfulOnce": true,
+    "ownedTopicsAndGroupsRemoved": true,
+    "brokerUnrestartedAndNoOom": true,
+    "noPublishedPorts": true,
+    "observedAt": "2026-10-15T01:57:19.474561+00:00"
+  },
+  "cleanup": {
+    "ownedContainersRemoved": 3,
+    "ownedNamedVolumesRemoved": 2,
+    "ownedNetworksRemoved": 1,
+    "ownedResourcesRemoved": true,
+    "allExistingDockerIdsUnchanged": true,
+    "existingDockerIncludingStoppedCount": 38,
+    "privateGarageDataAndDiagnosticsRetained": true,
+    "observedAt": "2026-10-15T01:57:30.460113+00:00"
+  },
+  "productionPreservation": {
+    "passed": true,
+    "beforeObservedAt": "2026-10-15T01:35:06.986378+00:00",
+    "afterObservedAt": "2026-10-15T01:57:40.550017+00:00",
+    "sourceCommit": "41897dbb9d2a38537f1d06928dcd01273d64be4d",
+    "gitopsRevision": "2bd1eebd5ecb81050d236148f2d4f023e2e4687a",
+    "apiImageDigest": "sha256:57c7fcbaf266eda7402831df95a12d4cabfab250071a75eaf4d8d1855f1296cb",
+    "webImageDigest": "sha256:012f955d4d85178c95c09c2dfee4b4ec858b3b87a1ac5216f53e81aca9e591f8",
+    "labPodCount": 3,
+    "productionPvcCount": 2,
+    "existingRunningDockerCount": 26,
+    "counts": {
+      "inputCount": 12,
+      "successCount": 7,
+      "failureCount": 3,
+      "duplicateCount": 2,
+      "pendingCount": 0
+    },
+    "checks": {
+      "threeLabPodsReady": true,
+      "canonicalTwelveResults": true,
+      "argoSyncedHealthyAtExpectedRevision": true,
+      "productionPvcUidsBindingsAndStorageUnchanged": true,
+      "databasePodImageAndMountsUnchanged": true,
+      "allSqlRowsTimestampsAndFlywayUnchanged": true,
+      "allPersistedApiFieldsExceptObservedAtUnchanged": true,
+      "existingDockerIdsMountsStartTimesUnchanged": true,
+      "hostBootUnchanged": true,
+      "nodesUnchanged": true,
+      "ufwUnchanged": true,
+      "productionPinsAndSourceUnchanged": true
+    }
+  },
+  "operationalDeploymentPerformed": false,
+  "publicPagesDeploymentPerformed": false,
+  "existingObservationContractsChanged": false,
+  "newReadOnlyJobObservationContract": true,
+  "publicExecutionEnabled": false
+}

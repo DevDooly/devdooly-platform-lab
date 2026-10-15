@@ -162,7 +162,7 @@
     "currentJvmSourceQueriedByThisCollector": false
   },
   "pending": [
-    "ACTUAL_30_MINUTE_INTERVAL_AND_LONG_RUNNING_OPERATION",
+    "LONG_RUNNING_OPERATION_BEYOND_OBSERVED_ELEVEN_PUBLICATIONS",
     "CREDENTIAL_SCOPE_QUERY_EXPIRY_AND_ROTATION",
     "OPTIONAL_LIVE_READ_API_AND_EXTERNAL_HTTPS"
   ],
@@ -470,5 +470,197 @@
     },
     "mountComparisonSemantics": "ORDER_INDEPENDENT_MOUNT_SETS_RAW_ARRAY_ORDER_CAN_DIFFER",
     "sqlRevalidatedDuringActivation": false
+  },
+  "activationVerificationScope": "HISTORICAL_INITIAL_ACTIVATION_BEFORE_REPEATED_EXECUTION_VERIFICATION",
+  "repeatedVerification": {
+    "scope": "ELEVEN_AUTOMATIC_TIMER_EXECUTIONS_PAGES_RESULTS_AND_SERVICE_COMPLETION_INTERVALS",
+    "completedAtSemantics": "HOST_SERVICE_EXECUTION_COMPLETION_UTC_NOT_COLLECTOR_CAPTURE_OR_PAGES_DEPLOY_COMPLETION",
+    "includesFirstAutomaticTrigger": true,
+    "summary": {
+      "serviceExecutions": 11,
+      "acceptedPublications": 11,
+      "allDispatchesAccepted": true,
+      "firstCompletedAt": "2026-10-12T01:38:40.510720Z",
+      "lastCompletedAt": "2026-10-12T06:45:29.625204Z",
+      "minimumObservedIntervalSeconds": 1825.569287,
+      "maximumObservedIntervalSeconds": 1875.101367
+    },
+    "executions": [
+      {
+        "completedAt": "2026-10-12T01:38:40.510720Z",
+        "attemptStatus": "DISPATCHED",
+        "runId": 38192680467,
+        "runUrl": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38192680467",
+        "status": "completed",
+        "conclusion": "success",
+        "jobs": {
+          "build": "success",
+          "deploy": "success"
+        }
+      },
+      {
+        "completedAt": "2026-10-12T02:09:16.021621Z",
+        "attemptStatus": "DISPATCHED",
+        "runId": 38194669140,
+        "runUrl": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38194669140",
+        "status": "completed",
+        "conclusion": "success",
+        "jobs": {
+          "build": "success",
+          "deploy": "success"
+        }
+      },
+      {
+        "completedAt": "2026-10-12T02:39:58.959112Z",
+        "attemptStatus": "DISPATCHED",
+        "runId": 38196672320,
+        "runUrl": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38196672320",
+        "status": "completed",
+        "conclusion": "success",
+        "jobs": {
+          "build": "success",
+          "deploy": "success"
+        }
+      },
+      {
+        "completedAt": "2026-10-12T03:10:40.793426Z",
+        "attemptStatus": "DISPATCHED",
+        "runId": 38198726020,
+        "runUrl": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38198726020",
+        "status": "completed",
+        "conclusion": "success",
+        "jobs": {
+          "build": "success",
+          "deploy": "success"
+        }
+      },
+      {
+        "completedAt": "2026-10-12T03:41:55.894793Z",
+        "attemptStatus": "DISPATCHED",
+        "runId": 38200776134,
+        "runUrl": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38200776134",
+        "status": "completed",
+        "conclusion": "success",
+        "jobs": {
+          "build": "success",
+          "deploy": "success"
+        }
+      },
+      {
+        "completedAt": "2026-10-12T04:12:29.962930Z",
+        "attemptStatus": "DISPATCHED",
+        "runId": 38202843810,
+        "runUrl": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38202843810",
+        "status": "completed",
+        "conclusion": "success",
+        "jobs": {
+          "build": "success",
+          "deploy": "success"
+        }
+      },
+      {
+        "completedAt": "2026-10-12T04:43:05.802855Z",
+        "attemptStatus": "DISPATCHED",
+        "runId": 38204920752,
+        "runUrl": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38204920752",
+        "status": "completed",
+        "conclusion": "success",
+        "jobs": {
+          "build": "success",
+          "deploy": "success"
+        }
+      },
+      {
+        "completedAt": "2026-10-12T05:13:31.372142Z",
+        "attemptStatus": "DISPATCHED",
+        "runId": 38207013275,
+        "runUrl": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38207013275",
+        "status": "completed",
+        "conclusion": "success",
+        "jobs": {
+          "build": "success",
+          "deploy": "success"
+        }
+      },
+      {
+        "completedAt": "2026-10-12T05:43:57.060377Z",
+        "attemptStatus": "DISPATCHED",
+        "runId": 38209223283,
+        "runUrl": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38209223283",
+        "status": "completed",
+        "conclusion": "success",
+        "jobs": {
+          "build": "success",
+          "deploy": "success"
+        }
+      },
+      {
+        "completedAt": "2026-10-12T06:14:50.515895Z",
+        "attemptStatus": "DISPATCHED",
+        "runId": 38211593641,
+        "runUrl": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38211593641",
+        "status": "completed",
+        "conclusion": "success",
+        "jobs": {
+          "build": "success",
+          "deploy": "success"
+        }
+      },
+      {
+        "completedAt": "2026-10-12T06:45:29.625204Z",
+        "attemptStatus": "DISPATCHED",
+        "runId": 38214103463,
+        "runUrl": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38214103463",
+        "status": "completed",
+        "conclusion": "success",
+        "jobs": {
+          "build": "success",
+          "deploy": "success"
+        }
+      }
+    ],
+    "intervalSeconds": [
+      1835.510901,
+      1842.937491,
+      1841.834314,
+      1875.101367,
+      1834.068137,
+      1835.839925,
+      1825.569287,
+      1825.688235,
+      1853.455518,
+      1839.109309
+    ],
+    "allPagesBuildsSucceeded": true,
+    "allPagesDeploysSucceeded": true,
+    "actualPeriodicIntervalsObserved": true,
+    "entirePublicEnvelopeAndBrowserVerifiedForEveryExecution": false,
+    "longTermAvailabilityVerified": false,
+    "timerHealthCheck": {
+      "observedAt": "2026-10-12T07:17:51.289331Z",
+      "timerEnabled": true,
+      "timerActive": true,
+      "serviceState": "inactive",
+      "serviceResult": "success",
+      "execMainStatus": "0",
+      "privateStatePermissionsValid": true,
+      "temporaryCredentialsRemaining": 0,
+      "collectorLockRemains": false
+    }
+  },
+  "latestPublicationVerification": {
+    "runId": 38216819944,
+    "runUrl": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38216819944",
+    "buildConclusion": "success",
+    "deployConclusion": "success",
+    "publicSnapshotMatchesEntireEnvelope": true,
+    "verifiedAt": "2026-10-12T07:18:45.045160Z",
+    "capturedAt": "2026-10-12T07:16:23.800530Z",
+    "publicBrowserReloadVerified": true,
+    "browserJenkinsBuildNumber": 17,
+    "browserArgoSync": "Synced",
+    "browserArgoHealth": "Healthy",
+    "browserWorkloadCountsMatchSnapshot": true,
+    "scope": "SEPARATE_LATEST_PUBLICATION_NOT_COUNTED_IN_ELEVEN_EXECUTION_WINDOW"
   }
 }

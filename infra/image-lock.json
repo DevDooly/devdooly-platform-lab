@@ -6,6 +6,10 @@
     "eclipse-temurin:21-jdk": "eclipse-temurin:21-jdk@sha256:3e3c176ffed168beb42c607be9bc1639b466cf00261a0fb04425562c9d0c5c2b",
     "eclipse-temurin:21-jre": "eclipse-temurin:21-jre@sha256:cff19e6215689161eb6162c11b86b0c60ddf802164f2eaf48d570f8fb79a36c5",
     "node:24.19.0-alpine": "node:24.19.0-alpine@sha256:d32cdf619f63fe0471182d08996dd516c6275bb5fd31ae06e55a570bd9e1ad43",
-    "nginx:stable-alpine": "nginx:stable-alpine@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94"
-  }
+    "nginx:stable-alpine": "nginx:stable-alpine@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94",
+    "apache/kafka:4.3.1": "apache/kafka:4.3.1@sha256:ccd1314e47ec76909e01f86308b4dcf2064f19f7c89759234322314b0e319e26",
+    "garage:2.4.1-linux-amd64": "dxflrs/garage@sha256:0d7c74fc8ca6fef68a5a941c0e7558c8b1e92ba3588fa7505400e1350456c796"
+  },
+  "runtimeVerifiedAt": "2026-10-15",
+  "runtimeSource": "Official Kafka 4.3.1 and Garage 2.4.1 linux-amd64 registry manifests; real isolated pull verified"
 }

@@ -73,3 +73,90 @@ bootstrap이 보관한 감사 자료는 같은 호스트의 설정·네트워크
 - [MariaDB healthcheck.sh](https://mariadb.com/docs/server/server-management/automated-mariadb-deployment-and-administration/docker-and-mariadb/using-healthcheck-sh)
 - [MariaDB 공식 Dockerfile과 entrypoint](https://github.com/MariaDB/mariadb-docker)
 - [Nginx 공식 Alpine Dockerfile](https://github.com/nginx/docker-nginx/blob/master/stable/alpine-slim/Dockerfile)
+
+## 선택적인 Kafka·Garage·상시 worker
+
+`runtime.kafka.enabled`, `runtime.garage.enabled`, `runtime.worker.enabled`의 기본값은 모두 `false`입니다. 이 경우 기존 7개 리소스만 렌더링합니다. 세 항목을 켜면 Kafka·Garage StatefulSet 각 1개, ClusterIP Service 각 1개와 worker Deployment 1개를 추가해 총 12개가 됩니다. worker에는 HTTP 포트와 Service가 없습니다.
+
+기존 API/Web 이미지 게시 gate의 `gitops/environments/home-lab/values.yaml`은 이미지 전용 형식을 유지합니다. runtime 설정은 별도 `gitops/environments/home-lab/runtime.yaml`에서 관리하며, Argo CD Application의 `helm.valueFiles`에 이 파일을 추가해야 반영됩니다. 자동 이미지 게시가 이 파일이나 worker 핀을 덮어쓰지 않습니다. worker는 검증한 API 이미지의 repository·digest와 대응하는 40자리 source commit을 **별도로 명시**해야 합니다. 비활성 기본값에서는 이미지가 비어 있어도 되지만, 활성화하면 schema가 누락·`unknown`·복제 확대·250초 미만 종료 유예를 거부합니다.
+
+| 추가 구성 | 고정 조건 | 영속 저장소 |
+| --- | --- | --- |
+| Kafka | 4.3.1 JVM, combined KRaft 1대·static voter 1개, 기본 partition 1·RF 1, topic 자동 생성 비활성 | 전용 5Gi claim, metadata와 log 경로 함께 보존 |
+| Garage | 2.4.1 linux-amd64, SQLite·replication factor 1, S3 포트만 ClusterIP | metadata 2Gi·data 10Gi, 별도 claim |
+| worker | API 이미지의 명시적 CLI `--lab-runtime=run`, replica 1·Recreate, 종료 유예 300초 | DB outbox·journal과 외부 객체 저장소 사용 |
+
+Kafka/Garage claim은 StatefulSet 삭제·축소 시 `Retain`입니다. 직접 PVC·namespace를 지우는 작업과 local-path PV의 Delete 정책까지 방지하지는 않습니다. 단일 노드·단일 복제 구성은 합성 데이터 Lab 용도이며 복제나 백업을 제공하지 않습니다. Garage layout의 capacity와 local-path PVC 요청도 실제 디스크 사용량의 강제 상한은 아닙니다.
+
+추가 요청량은 CPU 450m·메모리 1280Mi, 제한 합계는 CPU 4·메모리 4352Mi입니다. 추가 PVC 요청은 총 17Gi이며 기존 DB 10Gi는 유지합니다. 실제 가용량·백업과 기존 서비스 자원은 rollout 전에 별도로 확인합니다.
+
+모든 추가 Pod는 명시적 nonroot UID/GID, RuntimeDefault, capability 제거와 권한 상승 금지를 사용하고 Kubernetes API 토큰을 마운트하지 않습니다. Garage와 worker는 읽기 전용 루트와 제한된 `/tmp`를 사용합니다. Kafka는 공식 entrypoint가 `/opt/kafka/config`에 설정을 생성하므로 이미지의 쓰기 가능한 레이어를 유지합니다. Kafka의 appuser UID/GID는 고정 이미지에서 1000/1000으로 확인한 값입니다.
+
+Kafka 주소는 `kafka.<namespace>.svc.cluster.local:9092`, Garage는 `http://garage.<namespace>.svc.cluster.local:3900`입니다. Kafka controller는 9093의 내부 static voter만 사용하며 외부 주소를 advertise하지 않습니다. headless Kafka Service는 처음의 voter DNS 순환 대기를 막도록 `publishNotReadyAddresses: true`입니다. Garage RPC는 Pod 내부 loopback만 사용하며 RPC·관리·웹 포트를 Service로 열지 않습니다. 이 구성은 신뢰하는 개인 클러스터 내부의 PLAINTEXT/HTTP 경로이며 외부용 TLS·인증 경로를 제공하는 구성이 아닙니다.
+
+### 외부에서 먼저 준비하는 Secret
+
+chart는 Secret을 만들지 않습니다. 값·설정 원본·키 출력은 Git 제외 private 경로에 제한된 파일 권한으로 보관합니다.
+
+| 이름 | key | 용도 |
+| --- | --- | --- |
+| `platform-lab-kafka` | `cluster-id` | 최초 생성한 KRaft cluster ID. 같은 PVC에서는 유지 |
+| `platform-lab-garage-config` | `garage.toml` | RPC secret이 포함된 전체 설정, 파일 모드 0440으로 마운트 |
+| `platform-lab-runtime-s3` | `access-key-id`, `secret-access-key` | 해당 합성 bucket의 read/write key, owner 권한 없음 |
+| 기존 `platform-lab-db` | `app-password` | 기존 DB 계정 사용. DB 계정이나 비밀번호를 초기화하지 않음 |
+
+Garage private 설정의 필수 경로는 `metadata_dir = "/var/lib/garage/meta"`, `data_dir = "/var/lib/garage/data"`입니다. `db_engine = "sqlite"`, `replication_factor = 1`, RPC bind/public은 `127.0.0.1:3901`, `[s3_api]`의 bind는 `0.0.0.0:3900`, region은 `garage`로 맞춥니다. RPC secret은 새로 생성한 32-byte hex 값이며 공개 TOML·Helm values에 넣지 않습니다. namespace의 Secret을 변경한 뒤에는 사용 중인 프로세스·RPC 연결에 미치는 영향을 검토하고 해당 Pod를 계획대로 교체해야 합니다.
+
+### 단계별 bootstrap과 실제 검증
+
+1. 기존 DB·서비스 상태와 새 외부 백업을 확인하고, Kafka/Garage private Secret을 준비합니다.
+2. `runtime.yaml`에서 Kafka·Garage만 켜고 worker는 끈 상태로 GitOps에 반영합니다. Pod/PVC·권한·기존 서비스 보존을 확인합니다.
+3. 아래의 내부 Kafka topic과 신규 Garage layout·bucket·read/write key를 준비합니다. Secret 값을 Git·채팅·공개 근거로 출력하지 않습니다.
+4. 같은 source SHA에서 Jenkins·Actions를 통과한 API 이미지 게시·GitOps 반영 후 API가 V2·V3 migration을 적용했는지 확인합니다. 상시 CLI는 migration을 적용하지 않습니다.
+5. 검증한 worker 이미지·source commit·S3 Secret을 지정하고 worker를 켭니다. API `api.environment`도 `mini-pc`로 설정해 관측 scope를 구분합니다.
+6. 관리자 전용 1회 Job에 `--lab-runtime=stage`와 고유한 `LAB_RUNTIME_STAGE_RUN_ID=lab-fixture-...`를 전달해 고정 합성 입력 12개만 등록합니다. 이후 실제 dispatch·수신·두 파일 전체 GET 검증·EXPORTED·슬롯 해제와 consumer lag을 확인합니다. stage Job은 상시 chart 리소스가 아닙니다.
+
+Kafka topic은 이미지를 실행 중인 Kafka Pod 안에서 생성합니다. 아래는 기본 release `lab`, namespace `platform-lab`의 명령이며, 실행 전에 현재 context·실제 Pod·topic 이름을 확인합니다.
+
+```sh
+kubectl -n platform-lab exec lab-platform-lab-kafka-0 -- \
+  /opt/kafka/bin/kafka-topics.sh \
+  --bootstrap-server kafka.platform-lab.svc.cluster.local:9092 \
+  --create --if-not-exists --topic platform-lab-dispatch-v1 \
+  --partitions 1 --replication-factor 1 \
+  --config min.insync.replicas=1 \
+  --config retention.ms=604800000 \
+  --config retention.bytes=134217728 \
+  --config max.message.bytes=1024
+```
+
+`--if-not-exists`는 기존 topic의 설정을 고쳐 주지 않습니다. 생성 후 `--describe --topic platform-lab-dispatch-v1`로 실제 partition·RF·설정을 대조합니다. 초기 metadata와 consumer group ID는 기존 PVC와 함께 유지합니다.
+
+Garage CLI는 `/garage -c /etc/garage/garage.toml`입니다. `status`, `node id --quiet`, `layout show`로 **신규 PVC의 레이아웃이 아직 비어 있는지** 확인한 뒤 해당 node ID에 `layout assign -z home-lab -c 8G <node-id>`를 실행하고 최초 버전일 때만 `layout apply --version 1`을 적용합니다. 재시작한 기존 layout에 최초 명령을 무조건 반복하지 않습니다.
+
+bucket/key 준비에는 실제 격리 시험과 같은 JSON CLI를 사용할 수 있습니다.
+
+```sh
+# 아래 출력은 node ID·bucket ID·key secret을 포함하므로 private 파일로만 캡처합니다.
+# Garage Pod: lab-platform-lab-garage-0
+/garage -c /etc/garage/garage.toml json-api CreateBucket '{"globalAlias":"platform-lab-synthetic"}'
+/garage -c /etc/garage/garage.toml json-api CreateKey '{"name":"platform-lab-worker"}'
+# 위에서 실제로 반환한 ID를 private 도우미에서 구성해 전달합니다.
+/garage -c /etc/garage/garage.toml json-api AllowBucketKey \
+  '{"bucketId":"<returned-bucket-id>","accessKeyId":"<returned-access-key-id>","permissions":{"read":true,"write":true,"owner":false}}'
+```
+
+CreateKey의 `accessKeyId`와 `secretAccessKey`를 각각 private 0600 파일에 저장하고 `kubectl create secret generic platform-lab-runtime-s3 --from-file=access-key-id=<private-file> --from-file=secret-access-key=<private-file>`로 준비합니다. 실제 key 값이 shell history·명령 인수·일반 로그에 들어가는 `--from-literal` 방식은 사용하지 않습니다. 이미 생성된 bucket/key를 발견하면 임의로 다시 생성하거나 지우지 말고 기존 소유·권한과 private 보관본을 대조합니다.
+
+Kafka/Garage의 TCP probe는 리스너 연결만 확인합니다. topic·bucket·권한·DB migration·job 성공을 증명하지 않습니다. worker에는 거짓 성공을 만들 수 있는 파일 probe를 추가하지 않았습니다. Kubernetes의 프로세스 상태와 `/api/jobs/observation`의 실제 journal·heartbeat·job/export 상태를 함께 확인합니다. `PAUSED_OPERATOR`는 재시작으로 지워지지 않으며 원인을 확인·교정한 뒤 소유권으로 직렬화된 별도 `--lab-runtime=resume`을 실행해야 합니다.
+
+로컬 검증은 기존 `ci/validate-render.mjs`에 더해 아래를 실행합니다. fixture 이미지는 배포하지 않습니다.
+
+```sh
+node infra/charts/platform-lab/ci/validate-runtime-render.mjs
+```
+
+2026-10-15에 strict lint/render, runtime 정책 20개와 잘못된 값 13개의 schema 거부를 확인했습니다. 비활성 7개·storage만 활성 11개·worker까지 활성 12개 리소스와 기존 API/Web/DB manifest 보존을 검사했습니다. 이 로컬 결과는 서버 배포·PVC Bound·broker/S3·실제 job 실행 결과를 대신하지 않으며 [ci/runtime-render-validation.json](ci/runtime-render-validation.json)에 범위를 구분합니다.
+
+- [Kafka 공식 Docker 예제](https://github.com/apache/kafka/blob/4.3.1/docker/examples/docker-compose-files/single-node/plaintext/docker-compose.yml), [공식 configure](https://github.com/apache/kafka/blob/4.3.1/docker/resources/common-scripts/configure), [Dockerfile의 appuser](https://github.com/apache/kafka/blob/4.3.1/docker/jvm/Dockerfile)
+- [Garage 공식 설정](https://garagehq.deuxfleurs.fr/documentation/reference-manual/configuration/), [단일 노드와 수동 bootstrap](https://garagehq.deuxfleurs.fr/documentation/quick-start/)

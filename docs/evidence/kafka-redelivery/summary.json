@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 1,
+  "verifiedOn": "2026-10-15",
+  "timezone": "Asia/Seoul",
+  "scope": "isolated-disposable-services-and-Windows-child-JVMs",
+  "baseCommit": "3be6a901c84d56921d77cd8fe255071830738d69",
+  "sourceFingerprint": "source-fingerprint.json",
+  "versions": {
+    "java": 21,
+    "springBoot": "4.1.1",
+    "kafkaClient": "4.2.1",
+    "kafkaBroker": "4.3.1",
+    "mariaDb": "11.8.9",
+    "garage": "2.4.1"
+  },
+  "kafkaImage": {
+    "reference": "apache/kafka:4.3.1@sha256:ccd1314e47ec76909e01f86308b4dcf2064f19f7c89759234322314b0e319e26",
+    "indexDigest": "sha256:77e3df9054047a88b520d0cc46e16696d3b22022e1d580aeccd2632df6532837",
+    "configDigest": "sha256:47dccc76b32761bc57462b8753144cdbb73a16b123b1d13d3eedb92bb7952b11",
+    "pulledConfigMatched": true
+  },
+  "topology": {
+    "brokerControllers": 1,
+    "partitionsPerTopic": 1,
+    "replicationFactor": 1,
+    "publishedHostPorts": 0,
+    "dockerNetworkInternal": true,
+    "brokerMemoryLimitBytes": 2147483648,
+    "brokerHeapMiB": 512
+  },
+  "defaultVerify": {
+    "totals": {
+      "tests": 78,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "jarBuilt": true,
+    "productionAndDefaultTestSourcesMatchFinalIt": true,
+    "jarContainsKafkaClient421AndNoSpringKafka": true,
+    "jarContainsNoCrashTestHelpers": true
+  },
+  "actualServiceIt": {
+    "firstRun": {
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "finalRun": {
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "distinctScenarios": 4,
+    "forcedChildJvmTerminationsPerRun": 3,
+    "firstToFinalChangedFiles": [
+      "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/messaging/KafkaCrashProbe.java",
+      "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/messaging/KafkaRedeliveryIT.java"
+    ],
+    "changeReason": "Evidence field names and observed publisher transaction-state assertion only; production code unchanged.",
+    "finalCases": [
+      {
+        "case": "publisher-ack-kill",
+        "forcedKills": 1,
+        "successfulParentDeliveries": 2,
+        "completedReplaysObserved": 1,
+        "logEnd": 2,
+        "committedOffset": 2,
+        "lag": 0,
+        "runRows": 1,
+        "outcomeRows": 12
+      },
+      {
+        "case": "source-invalid-pause-recovery",
+        "forcedKills": 0,
+        "successfulParentDeliveries": 1,
+        "completedReplaysObserved": 0,
+        "logEnd": 1,
+        "committedOffset": 1,
+        "lag": 0,
+        "runRows": 1,
+        "outcomeRows": 12
+      },
+      {
+        "case": "worker-after-db-kill",
+        "forcedKills": 1,
+        "successfulParentDeliveries": 1,
+        "completedReplaysObserved": 1,
+        "logEnd": 1,
+        "committedOffset": 1,
+        "lag": 0,
+        "runRows": 1,
+        "outcomeRows": 12
+      },
+      {
+        "case": "worker-before-dbcommit-kill",
+        "forcedKills": 1,
+        "successfulParentDeliveries": 1,
+        "completedReplaysObserved": 0,
+        "logEnd": 1,
+        "committedOffset": 1,
+        "lag": 0,
+        "runRows": 1,
+        "outcomeRows": 12
+      }
+    ],
+    "successfulParentDeliveriesMeaning": "Successful parent receive calls only; excludes interrupted child and failed attempts.",
+    "completedReplaysObservedMeaning": "Parent deliveries of already-completed database jobs; not all delivery attempts."
+  },
+  "fixtureInspection": {
+    "singletonSlotFree": true,
+    "ownedRowsRemoved": true,
+    "noTriggersRemain": true,
+    "migrationsOneAndTwoSuccessfulOnce": true,
+    "ownedTopicsAndGroupsRemoved": true,
+    "brokerUnrestartedAndNoOom": true,
+    "noPublishedPorts": true,
+    "observedAt": "2026-10-15T00:51:08.123036+00:00"
+  },
+  "cleanup": {
+    "ownedContainersRemoved": 3,
+    "ownedNamedVolumesRemoved": 2,
+    "ownedNetworksRemoved": 1,
+    "ownedResourcesRemoved": true,
+    "allExistingDockerIdsUnchanged": true,
+    "existingDockerIncludingStoppedCount": 38,
+    "privateGarageDataAndDiagnosticsRetained": true,
+    "observedAt": "2026-10-15T00:51:10.971769+00:00"
+  },
+  "productionPreservation": {
+    "passed": true,
+    "beforeObservedAt": "2026-10-15T00:43:31.655609+00:00",
+    "afterObservedAt": "2026-10-15T00:51:13.532107+00:00",
+    "sourceCommit": "41897dbb9d2a38537f1d06928dcd01273d64be4d",
+    "gitopsRevision": "2bd1eebd5ecb81050d236148f2d4f023e2e4687a",
+    "apiImageDigest": "sha256:57c7fcbaf266eda7402831df95a12d4cabfab250071a75eaf4d8d1855f1296cb",
+    "webImageDigest": "sha256:012f955d4d85178c95c09c2dfee4b4ec858b3b87a1ac5216f53e81aca9e591f8",
+    "labPodCount": 3,
+    "productionPvcCount": 2,
+    "existingRunningDockerCount": 26,
+    "counts": {
+      "inputCount": 12,
+      "successCount": 7,
+      "failureCount": 3,
+      "duplicateCount": 2,
+      "pendingCount": 0
+    },
+    "checks": {
+      "threeLabPodsReady": true,
+      "canonicalTwelveResults": true,
+      "argoSyncedHealthyAtExpectedRevision": true,
+      "productionPvcUidsBindingsAndStorageUnchanged": true,
+      "databasePodImageAndMountsUnchanged": true,
+      "allSqlRowsTimestampsAndFlywayUnchanged": true,
+      "allPersistedApiFieldsExceptObservedAtUnchanged": true,
+      "existingDockerIdsMountsStartTimesUnchanged": true,
+      "hostBootUnchanged": true,
+      "nodesUnchanged": true,
+      "ufwUnchanged": true,
+      "productionPinsAndSourceUnchanged": true
+    }
+  },
+  "operationalDeploymentPerformed": false,
+  "publicContractChanged": false,
+  "resultExportImplemented": false,
+  "durablePauseImplemented": false
+}

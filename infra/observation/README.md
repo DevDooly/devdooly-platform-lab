@@ -1,5 +1,7 @@
 # 공개 플랫폼 수집기와 호스트 자동화
 
+작업·export의 실제 배포 기록은 선택적 [작업 관측 자동화](JOBS_AUTOMATION.md)로 같은 outbound Pages 주기에 연결한다. 기존 플랫폼 관측 계약과 파일은 별도로 보존한다.
+
 Python 표준 라이브러리만 사용하는 읽기 전용 수집기입니다. 공개 GitHub main의 Jenkins commit status와 K3s의 제한된 리소스를 읽고, platform-observation v1의 허용 필드만 저장합니다. 실제 RBAC 적용·수집·인증 실패 후 이전 성공 보존·Pages 게시를 검증했습니다. 전용 Pages 자격증명 등록 후 수동 host cycle·실제 systemd service·timer 최초 자동 실행의 게시와 전체 공개 JSON 일치도 확인했습니다. [실행 근거와 남은 범위](../../docs/evidence/platform-observation/README.md)를 함께 확인합니다.
 
 ## 통합 파일
@@ -94,7 +96,7 @@ PYTHONPATH=infra/observation python3 -B -m unittest discover -s tests/observatio
 python3 -B -m unittest discover -s tests/observation -p 'test_phase3_automation.py' -v
 ```
 
-합성 입력만 사용해 상태 4종, 최신 항목 신뢰 검증, 페이지 제한, main 이동, 실제 Pod 준비 조건, 허용 이미지, 출처 분리, 실패 시 이전 성공 보존, unknown 필드, 잘못된 날짜·나노초 순서, 원자적 파일 교체와 권한·리디렉션을 검증합니다. 합성 검사와 실제 서버 실행은 별도 기록합니다. 자동 수집·게시 요청은 호스트의 oneshot service와 timer로 실행하며 Kubernetes Job/CronJob은 구성하지 않았습니다. 공개 실시간 HTTP와 새 inbound 포트도 추가하지 않았습니다. 실제 30분 간격 반복 운영과 자격증명 만료·회전은 아직 검증하지 않았습니다.
+합성 입력만 사용해 상태 4종, 최신 항목 신뢰 검증, 페이지 제한, main 이동, 실제 Pod 준비 조건, 허용 이미지, 출처 분리, 실패 시 이전 성공 보존, unknown 필드, 잘못된 날짜·나노초 순서, 원자적 파일 교체와 권한·리디렉션을 검증합니다. 합성 검사와 실제 서버 실행은 별도 기록합니다. 자동 수집·게시 요청은 호스트의 oneshot service와 timer로 실행하며 Kubernetes Job/CronJob은 구성하지 않았습니다. 최초 자동 실행을 포함한 11회의 Pages build·deploy success와 실제 서비스 완료 간격 1825.569287~1875.101367초를 확인했습니다. 공개 실시간 HTTP와 새 inbound 포트는 추가하지 않았습니다. 자격증명 만료·회전과 장기간 운영은 아직 검증하지 않았습니다.
 
 ## 공식 근거
 
