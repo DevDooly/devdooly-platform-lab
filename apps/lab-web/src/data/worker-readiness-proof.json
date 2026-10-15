@@ -1,0 +1,16 @@
+{
+  "kind": "worker-readiness-verification",
+  "asOf": "2026-10-15T14:54:11.374116Z",
+  "sourceCommit": "3e0d85be2f529026cb44812602e31c0e18797b45",
+  "gitopsRevision": "75eb569b016c38c9cc1b1f5819a611b830f2b83d",
+  "apiTests": 180,
+  "exampleTests": 20,
+  "isolatedProbeCases": 10,
+  "exportedJobs": 8,
+  "exportFiles": 16,
+  "wholeObjects": 24,
+  "kafkaLag": 0,
+  "readOnlyRetryVerified": true,
+  "oldWorkerExitStatus": "UNOBSERVED",
+  "evidenceSha256": "d9a451b276b2f5279904b7f2df96a055540d227f9a98e6e45eb7d89b930fd55f"
+}

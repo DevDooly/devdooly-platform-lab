@@ -3,6 +3,8 @@ import LabExplorer from '../components/LabExplorer';
 import PlatformObservationCard from '../components/PlatformObservationCard';
 import JobObservationCard from '../components/JobObservationCard';
 import AiWindowCase from '../components/AiWindowCase';
+import WorkerReadinessProof from '../components/WorkerReadinessProof.astro';
+import IcebergDataflowCard from '../components/IcebergDataflowCard';
 import '../styles/global.css';
 const assetBase = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const apiBase = import.meta.env.PUBLIC_API_BASE_URL || '/api';
@@ -20,7 +22,7 @@ const steps = [
   { number: '03', title: '외부에서도 읽을 수 있게', text: '미니 PC의 관측 기록을 공개합니다. 실시간 API 연결과 공개 HTTPS 경로는 별도로 준비합니다.', state: '관측 기록 공개', tone: 'active' },
   { number: '04', title: '메시징과 객체 저장소', text: 'Kafka·Garage·상시 worker를 배포하고 파일 저장 확인, 재시작과 격리 복원을 검증했습니다.', state: '배포·검증', tone: 'active' },
   { number: '05', title: 'AI 개선 사례', text: '개인 Java 시간창 예제로 UTC 오류를 재현·수정하고, 같은 답을 구하는 두 알고리즘의 JMH 측정 기록을 공개합니다. 사람 검토는 대기 중입니다.', state: '로컬 재현·측정', tone: 'active' },
-  { number: '06', title: '데이터 플랫폼 확장', text: 'Iceberg·Spark·Trino의 적재·조회·재시작을 자원 예산 안에서 검증할 계획입니다.', state: '예정', tone: '' },
+  { number: '06', title: '데이터 플랫폼 확장', text: 'Iceberg·Trino의 영속 catalog와 시점 조회를 별도 합성 실험으로 준비합니다. Spark·compaction은 후속 범위입니다.', state: '실증 준비', tone: '' },
 ];
 ---
 <!doctype html>
@@ -56,8 +58,10 @@ const steps = [
       <section id="about" class="section experience-section" aria-labelledby="experience-title"><div class="section-heading"><div><span class="eyebrow">01 / EXPERIENCE INTO EVIDENCE</span><h2 id="experience-title">실무에서 다룬 기술, 직접 확인할 수 있는 기록.</h2></div><a class="text-link" href="https://github.com/DevDooly" target="_blank" rel="noreferrer">개발 기록 더 보기 ↗</a></div><div class="experience-grid">{skills.map(skill => <article class="experience-item"><span class="experience-number">{skill.index}</span><h3>{skill.title}</h3><p>{skill.description}</p><div class="skill-tags">{skill.tags.map(tag => <span>{tag}</span>)}</div></article>)}</div><div class="ai-note"><span class="ai-symbol" aria-hidden="true">✳</span><div><h3>AI와 함께 읽고, 개발자의 판단으로 개선합니다.</h3><p>LLM을 레거시 코드 분석과 버그 수정에 적극 활용합니다. 아래 개인 합성 예제에서는 시간대 오류 수정과 계산 복잡도 개선을 독립 테스트·JMH로 확인하며, 실무 성과와 구분합니다.</p><a class="text-link" href="#ai-window">개인 예제와 검증 기록 보기 ↗</a></div><span class="tag">개인 예제 · 사람 검토 대기</span></div></section>
       <LabExplorer client:load apiBase={apiBase} observationUrl={`${assetBase}data/lab-observation.json`}/>
       <JobObservationCard client:load apiBase={apiBase} observationUrl={`${assetBase}observations/jobs.latest.json`} mode={jobObservationMode}/>
+      <WorkerReadinessProof />
       <PlatformObservationCard client:load observationUrl={`${assetBase}data/platform-observation.json`}/>
       <AiWindowCase client:load observationUrl={`${assetBase}observations/ai-window.latest.json`}/>
+      <IcebergDataflowCard client:load observationUrl={`${assetBase}observations/iceberg.latest.json`}/>
       <section id="progress" class="section progress-section" aria-labelledby="progress-title"><div class="progress-intro"><span class="eyebrow">04 / BUILD IN THE OPEN</span><h2 id="progress-title">구축 과정도<br/>기록합니다.</h2><p>이곳은 개인 Lab의 첫 버전입니다.<br/>실무 경험과 새로 구축하는 환경을 구분하고,<br/>검증한 결과만 기록합니다.</p><a class="text-link" href={`${github}/blob/main/docs/ROADMAP.md`} target="_blank" rel="noreferrer">전체 진행 목록 ↗</a></div><div class="progress-list">{steps.map(step => <article class="progress-step"><span class="step-number">{step.number}</span><div><h3>{step.title}</h3><p>{step.text}</p></div><span class={`step-state ${step.tone}`}>{step.state}</span></article>)}</div></section>
       <section class="section notes-section" aria-label="기술 문서와 소스 코드"><div><span class="eyebrow">THE NOTES BEHIND THE WORK</span><h2>코드 옆에, 이유를 남깁니다.</h2><p>문제를 이해하고 선택한 방법, 검증한 과정은 문서에서 이어집니다.</p></div><div class="notes-links"><a href="https://devdooly.github.io/TIL/" target="_blank" rel="noreferrer"><div><small>TECHNICAL WIKI</small><strong>TIL · 매일의 기술 기록</strong></div><span aria-hidden="true">↗</span></a><a href={`${github}/tree/main/docs`} target="_blank" rel="noreferrer"><div><small>PROJECT DOCUMENTS</small><strong>설계 결정과 검증 기록</strong></div><span aria-hidden="true">↗</span></a><a href={`${github}/blob/main/docs/evidence/input-concurrency-load/README.md`} target="_blank" rel="noreferrer"><div><small>ISOLATED VALIDATION</small><strong>최대 1,000개 · 동시 접수 검증</strong></div><span aria-hidden="true">↗</span></a></div></section>
     </main>
