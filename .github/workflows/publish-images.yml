@@ -32,6 +32,10 @@ jobs:
        github.event.state == 'success')
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+      statuses: read
     outputs:
       eligible: ${{ steps.eligibility.outputs.eligible }}
       commit: ${{ steps.eligibility.outputs.commit }}
@@ -46,6 +50,7 @@ jobs:
         id: eligibility
         env:
           EXPECTED_JENKINS_ISSUER: ${{ vars.JENKINS_STATUS_ISSUER }}
+          LAB_GITHUB_METADATA_TOKEN: ${{ github.token }}
         run: |
           python3 infra/scripts/ci_publication_gate.py \
             --event-file "$GITHUB_EVENT_PATH" --event-name "$GITHUB_EVENT_NAME" \
@@ -60,6 +65,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+      actions: read
+      statuses: read
     outputs:
       manifest: ${{ steps.deployment.outputs.manifest }}
     env:
@@ -84,6 +91,7 @@ jobs:
         env:
           EXPECTED_JENKINS_ISSUER: ${{ vars.JENKINS_STATUS_ISSUER }}
           GATED_SOURCE_COMMIT: ${{ needs.gate.outputs.commit }}
+          LAB_GITHUB_METADATA_TOKEN: ${{ github.token }}
         run: |
           python3 .ci-tools/infra/scripts/ci_publication_gate.py \
             --event-file "$GITHUB_EVENT_PATH" --event-name "$GITHUB_EVENT_NAME" \
@@ -118,6 +126,7 @@ jobs:
       - name: Recheck current main and both CI paths immediately before publication
         env:
           EXPECTED_JENKINS_ISSUER: ${{ vars.JENKINS_STATUS_ISSUER }}
+          LAB_GITHUB_METADATA_TOKEN: ${{ github.token }}
         run: |
           python3 .ci-tools/infra/scripts/ci_publication_gate.py \
             --event-file "$GITHUB_EVENT_PATH" --event-name "$GITHUB_EVENT_NAME" \
@@ -257,6 +266,8 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      actions: read
+      statuses: read
     steps:
       - name: Checkout trusted proposal tools from main
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -269,6 +280,7 @@ jobs:
           PUBLISHED_MANIFEST: ${{ needs.publish.outputs.manifest }}
           EXPECTED_JENKINS_ISSUER: ${{ vars.JENKINS_STATUS_ISSUER }}
           GH_TOKEN: ${{ github.token }}
+          LAB_GITHUB_METADATA_TOKEN: ${{ github.token }}
         run: |
           python3 - <<'PY'
           import json, os, pathlib

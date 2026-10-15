@@ -17,7 +17,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlencode
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
-from ci_publication_gate import CONTEXT, GateError, PublicGitHub, REPOSITORY, evaluate, full_sha, repo_matches
+from ci_publication_gate import CONTEXT, GateError, PublicGitHub, REPOSITORY, evaluate, full_sha, repo_matches, safe_error_message
 from gitops_values import REPOSITORIES, ValuesError, parse, render, update, validate_change
 from validate_gitops_pr import VALUES_PATH, read_values
 
@@ -214,11 +214,12 @@ def main():
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         if not isinstance(manifest, dict):
             raise ProposalError("INVALID_PUBLICATION_MANIFEST")
-        result = propose(manifest, args.expected_issuer, PublicGitHub(), GitHubWriter(os.environ.get("GH_TOKEN", "")))
+        metadata = PublicGitHub(os.environ.get("LAB_GITHUB_METADATA_TOKEN"))
+        result = propose(manifest, args.expected_issuer, metadata, GitHubWriter(os.environ.get("GH_TOKEN", "")))
         print(json.dumps(result, sort_keys=True))
         return 0
     except (GateError, ValuesError, ProposalError) as exc:
-        print(f"GitOps proposal withheld: {exc}", file=sys.stderr)
+        print(f"GitOps proposal withheld: {safe_error_message(exc)}", file=sys.stderr)
         return 1
     except (OSError, ValueError, KeyError, TypeError, AttributeError):
         print("GitOps proposal withheld: INVALID_INPUT", file=sys.stderr)

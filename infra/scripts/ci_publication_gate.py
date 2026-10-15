@@ -9,13 +9,14 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 import re
 import sys
 from typing import Any, Callable
 from urllib.error import HTTPError, URLError
-from urllib.parse import quote, urlencode
-from urllib.request import Request, urlopen
+from urllib.parse import parse_qsl, quote, urlencode, urlsplit
+from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
 
 REPOSITORY = "DevDooly/devdooly-platform-lab"
 CONTEXT = "ci/jenkins-test"
@@ -27,6 +28,10 @@ DESCRIPTION = re.compile(r"Jenkins build #([1-9][0-9]*): tests and artifacts ver
 
 class GateError(Exception):
     """A safe, predefined diagnostic; never contains HTTP bodies or secrets."""
+
+    def __init__(self, code: str, diagnostics: dict[str, int] | None = None):
+        super().__init__(code)
+        self.diagnostics = diagnostics or {}
 
 
 class GatePending(GateError):
@@ -206,21 +211,100 @@ def already_published(source: str, current_run_id: str, get: Callable[[str], Any
     return False
 
 
+def metadata_route(path: str) -> bool:
+    """Only the existing read-only routes of this repository may receive a token."""
+    if not isinstance(path, str) or not 0 < len(path) <= 2048 or not path.isascii():
+        return False
+    if any(ord(character) < 33 or ord(character) > 126 for character in path):
+        return False
+    parsed = urlsplit(path)
+    if parsed.scheme or parsed.netloc or parsed.fragment or not re.fullmatch(r"[A-Za-z0-9._/-]+", parsed.path):
+        return False
+    if parsed.path.startswith("/") or any(part in {"", ".", ".."} for part in parsed.path.split("/")):
+        return False
+    try:
+        pairs = parse_qsl(parsed.query, keep_blank_values=True, strict_parsing=True)
+    except ValueError:
+        return False
+    query = dict(pairs)
+    if len(query) != len(pairs):
+        return False
+    source = r"[0-9a-f]{40}"
+    branch = "automation/lab-images/" + source
+    number = r"[1-9][0-9]{0,19}"
+    route = parsed.path
+    if not query:
+        return bool(route == "git/ref/heads/main" or re.fullmatch(r"actions/runs/" + number, route)
+                    or re.fullmatch(r"git/ref/heads/" + branch, route)
+                    or re.fullmatch(r"compare/" + source + r"\.\.\." + branch, route)
+                    or re.fullmatch(r"pulls/" + number, route))
+    if route in {"actions/workflows/lab-ci.yml/runs", "actions/workflows/publish-images.yml/runs"}:
+        keys = {"head_sha", "per_page"} | ({"branch"} if route.endswith("lab-ci.yml/runs") else set())
+        return (set(query) == keys and bool(SHA.fullmatch(query.get("head_sha", "")))
+                and query.get("per_page") == "100" and ("branch" not in keys or query["branch"] == "main"))
+    if re.fullmatch(r"commits/" + source + r"/statuses", route):
+        return set(query) == {"per_page", "page"} and query["per_page"] == "100" and query["page"] in {"1", "2", "3", "4", "5"}
+    if re.fullmatch(r"actions/runs/" + number + r"/artifacts", route):
+        return query == {"per_page": "100"}
+    if route == "contents/gitops/environments/home-lab/values.yaml":
+        return set(query) == {"ref"} and bool(re.fullmatch(source + "|" + branch, query["ref"]))
+    if route == "pulls":
+        return (set(query) == {"state", "base", "head", "per_page"} and query["state"] == "open"
+                and query["base"] == "main" and query["per_page"] == "10"
+                and bool(re.fullmatch("DevDooly:" + branch, query["head"])))
+    if re.fullmatch(r"pulls/" + number + r"/files", route):
+        return query == {"per_page": "100", "page": "1"}
+    return False
+
+
+def rate_diagnostics(error: HTTPError) -> dict[str, int]:
+    if error.code not in {403, 429}:
+        return {}
+    result = {}
+    for header, field in (("X-RateLimit-Remaining", "rate_limit_remaining"),
+                          ("X-RateLimit-Reset", "rate_limit_reset"), ("Retry-After", "retry_after_seconds")):
+        value = error.headers.get(header) if error.headers is not None else None
+        if isinstance(value, str) and re.fullmatch(r"[0-9]{1,19}", value) and int(value) <= (1 << 63) - 1:
+            result[field] = int(value)
+    return result
+
+
+def safe_error_message(error: Exception) -> str:
+    if isinstance(error, GateError) and error.diagnostics:
+        return str(error) + " " + json.dumps(error.diagnostics, sort_keys=True, separators=(",", ":"))
+    return str(error)
+
+
+class RejectMetadataRedirects(HTTPRedirectHandler):
+    def redirect_request(self, request, fp, code, message, headers, new_url):
+        raise GateError("PUBLIC_METADATA_REDIRECT_REJECTED")
+
+
 class PublicGitHub:
+    def __init__(self, token: str | None = None):
+        if token is not None and (not isinstance(token, str) or not re.fullmatch(r"[A-Za-z0-9_]{20,255}", token)):
+            raise GateError("INVALID_METADATA_TOKEN")
+        self._token = token
+        self._opener = build_opener(ProxyHandler({}), RejectMetadataRedirects())
+
     def __call__(self, path: str) -> Any:
-        # All paths are built from validated constants, integer IDs, and SHA values.
+        if not metadata_route(path):
+            raise GateError("PUBLIC_METADATA_ROUTE_REJECTED")
+        headers = {"Accept": "application/vnd.github+json", "User-Agent": "devdooly-lab-ci-gate"}
+        if self._token is not None:
+            headers["Authorization"] = "Bearer " + self._token
         request = Request(
             f"https://api.github.com/repos/{quote(REPOSITORY, safe='/')}/{path}",
-            headers={"Accept": "application/vnd.github+json", "User-Agent": "devdooly-lab-ci-gate"},
+            headers=headers, method="GET",
         )
         try:
-            with urlopen(request, timeout=30) as response:
+            with self._opener.open(request, timeout=30) as response:
                 data = response.read(2 * 1024 * 1024 + 1)
             if len(data) > 2 * 1024 * 1024:
                 raise GateError("PUBLIC_METADATA_RESPONSE_TOO_LARGE")
             return json.loads(data)
         except HTTPError as exc:
-            raise GateError(f"PUBLIC_METADATA_HTTP_{exc.code}") from None
+            raise GateError(f"PUBLIC_METADATA_HTTP_{exc.code}", rate_diagnostics(exc)) from None
         except (URLError, TimeoutError, json.JSONDecodeError):
             raise GateError("PUBLIC_METADATA_UNAVAILABLE") from None
 
@@ -254,8 +338,9 @@ def main() -> int:
         event = json.loads(Path(args.event_file).read_text(encoding="utf-8"))
         if not isinstance(event, dict):
             raise GateError("INVALID_EVENT")
-        result = evaluate(args.event_name, event, args.expected_issuer, PublicGitHub())
-        if args.skip_if_published and already_published(result["commit"], args.publication_run_id, PublicGitHub()):
+        metadata = PublicGitHub(os.environ.get("LAB_GITHUB_METADATA_TOKEN"))
+        result = evaluate(args.event_name, event, args.expected_issuer, metadata)
+        if args.skip_if_published and already_published(result["commit"], args.publication_run_id, metadata):
             raise GatePending("SOURCE_ALREADY_PUBLISHED")
         write_outputs(args.output, result)
         print(json.dumps({key: result[key] for key in ("eligible", "commit", "validation_run_id", "jenkins_status_id", "jenkins_build_number")}, sort_keys=True))
@@ -268,7 +353,7 @@ def main() -> int:
         print("Publication gate failed: INVALID_LOCAL_INPUT", file=sys.stderr)
         return 1
     except GateError as exc:
-        print(f"Publication gate failed: {exc}", file=sys.stderr)
+        print(f"Publication gate failed: {safe_error_message(exc)}", file=sys.stderr)
         return 1
 
 
