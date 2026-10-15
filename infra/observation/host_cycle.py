@@ -16,6 +16,7 @@ import tempfile
 from urllib.parse import urlsplit
 
 from pages_uploader import (AutomationError, atomic_private_json, dispatch, load_job_snapshot, load_snapshot, path_chain, public_report, regular_private)
+from platform_contract import moment
 
 CONFIG_KEYS={'k3s_path','kubeconfig','server','ca_file','collector_path','state_directory',
              'runtime_directory','pages_token_file'}
@@ -98,6 +99,7 @@ def run_cycle(config: dict, *, runner=subprocess.run, uploader=dispatch, lock_cl
     private_directory(state);private_directory(runtime)
     with lock_class(state/'cycle.lock'):
         started=datetime.now(timezone.utc)
+        started_precise=(started.replace(microsecond=0),started.microsecond*1000)
         token_path=None
         try:
             issued=runner([config['k3s_path'],'kubectl','--kubeconfig',config['kubeconfig'],
@@ -118,8 +120,8 @@ def run_cycle(config: dict, *, runner=subprocess.run, uploader=dispatch, lock_cl
                 stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=80,check=False,env=SAFE_ENV)
             if captured.returncode not in {0,1}:return public_report('CAPTURE_FAILED')
             snapshot=load_snapshot(output,datetime.now(timezone.utc))
-            completed=datetime.fromisoformat(snapshot['latestAttempt']['attemptedAt'].replace('Z','+00:00'))
-            if completed<started:return public_report('CAPTURE_FAILED')
+            completed=moment(snapshot['latestAttempt']['attemptedAt'],datetime.now(timezone.utc))
+            if completed<started_precise:return public_report('CAPTURE_FAILED')
             jobs=None
             if config.get('jobs_enabled')=='true':
                 job_output=state/'jobs-observation.json'
@@ -131,8 +133,8 @@ def run_cycle(config: dict, *, runner=subprocess.run, uploader=dispatch, lock_cl
                         stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=20,check=False,env=SAFE_ENV)
                     if job_capture.returncode==0:
                         candidate=load_job_snapshot(job_output,datetime.now(timezone.utc))
-                        captured_at=datetime.fromisoformat(candidate['capturedAt'].replace('Z','+00:00'))
-                        if captured_at>=started:jobs=candidate;code='NONE'
+                        captured_at=moment(candidate['capturedAt'],datetime.now(timezone.utc))
+                        if captured_at>=started_precise:jobs=candidate;code='NONE'
                 except Exception:pass
                 # Failure does not rewrite the last job record or block a valid
                 # platform envelope. Missing input makes Pages retain last-good.
