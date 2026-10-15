@@ -113,7 +113,7 @@ JVM과 child는 Java 21·Asia/Seoul을 요구한다. 시험은 H2가 아닌 실�
 | `worker-before-dbcommit-kill` | 1 | 1 | 0 | 1 / 1 | 0 | 1 / 12 |
 | `source-invalid-pause-recovery` | 0 | 1 | 0 | 1 / 1 | 0 | 1 / 12 |
 
-`successfulParentDeliveries`는 parent worker가 정상 반환한 수신만 센다. 강제 종료된 child의 수신·처리나 손상 원본의 실패 시도는 포함하지 않는다. `completedReplaysObserved`는 parent가 이미 DB 완료된 작업의 재전달을 확인한 횟수다. producer 내부 retry, 네트워크 실제 전달 횟수, 전체 처리 시도 횟수와 동의어가 아니다. 총 forced kill은 3회이며 손상 원본 시험은 강제 kill을 수행하지 않았다.
+`successfulParentDeliveries`는 parent worker가 정상 반환한 수신만 센다. 강제 종료된 child의 수신·처리나 손상 원본의 실패 시도는 포함하지 않는다. `completedReplaysObserved`는 parent가 이미 DB 완료된 작업의 재전달을 확인한 횟수다. producer 내부 retry, 네트워크 실제 전달 횟수, 전체 처리 시도 횟수와 동의어가 아니다. 최종 실행 기준 forced kill은 3회이며 최초 실행도 별도로 3회 수행했다. 손상 원본 시험은 강제 kill을 수행하지 않았다.
 
 ## checkpoint와 강제 종료 증거
 

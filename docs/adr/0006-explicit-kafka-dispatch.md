@@ -65,7 +65,7 @@ DB commit 전 시험은 실제 MariaDB SQL과 transaction을 실행한 child에�
 
 결과 export worker는 아직 구현하지 않았다. `COMPLETED`는 DB 연산 완료이며 결과·실패 파일의 S3 export 완료가 아니다. export intent와 singleton 실행 슬롯을 보유하고, 시험 성공을 만들기 위해 `completeExport`를 호출하거나 다음 작업 슬롯을 자동 해제하지 않는다. 시험 teardown만 자기 UUID의 폐기 가능한 자원을 명시적으로 정리한다.
 
-실제 시험에서는 첫 세 경계에서 JVM을 각각 한 번, 총 세 번 강제 종료했다. publisher ACK 뒤 kill은 최종 log end/committed offset 2/2, 나머지 세 시험은 각각 1/1이었다. 모든 시험의 최종 lag는 0이고 run 1·outcome 12였다. 공개 JSON의 `successfulParentDeliveries`는 성공 반환한 parent 수신만 세며 중단 child·실패 시도를 포함하지 않는다. `completedReplaysObserved`도 완료된 DB 작업을 parent가 재전달받아 관측한 횟수이지 전체 전송·재시도 수가 아니다.
+최종 실행에서는 첫 세 경계에서 JVM을 각각 한 번, 총 세 번 강제 종료했다. 최초 실행도 별도로 세 번 수행했다. publisher ACK 뒤 kill은 최종 log end/committed offset 2/2, 나머지 세 시험은 각각 1/1이었다. 모든 시험의 최종 lag는 0이고 run 1·outcome 12였다. 공개 JSON의 `successfulParentDeliveries`는 성공 반환한 parent 수신만 세며 중단 child·실패 시도를 포함하지 않는다. `completedReplaysObserved`도 완료된 DB 작업을 parent가 재전달받아 관측한 횟수이지 전체 전송·재시도 수가 아니다.
 
 teardown 뒤 시험 topic·group·DB 작업/결과 행·trigger는 0개, singleton slot은 1개이며 비어 있고 V1·V2 migration은 각각 성공 1회였다. broker는 제거 전 OOM false·restart 0이었고, 전용 trial container 3개·DB/Kafka volume 2개·network를 제거했다. 보존 대상 Docker 38개의 ID 일치를 확인했으며 고정 전후 자료로 운영 image·SQL·시각·PVC·공개 API 저장 필드·실행 중 Docker 26개의 시작 시각·host boot·node·방화벽 보존을 확인했다. 운영 배포나 롤백은 수행하지 않았다.
 
