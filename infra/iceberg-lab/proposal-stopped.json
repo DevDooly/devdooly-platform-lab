@@ -1,0 +1,799 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Namespace",
+      "metadata": {
+        "name": "platform-lab-iceberg-plan2-20261016",
+        "labels": {
+          "devdooly.io/purpose": "iceberg-jdbc-trial",
+          "devdooly.io/operation": "20261016-plan2"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ResourceQuota",
+      "metadata": {
+        "name": "bounded-trial",
+        "labels": {
+          "devdooly.io/purpose": "iceberg-jdbc-trial",
+          "devdooly.io/operation": "20261016-plan2"
+        },
+        "namespace": "platform-lab-iceberg-plan2-20261016"
+      },
+      "spec": {
+        "hard": {
+          "pods": "2",
+          "persistentvolumeclaims": "2",
+          "requests.storage": "3Gi",
+          "requests.cpu": "1",
+          "requests.memory": "3Gi",
+          "limits.cpu": "1500m",
+          "limits.memory": "5Gi",
+          "services": "2",
+          "secrets": "2",
+          "configmaps": "3"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ServiceAccount",
+      "metadata": {
+        "name": "iceberg-trial",
+        "labels": {
+          "devdooly.io/purpose": "iceberg-jdbc-trial",
+          "devdooly.io/operation": "20261016-plan2"
+        },
+        "namespace": "platform-lab-iceberg-plan2-20261016"
+      },
+      "automountServiceAccountToken": false
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ConfigMap",
+      "metadata": {
+        "name": "trino-config",
+        "labels": {
+          "devdooly.io/purpose": "iceberg-jdbc-trial",
+          "devdooly.io/operation": "20261016-plan2"
+        },
+        "namespace": "platform-lab-iceberg-plan2-20261016"
+      },
+      "data": {
+        "config.properties": "coordinator=true\nnode-scheduler.include-coordinator=true\nhttp-server.http.port=8080\ndiscovery.uri=http://127.0.0.1:8080\nquery.max-memory=256MB\nquery.max-memory-per-node=256MB\nquery.max-total-memory=512MB\nmemory.heap-headroom-per-node=512MB\nquery.max-run-time=30s\nquery.max-execution-time=30s\nretry-policy=NONE\ntask.concurrency=1\ntask.max-worker-threads=2\n",
+        "node.properties": "node.environment=phase6_lab\nnode.id=phase6-jdbc-single\nnode.data-dir=/data/trino\n",
+        "jvm.config": "-server\n-Xms512m\n-Xmx2g\n-XX:+UseG1GC\n-XX:G1HeapRegionSize=8M\n-XX:+ExitOnOutOfMemoryError\n-XX:ReservedCodeCacheSize=128M\n-Djdk.attach.allowAttachSelf=true\n-Djdk.nio.maxCachedBufferSize=2000000\n-Djava.io.tmpdir=/tmp\n",
+        "log.properties": "io.trino=INFO\n",
+        "iceberg.properties": "connector.name=iceberg\niceberg.catalog.type=jdbc\niceberg.jdbc-catalog.driver-class=org.postgresql.Driver\niceberg.jdbc-catalog.connection-url=jdbc:postgresql://postgres:5432/iceberg_lab?connectTimeout=5&socketTimeout=30&ApplicationName=phase6-trino\niceberg.jdbc-catalog.connection-user=iceberg_catalog\niceberg.jdbc-catalog.connection-password=${ENV:CATALOG_PASSWORD}\niceberg.jdbc-catalog.catalog-name=phase6\niceberg.jdbc-catalog.schema-version=V1\niceberg.jdbc-catalog.default-warehouse-dir=s3://${ENV:S3_BUCKET}/warehouse/phase6\nfs.s3.enabled=true\ns3.endpoint=${ENV:S3_ENDPOINT}\ns3.region=garage\ns3.path-style-access=true\ns3.aws-access-key=${ENV:S3_ACCESS_KEY}\ns3.aws-secret-key=${ENV:S3_SECRET_KEY}\ns3.auth-type=DEFAULT\ns3.streaming.part-size=5MB\ns3.max-connections=8\ns3.socket-connect-timeout=5s\ns3.socket-timeout=15s\ns3.max-error-retries=1\ns3.retry-mode=STANDARD\n",
+        "resource-groups.properties": "resource-groups.configuration-manager=file\nresource-groups.config-file=/etc/trino/resource-groups.json\n",
+        "resource-groups.json": "{\"rootGroups\": [{\"name\": \"lab\", \"softMemoryLimit\": \"256MB\", \"hardConcurrencyLimit\": 1, \"maxQueued\": 0}], \"selectors\": [{\"user\": \"lab_operator\", \"group\": \"lab\"}]}\n"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ConfigMap",
+      "metadata": {
+        "name": "postgres-init",
+        "labels": {
+          "devdooly.io/purpose": "iceberg-jdbc-trial",
+          "devdooly.io/operation": "20261016-plan2"
+        },
+        "namespace": "platform-lab-iceberg-plan2-20261016"
+      },
+      "data": {
+        "01-catalog.sh": "#!/bin/sh\nset -eu\npsql --no-psqlrc --set=ON_ERROR_STOP=1 --username=lab_bootstrap --dbname=iceberg_lab <<'SQL'\nSELECT format('CREATE ROLE iceberg_catalog LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE PASSWORD %L', pg_read_file('/run/phase6-secrets/catalog-password')) \\gexec\nALTER DATABASE iceberg_lab OWNER TO iceberg_catalog;\nREVOKE CREATE ON SCHEMA public FROM PUBLIC;\nALTER SCHEMA public OWNER TO iceberg_catalog;\nSET ROLE iceberg_catalog;\n-- Schema derived from Apache Iceberg 1.11.0 JdbcUtil V0_CREATE_CATALOG_SQL,\n-- V1_UPDATE_CATALOG_SQL and CREATE_NAMESPACE_PROPERTIES_TABLE_SQL.\n-- Source: https://github.com/apache/iceberg/blob/apache-iceberg-1.11.0/core/src/main/java/org/apache/iceberg/jdbc/JdbcUtil.java\n-- New dedicated database only. No IF NOT EXISTS: partial/unknown initialization must be diagnosed.\nCREATE TABLE iceberg_tables (\n    catalog_name VARCHAR(255) NOT NULL,\n    table_namespace VARCHAR(255) NOT NULL,\n    table_name VARCHAR(255) NOT NULL,\n    metadata_location VARCHAR(1000),\n    previous_metadata_location VARCHAR(1000),\n    PRIMARY KEY (catalog_name, table_namespace, table_name)\n);\nALTER TABLE iceberg_tables ADD COLUMN iceberg_type VARCHAR(5);\nCREATE TABLE iceberg_namespace_properties (\n    catalog_name VARCHAR(255) NOT NULL,\n    namespace VARCHAR(255) NOT NULL,\n    property_key VARCHAR(255),\n    property_value VARCHAR(1000),\n    PRIMARY KEY (catalog_name, namespace, property_key)\n);\n\nSQL\n"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolumeClaim",
+      "metadata": {
+        "name": "postgres-data",
+        "labels": {
+          "devdooly.io/purpose": "iceberg-jdbc-trial",
+          "devdooly.io/operation": "20261016-plan2"
+        },
+        "namespace": "platform-lab-iceberg-plan2-20261016"
+      },
+      "spec": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "storageClassName": "local-path",
+        "resources": {
+          "requests": {
+            "storage": "2Gi"
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolumeClaim",
+      "metadata": {
+        "name": "trino-data",
+        "labels": {
+          "devdooly.io/purpose": "iceberg-jdbc-trial",
+          "devdooly.io/operation": "20261016-plan2"
+        },
+        "namespace": "platform-lab-iceberg-plan2-20261016"
+      },
+      "spec": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "storageClassName": "local-path",
+        "resources": {
+          "requests": {
+            "storage": "1Gi"
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "StatefulSet",
+      "metadata": {
+        "name": "postgres",
+        "labels": {
+          "devdooly.io/purpose": "iceberg-jdbc-trial",
+          "devdooly.io/operation": "20261016-plan2",
+          "app.kubernetes.io/component": "postgres"
+        },
+        "namespace": "platform-lab-iceberg-plan2-20261016"
+      },
+      "spec": {
+        "replicas": 0,
+        "serviceName": "postgres",
+        "selector": {
+          "matchLabels": {
+            "devdooly.io/purpose": "iceberg-jdbc-trial",
+            "devdooly.io/operation": "20261016-plan2",
+            "app.kubernetes.io/component": "postgres"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "devdooly.io/purpose": "iceberg-jdbc-trial",
+              "devdooly.io/operation": "20261016-plan2",
+              "app.kubernetes.io/component": "postgres"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": false,
+            "enableServiceLinks": false,
+            "serviceAccountName": "iceberg-trial",
+            "terminationGracePeriodSeconds": 300,
+            "securityContext": {
+              "runAsNonRoot": true,
+              "runAsUser": 999,
+              "runAsGroup": 999,
+              "fsGroup": 999,
+              "fsGroupChangePolicy": "OnRootMismatch",
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "containers": [
+              {
+                "name": "postgres",
+                "image": "docker.io/library/postgres@sha256:3645570cccdfa447589da9f57dd740faa29b30938e861289a5574b6ca6b03826",
+                "imagePullPolicy": "IfNotPresent",
+                "args": [
+                  "postgres",
+                  "-c",
+                  "shared_buffers=128MB",
+                  "-c",
+                  "max_connections=10",
+                  "-c",
+                  "max_worker_processes=2",
+                  "-c",
+                  "max_parallel_workers=2",
+                  "-c",
+                  "fsync=on",
+                  "-c",
+                  "synchronous_commit=on",
+                  "-c",
+                  "full_page_writes=on",
+                  "-c",
+                  "log_statement=none",
+                  "-c",
+                  "statement_timeout=30000",
+                  "-c",
+                  "lock_timeout=5000"
+                ],
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "readOnlyRootFilesystem": true,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  }
+                },
+                "resources": {
+                  "requests": {
+                    "cpu": "250m",
+                    "memory": "512Mi",
+                    "ephemeral-storage": "256Mi"
+                  },
+                  "limits": {
+                    "cpu": "500m",
+                    "memory": "1Gi",
+                    "ephemeral-storage": "1Gi"
+                  }
+                },
+                "env": [
+                  {
+                    "name": "POSTGRES_USER",
+                    "value": "lab_bootstrap"
+                  },
+                  {
+                    "name": "POSTGRES_DB",
+                    "value": "iceberg_lab"
+                  },
+                  {
+                    "name": "POSTGRES_PASSWORD_FILE",
+                    "value": "/run/phase6-secrets/bootstrap-password"
+                  },
+                  {
+                    "name": "POSTGRES_INITDB_ARGS",
+                    "value": "--encoding=UTF8 --locale=C --auth-host=scram-sha-256"
+                  },
+                  {
+                    "name": "PGDATA",
+                    "value": "/var/lib/postgresql/data/pgdata"
+                  }
+                ],
+                "ports": [
+                  {
+                    "name": "postgres",
+                    "containerPort": 5432
+                  }
+                ],
+                "volumeMounts": [
+                  {
+                    "name": "data",
+                    "mountPath": "/var/lib/postgresql/data"
+                  },
+                  {
+                    "name": "init",
+                    "mountPath": "/docker-entrypoint-initdb.d",
+                    "readOnly": true
+                  },
+                  {
+                    "name": "secrets",
+                    "mountPath": "/run/phase6-secrets",
+                    "readOnly": true
+                  },
+                  {
+                    "name": "run",
+                    "mountPath": "/var/run/postgresql"
+                  },
+                  {
+                    "name": "tmp",
+                    "mountPath": "/tmp"
+                  },
+                  {
+                    "name": "shm",
+                    "mountPath": "/dev/shm"
+                  }
+                ],
+                "startupProbe": {
+                  "exec": {
+                    "command": [
+                      "pg_isready",
+                      "-U",
+                      "lab_bootstrap",
+                      "-d",
+                      "iceberg_lab"
+                    ]
+                  },
+                  "periodSeconds": 2,
+                  "failureThreshold": 60,
+                  "timeoutSeconds": 2
+                },
+                "readinessProbe": {
+                  "exec": {
+                    "command": [
+                      "pg_isready",
+                      "-U",
+                      "lab_bootstrap",
+                      "-d",
+                      "iceberg_lab"
+                    ]
+                  },
+                  "periodSeconds": 5,
+                  "timeoutSeconds": 2
+                }
+              }
+            ],
+            "volumes": [
+              {
+                "name": "data",
+                "persistentVolumeClaim": {
+                  "claimName": "postgres-data"
+                }
+              },
+              {
+                "name": "init",
+                "configMap": {
+                  "name": "postgres-init",
+                  "defaultMode": 292
+                }
+              },
+              {
+                "name": "secrets",
+                "secret": {
+                  "secretName": "iceberg-postgres-credentials",
+                  "defaultMode": 288
+                }
+              },
+              {
+                "name": "run",
+                "emptyDir": {
+                  "sizeLimit": "16Mi"
+                }
+              },
+              {
+                "name": "tmp",
+                "emptyDir": {
+                  "sizeLimit": "64Mi"
+                }
+              },
+              {
+                "name": "shm",
+                "emptyDir": {
+                  "medium": "Memory",
+                  "sizeLimit": "128Mi"
+                }
+              }
+            ],
+            "nodeSelector": {
+              "kubernetes.io/arch": "amd64",
+              "kubernetes.io/os": "linux"
+            }
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "name": "trino",
+        "labels": {
+          "devdooly.io/purpose": "iceberg-jdbc-trial",
+          "devdooly.io/operation": "20261016-plan2",
+          "app.kubernetes.io/component": "trino"
+        },
+        "namespace": "platform-lab-iceberg-plan2-20261016"
+      },
+      "spec": {
+        "replicas": 0,
+        "strategy": {
+          "type": "Recreate"
+        },
+        "selector": {
+          "matchLabels": {
+            "devdooly.io/purpose": "iceberg-jdbc-trial",
+            "devdooly.io/operation": "20261016-plan2",
+            "app.kubernetes.io/component": "trino"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "devdooly.io/purpose": "iceberg-jdbc-trial",
+              "devdooly.io/operation": "20261016-plan2",
+              "app.kubernetes.io/component": "trino"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": false,
+            "enableServiceLinks": false,
+            "serviceAccountName": "iceberg-trial",
+            "terminationGracePeriodSeconds": 300,
+            "securityContext": {
+              "runAsNonRoot": true,
+              "runAsUser": 1000,
+              "runAsGroup": 1000,
+              "fsGroup": 1000,
+              "fsGroupChangePolicy": "OnRootMismatch",
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "containers": [
+              {
+                "name": "trino",
+                "image": "docker.io/trinodb/trino@sha256:db58cc93e593a2706553745f276bb119c9810e69918be56ecde088ba7ccb0534",
+                "imagePullPolicy": "IfNotPresent",
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "readOnlyRootFilesystem": true,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  }
+                },
+                "resources": {
+                  "requests": {
+                    "cpu": "500m",
+                    "memory": "2Gi",
+                    "ephemeral-storage": "256Mi"
+                  },
+                  "limits": {
+                    "cpu": "1",
+                    "memory": "4Gi",
+                    "ephemeral-storage": "1Gi"
+                  }
+                },
+                "ports": [
+                  {
+                    "name": "http",
+                    "containerPort": 8080
+                  }
+                ],
+                "env": [
+                  {
+                    "name": "CATALOG_PASSWORD",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "iceberg-postgres-credentials",
+                        "key": "catalog-password"
+                      }
+                    }
+                  },
+                  {
+                    "name": "S3_ENDPOINT",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "iceberg-s3-credentials",
+                        "key": "endpoint"
+                      }
+                    }
+                  },
+                  {
+                    "name": "S3_BUCKET",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "iceberg-s3-credentials",
+                        "key": "bucket"
+                      }
+                    }
+                  },
+                  {
+                    "name": "S3_ACCESS_KEY",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "iceberg-s3-credentials",
+                        "key": "access-key"
+                      }
+                    }
+                  },
+                  {
+                    "name": "S3_SECRET_KEY",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "iceberg-s3-credentials",
+                        "key": "secret-key"
+                      }
+                    }
+                  }
+                ],
+                "volumeMounts": [
+                  {
+                    "name": "data",
+                    "mountPath": "/data/trino"
+                  },
+                  {
+                    "name": "config",
+                    "mountPath": "/etc/trino",
+                    "readOnly": true
+                  },
+                  {
+                    "name": "tmp",
+                    "mountPath": "/tmp"
+                  }
+                ],
+                "startupProbe": {
+                  "exec": {
+                    "command": [
+                      "/usr/lib/trino/bin/health-check"
+                    ]
+                  },
+                  "periodSeconds": 2,
+                  "failureThreshold": 60,
+                  "timeoutSeconds": 2
+                },
+                "readinessProbe": {
+                  "exec": {
+                    "command": [
+                      "/usr/lib/trino/bin/health-check"
+                    ]
+                  },
+                  "periodSeconds": 5,
+                  "timeoutSeconds": 2
+                }
+              }
+            ],
+            "volumes": [
+              {
+                "name": "data",
+                "persistentVolumeClaim": {
+                  "claimName": "trino-data"
+                }
+              },
+              {
+                "name": "config",
+                "configMap": {
+                  "name": "trino-config",
+                  "items": [
+                    {
+                      "key": "config.properties",
+                      "path": "config.properties"
+                    },
+                    {
+                      "key": "node.properties",
+                      "path": "node.properties"
+                    },
+                    {
+                      "key": "jvm.config",
+                      "path": "jvm.config"
+                    },
+                    {
+                      "key": "log.properties",
+                      "path": "log.properties"
+                    },
+                    {
+                      "key": "iceberg.properties",
+                      "path": "catalog/iceberg.properties"
+                    },
+                    {
+                      "key": "resource-groups.properties",
+                      "path": "resource-groups.properties"
+                    },
+                    {
+                      "key": "resource-groups.json",
+                      "path": "resource-groups.json"
+                    }
+                  ]
+                }
+              },
+              {
+                "name": "tmp",
+                "emptyDir": {
+                  "sizeLimit": "256Mi"
+                }
+              }
+            ],
+            "nodeSelector": {
+              "kubernetes.io/arch": "amd64",
+              "kubernetes.io/os": "linux"
+            }
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "postgres",
+        "labels": {
+          "devdooly.io/purpose": "iceberg-jdbc-trial",
+          "devdooly.io/operation": "20261016-plan2"
+        },
+        "namespace": "platform-lab-iceberg-plan2-20261016"
+      },
+      "spec": {
+        "type": "ClusterIP",
+        "selector": {
+          "devdooly.io/purpose": "iceberg-jdbc-trial",
+          "devdooly.io/operation": "20261016-plan2",
+          "app.kubernetes.io/component": "postgres"
+        },
+        "ports": [
+          {
+            "name": "postgres",
+            "port": 5432,
+            "targetPort": 5432,
+            "protocol": "TCP"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "trino",
+        "labels": {
+          "devdooly.io/purpose": "iceberg-jdbc-trial",
+          "devdooly.io/operation": "20261016-plan2"
+        },
+        "namespace": "platform-lab-iceberg-plan2-20261016"
+      },
+      "spec": {
+        "type": "ClusterIP",
+        "selector": {
+          "devdooly.io/purpose": "iceberg-jdbc-trial",
+          "devdooly.io/operation": "20261016-plan2",
+          "app.kubernetes.io/component": "trino"
+        },
+        "ports": [
+          {
+            "name": "http",
+            "port": 8080,
+            "targetPort": 8080,
+            "protocol": "TCP"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "default-deny",
+        "labels": {
+          "devdooly.io/purpose": "iceberg-jdbc-trial",
+          "devdooly.io/operation": "20261016-plan2"
+        },
+        "namespace": "platform-lab-iceberg-plan2-20261016"
+      },
+      "spec": {
+        "podSelector": {},
+        "policyTypes": [
+          "Ingress",
+          "Egress"
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "postgres-from-trino",
+        "labels": {
+          "devdooly.io/purpose": "iceberg-jdbc-trial",
+          "devdooly.io/operation": "20261016-plan2"
+        },
+        "namespace": "platform-lab-iceberg-plan2-20261016"
+      },
+      "spec": {
+        "podSelector": {
+          "matchLabels": {
+            "devdooly.io/purpose": "iceberg-jdbc-trial",
+            "devdooly.io/operation": "20261016-plan2",
+            "app.kubernetes.io/component": "postgres"
+          }
+        },
+        "policyTypes": [
+          "Ingress"
+        ],
+        "ingress": [
+          {
+            "from": [
+              {
+                "podSelector": {
+                  "matchLabels": {
+                    "devdooly.io/purpose": "iceberg-jdbc-trial",
+                    "devdooly.io/operation": "20261016-plan2",
+                    "app.kubernetes.io/component": "trino"
+                  }
+                }
+              }
+            ],
+            "ports": [
+              {
+                "protocol": "TCP",
+                "port": 5432
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "trino-outbound",
+        "labels": {
+          "devdooly.io/purpose": "iceberg-jdbc-trial",
+          "devdooly.io/operation": "20261016-plan2"
+        },
+        "namespace": "platform-lab-iceberg-plan2-20261016"
+      },
+      "spec": {
+        "podSelector": {
+          "matchLabels": {
+            "devdooly.io/purpose": "iceberg-jdbc-trial",
+            "devdooly.io/operation": "20261016-plan2",
+            "app.kubernetes.io/component": "trino"
+          }
+        },
+        "policyTypes": [
+          "Egress"
+        ],
+        "egress": [
+          {
+            "to": [
+              {
+                "podSelector": {
+                  "matchLabels": {
+                    "devdooly.io/purpose": "iceberg-jdbc-trial",
+                    "devdooly.io/operation": "20261016-plan2",
+                    "app.kubernetes.io/component": "postgres"
+                  }
+                }
+              }
+            ],
+            "ports": [
+              {
+                "protocol": "TCP",
+                "port": 5432
+              }
+            ]
+          },
+          {
+            "to": [
+              {
+                "namespaceSelector": {
+                  "matchLabels": {
+                    "kubernetes.io/metadata.name": "platform-lab"
+                  }
+                },
+                "podSelector": {
+                  "matchLabels": {
+                    "app.kubernetes.io/component": "garage"
+                  }
+                }
+              }
+            ],
+            "ports": [
+              {
+                "protocol": "TCP",
+                "port": 3900
+              }
+            ]
+          },
+          {
+            "to": [
+              {
+                "namespaceSelector": {
+                  "matchLabels": {
+                    "kubernetes.io/metadata.name": "kube-system"
+                  }
+                },
+                "podSelector": {
+                  "matchLabels": {
+                    "k8s-app": "kube-dns"
+                  }
+                }
+              }
+            ],
+            "ports": [
+              {
+                "protocol": "UDP",
+                "port": 53
+              },
+              {
+                "protocol": "TCP",
+                "port": 53
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
