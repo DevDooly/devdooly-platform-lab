@@ -1,6 +1,7 @@
 """Offline contracts only; no Docker, network, JAR loading, or PySpark."""
 import copy
 import json
+import re
 from pathlib import Path
 import sys
 import tempfile
@@ -97,9 +98,9 @@ class CiBoundaries(unittest.TestCase):
 
     def test_workflow_is_manual_read_only_and_uploads_one_explicit_safe_file(self):
         raw = (Path(__file__).resolve().parents[2] / '.github/workflows/lab-ci.yml').read_text('utf-8')
-        self.assertIn('  workflow_dispatch:\n    inputs:\n      run_spark_trial:', raw)
-        self.assertIn('default: false\n        type: boolean', raw)
-        job = raw.split('\n  isolated-spark:\n', 1)[1]
+        manual = raw.split('  workflow_dispatch:\n    inputs:\n', 1)[1].split('\npermissions:', 1)[0]
+        self.assertRegex(manual, r'(?m)^      run_spark_trial:\n        description: [^\n]+\n        required: false\n        default: false\n        type: boolean$')
+        job = re.split(r'\n  [a-z][a-z0-9-]*:\n', raw.split('\n  isolated-spark:\n', 1)[1], maxsplit=1)[0]
         self.assertIn("if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_spark_trial == true }}", job)
         self.assertIn('permissions:\n  contents: read', raw)
         self.assertIn('persist-credentials: false', job)
