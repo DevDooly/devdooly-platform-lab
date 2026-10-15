@@ -145,6 +145,8 @@ class SourceStagingIntegrationTest {
         assertThat(context.getBeansOfType(RawSourceStore.class)).isEmpty();
         assertThat(context.getBeansOfType(SourceStagingService.class)).isEmpty();
         assertThat(context.getBeansOfType(VerifiedSourceReader.class)).isEmpty();
+        assertThat(context.getBeansOfType(io.github.devdooly.platformlab.jobs.exporting.ResultExportStore.class)).isEmpty();
+        assertThat(context.getBeansOfType(io.github.devdooly.platformlab.jobs.exporting.ResultExportService.class)).isEmpty();
         assertThat(context.getBeansOfType(org.apache.kafka.clients.producer.Producer.class)).isEmpty();
         assertThat(context.getBeansOfType(org.apache.kafka.clients.consumer.Consumer.class)).isEmpty();
         assertThat(context.getBeansOfType(io.github.devdooly.platformlab.jobs.messaging.DispatchPublisher.class)).isEmpty();

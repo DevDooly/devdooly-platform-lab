@@ -1,6 +1,6 @@
 # Platform Lab 다음 개발 계획
 
-초기 계획: 2026년 10월 12일 · 최근 Kafka 재전달 검증: 2026년 10월 15일
+초기 계획: 2026년 10월 12일 · 최근 결과 export 검증: 2026년 10월 15일
 
 Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접 확인할 수 있는 포트폴리오로 발전시킵니다. 외부 백업·격리 DB 복원·재부팅과 CI/CD의 정상 배포·실패 차단·이전 image digest 복구를 확인했습니다. **3단계의 실제 수집·실패 후 보존·Pages 게시·공개 화면과 자동 운영 기본 경로·반복 게시 11회를 검증**했습니다. 게시 순서 회귀 교정, API·웹 중단 후 같은 정상 B 복원에 이어 전용 Pages 자격증명으로 수동 host cycle·실제 systemd service·timer 자동 실행을 확인했습니다. 실제 완료 간격은 약 30~31분이었고 자격증명 만료·회전과 장기간 운영은 별도 후속입니다. 이후 합성 데이터를 Kafka와 객체 저장소로 확장하고, AI를 활용한 코드 개선과 데이터 플랫폼 사례를 추가합니다.
 
@@ -91,14 +91,14 @@ GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins 
 
 [구현 전 조사와 작은 처리 흐름](plans/phase4-messaging-storage.md)에 제품 후보, 원본 보관·재전달·DB 멱등 처리와 장애 검증 순서를 정리했습니다. 이는 최초 계획이며, 이후 Garage·SDK의 격리 검증과 한정 채택을 아래 근거에 추가했습니다. 운영 설치는 후속 단계입니다.
 
-[읽기 전용 자원 사전 점검](evidence/messaging-storage/README.md)에서 잠정 메모리·디스크 관문을 통과했습니다. 한 시점의 여유이며 신규 구성의 부하 검증이나 설치 완료를 뜻하지 않습니다. V2 작업/outbox·단일 실행 슬롯과 실제 MariaDB의 잠금·동시 제출·rollback·재전달·시간대 일치를 격리 검증했습니다. 기본 verify 35개와 실제 DB 세 조건 각각 17개가 통과했으며 이전 image 호환성·기존 운영 보존도 확인했습니다. [DB 기반 코드의 결과와 한계](evidence/db-job-foundation/README.md)를 연결합니다. 운영에는 미배포입니다. 이후 Garage 원본 adapter의 기본 verify 54개·실제 SDK 4개·컨테이너 재생성 전후 각 1개를 통과했습니다. 기본 checksum 실패의 교정과 기존 운영 보존은 [S3 근거](evidence/s3-source-storage/README.md), 한정 선정은 [ADR 0005](adr/0005-verified-raw-source-storage.md)에 있습니다. 이후 Kafka 전달·수동 offset과 실제 JVM 중단 세 경계·손상 원본 복구를 검증했습니다. 기본 78개와 별도 실제 IT 4개가 통과했고 모든 최종 lag 0, DB 결과·처리 시각 보존을 확인했습니다. [Kafka 실제 근거](evidence/kafka-redelivery/README.md), [ADR 0006](adr/0006-explicit-kafka-dispatch.md)을 연결합니다. 다음은 결과·실패 파일 export와 확인 후 슬롯 해제입니다.
+[읽기 전용 자원 사전 점검](evidence/messaging-storage/README.md)에서 잠정 메모리·디스크 관문을 통과했습니다. 한 시점의 여유이며 신규 구성의 부하 검증이나 설치 완료를 뜻하지 않습니다. V2 작업/outbox·단일 실행 슬롯과 실제 MariaDB의 잠금·동시 제출·rollback·재전달·시간대 일치를 격리 검증했습니다. 기본 verify 35개와 실제 DB 세 조건 각각 17개가 통과했으며 이전 image 호환성·기존 운영 보존도 확인했습니다. [DB 기반 코드의 결과와 한계](evidence/db-job-foundation/README.md)를 연결합니다. 운영에는 미배포입니다. 이후 Garage 원본 adapter의 기본 verify 54개·실제 SDK 4개·컨테이너 재생성 전후 각 1개를 통과했습니다. 기본 checksum 실패의 교정과 기존 운영 보존은 [S3 근거](evidence/s3-source-storage/README.md), 한정 선정은 [ADR 0005](adr/0005-verified-raw-source-storage.md)에 있습니다. 이후 Kafka 전달·수동 offset과 실제 JVM 중단 세 경계·손상 원본 복구를 검증했습니다. 기본 78개와 별도 실제 IT 4개가 통과했고 모든 최종 lag 0, DB 결과·처리 시각 보존을 확인했습니다. [Kafka 실제 근거](evidence/kafka-redelivery/README.md), [ADR 0006](adr/0006-explicit-kafka-dispatch.md)을 연결합니다. 이후 결정적 결과·실패 파일의 전체 Get 확인 후 슬롯 해제를 구현하고 기본 verify 97개·실제 MariaDB/Garage IT 6개와 두 JVM 중단 후 회복을 통과했습니다. [export 실제 근거](evidence/result-export/README.md)를 연결합니다. 다음은 상시 실행기·job/export 관측과 운영 배포 조건 검증입니다.
 
 기존 합성 센서 시나리오에 메시지 수신과 원본 보관을 추가합니다. 최대 이벤트 수, 동시 실행 수, 보존 기간부터 제한하고 하나의 worker로 시작합니다. 객체 저장소는 유지보수 상태·라이선스·S3 호환 기능을 확인한 Garage로 한정 채택했으며 운영 배포 조건은 별도로 검증합니다.
 
 - [ ] 동일 이벤트 재전송, 센서별 시간 역순, 잘못된 값의 처리 규칙을 명시합니다.
 - [x] 격리 실제 Kafka·MariaDB·Garage에서 ACK 뒤·DB commit 전후 JVM을 강제 종료해 rollback·재전달 멱등·offset/lag를 확인했습니다. 운영 worker Pod 검증은 별도입니다.
 - [ ] 재시도 횟수와 실패 메시지 보관 정책을 정하고 실패 데이터의 재처리 경로를 만듭니다.
-- [ ] 원본과 처리 결과를 객체 저장소에 보관하고 run ID로 연결합니다.
+- [x] 원본·결과/실패 파일을 run/source hash로 연결하고 격리 실제 저장소에서 검증했습니다. 결과 두 파일 확인 뒤에만 export 완료와 슬롯 해제를 확정합니다. 자동 보존/정리는 후속입니다.
 - [ ] 화면에 입력·성공·실패·중복 건수와 consumer lag를 표시합니다.
 
 **완료 조건:** 메시지 전송의 멱등성과 DB의 업무 중복 방지를 나눠 검증합니다. producer 설정만으로 전체 처리의 exactly-once를 주장하지 않습니다. [Kafka producer 설정](https://kafka.apache.org/42/configuration/producer-configs/)
@@ -143,6 +143,6 @@ CKA 학습은 Lab과 연결합니다. context·RBAC·Service와 DNS·probe·requ
 1. 외부 백업·격리 DB 복원·호스트 재부팅 검증을 완료했습니다. 초기 관리자 비밀번호 교체는 별도로 남아 있습니다.
 2. CI/CD의 정상 B 배포·실제 실패 차단·이전 정상 A 복구를 완료했습니다. 전용 credential의 만료·회전은 운영 후속으로 관리합니다.
 3. 게시 순서 보존과 API·웹 중단 시 공개 기록 유지·같은 정상 B 복원을 검증했습니다. 전용 자격증명의 수동 host cycle·실제 systemd service·timer 자동 실행과 반복 Pages 게시 11회·실제 간격까지 확인했습니다. 이후 장기간 운영과 credential 만료·회전을 별도로 확인합니다.
-4. DB 작업/outbox·멱등 경계의 격리 검증을 마쳤습니다. Garage Java SDK 호환성·원본 보관·hash 확인과 컨테이너 재생성 후 Get-only 보존도 검증했습니다. [실제 MariaDB·Garage 결합](evidence/mariadb-s3/README.md)의 세 시험과 같은 DB 반복도 통과했습니다. 연결 실패·소유 데이터 복구와 운영 보존을 별도로 기록했습니다. Kafka 발행·수신과 실제 중단 후 재전달까지 [격리 검증](evidence/kafka-redelivery/README.md)을 통과했습니다. 다음은 결과·실패 파일 export, export 확인 뒤 슬롯 해제와 재시도 검증입니다. DB foundation은 검토용 변경이며 운영 image pin은 유지합니다. AI 개선 사례는 이후 5단계로 연결합니다.
+4. DB 작업/outbox·멱등 경계의 격리 검증을 마쳤습니다. Garage Java SDK 호환성·원본 보관·hash 확인과 컨테이너 재생성 후 Get-only 보존도 검증했습니다. [실제 MariaDB·Garage 결합](evidence/mariadb-s3/README.md)의 세 시험과 같은 DB 반복도 통과했습니다. 연결 실패·소유 데이터 복구와 운영 보존을 별도로 기록했습니다. Kafka 발행·수신과 실제 중단 후 재전달까지 [격리 검증](evidence/kafka-redelivery/README.md)을 통과했습니다. 결과·실패 export와 두 파일 저장 확인 후 슬롯 해제·실패/중단 후 재시도까지 [격리 검증](evidence/result-export/README.md)을 통과했습니다. 다음은 상시 실행기·운영자 정지/재개와 job/export 관측 계약을 설계하고 제한된 운영 배포 조건을 검증합니다. DB foundation은 검토용 변경이며 운영 image pin은 유지합니다. AI 개선 사례는 이후 5단계로 연결합니다.
 
 각 결과는 소스 변경, 실행 방법, 실제 검증 결과, TIL 설명, 포트폴리오 링크로 연결합니다. 작업 완료 시 [진행 목록](ROADMAP.md)을 갱신하고 프로필에는 구현한 범위만 반영합니다.

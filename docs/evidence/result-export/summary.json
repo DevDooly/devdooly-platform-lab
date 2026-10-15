@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 1,
+  "verifiedOn": "2026-10-15",
+  "timezone": "Asia/Seoul",
+  "baseCommit": "8c3bcc826843e8c7fd6d8a05966b69b1c0066307",
+  "scope": "isolated-MariaDB-Garage-and-Windows-child-JVMs",
+  "versions": {
+    "java": 21,
+    "springBoot": "4.1.1",
+    "awsSdk": "2.55.16",
+    "mariaDb": "11.8.9",
+    "garage": "2.4.1"
+  },
+  "images": {
+    "database": "mariadb:11.8.9@sha256:6422478cb8e159f080fb1d8ccf65101e26fe51385787fde7d16c3b165a331f15",
+    "garage": "dxflrs/garage@sha256:0d7c74fc8ca6fef68a5a941c0e7558c8b1e92ba3588fa7505400e1350456c796"
+  },
+  "topology": {
+    "containers": 2,
+    "publishedHostPorts": 0,
+    "internalNetwork": true,
+    "dbMemoryLimitBytes": 1073741824,
+    "garageMemoryLimitBytes": 1610612736
+  },
+  "defaultVerify": {
+    "totals": {
+      "tests": 97,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "startedAt": "2026-10-15T01:17:19.289516+00:00",
+    "finishedAt": "2026-10-15T01:17:44.297223+00:00",
+    "jarBuilt": true,
+    "noCrashHelpersInJar": true
+  },
+  "actualServiceIt": {
+    "totals": {
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "startedAt": "2026-10-15T01:18:02.123824+00:00",
+    "finishedAt": "2026-10-15T01:19:28.065520+00:00",
+    "distinctScenarios": 6,
+    "forcedChildJvmTerminations": 2,
+    "finalCases": [
+      {
+        "case": "second-file-storage-failure-retry",
+        "forcedKills": 0,
+        "objectsVerified": 2,
+        "runRows": 1,
+        "outcomeRows": 12,
+        "exported": true,
+        "slotFree": true,
+        "resultSize": 2392,
+        "resultSha256": "c1c84b8e257293c193d9a51a39af54599706e9e8bbd5d9efb2daf5a9d12648c2",
+        "failuresSize": 1451,
+        "failuresSha256": "a8537483f30eb9489d9681add64cf60c1ed3ae0b7dd3a88d13436c764e469418"
+      },
+      {
+        "case": "verified-export-and-repeat",
+        "forcedKills": 0,
+        "objectsVerified": 2,
+        "runRows": 1,
+        "outcomeRows": 12,
+        "exported": true,
+        "slotFree": true,
+        "resultSize": 2392,
+        "resultSha256": "788ccc636ebe666f0ed2342bb68c196b62d189de63c7130f2b81f6f8b0e76dc5",
+        "failuresSize": 1451,
+        "failuresSha256": "c8394c446d7bbceb0f484e4784e474465b627eba7b68463ca6cc8442b7192841"
+      },
+      {
+        "case": "exporter-first-object-kill-recovery",
+        "forcedKills": 1,
+        "objectsVerified": 2,
+        "runRows": 1,
+        "outcomeRows": 12,
+        "exported": true,
+        "slotFree": true,
+        "resultSize": 2392,
+        "resultSha256": "9d5858855767c0402bc5583f1e375e71ce6e5032c4999049f88ea363b0827672",
+        "failuresSize": 1451,
+        "failuresSha256": "1add8e4096bffeffe2dbb583865ef09a272b3078187ffe153555edf746d82b05"
+      },
+      {
+        "case": "corrupt-existing-object-explicit-repair",
+        "forcedKills": 0,
+        "objectsVerified": 2,
+        "runRows": 1,
+        "outcomeRows": 12,
+        "exported": true,
+        "slotFree": true,
+        "resultSize": 2392,
+        "resultSha256": "aef35adc874279cd3e859dcdf30180c3702f1324f729879f2e3a468bc9b8b136",
+        "failuresSize": 1451,
+        "failuresSha256": "6fa40611822a718a58abd865d1abb9a2e8c82eb57b8df6c40e3292d9e89160fc"
+      },
+      {
+        "case": "database-ack-slot-release-rollback-retry",
+        "forcedKills": 0,
+        "objectsVerified": 2,
+        "runRows": 1,
+        "outcomeRows": 12,
+        "exported": true,
+        "slotFree": true,
+        "resultSize": 2392,
+        "resultSha256": "6e50d48ac4f3fd9fae7c5db68f03033ad2efbedac6e4a1296c840e28508a2926",
+        "failuresSize": 1451,
+        "failuresSha256": "0c60bf780a5c1966552065fa0ed70cdc090d577549faa54cd9622191b71857cd"
+      },
+      {
+        "case": "exporter-both-objects-before-db-kill-recovery",
+        "forcedKills": 1,
+        "objectsVerified": 2,
+        "runRows": 1,
+        "outcomeRows": 12,
+        "exported": true,
+        "slotFree": true,
+        "resultSize": 2392,
+        "resultSha256": "85390ca41288db5023d066b2e9c2b63cb2385106bb3ff4373c5468ec53707f4c",
+        "failuresSize": 1451,
+        "failuresSha256": "0f975d2e5e02c7c5349045ea61bb338e2ebb19aeadd551a3bf0389716b08d6a5"
+      }
+    ],
+    "additionalObservation": {
+      "case": "exported-repeat-preserves-next-slot",
+      "newJobAdmitted": true,
+      "newSlotOwnerPreserved": true,
+      "additionalExportPuts": 0
+    },
+    "objectsVerifiedMeaning": "Distinct result/failures documents in the final successful state, not all GET attempts.",
+    "secondFileFailureMeaning": "Deliberate adapter-boundary exception before second S3 adapter call, not a network/storage outage."
+  },
+  "sourceIdentity": {
+    "fingerprintFile": "source-fingerprint.json",
+    "defaultAndActualSourcesMatch": true
+  },
+  "fixtureInspection": {
+    "singletonSlotFree": true,
+    "ownedRowsRemoved": true,
+    "noTriggersRemain": true,
+    "migrationsOneAndTwoSuccessfulOnce": true,
+    "noPublishedPorts": true,
+    "observedAt": "2026-10-15T01:21:03.225598+00:00"
+  },
+  "cleanup": {
+    "ownedContainersRemoved": 2,
+    "ownedNamedVolumesRemoved": 1,
+    "ownedNetworksRemoved": 1,
+    "ownedResourcesRemoved": true,
+    "allExistingDockerIdsUnchanged": true,
+    "existingDockerIncludingStoppedCount": 38,
+    "privateGarageDataAndDiagnosticsRetained": true,
+    "observedAt": "2026-10-15T01:21:16.171910+00:00"
+  },
+  "productionPreservation": {
+    "passed": true,
+    "beforeObservedAt": "2026-10-15T01:10:52.626862+00:00",
+    "afterObservedAt": "2026-10-15T01:21:33.664920+00:00",
+    "sourceCommit": "41897dbb9d2a38537f1d06928dcd01273d64be4d",
+    "gitopsRevision": "2bd1eebd5ecb81050d236148f2d4f023e2e4687a",
+    "apiImageDigest": "sha256:57c7fcbaf266eda7402831df95a12d4cabfab250071a75eaf4d8d1855f1296cb",
+    "webImageDigest": "sha256:012f955d4d85178c95c09c2dfee4b4ec858b3b87a1ac5216f53e81aca9e591f8",
+    "labPodCount": 3,
+    "productionPvcCount": 2,
+    "existingRunningDockerCount": 26,
+    "counts": {
+      "inputCount": 12,
+      "successCount": 7,
+      "failureCount": 3,
+      "duplicateCount": 2,
+      "pendingCount": 0
+    },
+    "checks": {
+      "threeLabPodsReady": true,
+      "canonicalTwelveResults": true,
+      "argoSyncedHealthyAtExpectedRevision": true,
+      "productionPvcUidsBindingsAndStorageUnchanged": true,
+      "databasePodImageAndMountsUnchanged": true,
+      "allSqlRowsTimestampsAndFlywayUnchanged": true,
+      "allPersistedApiFieldsExceptObservedAtUnchanged": true,
+      "existingDockerIdsMountsStartTimesUnchanged": true,
+      "hostBootUnchanged": true,
+      "nodesUnchanged": true,
+      "ufwUnchanged": true,
+      "productionPinsAndSourceUnchanged": true
+    }
+  },
+  "operationalDeploymentPerformed": false,
+  "publicContractChanged": false,
+  "newDependencyAdded": false,
+  "persistentExportManifestAdded": false,
+  "automaticRetentionImplemented": false
+}

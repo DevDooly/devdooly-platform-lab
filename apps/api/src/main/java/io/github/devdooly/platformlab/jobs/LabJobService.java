@@ -39,6 +39,16 @@ public class LabJobService {
     public record Outbox(long id, String runId, EventType eventType, String sourceSha256,
                          OutboxStatus status, Instant createdAt, Instant acknowledgedAt) {}
 
+    /** A bounded, committed DB snapshot. Export I/O must start only after this transaction ends. */
+    public record ExportRun(String scenario, long seed, int inputCount, int successCount,
+                            int failureCount, int duplicateCount, int pendingCount,
+                            Instant startedAt, Instant completedAt) {}
+    public record ExportSnapshot(Job job, byte[] sourceBytes, ExportRun run,
+                                 List<SensorProcessor.Outcome> outcomes) {
+        public ExportSnapshot { sourceBytes = sourceBytes.clone(); outcomes = List.copyOf(outcomes); }
+        @Override public byte[] sourceBytes() { return sourceBytes.clone(); }
+    }
+
     private final JdbcTemplate jdbc;
     private final TransactionTemplate tx;
     private final DemoService demos;
@@ -122,6 +132,31 @@ public class LabJobService {
             requireState(job.status() == Status.QUEUED || job.status() == Status.COMPLETED);
             acknowledgeOutbox(runId, EventType.DISPATCH, now());
             return job;
+        });
+    }
+
+    /** Short consistent snapshot; never performs external storage I/O. */
+    public ExportSnapshot exportSnapshot(String runId, String sourceSha256) {
+        return tx.execute(ignored -> {
+            lockSlot();
+            Job job = requireLocked(runId); requireHash(job, sourceSha256);
+            requireState(job.status() == Status.COMPLETED && job.terminatedAt() == null
+                && (job.exportStatus() == ExportStatus.PENDING || job.exportStatus() == ExportStatus.EXPORTED));
+            if (job.exportStatus() == ExportStatus.PENDING) { requireOccupied(runId); }
+            String expectedOutbox = job.exportStatus() == ExportStatus.PENDING ? "PENDING" : "ACKNOWLEDGED";
+            requireState(jdbc.queryForObject("SELECT COUNT(*) FROM lab_outbox WHERE job_run_id = ? AND event_type = 'EXPORT' AND source_sha256 = ? AND status = ?",
+                Long.class, runId, sourceSha256, expectedOutbox) == 1);
+            byte[] source = jdbc.queryForObject("SELECT source_bytes FROM lab_job WHERE run_id = ?", byte[].class, runId);
+            List<ExportRun> runs = jdbc.query("SELECT * FROM demo_run WHERE id = ?", (rs, row) -> new ExportRun(
+                rs.getString("scenario"), rs.getLong("seed"), rs.getInt("input_count"), rs.getInt("success_count"),
+                rs.getInt("failure_count"), rs.getInt("duplicate_count"), rs.getInt("pending_count"),
+                instant(rs, "started_at"), instant(rs, "completed_at")), runId);
+            requireState(runs.size() == 1);
+            List<SensorProcessor.Outcome> outcomes = jdbc.query("SELECT * FROM demo_outcome WHERE run_id = ? ORDER BY input_sequence", (rs, row) ->
+                new SensorProcessor.Outcome(rs.getInt("input_sequence"), rs.getString("event_id"), rs.getString("sensor_id"),
+                    rs.getString("event_time"), rs.getObject("sensor_value", Double.class),
+                    SensorProcessor.Status.valueOf(rs.getString("status")), SensorProcessor.Reason.valueOf(rs.getString("reason"))), runId);
+            return new ExportSnapshot(job, source, runs.getFirst(), outcomes);
         });
     }
 

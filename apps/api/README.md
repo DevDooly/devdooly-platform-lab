@@ -35,7 +35,7 @@ MariaDB 없이 로컬 코드·HTTP를 확인할 때만 명시적으로 다음 pr
 - 고정 seed 42의 12건: 성공 7, 실패 3, 중복 2, 대기 0
 - 최초 시작 시 고정 run ID를 저장하고 이후 시작에서는 이미 저장된 결과를 재사용
 
-공개 실행 POST는 제공하지 않습니다. S3 원본 adapter와 Kafka publisher/worker는 명시적 내부 호출과 격리 검증을 추가했으며 기본 앱에는 자동 연결하지 않습니다. 기본 verify 78개와 별도 실제 Kafka·MariaDB·Garage IT 4개를 통과했습니다. [Kafka 중단·재전달 결과](../../docs/evidence/kafka-redelivery/README.md), [실행 절차](../../docs/runbooks/kafka-redelivery.md)를 연결합니다. 운영 Kafka 배포와 결과 export는 후속입니다. [S3 사용·검증 절차](../../docs/runbooks/s3-source-storage.md)를 참고합니다. 현재 bootstrap은 단일 앱 인스턴스 시작을 전제로 합니다. 여러 replica가 동시에 최초 시작하는 배포 전에는 DB 잠금/별도 seed Job을 추가해야 합니다.
+공개 실행 POST는 제공하지 않습니다. S3 원본 adapter와 Kafka publisher/worker는 명시적 내부 호출과 격리 검증을 추가했으며 기본 앱에는 자동 연결하지 않습니다. 기본 verify 78개와 별도 실제 Kafka·MariaDB·Garage IT 4개를 통과했습니다. [Kafka 중단·재전달 결과](../../docs/evidence/kafka-redelivery/README.md), [실행 절차](../../docs/runbooks/kafka-redelivery.md)를 연결합니다. 결과·실패 파일 export도 명시적 내부 coordinator로 구현했고 전체 두 파일 확인 후에만 슬롯을 해제합니다. 기본 verify는 97개, 별도 실제 export IT는 6개 통과했습니다. [export 근거](../../docs/evidence/result-export/README.md), [실행 절차](../../docs/runbooks/result-export.md)를 따릅니다. 상시 worker/export 실행기와 운영 배포는 후속입니다. [S3 사용·검증 절차](../../docs/runbooks/s3-source-storage.md)를 참고합니다. 현재 bootstrap은 단일 앱 인스턴스 시작을 전제로 합니다. 여러 replica가 동시에 최초 시작하는 배포 전에는 DB 잠금/별도 seed Job을 추가해야 합니다.
 
 [API 계약](../../docs/contracts/demo-api.md), [독립 시나리오](../../tests/scenarios/sensor-validation-v1.json), [검증 기록](../../docs/evidence/api-mvp/README.md)을 참고합니다.
 

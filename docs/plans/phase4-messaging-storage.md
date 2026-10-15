@@ -1,6 +1,6 @@
 # 4단계 준비 조사: Kafka와 원본 객체 보관
 
-최초 조사: 2026-10-12 KST. DB 작업/outbox·단일 슬롯을 격리 MariaDB에서 검증한 뒤, 2026-10-14에는 Garage 2.4.1·Java SDK 2.55.16 원본 adapter를 추가했다. 기본 checksum의 실제 실패와 Garage 전용 설정의 교정, 전체 원본 검증·재시도·컨테이너 재생성 후 Get-only 보존을 확인했다. [DB 기반 근거](../evidence/db-job-foundation/README.md), [S3 검증 근거](../evidence/s3-source-storage/README.md), [선정 ADR](../adr/0005-verified-raw-source-storage.md)을 연결한다. 2026-10-15에는 Kafka 발행·수신·수동 offset과 실제 중단 후 재전달을 격리 검증했다. 기본 78개·실제 IT 4개와 기존 운영 보존 결과는 [Kafka 근거](../evidence/kafka-redelivery/README.md), plain client 선택과 현재 envelope는 [ADR 0006](../adr/0006-explicit-kafka-dispatch.md)을 따른다. 운영 image·DB는 갱신하지 않았고 결과 export·상시 worker는 후속이다. 아래 제품 조사는 최초 시점의 기록이며 이후 확정한 조합은 ADR을 따른다.
+최초 조사: 2026-10-12 KST. DB 작업/outbox·단일 슬롯을 격리 MariaDB에서 검증한 뒤, 2026-10-14에는 Garage 2.4.1·Java SDK 2.55.16 원본 adapter를 추가했다. 기본 checksum의 실제 실패와 Garage 전용 설정의 교정, 전체 원본 검증·재시도·컨테이너 재생성 후 Get-only 보존을 확인했다. [DB 기반 근거](../evidence/db-job-foundation/README.md), [S3 검증 근거](../evidence/s3-source-storage/README.md), [선정 ADR](../adr/0005-verified-raw-source-storage.md)을 연결한다. 2026-10-15에는 Kafka 발행·수신·수동 offset과 실제 중단 후 재전달을 격리 검증했다. 기본 78개·실제 IT 4개와 기존 운영 보존 결과는 [Kafka 근거](../evidence/kafka-redelivery/README.md), plain client 선택과 현재 envelope는 [ADR 0006](../adr/0006-explicit-kafka-dispatch.md)을 따른다. 같은 날 결과·실패 파일 export와 두 파일 검증 뒤 슬롯 해제도 구현했고 기본 97개·실제 IT 6개 및 두 JVM 중단 후 회복을 통과했다. [export 근거](../evidence/result-export/README.md), [ADR 0007](../adr/0007-verified-result-export.md)을 연결한다. 운영 image·DB는 갱신하지 않았고 상시 worker/export 실행기·관측과 운영 배포는 후속이다. 아래 제품 조사는 최초 시점의 기록이며 이후 확정한 조합은 ADR을 따른다.
 
 ## 권장 범위
 
@@ -124,7 +124,7 @@ AWS SDK for Java v2의 S3 client 하나로 아래를 확인한다. endpointOverr
 
 ## 보여줄 검증 시나리오
 
-아래는 앞으로 실행할 합격 조건이다. 아직 Kafka·S3에서 통과한 결과가 아니다.
+아래는 최초 계획의 합격 조건이다. 이후 격리 환경에서 통과한 DB/S3·Kafka·결과 export 범위는 상단의 실제 근거를 따른다. 별도 원본 replay·최대 1,000개·운영 Pod 재생성 등은 완료 표시하지 않는다.
 
 | 상황 | 반드시 남길 근거 |
 | --- | --- |

@@ -94,12 +94,14 @@
 
 - [x] 명시적 Kafka publisher·worker, ACK 뒤 outbox 확인·Get-only 원본 검증·DB commit 뒤 수동 offset 구현: [ADR 0006](adr/0006-explicit-kafka-dispatch.md)
 - [x] 실제 Kafka·MariaDB·Garage에서 JVM 중단 세 경계·재전달 멱등·손상 원본 fail-stop/명시적 fixture 복구, 결과 건수·offset·lag 0·기존 운영 보존: [근거](evidence/kafka-redelivery/README.md)
-- [ ] 상시 worker 실행기·운영자 영속 정지/재개·결과/실패 export와 운영 배포 검증
+- [x] 결정적 결과·실패 파일 export, 전체 bytes/크기/SHA 확인 뒤 outbox·EXPORTED·슬롯 해제: [ADR 0007](adr/0007-verified-result-export.md)
+- [x] 실제 MariaDB/Garage 정상·반복/다음 슬롯 보존·부분 저장·손상 거부·최종 DB rollback·JVM 중단 2개 경계와 재시도, 기존 운영 보존: [근거](evidence/result-export/README.md)
+- [ ] 상시 worker/export 실행기·운영자 영속 정지/재개·job/export 관측과 운영 배포 검증
 - [ ] 다중 partition·이벤트별 전달 순서 검증이 필요할 때 별도 확장
 - [x] Garage·Java SDK의 필요한 API·기본 checksum 실패와 호환성 교정 검증 후 한정 선정: [ADR 0005](adr/0005-verified-raw-source-storage.md)
 - [x] 원본 전체 bytes·크기·SHA-256, 상태 전환 전 실패·재시도와 컨테이너 재생성 후 Get-only 보존: [근거](evidence/s3-source-storage/README.md)
 - [x] 실제 MariaDB·Garage 결합의 정상·손상·DB statement 오류 rollback과 원본 보존·재시도, 같은 DB 반복 및 운영 보존: [근거](evidence/mariadb-s3/README.md)
-- [ ] 결과 파일과 보존 정책, 지연·자원 지표 연결
+- [ ] 자동 보존 정책·지연·자원 지표 연결
 - [ ] 최대 1,000개 이벤트·전체 동시 작업 1개·요청 빈도 제한 검증
 - [ ] 제한을 검증한 뒤 공개 샘플 실행 기능 추가
 
