@@ -51,3 +51,7 @@ python3 -m unittest discover -s tests/maintenance -p 'test_*.py' -v
 ```
 
 `--now`로 지정한 시각은 결과에 `EXPLICIT_HYPOTHETICAL`로 표시된다. 과거 inventory의 완료 시각만 바꿔 실제 자료가 만료됐다고 주장하지 않는다. 합성 fixture는 현재 수집 시각과 별도 완료 시각을 명시해 일/주 경계·7일 경과·소유권/키/정지 조건을 검증한다. 실제 dry-run 결과와 합성 만료 후보를 구분한다. 정책/계획의 `applyEnabled`·`deletionExecutorImplemented`는 false이며 삭제는 수행하지 않는다.
+
+## 객체 참조 보호 계획
+
+[object_reference_plan.py의 계약과 합성 실행 예시](OBJECT_REFERENCE_PLAN.md)를 추가했습니다. 기존 백업/PVC 계획과 별도이며 운영 DB run의 raw/result·unknown 객체는 모두 KEEP합니다. 실제 운영 참조 수집과 새 Garage만의 자연 GC 결과는 [근거](../../docs/evidence/object-reference-gc/README.md)를 확인합니다. planner에 apply/삭제 기능은 없습니다.

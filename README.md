@@ -112,3 +112,7 @@ benchmarks/               후속 공개 예제의 전후 측정
 ```
 
 회사 코드·데이터·실제 수율 알고리즘을 사용하지 않습니다. 실제 접속 주소·진단 원본·비밀값은 Git에서 제외한 `.local/`에 보관합니다. 공개 화면에는 허용한 요약만 제공합니다.
+
+## 객체 참조 보호와 격리 GC
+
+운영 DB의 전체 7작업·14 outbox와 S3 LIST 21객체를 읽어 전부 보호 대상으로 확인했습니다(19/19, 삭제 후보 0). 별도 새 Garage의 합성 객체 두 개만 삭제한 자연 GC 검증은 11/11을 통과했고, 고유 블록 2개의 allocated 2,105,344B 회수와 공유·보호 객체 보존을 확인했습니다. [실제 근거](docs/evidence/object-reference-gc/README.md), [순수 계획기](infra/maintenance/OBJECT_REFERENCE_PLAN.md)를 연결합니다. 운영 삭제 실행기·metadata DB 축소를 구현한 결과는 아닙니다.

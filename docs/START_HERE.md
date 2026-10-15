@@ -93,3 +93,7 @@ CI/CD의 정상 배포·실패 차단·이전 digest 복구를 확인했으며, 
 - [Kafka/Garage PVC 격리 복원](runbooks/runtime-pvc-recovery.md), [외부 사본·블록 복원 근거](evidence/runtime-pvc-restore/README.md)
 - [K3s bootstrap](runbooks/k3s-bootstrap.md), [플랫폼 설치](runbooks/platform-install.md)
 - [이미지 게시](runbooks/image-publication.md), [앱 Helm](runbooks/app-helm.md)
+
+## 객체 보호의 현재 범위
+
+[객체 참조 보호·격리 GC](evidence/object-reference-gc/README.md)는 전체 운영 DB·S3 LIST 21객체의 KEEP/후보0 검증과 새 disposable Garage의 자연 블록 회수 검증을 구분합니다. 공개 계획기는 network·삭제 기능 없는 dry-run이며 기존 보존 검사 31개와 신규 20개가 함께 통과했습니다. 운영 객체 삭제 프로토콜은 별도 후속입니다.

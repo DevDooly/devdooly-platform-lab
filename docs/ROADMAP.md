@@ -125,7 +125,8 @@
 - [x] 별도 Linux worker의 1 CPU·768MiB 제한에서 1,000개 작업 3회·전체 파일 GET·자원/지연 관측: [근거](evidence/input-concurrency-load/README.md)
 - [x] V2 지원 API·worker 실제 배포, 1,000건 처리·기존 18개/신규 3개 객체와 7개 작업 공개 게시: [근거](evidence/input-v2-deployment/README.md)
 - [ ] 요청 빈도 제한 구현·검증
-- [ ] 객체 tombstone/GC와 참조 확인 기반 삭제 경계 검증
+- [x] 전체 운영 DB·S3 참조21개를 모두 보호하는 dry-run과 새 Garage의 합성 객체2개 자연 GC·공유 블록 보존을 검증했습니다: [근거](evidence/object-reference-gc/README.md)
+- [ ] 운영 객체의 tombstone·삭제 intent·재전달/resume·백업 의존성을 조율하는 삭제 프로토콜과 metadata GC를 검증합니다.
 - [ ] 과부하·운영 처리 용량과 중단/회복 한계 검증
 - [ ] 제한을 검증한 뒤 공개 샘플 실행 기능 추가
 
