@@ -1,8 +1,8 @@
 # Platform Lab 다음 개발 계획
 
-초기 계획: 2026년 10월 12일 · 최근 실제 runtime·PVC 격리 복원 검증: 2026년 10월 15일
+초기 계획: 2026년 10월 12일 · 최근 V2 운영 배포·격리 export 경계 중단 복구 검증: 2026년 10월 15일
 
-Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접 확인할 수 있는 포트폴리오로 발전시킵니다. 외부 백업·격리 DB 복원·재부팅과 CI/CD의 정상 배포·실패 차단·이전 image digest 복구를 확인했습니다. **기존 플랫폼 관측의 2026-10-12 수집·실패 보존·Pages 게시·공개 화면과 자동 운영·반복 게시 11회를 검증**했습니다. 게시 순서 회귀 교정, API·웹 중단 후 같은 정상 B 복원에 이어 전용 Pages 자격증명으로 수동 host cycle·실제 systemd service·timer 자동 실행을 확인했습니다. 실제 완료 간격은 약 30~31분이었고 자격증명 만료·회전과 장기간 운영은 별도 후속입니다. Kafka·Garage·상시 worker의 실제 배포와 정상 재시작, 총 3작업·파일 6개·슬롯 해제도 확인했습니다. 새 job timer의 자동 게시 2회·완료 간격 1개와 전용 PVC 외부 사본의 격리 복원·clone 물리 블록 복원을 검증했습니다. 보존 계획·새 합성 PVC 정리와 작은 자원 관측까지 확인했으며, 다음은 객체 GC·부하/진행 중 장애·장기간 운영과 AI 개선·데이터 플랫폼 사례입니다.
+Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접 확인할 수 있는 포트폴리오로 발전시킵니다. 외부 백업·격리 DB 복원·재부팅과 CI/CD의 정상 배포·실패 차단·이전 image digest 복구를 확인했습니다. **기존 플랫폼 관측의 2026-10-12 수집·실패 보존·Pages 게시·공개 화면과 자동 운영·반복 게시 11회를 검증**했습니다. 게시 순서 회귀 교정, API·웹 중단 후 같은 정상 B 복원에 이어 전용 Pages 자격증명으로 수동 host cycle·실제 systemd service·timer 자동 실행을 확인했습니다. 실제 완료 간격은 약 30~31분이었고 자격증명 만료·회전과 장기간 운영은 별도 후속입니다. Kafka·Garage·상시 worker의 최초 배포와 정상 재시작 당시 총 3작업·파일 6개·슬롯 해제를 확인했습니다. 새 job timer의 자동 게시 2회·완료 간격 1개와 전용 PVC 외부 사본의 격리 복원·clone 물리 블록 복원을 검증했습니다. 이후 보존 계획·새 합성 PVC 정리·작은 자원 관측과 최대 1,000개 입력·동시 접수 경계를 격리 검증했습니다. V2 지원 API·worker를 운영에 함께 배포하고 내부 V2 작업 한 건을 추가해 현재 총 7개 EXPORTED 작업·파일 14개를 확인했습니다. 별도 격리 worker의 export 경계 강제 종료 복구도 확인했습니다. 다음은 객체 GC·다른 장애 경계/호스트 중단·과부하 정책·장기간 운영과 AI 개선·데이터 플랫폼 사례입니다.
 
 [공개 Lab](https://devdooly.github.io/devdooly-platform-lab/) · [전체 진행 목록](ROADMAP.md) · [현재 접속 안내](START_HERE.md)
 
@@ -10,7 +10,7 @@ Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접
 
 | 영역 | 확인한 내용 | 다음에 채울 부분 |
 | --- | --- | --- |
-| Java API·worker | 기본 128개, K3s 연동·정상 교체·총 6작업/12파일 확인, 고정 3회 자원 관측 | 진행 중 장애·최대 입력/부하 한도 |
+| Java API·worker | 기본 140개, 격리 기능 IT 5개·Linux 1,000개 입력 3회·export 경계 강제 종료 복구, V2 운영 배포 후 총 7작업/14파일 확인 | 다른 장애 경계·호스트 중단·과부하 정책·장기간 관측 |
 | Kafka·Garage 복구 | 외부 사본의 전용 3PVC 복원·clone 물리 블록, 보존 정책·합성 정리 검증 | 장기간 보존 운영·객체 GC·복구 절차 유지 |
 | 포트폴리오 | 웹 34개, 기존 플랫폼 11회와 별도 새 job timer 자동 게시 2회·간격 1개 확인 | 장기간 반복 운영·자격증명 회전 |
 | Jenkins·Actions | 같은 SHA의 두 CI 성공·게시·draft GitOps PR·정상 B 배포·실제 실패 차단, main의 공개 status 수집 | credential 만료·회전과 게시 이력 보존 운영 |
@@ -92,9 +92,11 @@ GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins 
 
 ## 4 Kafka와 객체 저장소
 
-[최초 계획](plans/phase4-messaging-storage.md)의 DB·원본·Kafka·export 경계를 격리 검증한 뒤, 2026-10-15 미니 PC K3s에 Kafka·Garage·상시 worker를 GitOps로 배포했습니다. 내부 고정 fixture 두 작업이 각 12/7/3/2/0으로 완료됐고 결과·실패 파일 총 4개를 전체 Get·크기·SHA-256으로 확인했습니다. 실행 슬롯은 비었으며 Kafka offset 2·log end 2·lag 0을 확인했습니다. 기존 seed·V1 처리 시각·PVC와 Docker 전체 38개·실행 26개를 보존했습니다. [현재 배포·게시 근거](evidence/runtime-deployment/README.md)를 연결합니다.
+[최초 계획](plans/phase4-messaging-storage.md)의 DB·원본·Kafka·export 경계를 격리 검증한 뒤, 2026-10-15 미니 PC K3s에 Kafka·Garage·상시 worker를 GitOps로 처음 배포했습니다. 최초 배포 당시 내부 고정 fixture 두 작업이 각 12/7/3/2/0으로 완료됐고 결과·실패 파일 총 4개를 전체 Get·크기·SHA-256으로 확인했습니다. 실행 슬롯은 비었으며 Kafka offset 2·log end 2·lag 0을 확인했습니다. 기존 seed·V1 처리 시각·PVC와 Docker 전체 38개·실행 26개를 보존했습니다. [최초 배포·게시 근거](evidence/runtime-deployment/README.md)를 연결합니다.
 
-이전 단계의 [DB](evidence/db-job-foundation/README.md), [원본 S3](evidence/s3-source-storage/README.md), [실제 결합](evidence/mariadb-s3/README.md), [Kafka 중단·재전달](evidence/kafka-redelivery/README.md), [export](evidence/result-export/README.md), [상시 실행기](evidence/continuous-runtime/README.md) 검증은 각각 당시 조건과 한계를 유지합니다. 이번 실제 배포는 기본 API 128개·웹 34개와 별도로 확인했으며, 새 수집·게시 코드는 실제 Ubuntu 검사 135개를 통과했습니다.
+최신 운영 API·worker는 같은 source `6c5aff948770982dd44c8d44547131b3ccf6ddd9`의 V2 지원 이미지입니다. 별도 GitOps PR로 API·웹을 먼저 교체하고 worker를 뒤이어 교체한 뒤 내부 V2 fixture를 한 번 접수했습니다. 기존 여섯 작업을 보존한 채 V2의 입력 1,000 = 성공 500 + 실패 300 + 업무상 중복 200 + 대기 0, EXPORTED·슬롯 해제·Kafka offset 7/log end 7/lag 0을 확인했습니다. 현재 총 7작업·파일 14개이며, 실제 GET 21개는 기존 18개 객체와 새 원본·결과·실패 객체 3개를 합친 수입니다. [V2 운영 배포·공개 게시 근거](evidence/input-v2-deployment/README.md)를 현재 기준으로 사용합니다.
+
+이전 단계의 [DB](evidence/db-job-foundation/README.md), [원본 S3](evidence/s3-source-storage/README.md), [실제 결합](evidence/mariadb-s3/README.md), [Kafka 중단·재전달](evidence/kafka-redelivery/README.md), [export](evidence/result-export/README.md), [상시 실행기](evidence/continuous-runtime/README.md) 검증은 각각 당시 조건과 한계를 유지합니다. 최초 운영 배포 당시 기본 API 128개·웹 34개와 별도로 확인했으며, 새 수집·게시 코드는 실제 Ubuntu 검사 135개를 통과했습니다. 후속 V2 소스의 기본 API 검증은 140개이며 아래 격리 기능·자원 검증과 구분합니다.
 
 - [x] 고정 12개 fixture의 시간 역순·잘못된 값·업무상 중복 처리와 독립 기대 결과를 명시했습니다.
 - [x] 격리 Kafka·MariaDB·Garage에서 ACK 뒤·DB commit 전후 JVM 강제 종료·재전달 멱등·offset을 검증했습니다.
@@ -112,20 +114,26 @@ GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins 
 - [x] 복제 Kafka도 정상 TERM 교체 후 같은 PVC·3개 record의 key/value/시각·offset 3·lag 0을 보존했습니다.
 - [x] 최신 검증본·미완료·키를 보호하는 순수 계획기 31개 테스트·실제 dry-run 후보 0과 새 합성 PVC만의 실제 정리 경계를 검증했습니다.
 - [x] 고정 12개 입력 3회에서 기존 cgroup 설정·CPU/RSS/PSS·디스크 snapshot·처리/export 지연을 관측했습니다: [근거](evidence/retention-resource-budget/README.md)
-- [ ] 객체 tombstone/GC·최대 입력/과부하의 한도는 별도로 검증합니다.
-- [ ] 진행 중 작업의 장애 복구·호스트 재시작 범위를 별도로 검증합니다.
+- [x] 격리 기능 IT 5개에서 정확히 1MiB인 V2 입력 3회·기존 V1, 2/8개 동시 접수의 한 슬롯 경합, 1,001개/1MiB+1 거부·재접수/충돌 경계를 검증했습니다: [근거](evidence/input-concurrency-load/README.md)
+- [x] 별도 Linux Docker에서 1CPU·768MiB의 같은 candidate worker로 1,000개 입력 3회·원본/결과/실패 전체 GET 9개와 자원을 관측했습니다. 이 세 입력은 각각 99,600B이며 정확히 1MiB 검증과 구분합니다.
+- [x] V2 지원 API·worker를 모두 운영에 교체한 뒤 내부 V2 한 건·기존 여섯 작업 보존·총 7작업/14파일·공개 JSON 일치를 확인했습니다: [근거](evidence/input-v2-deployment/README.md)
+- [ ] 객체 tombstone/GC·과부하와 지속 부하의 한도는 별도로 검증합니다.
+- [x] 별도 Linux Docker의 V2 작업에서 결과 파일 확인 후 실패 파일 PUT을 전달하기 전 worker를 한 번 강제 종료하고, 같은 jar의 새 worker가 미완료 export를 복구하는지 검증했습니다: [근거](evidence/maximum-export-crash/README.md)
+- [ ] 다른 작업 경계의 중단·진행 중 호스트 재시작 범위를 별도로 검증합니다.
 - [ ] 실패 데이터 재처리와 미완료 객체를 보존하는 명시적 정리 절차를 만듭니다.
-- [ ] consumer lag의 자동 공개 관측·지연/자원 지표·최대 1,000개와 부하 한도를 검증합니다.
+- [ ] consumer lag의 자동 공개 관측·장기간 지연/자원 지표와 과부하 대응 정책을 검증합니다. 최대 1,000개와 2/8개 동시 접수 경계의 완료를 지속 처리량·rate limit 보장으로 확대하지 않습니다.
 
-실제 worker 정상 재시작의 관측 절차는 17.808초였고 새 Pod의 restartCount는 0입니다. 기존 두 작업의 전체 SQL·시각과 파일 4개의 전체 Get·크기·SHA, Kafka offset 2·log end 2·lag 0이 유지됐습니다. 23개 보존 검사에서 다른 5개 Pod·Docker 전체 38개/실행 26개·전체 PVC 6개/Lab 4개·호스트 상태를 확인했습니다. 이 범위는 작업이 없는 정상 TERM 교체이며 진행 중 crash·PVC 복원·고가용성 검증으로 확대하지 않습니다.
+초기 실제 worker 정상 재시작 당시 관측 절차는 17.808초였고 새 Pod의 restartCount는 0입니다. 기존 두 작업의 전체 SQL·시각과 파일 4개의 전체 Get·크기·SHA, Kafka offset 2·log end 2·lag 0이 유지됐습니다. 23개 보존 검사에서 다른 5개 Pod·Docker 전체 38개/실행 26개·전체 PVC 6개/Lab 4개·호스트 상태를 확인했습니다. 이 범위는 작업이 없는 정상 TERM 교체이며 진행 중 crash·PVC 복원·고가용성 검증으로 확대하지 않습니다.
 
-교체된 worker에 별도 고정 fixture `lab-fixture-20261015-recovery`를 접수해 입력 12 = 성공 7 + 실패 3 + 업무상 중복 2 + 대기 0, EXPORTED와 슬롯 해제를 확인했습니다. 새 결과·실패 파일 2개도 실제 Get의 전체 내용·크기·SHA-256을 대조했습니다. 전체 작업은 3개·확인 파일 6개가 됐고 Kafka offset 3·log end 3·lag 0입니다. 원래 두 작업의 전체 SQL·시각·HTTP 요약과 파일 4개는 그대로 보존했습니다.
+그 정상 재시작의 후속 검증 당시 교체된 worker에 별도 고정 fixture `lab-fixture-20261015-recovery`를 접수해 입력 12 = 성공 7 + 실패 3 + 업무상 중복 2 + 대기 0, EXPORTED와 슬롯 해제를 확인했습니다. 새 결과·실패 파일 2개도 실제 Get의 전체 내용·크기·SHA-256을 대조했습니다. 전체 작업은 3개·확인 파일 6개가 됐고 Kafka offset 3·log end 3·lag 0입니다. 원래 두 작업의 전체 SQL·시각·HTTP 요약과 파일 4개는 그대로 보존했습니다.
 
 원본 전용 PVC 3개의 외부 사본 복원과 별도 clone 물리 블록 복원을 구분했습니다. 원본의 9개 객체는 모두 inline이므로, data 블록 복원은 clone 전용 128KiB canary로 별도 입증했습니다. 원본 객체 쓰기·운영 PVC 덮어쓰기는 하지 않았고 시험 대상 5PVC의 요청량은 총 29Gi입니다. 이 요청량은 실제 사용량이나 처리 용량 측정이 아닙니다. 시험용 workload 3개를 정상 종료해 Pod 0개·Retain PVC 5개를 남겼습니다. 최종 보존 검사 28개에서 원본 SQL·작업/파일 정보·PVC 6개·Ready Pod 6개와 기존 Docker 38개/실행 26개의 상태를 확인했습니다. [실행 절차](runbooks/runtime-pvc-recovery.md)를 따릅니다.
 
-후속 자원 관측에서 고정 12개 입력을 세 번 추가해 총 6개 EXPORTED 작업·파일 12개의 전체 Get·Kafka offset 6/lag 0을 확인했습니다. 약 63초·64개 샘플의 worker 작업 구간 평균 CPU는 0.04235 core, 약 1초 관측 최대는 0.66622 core였습니다. DB 생성→export 기록 평균은 1.5943초지만 cold stage 요청부터는 14.0757초로, 시작·접수 비용을 구분했습니다. 11분 디스크 snapshot의 active PVC 증가 972KiB는 heartbeat/WAL 영향을 포함합니다. [정의·조건·한계](runbooks/retention-resource-budget.md)를 함께 읽으며 처리 용량이나 SLA로 확대하지 않습니다. 최종 25개 검사에서 기존 11PVC/PV·원본 Pod 6개·Docker 38개/실행 26개·기존 업무 SQL/객체·timer 설정과 주기 보존도 확인했습니다.
+이후 고정 12개 입력의 자원 관측 당시 세 작업을 추가해 총 6개 EXPORTED 작업·파일 12개의 전체 Get·Kafka offset 6/lag 0을 확인했습니다. 약 63초·64개 샘플의 worker 작업 구간 평균 CPU는 0.04235 core, 약 1초 관측 최대는 0.66622 core였습니다. DB 생성→export 기록 평균은 1.5943초지만 cold stage 요청부터는 14.0757초로, 시작·접수 비용을 구분했습니다. 11분 디스크 snapshot의 active PVC 증가 972KiB는 heartbeat/WAL 영향을 포함합니다. [정의·조건·한계](runbooks/retention-resource-budget.md)를 함께 읽으며 처리 용량이나 SLA로 확대하지 않습니다. 최종 25개 검사에서 기존 11PVC/PV·원본 Pod 6개·Docker 38개/실행 26개·기존 업무 SQL/객체·timer 설정과 주기 보존도 확인했습니다.
 
-실제 job·플랫폼 공개 JSON은 수집 원본과 일치했습니다. 새 job의 원래 timer 자동 수집·게시 2회와 완료 간격 1개(1809.371239초)를 확인했습니다. [후속 검증 근거](evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다. 공개 화면은 약 30분 주기의 마지막 기록이며 실시간 조회가 아닙니다. 5분 heartbeat 경고는 마지막 실행 신호의 나이이고 프로세스 중단 판정이 아닙니다. 공개 POST는 없고 내부 `--lab-runtime=stage`가 고정 fixture만 접수합니다.
+격리 Linux의 V2 export 경계 검증은 12개 검사를 통과했습니다. 첫 결과 파일의 PUT·전체 GET을 확인하고 두 번째 실패 파일 PUT을 upstream에 전달하기 전에 해당 worker만 한 번 SIGKILL했습니다. exit 137·비 OOM을 확인한 뒤 같은 source/jar의 새 worker가 PENDING export를 완료했고, 처리 SQL·시각과 첫 결과 파일 전체 바이트, 기존 네 작업/12개 객체와 이전 Kafka offset을 보존했습니다. 새 작업의 offset 1/log end 1/lag 0·슬롯 해제와 소유 컨테이너의 종료를 확인했습니다. 이 검증은 독립 Docker 환경의 한 export 경계이며 운영 K3s 중단·호스트 재시작·고가용성을 입증하지 않습니다. [전체 근거](evidence/maximum-export-crash/README.md)를 연결합니다.
+
+최신 V2 배포 후 수동 수집·Pages 게시에서도 실제 job·플랫폼 공개 JSON 전체가 수집 원본과 일치했습니다: [최신 게시 근거](evidence/input-v2-deployment/README.md). 그보다 앞선 재시작 검증에서는 새 job의 원래 timer 자동 수집·게시 2회와 완료 간격 1개(1809.371239초)를 확인했습니다. [후속 검증 근거](evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다. 공개 화면은 약 30분 주기의 마지막 기록이며 실시간 조회가 아닙니다. 5분 heartbeat 경고는 마지막 실행 신호의 나이이고 프로세스 중단 판정이 아닙니다. 공개 POST는 없고 내부 `--lab-runtime=stage`가 고정 fixture만 접수합니다.
 
 **완료 조건:** producer ACK·DB 멱등 처리·offset·export 확인을 각각 설명하고 실제 운영 한계를 기록합니다. 단일 노드·partition 1/RF1을 고가용성이나 전체 exactly-once로 표현하지 않습니다. [Kafka producer 설정](https://kafka.apache.org/42/configuration/producer-configs/)
 
@@ -165,8 +173,8 @@ CKA 학습은 Lab과 연결합니다. context·RBAC·Service와 DNS·probe·requ
 ## 바로 다음 작업
 
 1. **보존 운영과 객체 GC:** [보존 기준](runbooks/retention-resource-budget.md)의 dry-run을 새 inventory로 확인하고 보호 사유를 유지합니다. 현재 실제 자료는 삭제하지 않으며 S3 객체 GC는 tombstone·DB 참조·재전달/resume 경계부터 설계합니다.
-2. **검증 확대:** 고정 fixture 3회의 관측을 기준으로 최대 입력·진행 중 장애·필요한 부하 조건을 별도 정의합니다. PVC 요청량과 limit 설정 일치를 처리 용량으로 표현하지 않고 공개 실행은 열지 않습니다.
+2. **검증 확대:** 최대 1,000개 입력·2/8개 동시 접수와 격리 Linux 3회의 관측, 한 export 경계의 worker 강제 종료 복구는 완료했습니다. 다음은 다른 장애 경계·진행 중 호스트 중단·지속 부하·과부하 거부 정책입니다. 한 슬롯 경합은 rate limiter가 아니며 작은 표본을 처리 용량·SLA로 표현하지 않습니다. 공개 실행은 열지 않습니다.
 3. **장기간 수집 운영:** 원래 timer의 자동 게시 2회·실제 간격 1개는 확인했습니다. 더 긴 반복·실패 후 이전 기록 보존·자격증명 만료/회전을 이어서 검증합니다. 초기 관리자 비밀번호 교체·K3s/Jenkins archive 전체 복원도 별도 운영 후속입니다.
-4. **이후 확장:** 진행 중 작업의 장애·호스트 재시작은 이번 idle 정상 교체와 분리하고, AI 개선 사례는 5단계의 독립 합성 예제로 연결합니다. 공개 실행은 내부 고정 fixture 명령으로 제한하며 새 inbound 경로는 필요성을 먼저 판단합니다.
+4. **이후 확장:** 격리 export 경계의 worker 강제 종료 복구와 기존 idle 정상 교체를 구분하고, 진행 중 호스트 재시작·고가용성은 별도 미검증으로 남깁니다. AI 개선 사례는 5단계의 독립 합성 예제로 연결합니다. 공개 실행은 내부 고정 fixture 명령으로 제한하며 새 inbound 경로는 필요성을 먼저 판단합니다.
 
 각 결과는 소스 변경, 실행 방법, 실제 검증 결과, TIL 설명, 포트폴리오 링크로 연결합니다. 작업 완료 시 [진행 목록](ROADMAP.md)을 갱신하고 프로필에는 구현한 범위만 반영합니다.

@@ -46,6 +46,8 @@ Kafka·Garage 전용 PVC 3개를 정상 정지 구간에서 보관하고 AES-256
 
 기반 검증은 [DB](docs/evidence/db-job-foundation/README.md), [원본 S3](docs/evidence/s3-source-storage/README.md), [실제 MariaDB/Garage 결합](docs/evidence/mariadb-s3/README.md), [Kafka 중단·재전달](docs/evidence/kafka-redelivery/README.md), [결과 export](docs/evidence/result-export/README.md)에 구분해 기록했습니다.
 
+별도 Linux worker의 1,000건 작업은 결과 파일 저장·GET 후 실패 파일 PUT을 Garage에 전달하기 직전에 SIGKILL 1회로 중단했습니다. 동일 JAR의 새 worker가 재계산 없이 export를 완료했고 첫 결과 파일·기존 4개 작업/12개 객체를 보존했습니다. 격리 검사 12/12·후속 운영 보존 18/18을 통과했으며 [정확한 중단 경계·준비 실패·회복 근거](docs/evidence/maximum-export-crash/README.md)를 제공합니다. 운영 worker 강제 종료나 진행 중 호스트 재부팅 결과는 아닙니다.
+
 ## 로컬 실행
 
 Java 21과 Node 24.19.0을 사용합니다. API와 화면을 별도 터미널에서 실행합니다.
