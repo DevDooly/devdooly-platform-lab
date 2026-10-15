@@ -158,12 +158,16 @@
 
 ## 6 데이터 플랫폼 확장
 
-- [ ] Iceberg의 영속 catalog와 backing store 결정
+- [x] 별도 합성 실증의 PostgreSQL JDBC V1 영속 catalog·Garage backing store 선정과 실제 연결: [native7 근거](evidence/iceberg-jdbc/README.md)
+- [x] Trino에서 원본 0→6→12행·초기 빈 snapshot 1개와 데이터 append 2개·세 시점 조회 검증: [실제 기록](evidence/iceberg-jdbc/summary.json)
 - [ ] Spark 적재·compaction과 Trino 조회 연결
-- [ ] 재시작 후 메타데이터와 데이터 조회 검증
+- [x] Trino만 정상 재시작한 뒤 같은 행·metadata pointer·warehouse 전체 bytes 조회 검증. PostgreSQL은 같은 프로세스를 유지했으며 재시작은 검증하지 않음: [범위](evidence/iceberg-jdbc/README.md)
+- [x] 시험 PostgreSQL·Trino workload 0·Retain PVC 2개·warehouse 보관과 원래 8개 작업·객체 24개 보존: [종료·보존](evidence/iceberg-jdbc/README.md)
 - [ ] 필요한 경우 Airflow DAG 추가
-- [ ] CI 빌드와 겹치지 않는 실행 예산·종료·복구 절차 기록
+- [x] 이번 실증의 명시적 새 20분 예산·heavy 단계 전 CI 유휴 시점 관측·단발 detached 실행·소유 workload 종료와 실패 기록 보존 절차 작성: [runbook](runbooks/iceberg-jdbc-native.md)
 
-완료 조건: 동일 warehouse에서 쓰기·조회·재시작·compaction이 검증되고 실행 시 자원 사용량이 남습니다.
+완료 조건: 동일 warehouse에서 쓰기·조회·재시작·compaction이 검증되고 실행 시 자원 사용량이 남습니다. 현재는 **Trino·JDBC catalog의 작은 합성 실증만 부분 완료**입니다. 2026-10-15 19:05:20 UTC의 일곱 번째 실행에서 시점 조회·Trino 정상 재시작·종료·원본 보존을 확인했습니다. 이전 실패와 완료된 DDL의 채택 관계는 [근거](evidence/iceberg-jdbc/README.md)에 보존했습니다.
+
+Spark/Silver 적재·compaction과 필요한 경우의 Airflow는 남아 있으며 전체 6단계를 완료로 표시하지 않습니다. PostgreSQL 재시작·호스트 장애·HA·처리량 SLA·현재 가용성은 이번 검증 범위가 아닙니다. CI 유휴 관측은 각 확인 시점의 근거이며, 전체 실행 동안의 비활성을 보장하는 잠금이 아닙니다.
 
 단계는 의존 순서이며 기간 약속이 아닙니다. 각 단계 완료 후 다음 확장의 필요성과 자원을 다시 판단합니다.
