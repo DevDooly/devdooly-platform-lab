@@ -18,7 +18,12 @@ def sample():
         'bronzeRows': 12, 'bronzeSnapshotCount': 2, 'bronzeRowsSha256': 'a'*64, 'bronzeSnapshotIds': ['9007199254740993', '9223372036854775807'],
         'silverRows': 12, 'success': 7, 'failure': 3, 'duplicate': 2, 'pending': 0, 'silverRowsSha256': 'b'*64, 'silverSnapshotCount': 1,
         'mergeInvocations': 1, 'sequentialReplayInvocations': 1, 'replayWriteInvocations': 0, 'sparkApplicationCount': 1,
-        'nativeTrinoVerified': False, 'miniPcPreservationVerified': False, 'kubernetesVerified': False, 'distributedConcurrencyOrCrashRecoveryVerified': False}
+        'nativeTrinoVerified': False, 'miniPcPreservationVerified': False, 'kubernetesVerified': False, 'distributedConcurrencyOrCrashRecoveryVerified': False,
+        'compressionExperiment': {'requestedCodec': 'gzip', 'catalogDefaultSetBeforeFirstCatalogAccess': True,
+            'bronzePropertyBeforeAppend': 'gzip', 'bronzePropertyAfterRun': 'gzip',
+            'silverPropertyAfterWriteAndReplay': 'gzip', 'silverPropertyBeforeWriteObserved': False,
+            'verification': 'SHOW_TBLPROPERTIES_ONLY', 'actualParquetFooterCodecVerified': False,
+            'priorFailureSoleCauseProven': False}}
 
 
 class CiBoundaries(unittest.TestCase):
@@ -154,7 +159,8 @@ class CiBoundaries(unittest.TestCase):
 
     def test_diagnostic_rejects_extra_fields_messages_and_unknown_class_names(self):
         value = {'schemaVersion':1, 'scope':'ISOLATED_SPARK_BOOTSTRAP_DIAGNOSTIC', 'passed':False, 'lastPhase':'SESSION',
-            'milestones':['PYTHON_START','SESSION'], 'pythonExceptionClass':'RuntimeError', 'javaCauseClasses':[], 'sessionStopFailed':False}
+            'milestones':['PYTHON_START','SESSION'], 'pythonExceptionClass':'RuntimeError', 'javaCauseClasses':[], 'sessionStopFailed':False,
+            'nativeLibraryCategories':[], 'failedMapSegmentObserved':False, 'tmpMountFlag':'UNOBSERVED'}
         self.assertIs(value, r.safe_bootstrap_diagnostic(value))
         for change in ({'message':'secret'}, {'javaCauseClasses':['private.Credential']}, {'pythonExceptionClass':'private-password'},
                        {'milestones':['PYTHON_START']*33}, {'lastPhase':'arbitrary-host'}):
@@ -175,7 +181,7 @@ class CiBoundaries(unittest.TestCase):
 
     def test_session_stop_failure_cannot_publish_successful_completion_diagnostic(self):
         def stop(): raise RuntimeError('secret cleanup details')
-        spark=SimpleNamespace(stop=stop)
+        spark=SimpleNamespace(stop=stop,conf=SimpleNamespace(set=lambda *a:None,get=lambda *a:'gzip'))
         silver=SimpleNamespace(session=lambda:spark)
         contract=SimpleNamespace(FIELDS=(),SOURCE_SHA='a'*64,golden_bronze=None,require=None,row_sha=None)
         with tempfile.TemporaryDirectory() as folder, patch.object(b,'PROOF',Path(folder)), \
@@ -188,6 +194,73 @@ class CiBoundaries(unittest.TestCase):
             self.assertEqual('STOP_SESSION',value['lastPhase'])
             self.assertNotIn('secret',json.dumps(value))
             r.safe_bootstrap_diagnostic(value)
+
+    def test_gzip_default_is_set_and_read_back_before_first_catalog_access(self):
+        calls=[]
+        spark=SimpleNamespace(conf=SimpleNamespace(set=lambda key,value:calls.append(('set',key,value)),
+            get=lambda key:calls.append(('get',key)) or 'gzip'),stop=lambda:calls.append(('stop',)))
+        silver=SimpleNamespace(session=lambda:calls.append(('session',)) or spark)
+        contract=SimpleNamespace(FIELDS=(),SOURCE_SHA='a'*64,golden_bronze=None,require=None,row_sha=None)
+        with tempfile.TemporaryDirectory() as folder,patch.object(b,'PROOF',Path(folder)),patch.object(b.os,'O_NOFOLLOW',0,create=True), \
+             patch.object(b,'execute',side_effect=lambda *a:calls.append(('first-catalog-use',))), \
+             patch.dict(sys.modules,{'spark_silver':silver,'silver_contract':contract}):
+            self.assertEqual(0,b.main())
+            diagnostic=json.loads((Path(folder)/'bootstrap-diagnostic.json').read_bytes())
+            r.safe_bootstrap_diagnostic(diagnostic)
+        self.assertEqual([('session',),('set',b.CODEC_DEFAULT,'gzip'),('get',b.CODEC_DEFAULT),('first-catalog-use',),('stop',)],calls)
+        self.assertIn('GZIP_DEFAULT',diagnostic['milestones'])
+
+    def test_table_property_requires_actual_single_exact_gzip_show_result(self):
+        calls=[]
+        value=[{'key':b.CODEC_PROPERTY,'value':'gzip'}]
+        class Frame:
+            def limit(self,count):
+                self.assert_limit=count;return self
+            def collect(self):return [SimpleNamespace(asDict=lambda row=row:row)for row in value]
+        frame=Frame();spark=SimpleNamespace(sql=lambda sql:calls.append(sql) or frame)
+        self.assertEqual('gzip',b.gzip_property(spark,b.TABLES[0]))
+        self.assertEqual(2,frame.assert_limit)
+        self.assertEqual("SHOW TBLPROPERTIES phase6.bronze.synthetic_events ('write.parquet.compression-codec')",calls[0])
+        for rows in ([],[{'key':b.CODEC_PROPERTY,'value':'zstd'}],[{'key':b.CODEC_PROPERTY,'value':'gzip','message':'private'}],value*2):
+            value=rows
+            with self.assertRaises(ValueError):b.gzip_property(spark,b.TABLES[1])
+        with self.assertRaises(ValueError):b.gzip_property(spark,'private.other_table')
+
+    def test_public_compression_proof_refuses_footer_prewrite_or_cause_overclaim(self):
+        for field,wrong in (('actualParquetFooterCodecVerified',True),('silverPropertyBeforeWriteObserved',True),
+                            ('priorFailureSoleCauseProven',True),('silverPropertyAfterWriteAndReplay','zstd'),
+                            ('bronzePropertyBeforeAppend','UNOBSERVED'),('privatePath','secret')):
+            value=sample();value['compressionExperiment'][field]=wrong
+            with self.assertRaises(RuntimeError):r.safe_spark_result(value)
+
+    def test_native_message_classification_is_only_whitelist_and_signature_boolean(self):
+        class Node:
+            def __init__(self,name,message,cause=None):self.name,self.message,self.cause=name,message,cause
+            def getClass(self):return SimpleNamespace(getName=lambda:self.name)
+            def getMessage(self):return self.message
+            def getCause(self):return self.cause
+        error=RuntimeError('password=never-public')
+        error.java_exception=Node('org.apache.spark.SparkException','private-host',
+            Node('java.lang.UnsatisfiedLinkError','/tmp/private/libzstd-jni-1.so: failed to map segment from shared object; secret=private'))
+        result=b.exception_classes(error)
+        self.assertEqual(['zstd'],result['nativeLibraryCategories']);self.assertIs(True,result['failedMapSegmentObserved'])
+        self.assertNotIn('private',json.dumps(result));self.assertNotIn('/tmp',json.dumps(result))
+        value={'schemaVersion':1,'scope':'ISOLATED_SPARK_BOOTSTRAP_DIAGNOSTIC','passed':False,'lastPhase':'APPEND_FIRST',
+            'milestones':['PYTHON_START','APPEND_FIRST'],'sessionStopFailed':False,'tmpMountFlag':'NOEXEC',**result}
+        r.safe_bootstrap_diagnostic(value)
+        for change in ({'nativeLibraryCategories':['/private/libfoo.so']},{'nativeLibraryCategories':['zstd','zstd']},
+                       {'failedMapSegmentObserved':'false'},{'tmpMountFlag':'rw,noexec,/private/path'}):
+            with self.assertRaises(RuntimeError):r.safe_bootstrap_diagnostic({**value,**change})
+
+    def test_effective_tmp_mount_flag_is_enum_only_and_unknown_is_preserved(self):
+        root=b'1 0 0:1 / / rw,relatime - overlay overlay rw\n'
+        noexec=b'2 1 0:2 / /tmp rw,nosuid,nodev,noexec - tmpfs tmpfs rw,size=209715200\n'
+        nested=b'3 2 0:3 / /tmp/sub rw - tmpfs tmpfs rw\n'
+        self.assertEqual('EXEC',b.tmp_mount_flag(root))
+        self.assertEqual('NOEXEC',b.tmp_mount_flag(root+noexec+nested))
+        self.assertEqual('UNOBSERVED',b.tmp_mount_flag(b'private invalid\n'))
+        self.assertEqual('UNOBSERVED',b.tmp_mount_flag(b'x'*(1024**2+1)))
+        self.assertEqual('UNOBSERVED',b.tmp_mount_flag(noexec+noexec.replace(b'noexec',b'exec')))
 
 
 if __name__ == '__main__':

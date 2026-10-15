@@ -29,7 +29,7 @@ JARS = {
     'iceberg-spark-runtime-4.1_2.13-1.11.0.jar': ('org/apache/iceberg/iceberg-spark-runtime-4.1_2.13/1.11.0/', 47959591, 'd6ea6c5d099288daeb7d5a92061bd3d7d8f296492632b42378e5f2f0e3066242'),
     'iceberg-aws-bundle-1.11.0.jar': ('org/apache/iceberg/iceberg-aws-bundle/1.11.0/', 63613165, '38f01da7e96850cdd05e6616d758b77b43314b712a8808e3f9a824d56976162f'),
     'postgresql-42.7.14.jar': ('org/postgresql/postgresql/42.7.14/', 1221004, '73914527305a40cce504b0d3d90b23caf565136912d607ae8ae7c5895512332c')}
-BOOTSTRAP_PHASES = frozenset(('PYTHON_START', 'IMPORT_SILVER', 'SESSION', 'VERSIONS', 'FRESH_TABLES',
+BOOTSTRAP_PHASES = frozenset(('PYTHON_START', 'IMPORT_SILVER', 'SESSION', 'GZIP_DEFAULT', 'VERSIONS', 'FRESH_TABLES',
     'CREATE_BRONZE', 'APPEND_FIRST', 'APPEND_SECOND', 'VERIFY_BRONZE', 'SILVER_RUN', 'VERIFY_RESULT',
     'WRITE_RESULT', 'STOP_SESSION', 'COMPLETED'))
 PYTHON_EXCEPTIONS = frozenset(('Py4JJavaError', 'Py4JNetworkError', 'Py4JError', 'AnalysisException',
@@ -187,7 +187,7 @@ def safe_spark_result(value):
     fields = {'schemaVersion', 'passed', 'scope', 'spark', 'java', 'scala', 'fixtureSha256', 'bronzeRows', 'bronzeSnapshotCount', 'bronzeRowsSha256',
         'bronzeSnapshotIds', 'silverRows', 'success', 'failure', 'duplicate', 'pending', 'silverRowsSha256', 'silverSnapshotCount', 'mergeInvocations',
         'sequentialReplayInvocations', 'replayWriteInvocations', 'sparkApplicationCount', 'nativeTrinoVerified', 'miniPcPreservationVerified', 'kubernetesVerified',
-        'distributedConcurrencyOrCrashRecoveryVerified'}
+        'distributedConcurrencyOrCrashRecoveryVerified', 'compressionExperiment'}
     require(isinstance(value, dict) and set(value) == fields and value['schemaVersion'] == 1 and value['passed'] is True
         and value['scope'] == 'ISOLATED_GITHUB_RUNNER_SPARK_JDBC_GARAGE' and value['spark'] == '4.1.1'
         and value['fixtureSha256'] == MODULES['synthetic-v1.ndjson'], 'EXACT_PUBLIC_SPARK_RESULT')
@@ -195,6 +195,14 @@ def safe_spark_result(value):
               'silverSnapshotCount': 1, 'mergeInvocations': 1, 'sequentialReplayInvocations': 1, 'replayWriteInvocations': 0, 'sparkApplicationCount': 1}
     require(all(type(value[key]) is int and value[key] == count for key, count in counts.items()), 'EXACT_FIXED_COUNTS')
     require(all(value[key] is False for key in ('nativeTrinoVerified', 'miniPcPreservationVerified', 'kubernetesVerified', 'distributedConcurrencyOrCrashRecoveryVerified')), 'NO_PRODUCTION_OR_TRINO_OVERCLAIM')
+    compression = {'requestedCodec': 'gzip', 'catalogDefaultSetBeforeFirstCatalogAccess': True,
+        'bronzePropertyBeforeAppend': 'gzip', 'bronzePropertyAfterRun': 'gzip',
+        'silverPropertyAfterWriteAndReplay': 'gzip', 'silverPropertyBeforeWriteObserved': False,
+        'verification': 'SHOW_TBLPROPERTIES_ONLY', 'actualParquetFooterCodecVerified': False,
+        'priorFailureSoleCauseProven': False}
+    require(isinstance(value['compressionExperiment'], dict) and set(value['compressionExperiment']) == set(compression)
+        and all(type(value['compressionExperiment'][key]) is type(expected)
+            and value['compressionExperiment'][key] == expected for key, expected in compression.items()), 'EXPLICIT_GZIP_TABLE_PROPERTY_EXPERIMENT_ONLY')
     require(re.fullmatch(r'21(?:\.[A-Za-z0-9+._-]+)?', value['java']) and re.fullmatch(r'2\.13\.[0-9]+', value['scala']), 'BOUNDED_ACTUAL_JAVA_SCALA')
     require(all(re.fullmatch('[a-f0-9]{64}', value[key]) for key in ('bronzeRowsSha256', 'silverRowsSha256'))
         and len(value['bronzeSnapshotIds']) == 2 and all(re.fullmatch('[1-9][0-9]{0,18}', v) and int(v) < 2**63 for v in value['bronzeSnapshotIds'])
@@ -203,17 +211,24 @@ def safe_spark_result(value):
 
 
 def safe_bootstrap_diagnostic(value):
-    fields = {'schemaVersion', 'scope', 'passed', 'lastPhase', 'milestones', 'pythonExceptionClass', 'javaCauseClasses', 'sessionStopFailed'}
+    fields = {'schemaVersion', 'scope', 'passed', 'lastPhase', 'milestones', 'pythonExceptionClass', 'javaCauseClasses', 'sessionStopFailed',
+        'nativeLibraryCategories', 'failedMapSegmentObserved', 'tmpMountFlag'}
     require(isinstance(value, dict) and set(value) == fields and type(value['schemaVersion']) is int and value['schemaVersion'] == 1
         and value['scope'] == 'ISOLATED_SPARK_BOOTSTRAP_DIAGNOSTIC' and type(value['passed']) is bool
-        and value['lastPhase'] in BOOTSTRAP_PHASES and type(value['sessionStopFailed']) is bool, 'BOUNDED_MESSAGE_FREE_BOOTSTRAP_DIAGNOSTIC')
+        and value['lastPhase'] in BOOTSTRAP_PHASES and type(value['sessionStopFailed']) is bool
+        and type(value['failedMapSegmentObserved']) is bool and value['tmpMountFlag'] in ('NOEXEC', 'EXEC', 'UNOBSERVED'),
+        'BOUNDED_MESSAGE_FREE_BOOTSTRAP_DIAGNOSTIC')
     milestones, causes = value['milestones'], value['javaCauseClasses']
     require(isinstance(milestones, list) and 1 <= len(milestones) <= 32 and all(v in BOOTSTRAP_PHASES for v in milestones)
         and milestones[0] == 'PYTHON_START' and isinstance(causes, list) and len(causes) <= 8
         and all(isinstance(v, str) and len(v) <= 160 and JAVA_CLASS.fullmatch(v) for v in causes), 'ONLY_FIXED_MILESTONES_AND_JAVA_CLASS_NAMES')
+    libraries = value['nativeLibraryCategories']
+    require(isinstance(libraries, list) and len(libraries) <= 4 and all(v in ('zstd', 'snappy', 'lz4', 'hadoop') for v in libraries)
+        and libraries == sorted(set(libraries)), 'ONLY_NATIVE_LIBRARY_WHITELIST_CATEGORIES')
     if value['passed']:
         require(value['lastPhase'] == milestones[-1] == 'COMPLETED' and value['pythonExceptionClass'] is None
-            and causes == [] and value['sessionStopFailed'] is False, 'SUCCESSFUL_BOOTSTRAP_DIAGNOSTIC')
+            and causes == [] and value['sessionStopFailed'] is False and libraries == []
+            and value['failedMapSegmentObserved'] is False, 'SUCCESSFUL_BOOTSTRAP_DIAGNOSTIC')
     else:
         require(value['pythonExceptionClass'] in PYTHON_EXCEPTIONS and value['lastPhase'] in milestones, 'FAILED_BOOTSTRAP_CLASS_ONLY')
     return value

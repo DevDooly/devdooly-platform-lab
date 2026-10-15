@@ -9,7 +9,7 @@ from pathlib import Path
 import re
 
 PROOF = Path('/proof')
-PHASES = ('PYTHON_START', 'IMPORT_SILVER', 'SESSION', 'VERSIONS', 'FRESH_TABLES',
+PHASES = ('PYTHON_START', 'IMPORT_SILVER', 'SESSION', 'GZIP_DEFAULT', 'VERSIONS', 'FRESH_TABLES',
           'CREATE_BRONZE', 'APPEND_FIRST', 'APPEND_SECOND', 'VERIFY_BRONZE',
           'SILVER_RUN', 'VERIFY_RESULT', 'WRITE_RESULT', 'STOP_SESSION', 'COMPLETED')
 PYTHON_EXCEPTIONS = frozenset(('Py4JJavaError', 'Py4JNetworkError', 'Py4JError',
@@ -18,6 +18,45 @@ PYTHON_EXCEPTIONS = frozenset(('Py4JJavaError', 'Py4JNetworkError', 'Py4JError',
     'RuntimeError', 'ValueError', 'OSError', 'TypeError', 'AssertionError'))
 JAVA_CLASS = re.compile(r'(?:org\.apache\.(?:spark|iceberg)|java|org\.postgresql|software\.amazon)'
                         r'(?:\.[A-Za-z_$][A-Za-z0-9_$]*){1,12}')
+CODEC_PROPERTY = 'write.parquet.compression-codec'
+CODEC_DEFAULT = 'spark.sql.catalog.phase6.table-default.' + CODEC_PROPERTY
+TABLES = ('phase6.bronze.synthetic_events', 'phase6.silver.sensor_outcomes')
+NATIVE_LIBRARIES = ('zstd', 'snappy', 'lz4', 'hadoop')
+
+
+def tmp_mount_flag(raw=None):
+    """Return only the effective /tmp mount option, never mount names/paths."""
+    try:
+        if raw is None:
+            with Path('/proc/self/mountinfo').open('rb') as stream:
+                raw = stream.read(1024**2 + 1)
+        if not isinstance(raw, bytes) or not 0 < len(raw) <= 1024**2:
+            return 'UNOBSERVED'
+        matches = []
+        for line in raw.decode('ascii').splitlines():
+            fields = line.split(); marker = fields.index('-')
+            if marker < 6 or len(fields) < marker + 4:
+                return 'UNOBSERVED'
+            mount = fields[4]
+            if mount == '/' or mount == '/tmp' or '/tmp'.startswith(mount.rstrip('/') + '/'):
+                options = set(fields[5].split(',')) | set(fields[marker + 3].split(','))
+                matches.append((len(mount), 'NOEXEC' if 'noexec' in options else 'EXEC'))
+        if not matches:
+            return 'UNOBSERVED'
+        longest = max(length for length, flag in matches)
+        flags = {flag for length, flag in matches if length == longest}
+        return flags.pop() if len(flags) == 1 else 'UNOBSERVED'
+    except Exception:
+        return 'UNOBSERVED'
+
+
+def gzip_property(spark, table):
+    if table not in TABLES:
+        raise ValueError('ONLY_FIXED_SYNTHETIC_TABLE_PROPERTY_READ')
+    rows = [row.asDict() for row in spark.sql("SHOW TBLPROPERTIES " + table + " ('" + CODEC_PROPERTY + "')").limit(2).collect()]
+    if rows != [{'key': CODEC_PROPERTY, 'value': 'gzip'}]:
+        raise ValueError('ACTUAL_GZIP_TABLE_PROPERTY_NOT_VERIFIED')
+    return 'gzip'
 
 
 def write_new(path, value):
@@ -32,7 +71,7 @@ def write_new(path, value):
 def exception_classes(error):
     name = type(error).__name__
     python = name if name in PYTHON_EXCEPTIONS else 'OTHER'
-    names = []
+    names, libraries, failed_map = [], set(), False
     try:
         current = getattr(error, 'java_exception', None)
         for _ in range(8):
@@ -44,10 +83,23 @@ def exception_classes(error):
             if name in names:
                 break
             names.append(name)
+            # Message text is transient classification input only. No message,
+            # native path or stack trace is returned or written by this helper.
+            try:
+                message = current.getMessage()
+            except Exception:
+                message = None
+            if isinstance(message, str):
+                message = message[:8192]
+                for library in NATIVE_LIBRARIES:
+                    if re.search(r'(?:^|[^a-z])(?:lib)?' + library + r'(?:[-_.0-9]|$)', message, re.I):
+                        libraries.add(library)
+                failed_map |= bool(re.search(r'\bfailed to map segment\b', message, re.I))
             current = current.getCause()
     except Exception:
         pass
-    return {'pythonExceptionClass': python, 'javaCauseClasses': names}
+    return {'pythonExceptionClass': python, 'javaCauseClasses': names,
+        'nativeLibraryCategories': sorted(libraries), 'failedMapSegmentObserved': failed_map}
 
 
 def execute(spark, silver, FIELDS, SOURCE_SHA, golden_bronze, require, row_sha, advance):
@@ -63,6 +115,7 @@ def execute(spark, silver, FIELDS, SOURCE_SHA, golden_bronze, require, row_sha, 
     spark.sql("CREATE NAMESPACE phase6.bronze LOCATION '" + silver.WAREHOUSE + "/bronze'")
     spark.sql('CREATE TABLE ' + silver.SOURCE_TABLE + ' (input_sequence INT,event_id STRING,sensor_id STRING,event_time_raw STRING,sensor_value DOUBLE,source_sha256 STRING) USING iceberg LOCATION '
         + "'" + silver.WAREHOUSE + "/bronze/synthetic_events' TBLPROPERTIES ('format-version'='2','commit.retry.num-retries'='0','write.metadata.delete-after-commit.enabled'='false')")
+    bronze_before = gzip_property(spark, silver.SOURCE_TABLE)
     schema = t.StructType([t.StructField(name, t.IntegerType() if name == 'input_sequence' else t.DoubleType() if name == 'sensor_value' else t.StringType(), False) for name in FIELDS])
     rows = golden_bronze()
     for batch, subset in enumerate((rows[:6], rows[6:])):
@@ -79,6 +132,10 @@ def execute(spark, silver, FIELDS, SOURCE_SHA, golden_bronze, require, row_sha, 
     before = row_sha(silver.ordered(spark.table(silver.SOURCE_TABLE).select(*FIELDS)))
     advance('SILVER_RUN')
     result = silver.run(spark, snapshots[1]['snapshot_id'])
+    # Frozen run creates Silver and performs its MERGE + sequential replay.
+    # This is an after-write property observation, not a Silver pre-write probe.
+    bronze_after = gzip_property(spark, silver.SOURCE_TABLE)
+    silver_after = gzip_property(spark, silver.TARGET_TABLE)
     advance('VERIFY_RESULT')
     require(row_sha(silver.ordered(spark.table(silver.SOURCE_TABLE).select(*FIELDS))) == before, 'BRONZE_ROWS_PRESERVED_AFTER_SILVER')
     after = [v.asDict() for v in spark.sql('SELECT snapshot_id,parent_id,operation FROM ' + silver.SOURCE_TABLE + '.snapshots ORDER BY committed_at,snapshot_id').limit(3).collect()]
@@ -94,7 +151,12 @@ def execute(spark, silver, FIELDS, SOURCE_SHA, golden_bronze, require, row_sha, 
         'silverRowsSha256': result['silverRowsSha256'], 'silverSnapshotCount': 1,
         'mergeInvocations': 1, 'sequentialReplayInvocations': 1, 'replayWriteInvocations': 0,
         'sparkApplicationCount': 1, 'nativeTrinoVerified': False, 'miniPcPreservationVerified': False,
-        'kubernetesVerified': False, 'distributedConcurrencyOrCrashRecoveryVerified': False}
+        'kubernetesVerified': False, 'distributedConcurrencyOrCrashRecoveryVerified': False,
+        'compressionExperiment': {'requestedCodec': 'gzip', 'catalogDefaultSetBeforeFirstCatalogAccess': True,
+            'bronzePropertyBeforeAppend': bronze_before, 'bronzePropertyAfterRun': bronze_after,
+            'silverPropertyAfterWriteAndReplay': silver_after, 'silverPropertyBeforeWriteObserved': False,
+            'verification': 'SHOW_TBLPROPERTIES_ONLY', 'actualParquetFooterCodecVerified': False,
+            'priorFailureSoleCauseProven': False}}
     advance('WRITE_RESULT')
     path = PROOF / 'spark-result.json'
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644)
@@ -108,6 +170,7 @@ def execute(spark, silver, FIELDS, SOURCE_SHA, golden_bronze, require, row_sha, 
 def main():
     spark, failure, failure_phase = None, None, None
     phase, milestones, stop_failed = 'PYTHON_START', [], False
+    mount_flag = tmp_mount_flag()
 
     def advance(value):
         nonlocal phase
@@ -123,6 +186,10 @@ def main():
         from silver_contract import FIELDS, SOURCE_SHA, golden_bronze, require, row_sha
         advance('SESSION')
         spark = silver.session()
+        advance('GZIP_DEFAULT')
+        spark.conf.set(CODEC_DEFAULT, 'gzip')
+        if spark.conf.get(CODEC_DEFAULT) != 'gzip':
+            raise ValueError('GZIP_DEFAULT_NOT_SET_BEFORE_CATALOG_ACCESS')
         execute(spark, silver, FIELDS, SOURCE_SHA, golden_bronze, require, row_sha, advance)
     except Exception as error:
         failure_phase, failure = phase, exception_classes(error)
@@ -141,7 +208,10 @@ def main():
         'passed': failure is None, 'lastPhase': failure_phase if failure else phase,
         'milestones': milestones, 'pythonExceptionClass': None if failure is None else failure['pythonExceptionClass'],
         'javaCauseClasses': [] if failure is None else failure['javaCauseClasses'],
-        'sessionStopFailed': stop_failed}
+        'sessionStopFailed': stop_failed,
+        'nativeLibraryCategories': [] if failure is None else failure['nativeLibraryCategories'],
+        'failedMapSegmentObserved': False if failure is None else failure['failedMapSegmentObserved'],
+        'tmpMountFlag': mount_flag}
     try:
         write_new(PROOF / 'bootstrap-diagnostic.json', diagnostic)
     except Exception:
