@@ -22,7 +22,7 @@ const steps = [
   { number: '03', title: '외부에서도 읽을 수 있게', text: '미니 PC의 관측 기록을 공개합니다. 실시간 API 연결과 공개 HTTPS 경로는 별도로 준비합니다.', state: '관측 기록 공개', tone: 'active' },
   { number: '04', title: '메시징과 객체 저장소', text: 'Kafka·Garage·상시 worker를 배포하고 파일 저장 확인, 재시작과 격리 복원을 검증했습니다.', state: '배포·검증', tone: 'active' },
   { number: '05', title: 'AI 개선 사례', text: '개인 Java 시간창 예제로 UTC 오류를 재현·수정하고, 같은 답을 구하는 두 알고리즘의 JMH 측정 기록을 공개합니다. 사람 검토는 대기 중입니다.', state: '로컬 재현·측정', tone: 'active' },
-  { number: '06', title: '데이터 플랫폼 확장', text: 'Iceberg·Trino의 영속 catalog와 시점 조회를 별도 합성 실험으로 준비합니다. Spark·compaction은 후속 범위입니다.', state: '실증 준비', tone: '' },
+  { number: '06', title: '데이터 플랫폼 확장', text: 'Iceberg·Trino에서 0→6→12행의 시점 조회와 정상 재시작 후 보존을 검증했습니다. Spark·compaction은 후속 범위입니다.', state: '부분 실증', tone: 'active' },
 ];
 ---
 <!doctype html>
