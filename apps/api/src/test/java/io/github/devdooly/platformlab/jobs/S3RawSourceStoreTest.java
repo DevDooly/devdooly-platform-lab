@@ -168,6 +168,28 @@ class S3RawSourceStoreTest {
         }
     }
 
+    @Test void workerReadIsGetOnlyAndReturnsVerifiedSourceBytes() {
+        stubGets(response(bytes, bytes.length));
+        assertThat(store.readAndVerify(job)).isEqualTo(bytes);
+        verify(s3).getObject(any(GetObjectRequest.class), transformer());
+        verifyNoMoreInteractions(s3);
+    }
+
+    @Test void workerMissingSourceNeverRecreatesIt() {
+        stubGets(error(404, "NoSuchKey"));
+        assertThatThrownBy(() -> store.readAndVerify(job)).isInstanceOf(S3Exception.class);
+        verify(s3).getObject(any(GetObjectRequest.class), transformer());
+        verifyNoMoreInteractions(s3);
+    }
+
+    @Test void workerCorruptSourceNeverOverwritesIt() {
+        var corrupt = bytes.clone(); corrupt[1] ^= 1;
+        stubGets(response(corrupt, bytes.length));
+        assertThatThrownBy(() -> store.readAndVerify(job)).isInstanceOf(S3RawSourceStore.SourceVerificationException.class);
+        verify(s3).getObject(any(GetObjectRequest.class), transformer());
+        verifyNoMoreInteractions(s3);
+    }
+
     private void stubGets(Object... replies) {
         var next = new AtomicInteger();
         when(s3.getObject(any(GetObjectRequest.class), transformer())).thenAnswer(invocation -> {

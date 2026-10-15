@@ -16,7 +16,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
  * legitimate retries for one admitted run may PUT the same bytes; other writers are excluded
  * by operational policy. An observed conflicting object is never overwritten or deleted here.
  */
-public final class S3RawSourceStore implements RawSourceStore {
+public final class S3RawSourceStore implements RawSourceStore, VerifiedSourceReader {
     private final S3Client s3;
     private final String bucket;
 
@@ -46,6 +46,45 @@ public final class S3RawSourceStore implements RawSourceStore {
             .contentType("application/x-ndjson").contentLength((long) source.size()).build(),
             RequestBody.fromBytes(source.bytes()));
         readAndVerify(key, source, false);
+    }
+
+    /** Bounded GET only: a missing or invalid source is never replaced using DB or fixture bytes. */
+    @Override
+    public byte[] readAndVerify(LabJobService.Job job) {
+        Objects.requireNonNull(job, "Admitted job is required");
+        if (job.runId() == null || !job.runId().matches("[a-z0-9][a-z0-9._-]{0,79}")
+            || job.sourceSha256() == null || !job.sourceSha256().matches("[a-f0-9]{64}")
+            || job.sourceSize() < 1 || job.sourceSize() > CanonicalSource.MAX_BYTES) {
+            throw new IllegalArgumentException("Invalid admitted source metadata");
+        }
+        try {
+            ResponseTransformer<GetObjectResponse, byte[]> boundedBody = (response, input) -> {
+                Long declared = response.contentLength();
+                if (declared == null || declared != job.sourceSize() || declared > CanonicalSource.MAX_BYTES) {
+                    input.abort();
+                    throw new SourceVerificationException("Stored source declared size differs from admitted metadata");
+                }
+                byte[] actual = input.readNBytes(CanonicalSource.MAX_BYTES + 1);
+                if (actual.length != declared || actual.length > CanonicalSource.MAX_BYTES) {
+                    input.abort();
+                    throw new SourceVerificationException("Stored source actual size differs from admitted metadata");
+                }
+                return actual;
+            };
+            byte[] actual = s3.getObject(GetObjectRequest.builder().bucket(bucket).key(job.sourceObjectKey()).build(), boundedBody);
+            final CanonicalSource verified;
+            try { verified = CanonicalSource.validate(actual); }
+            catch (IllegalArgumentException invalid) { throw new SourceVerificationException("Stored source is not the admitted scenario", invalid); }
+            if (verified.size() != job.sourceSize() || !verified.sha256().equals(job.sourceSha256())) {
+                throw new SourceVerificationException("Stored source hash differs from admitted metadata");
+            }
+            return verified.bytes();
+        } catch (SdkClientException failure) {
+            for (Throwable cause = failure.getCause(); cause != null; cause = cause.getCause()) {
+                if (cause instanceof SourceVerificationException invalid) { throw invalid; }
+            }
+            throw failure;
+        }
     }
 
     private boolean readAndVerify(String key, CanonicalSource expected, boolean allowMissing) {

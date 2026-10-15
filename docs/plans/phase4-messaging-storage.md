@@ -1,6 +1,6 @@
 # 4단계 준비 조사: Kafka와 원본 객체 보관
 
-최초 조사: 2026-10-12 KST. DB 작업/outbox·단일 슬롯을 격리 MariaDB에서 검증한 뒤, 2026-10-14에는 Garage 2.4.1·Java SDK 2.55.16 원본 adapter를 추가했다. 기본 checksum의 실제 실패와 Garage 전용 설정의 교정, 전체 원본 검증·재시도·컨테이너 재생성 후 Get-only 보존을 확인했다. [DB 기반 근거](../evidence/db-job-foundation/README.md), [S3 검증 근거](../evidence/s3-source-storage/README.md), [선정 ADR](../adr/0005-verified-raw-source-storage.md)을 연결한다. 운영 image·DB는 갱신하지 않았고 Kafka 전달·offset·결과 export는 아직 미구현이다. 아래 제품 조사는 최초 시점의 기록이며 이후 확정한 조합은 ADR을 따른다.
+최초 조사: 2026-10-12 KST. DB 작업/outbox·단일 슬롯을 격리 MariaDB에서 검증한 뒤, 2026-10-14에는 Garage 2.4.1·Java SDK 2.55.16 원본 adapter를 추가했다. 기본 checksum의 실제 실패와 Garage 전용 설정의 교정, 전체 원본 검증·재시도·컨테이너 재생성 후 Get-only 보존을 확인했다. [DB 기반 근거](../evidence/db-job-foundation/README.md), [S3 검증 근거](../evidence/s3-source-storage/README.md), [선정 ADR](../adr/0005-verified-raw-source-storage.md)을 연결한다. 2026-10-15에는 Kafka 발행·수신·수동 offset과 실제 중단 후 재전달을 격리 검증했다. 기본 78개·실제 IT 4개와 기존 운영 보존 결과는 [Kafka 근거](../evidence/kafka-redelivery/README.md), plain client 선택과 현재 envelope는 [ADR 0006](../adr/0006-explicit-kafka-dispatch.md)을 따른다. 운영 image·DB는 갱신하지 않았고 결과 export·상시 worker는 후속이다. 아래 제품 조사는 최초 시점의 기록이며 이후 확정한 조합은 ADR을 따른다.
 
 ## 권장 범위
 
@@ -33,7 +33,7 @@ Flyway V1에는 `(run_id, input_sequence)` unique 제약과 전체 건수 CHECK�
 
 최초 조사 당시 `SampleBootstrap`은 모든 profile에서 실행됐다. 이번 foundation은 `worker`·`admin` profile에서 자동 bootstrap을 제외했고, `DemoRun`에 별도 작업 메타데이터 생성 경로와 공유 결과 저장 경로를 추가해 기존 seed 경로를 유지했다. 현재 작업도 같은 고정 시나리오이므로 detail 설명은 유지한다. 범용 시나리오 설명 분리, 조회 API만의 migration 주체 설정, worker의 Flyway·웹 서버 비활성화와 실제 worker·관리자 실행기는 후속 구현이다. profile로 bootstrap을 제외했다고 migration이나 웹 서버가 자동 비활성화되는 것은 아니다.
 
-잠금·트랜잭션의 합격 근거는 **실제 MariaDB 격리 검증**으로 남긴다. 동시 제출 2개, 같은 run+같은 hash 재요청, 같은 run+다른 hash 거부, 결과 commit 전 rollback, commit 뒤 같은 작업 재전달에서 DB 효과 1회와 기존 완료 시각·seed 전체 행 보존을 확인한다. H2 결과만으로 MariaDB 동시성·잠금까지 검증했다고 기록하지 않는다. 이번 foundation에서 기존 V1 업그레이드·빈 DB 초기화·반복 시작 조건 각각의 실제 MariaDB 17개 검증을 통과했다. 비UTC JVM 완료 시각 일치와 이전 image 호환성도 확인했다. [실제 결과와 검증 실패·교정 기록](../evidence/db-job-foundation/README.md)을 연결한다. Kafka 발행·수신·offset·S3의 장애 후 복구는 아직 후속 관문이다.
+잠금·트랜잭션의 합격 근거는 **실제 MariaDB 격리 검증**으로 남긴다. 동시 제출 2개, 같은 run+같은 hash 재요청, 같은 run+다른 hash 거부, 결과 commit 전 rollback, commit 뒤 같은 작업 재전달에서 DB 효과 1회와 기존 완료 시각·seed 전체 행 보존을 확인한다. H2 결과만으로 MariaDB 동시성·잠금까지 검증했다고 기록하지 않는다. 이번 foundation에서 기존 V1 업그레이드·빈 DB 초기화·반복 시작 조건 각각의 실제 MariaDB 17개 검증을 통과했다. 비UTC JVM 완료 시각 일치와 이전 image 호환성도 확인했다. [실제 결과와 검증 실패·교정 기록](../evidence/db-job-foundation/README.md)을 연결한다. 이후 실제 MariaDB·Garage 결합의 rollback·원본 보존과 Kafka 발행·수신·offset 중단 후 재전달을 별도 격리 검증했다. [결합 근거](../evidence/mariadb-s3/README.md), [Kafka 근거](../evidence/kafka-redelivery/README.md)를 연결하며 운영 배포·결과 export는 후속 관문이다.
 
 ## 제품과 공식 배포 상태
 
@@ -71,7 +71,7 @@ SeaweedFS도 한 프로세스의 `weed mini` 구성이 있지만 내부에 maste
 1. 관리자 전용 1회 실행 경로에서 허용한 합성 시나리오와 run ID를 만든다. JSON/NDJSON 원본은 입력 순번을 유지하고 잘못된 시각과 중복 ID까지 그대로 포함한다.
 2. MariaDB에 `runId + payloadSha256 + scenarioVersion`을 갖는 작업을 `STAGING`으로 등록한다. 같은 run ID에 다른 hash가 들어오면 거부한다. 전체 진행 작업은 DB 제약·잠금으로 1개만 허용한다.
 3. 전용 비공개 bucket에 원본을 Put하고, Get으로 읽어 SHA-256과 입력 수를 확인한다. 성공한 뒤 DB 트랜잭션에서 작업을 `QUEUED`로 바꾸고 outbox 행을 함께 등록한다. S3 실패 때 완료·접수 성공이나 Kafka 발행 성공으로 기록하지 않는다.
-4. 작은 outbox publisher가 topic `lab.sensor-runs.v1`에 원본 object key·hash·입력 수·scenarioVersion·run ID만 보낸다. partition 1, key run ID, consumer 1로 시작한다. 발행 ACK 뒤 outbox 표시 전에 중단되면 같은 작업이 재전달될 수 있게 설계한다.
+4. 최초 계획은 원본 object key·hash·입력 수·scenarioVersion·run ID 전달이었으나, 실제 구현은 [ADR 0006](../adr/0006-explicit-kafka-dispatch.md)에 따라 schemaVersion·run ID·scenarioVersion·sourceSha256 네 필드만 보낸다. object key·입력 수는 불변 DB 작업에서 대조한다. 향후 운영 topic은 `lab.sensor-runs.v1`을 후보로 두며 실제 시험은 UUID 전용 topic을 사용했다. partition 1, key run ID, consumer 1로 시작한다. 발행 ACK 뒤 outbox 표시 전에 중단되면 같은 작업이 재전달될 수 있게 설계한다.
 5. worker는 DB의 고유 run과 row lock으로 선점하고, S3 원본 hash를 검증한 뒤 기존 `SensorProcessor`로 전체 묶음을 판정한다. 결과와 12개 outcome, 작업 완료 상태를 같은 DB 트랜잭션으로 저장한다. 그 뒤 Kafka offset을 commit한다.
 6. 이미 완료된 run의 재전달은 hash를 대조하고 결과를 추가하지 않는다. 저장 당시 처리 시각도 덮어쓰지 않는다. Kafka 전달 횟수와 재전달 억제 횟수는 업무상 중복 2건과 다른 항목으로 기록한다.
 7. 결과 JSON과 실패 입력·실패 이유 JSON은 DB 완료 후 별도 export outbox로 S3에 저장한다. 연산 완료와 export 상태를 분리하고, export 장애를 연산 실패로 바꾸지 않고 `RESULT_EXPORT_PENDING`으로 드러낸다. 같은 hash·결과 버전의 결정적 key로 재시도하고, 실제 export 확인 뒤에만 결과 파일 보관 완료로 표시한다. **최초 정책은 결과·실패 파일의 export 완료까지 전체 실행 슬롯을 보유**한다. export 대기·운영자 정지 중에는 후속 작업을 받지 않아 미완료 작업 누적을 억제한다. 복구 불가능한 작업의 슬롯 해제는 원본·결과 보존을 확인한 명시적 운영자 종료 절차에서만 수행한다.

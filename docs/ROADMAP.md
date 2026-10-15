@@ -92,8 +92,10 @@
 - [x] 실제 MariaDB의 V1 업그레이드·빈 DB 초기화·반복 시작, 동시 제출·rollback·재전달·Asia/Seoul 시각 일치 검증
 - [x] 이전 image의 V2 DB 호환성과 기존 운영 SQL·PVC·Docker 보존, 임시 자원 정리 확인
 
-- [ ] Kafka producer·worker와 멱등 키·재시도·실패 이벤트 보관 구현
-- [ ] 중복·역순·중단·재시작 후 결과 건수와 lag 확인
+- [x] 명시적 Kafka publisher·worker, ACK 뒤 outbox 확인·Get-only 원본 검증·DB commit 뒤 수동 offset 구현: [ADR 0006](adr/0006-explicit-kafka-dispatch.md)
+- [x] 실제 Kafka·MariaDB·Garage에서 JVM 중단 세 경계·재전달 멱등·손상 원본 fail-stop/명시적 fixture 복구, 결과 건수·offset·lag 0·기존 운영 보존: [근거](evidence/kafka-redelivery/README.md)
+- [ ] 상시 worker 실행기·운영자 영속 정지/재개·결과/실패 export와 운영 배포 검증
+- [ ] 다중 partition·이벤트별 전달 순서 검증이 필요할 때 별도 확장
 - [x] Garage·Java SDK의 필요한 API·기본 checksum 실패와 호환성 교정 검증 후 한정 선정: [ADR 0005](adr/0005-verified-raw-source-storage.md)
 - [x] 원본 전체 bytes·크기·SHA-256, 상태 전환 전 실패·재시도와 컨테이너 재생성 후 Get-only 보존: [근거](evidence/s3-source-storage/README.md)
 - [x] 실제 MariaDB·Garage 결합의 정상·손상·DB statement 오류 rollback과 원본 보존·재시도, 같은 DB 반복 및 운영 보존: [근거](evidence/mariadb-s3/README.md)

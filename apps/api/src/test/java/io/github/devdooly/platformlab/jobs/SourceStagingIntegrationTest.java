@@ -144,6 +144,11 @@ class SourceStagingIntegrationTest {
         assertThat(context.getBeansOfType(software.amazon.awssdk.services.s3.S3Client.class)).isEmpty();
         assertThat(context.getBeansOfType(RawSourceStore.class)).isEmpty();
         assertThat(context.getBeansOfType(SourceStagingService.class)).isEmpty();
+        assertThat(context.getBeansOfType(VerifiedSourceReader.class)).isEmpty();
+        assertThat(context.getBeansOfType(org.apache.kafka.clients.producer.Producer.class)).isEmpty();
+        assertThat(context.getBeansOfType(org.apache.kafka.clients.consumer.Consumer.class)).isEmpty();
+        assertThat(context.getBeansOfType(io.github.devdooly.platformlab.jobs.messaging.DispatchPublisher.class)).isEmpty();
+        assertThat(context.getBeansOfType(io.github.devdooly.platformlab.jobs.messaging.DispatchWorker.class)).isEmpty();
     }
 
     private void assertStagingWithoutDispatch() {
