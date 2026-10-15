@@ -96,7 +96,10 @@
 - [x] 실제 Kafka·MariaDB·Garage에서 JVM 중단 세 경계·재전달 멱등·손상 원본 fail-stop/명시적 fixture 복구, 결과 건수·offset·lag 0·기존 운영 보존: [근거](evidence/kafka-redelivery/README.md)
 - [x] 결정적 결과·실패 파일 export, 전체 bytes/크기/SHA 확인 뒤 outbox·EXPORTED·슬롯 해제: [ADR 0007](adr/0007-verified-result-export.md)
 - [x] 실제 MariaDB/Garage 정상·반복/다음 슬롯 보존·부분 저장·손상 거부·최종 DB rollback·JVM 중단 2개 경계와 재시도, 기존 운영 보존: [근거](evidence/result-export/README.md)
-- [ ] 상시 worker/export 실행기·운영자 영속 정지/재개·job/export 관측과 운영 배포 검증
+- [x] 명시적 상시 publisher/worker/export 실행기·MariaDB named lock·V3 영속 정지와 별도 resume: [ADR 0008](adr/0008-continuous-runtime-observation.md)
+- [x] 실제 연속 두 작업·JVM 중단/재시작·PAUSED 재시작/경쟁 CLI 거부·resume, 작업/export HTTP 관측·기록 화면·운영 보존: [근거](evidence/continuous-runtime/README.md)
+- [ ] 운영용 Kafka/S3 접속·인증·배치·자원/보존 조건과 제한된 worker GitOps 배포 검증
+- [ ] job 관측 자동 outbound 수집·Pages 게시와 OS 재시작 정책 검증
 - [ ] 다중 partition·이벤트별 전달 순서 검증이 필요할 때 별도 확장
 - [x] Garage·Java SDK의 필요한 API·기본 checksum 실패와 호환성 교정 검증 후 한정 선정: [ADR 0005](adr/0005-verified-raw-source-storage.md)
 - [x] 원본 전체 bytes·크기·SHA-256, 상태 전환 전 실패·재시도와 컨테이너 재생성 후 Get-only 보존: [근거](evidence/s3-source-storage/README.md)

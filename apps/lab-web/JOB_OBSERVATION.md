@@ -51,4 +51,4 @@ slot: occupiedRunId
 jobs: 최대 20개의 공개 작업 요약
 ```
 
-실제 통과한 실행기·중단·복구 근거와 운영 보존 결과는 후속 검증 문서에서 연결한다. 기본 API와 브라우저 테스트는 공개 범위·실패 보존·미관측 처리·시간 경고를 검증하며, 실제 저장소 가용성을 대신 증명하지 않는다.
+실제 통과한 실행기·중단·복구와 운영 보존은 [상시 실행·관측 근거](../../docs/evidence/continuous-runtime/README.md), 실행은 [운영 절차](../../docs/runbooks/continuous-runtime.md), API는 [계약](../../docs/contracts/job-observation.md)에 연결한다. 등록한 정적 파일은 실제 격리 HTTP 응답이며 운영 배포 결과가 아니다. 기본 API와 브라우저 테스트는 공개 범위·실패 보존·미관측 처리·시간 경고를 검증하며, 실제 저장소 가용성을 대신 증명하지 않는다.

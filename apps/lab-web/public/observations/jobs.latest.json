@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "kind": "job-observation",
+  "capturedAt": "2026-10-15T01:51:02.339869600Z",
+  "environment": "ISOLATED_LAB",
+  "sourceCommit": "81cc95174d400544ed949997c0782492c3a3843d",
+  "synthetic": true,
+  "scope": "ISOLATED_LAB",
+  "publicExecutionEnabled": false,
+  "runtime": {
+    "status": "STOPPED",
+    "stage": "STOPPED",
+    "failureCode": null,
+    "startedAt": "2026-10-15T01:50:50.770167Z",
+    "heartbeatAt": "2026-10-15T01:51:01.656523Z",
+    "stoppedAt": "2026-10-15T01:51:01.656523Z",
+    "sourceCommit": "81cc95174d400544ed949997c0782492c3a3843d",
+    "stale": false
+  },
+  "slot": {
+    "occupiedRunId": null
+  },
+  "jobs": [
+    {
+      "runId": "runtime-it-f504789d-86a5-4c0c-95e6-1816a083c3c4",
+      "status": "COMPLETED",
+      "exportStatus": "EXPORTED",
+      "createdAt": "2026-10-15T01:50:56.403360Z",
+      "sourceVerifiedAt": "2026-10-15T01:50:56.884359Z",
+      "queuedAt": "2026-10-15T01:50:56.884359Z",
+      "completedAt": "2026-10-15T01:50:58.647845Z",
+      "exportCompletedAt": "2026-10-15T01:50:59.204219Z",
+      "terminatedAt": null,
+      "counts": {
+        "input": 12,
+        "success": 7,
+        "failure": 3,
+        "duplicate": 2,
+        "pending": 0
+      },
+      "files": {
+        "result": {
+          "sha256": "1562c20595f4147e3e57d5f5d5810ba39e3a3ef1d8eb778eeaf645041444d506",
+          "size": 2393
+        },
+        "failures": {
+          "sha256": "1594a582fdbc6afb7e9fd3abddf9986f3da1603dc6493e00e249113e71659d20",
+          "size": 1452
+        }
+      },
+      "fileEvidence": "VERIFIED_AT_EXPORT_COMMIT"
+    },
+    {
+      "runId": "runtime-it-87e10a6b-0824-4ea0-bc69-1e46aae5096b",
+      "status": "COMPLETED",
+      "exportStatus": "EXPORTED",
+      "createdAt": "2026-10-15T01:50:51.884355Z",
+      "sourceVerifiedAt": "2026-10-15T01:50:52.197941Z",
+      "queuedAt": "2026-10-15T01:50:52.197941Z",
+      "completedAt": "2026-10-15T01:50:54.421097Z",
+      "exportCompletedAt": "2026-10-15T01:50:55.507893Z",
+      "terminatedAt": null,
+      "counts": {
+        "input": 12,
+        "success": 7,
+        "failure": 3,
+        "duplicate": 2,
+        "pending": 0
+      },
+      "files": {
+        "result": {
+          "sha256": "82e0c0726e31cf3415a2bf5eb4d08196452922b5a87a7e431011ed2091e4e7b5",
+          "size": 2393
+        },
+        "failures": {
+          "sha256": "832a96d64f978b8badc8e9320c53cea0cf47374677377ce01a79db24678ecdc6",
+          "size": 1452
+        }
+      },
+      "fileEvidence": "VERIFIED_AT_EXPORT_COMMIT"
+    }
+  ]
+}
