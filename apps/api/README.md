@@ -35,9 +35,9 @@ MariaDB 없이 로컬 코드·HTTP를 확인할 때만 명시적으로 다음 pr
 - 고정 seed 42의 12건: 성공 7, 실패 3, 중복 2, 대기 0
 - 최초 시작 시 고정 run ID를 저장하고 이후 시작에서는 이미 저장된 결과를 재사용
 
-공개 실행 POST는 제공하지 않습니다. 기본 API는 Kafka·S3 client나 상시 worker를 자동 생성하지 않습니다. 명시적 `--lab-runtime=run|resume` 실행기는 API/관리 절차가 V3를 적용한 뒤 worker/non-web 모드에서 별도로 시작합니다. 읽기 전용 `GET /api/jobs/observation`은 작업·export·실행기 journal을 별도 계약으로 제공합니다.
+공개 실행 POST는 제공하지 않습니다. 기본 API는 Kafka·S3 client나 상시 worker를 자동 생성하지 않습니다. 명시적 `--lab-runtime=run|resume` 실행기는 API/관리 절차가 V3를 적용한 뒤 worker/non-web 모드에서 별도로 시작합니다. 내부 `--lab-runtime=stage`는 기본 V1 12건을 유지하며, `LAB_RUNTIME_STAGE_SCENARIO=sensor-validation-v2`로 고정 합성 입력 1,000건(성공 500·실패 300·중복 200·대기 0)을 선택합니다. 임의 파일·건수·URL은 받지 않습니다. 원본은 1 MiB, 결과/실패 문서는 각각 4 MiB, Kafka 포인터는 1,024 bytes 이하이며 export 확인까지 진행 슬롯 1개를 유지합니다. 읽기 전용 `GET /api/jobs/observation`은 작업·export·실행기 journal을 별도 계약으로 제공합니다.
 
-현재 기본 verify는 120개이며 별도 실제 상시 IT 4개를 통과했습니다. [상시 실행 절차](../../docs/runbooks/continuous-runtime.md), [작업 관측 계약](../../docs/contracts/job-observation.md), [실제 근거](../../docs/evidence/continuous-runtime/README.md)를 따릅니다. 기반의 [원본 S3](../../docs/runbooks/s3-source-storage.md)·[Kafka 재전달](../../docs/evidence/kafka-redelivery/README.md)·[결과 export](../../docs/evidence/result-export/README.md) 검증은 각 문서에 분리했습니다. 운영 배치·배포와 자동 관측 게시 연결은 후속입니다.
+현재 기본 verify는 140개이며 최대 입력·동시 접수의 실제 격리 기능 IT 5개를 통과했습니다. Windows Java 드라이버와 Linux Docker backend의 기능 검증이며 운영 자원 성능·SLA가 아닙니다. V1 bytes/hash는 유지하지만 이전 image가 V2를 처리하지는 못하므로 최초 V2 접수 전에 API와 worker를 모두 지원 image로 갱신해야 합니다. [버전·제한 결정](../../docs/adr/0010-versioned-bounded-input.md), [최대 입력·동시 접수 절차](../../docs/runbooks/maximum-input-concurrency.md)를 따릅니다. 앞서 수행한 상시 IT 4개와 이후 배포·복구는 [상시 실행 절차](../../docs/runbooks/continuous-runtime.md)에, [작업 관측 계약](../../docs/contracts/job-observation.md)과 기반의 [원본 S3](../../docs/runbooks/s3-source-storage.md)·[Kafka 재전달](../../docs/evidence/kafka-redelivery/README.md)·[결과 export](../../docs/evidence/result-export/README.md) 근거는 각 문서에 분리했습니다. Linux 제한 자원 실행과 이번 변경의 운영 반영은 [별도 실행 근거](../../docs/evidence/input-concurrency-load/README.md)에 기록합니다. 슬롯 제어는 요청률 제한기가 아니며 공개 rate limiter를 추가하지 않았습니다.
 
 현재 bootstrap은 단일 조회 앱 인스턴스의 최초 시작을 전제로 합니다. 여러 조회 replica가 동시에 seed를 처음 생성하는 배포 전에는 별도 DB 잠금/seed Job을 추가해야 합니다. worker mode는 seed bootstrap을 실행하지 않습니다.
 

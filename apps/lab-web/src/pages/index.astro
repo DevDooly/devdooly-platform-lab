@@ -17,7 +17,9 @@ const steps = [
   { number: '01', title: '작은 API와 조회 화면', text: '고정 seed 합성 데이터, Spring Boot 조회 API와 Astro·React 화면을 연결합니다.', state: 'MVP 구현', tone: 'active' },
   { number: '02', title: '빌드부터 배포까지', text: 'Jenkins 테스트·패키징, Actions 이미지 게시, Argo CD·Helm 배포를 구분해 기록하며 CI 연계를 확장합니다.', state: '실제 배포', tone: 'active' },
   { number: '03', title: '외부에서도 읽을 수 있게', text: '미니 PC의 관측 기록을 공개합니다. 실시간 API 연결과 공개 HTTPS 경로는 별도로 준비합니다.', state: '관측 기록 공개', tone: 'active' },
-  { number: '04–06', title: '메시징과 데이터 플랫폼 확장', text: 'Kafka·객체 저장소, AI 개선 사례와 Iceberg·Spark·Trino를 순서대로 검증합니다.', state: '예정', tone: '' },
+  { number: '04', title: '메시징과 객체 저장소', text: 'Kafka·Garage·상시 worker를 배포하고 파일 저장 확인, 재시작과 격리 복원을 검증했습니다.', state: '배포·검증', tone: 'active' },
+  { number: '05', title: 'AI 개선 사례', text: '공개 예제로 AI 제안과 개발자의 판단, 변경 전후 테스트를 기록할 계획입니다.', state: '예정', tone: '' },
+  { number: '06', title: '데이터 플랫폼 확장', text: 'Iceberg·Spark·Trino의 적재·조회·재시작을 자원 예산 안에서 검증할 계획입니다.', state: '예정', tone: '' },
 ];
 ---
 <!doctype html>
@@ -55,7 +57,7 @@ const steps = [
       <JobObservationCard client:load apiBase={apiBase} observationUrl={`${assetBase}observations/jobs.latest.json`} mode={jobObservationMode}/>
       <PlatformObservationCard client:load observationUrl={`${assetBase}data/platform-observation.json`}/>
       <section id="progress" class="section progress-section" aria-labelledby="progress-title"><div class="progress-intro"><span class="eyebrow">04 / BUILD IN THE OPEN</span><h2 id="progress-title">구축 과정도<br/>기록합니다.</h2><p>이곳은 개인 Lab의 첫 버전입니다.<br/>실무 경험과 새로 구축하는 환경을 구분하고,<br/>검증한 결과만 기록합니다.</p><a class="text-link" href={`${github}/blob/main/docs/ROADMAP.md`} target="_blank" rel="noreferrer">전체 진행 목록 ↗</a></div><div class="progress-list">{steps.map(step => <article class="progress-step"><span class="step-number">{step.number}</span><div><h3>{step.title}</h3><p>{step.text}</p></div><span class={`step-state ${step.tone}`}>{step.state}</span></article>)}</div></section>
-      <section class="section notes-section" aria-label="기술 문서와 소스 코드"><div><span class="eyebrow">THE NOTES BEHIND THE WORK</span><h2>코드 옆에, 이유를 남깁니다.</h2><p>문제를 이해하고 선택한 방법, 검증한 과정은 문서에서 이어집니다.</p></div><div class="notes-links"><a href="https://devdooly.github.io/TIL/" target="_blank" rel="noreferrer"><div><small>TECHNICAL WIKI</small><strong>TIL · 매일의 기술 기록</strong></div><span aria-hidden="true">↗</span></a><a href={`${github}/tree/main/docs`} target="_blank" rel="noreferrer"><div><small>PROJECT DOCUMENTS</small><strong>설계 결정과 검증 기록</strong></div><span aria-hidden="true">↗</span></a></div></section>
+      <section class="section notes-section" aria-label="기술 문서와 소스 코드"><div><span class="eyebrow">THE NOTES BEHIND THE WORK</span><h2>코드 옆에, 이유를 남깁니다.</h2><p>문제를 이해하고 선택한 방법, 검증한 과정은 문서에서 이어집니다.</p></div><div class="notes-links"><a href="https://devdooly.github.io/TIL/" target="_blank" rel="noreferrer"><div><small>TECHNICAL WIKI</small><strong>TIL · 매일의 기술 기록</strong></div><span aria-hidden="true">↗</span></a><a href={`${github}/tree/main/docs`} target="_blank" rel="noreferrer"><div><small>PROJECT DOCUMENTS</small><strong>설계 결정과 검증 기록</strong></div><span aria-hidden="true">↗</span></a><a href={`${github}/blob/main/docs/evidence/input-concurrency-load/README.md`} target="_blank" rel="noreferrer"><div><small>ISOLATED VALIDATION</small><strong>최대 1,000개 · 동시 접수 검증</strong></div><span aria-hidden="true">↗</span></a></div></section>
     </main>
     <footer class="site-footer"><div><span class="footer-name">DevDooly <span>김선홍</span></span><p>실무 경험에서 출발한 개인 플랫폼. 모든 예제는 합성 데이터로 구성합니다.</p></div><a href="#main">BACK TO TOP ↑</a></footer>
   </body>
