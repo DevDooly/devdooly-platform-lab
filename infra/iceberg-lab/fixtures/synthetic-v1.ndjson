@@ -1,0 +1,12 @@
+{"eventId":"evt-001","sensorId":"sensor-a","eventTime":"2026-01-01T00:00:00Z","value":21.5}
+{"eventId":"evt-002","sensorId":"sensor-b","eventTime":"2026-01-01T00:00:00Z","value":25.9}
+{"eventId":"evt-003","sensorId":"sensor-a","eventTime":"2026-01-01T00:01:00Z","value":20.4}
+{"eventId":"evt-003","sensorId":"sensor-a","eventTime":"2026-01-01T00:01:00Z","value":30.0}
+{"eventId":"evt-004","sensorId":"sensor-a","eventTime":"not-a-timestamp","value":30.0}
+{"eventId":"evt-005","sensorId":"sensor-a","eventTime":"2026-01-01T00:00:30Z","value":30.0}
+{"eventId":"evt-006","sensorId":"sensor-b","eventTime":"2026-01-01T00:01:00Z","value":120.0}
+{"eventId":"evt-007","sensorId":"sensor-b","eventTime":"2026-01-01T00:01:00Z","value":28.9}
+{"eventId":"evt-008","sensorId":"sensor-a","eventTime":"2026-01-01T00:02:00Z","value":21.1}
+{"eventId":"evt-009","sensorId":"sensor-b","eventTime":"2026-01-01T00:02:00Z","value":25.6}
+{"eventId":"evt-001","sensorId":"sensor-a","eventTime":"2026-01-01T00:00:00Z","value":30.0}
+{"eventId":"evt-010","sensorId":"sensor-a","eventTime":"2026-01-01T00:03:00Z","value":20.3}

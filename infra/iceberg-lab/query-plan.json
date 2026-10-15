@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 2,
+  "status": "PREPARED_NOT_RUN",
+  "scope": "BRONZE_RAW_ONLY",
+  "catalog": "phase6",
+  "bucket": "platform-lab-iceberg-plan2-20261016",
+  "sourceSha256": "39ba10d8c47dce790f3ccc9c9134fea593d6de31f1f3a7992ca61d9f554da3b5",
+  "sourceBytes": 1100,
+  "logicalRows": 12,
+  "statements": [
+    {
+      "name": "create_schema",
+      "mutation": true,
+      "sql": "CREATE SCHEMA iceberg.bronze WITH (location='s3://platform-lab-iceberg-plan2-20261016/warehouse/phase6/bronze');"
+    },
+    {
+      "name": "create_table",
+      "mutation": true,
+      "sql": "CREATE TABLE iceberg.bronze.synthetic_events (input_sequence INTEGER,event_id VARCHAR,sensor_id VARCHAR,event_time_raw VARCHAR,sensor_value DOUBLE,source_sha256 VARCHAR) WITH (format='PARQUET',format_version=2,location='s3://platform-lab-iceberg-plan2-20261016/warehouse/phase6/bronze/synthetic_events');"
+    },
+    {
+      "name": "read_initial_empty",
+      "mutation": false,
+      "sql": "SELECT input_sequence,event_id,sensor_id,event_time_raw,sensor_value,source_sha256 FROM iceberg.bronze.synthetic_events ORDER BY input_sequence;"
+    },
+    {
+      "name": "insert_six_1",
+      "mutation": true,
+      "sql": "INSERT INTO iceberg.bronze.synthetic_events VALUES\n(1, 'evt-001', 'sensor-a', '2026-01-01T00:00:00Z', 21.5, '39ba10d8c47dce790f3ccc9c9134fea593d6de31f1f3a7992ca61d9f554da3b5'),\n(2, 'evt-002', 'sensor-b', '2026-01-01T00:00:00Z', 25.9, '39ba10d8c47dce790f3ccc9c9134fea593d6de31f1f3a7992ca61d9f554da3b5'),\n(3, 'evt-003', 'sensor-a', '2026-01-01T00:01:00Z', 20.4, '39ba10d8c47dce790f3ccc9c9134fea593d6de31f1f3a7992ca61d9f554da3b5'),\n(4, 'evt-003', 'sensor-a', '2026-01-01T00:01:00Z', 30.0, '39ba10d8c47dce790f3ccc9c9134fea593d6de31f1f3a7992ca61d9f554da3b5'),\n(5, 'evt-004', 'sensor-a', 'not-a-timestamp', 30.0, '39ba10d8c47dce790f3ccc9c9134fea593d6de31f1f3a7992ca61d9f554da3b5'),\n(6, 'evt-005', 'sensor-a', '2026-01-01T00:00:30Z', 30.0, '39ba10d8c47dce790f3ccc9c9134fea593d6de31f1f3a7992ca61d9f554da3b5');\n"
+    },
+    {
+      "name": "read_snapshot_1",
+      "mutation": false,
+      "sql": "SELECT input_sequence,event_id,sensor_id,event_time_raw,sensor_value,source_sha256 FROM iceberg.bronze.synthetic_events ORDER BY input_sequence;"
+    },
+    {
+      "name": "insert_six_2",
+      "mutation": true,
+      "sql": "INSERT INTO iceberg.bronze.synthetic_events VALUES\n(7, 'evt-006', 'sensor-b', '2026-01-01T00:01:00Z', 120.0, '39ba10d8c47dce790f3ccc9c9134fea593d6de31f1f3a7992ca61d9f554da3b5'),\n(8, 'evt-007', 'sensor-b', '2026-01-01T00:01:00Z', 28.9, '39ba10d8c47dce790f3ccc9c9134fea593d6de31f1f3a7992ca61d9f554da3b5'),\n(9, 'evt-008', 'sensor-a', '2026-01-01T00:02:00Z', 21.1, '39ba10d8c47dce790f3ccc9c9134fea593d6de31f1f3a7992ca61d9f554da3b5'),\n(10, 'evt-009', 'sensor-b', '2026-01-01T00:02:00Z', 25.6, '39ba10d8c47dce790f3ccc9c9134fea593d6de31f1f3a7992ca61d9f554da3b5'),\n(11, 'evt-001', 'sensor-a', '2026-01-01T00:00:00Z', 30.0, '39ba10d8c47dce790f3ccc9c9134fea593d6de31f1f3a7992ca61d9f554da3b5'),\n(12, 'evt-010', 'sensor-a', '2026-01-01T00:03:00Z', 20.3, '39ba10d8c47dce790f3ccc9c9134fea593d6de31f1f3a7992ca61d9f554da3b5');\n"
+    },
+    {
+      "name": "read_snapshot_2",
+      "mutation": false,
+      "sql": "SELECT input_sequence,event_id,sensor_id,event_time_raw,sensor_value,source_sha256 FROM iceberg.bronze.synthetic_events ORDER BY input_sequence;"
+    }
+  ],
+  "inspection": {
+    "snapshots": "SELECT snapshot_id,parent_id,operation,element_at(summary,'added-records') AS added_records,element_at(summary,'total-records') AS total_records FROM iceberg.bronze.\"synthetic_events$snapshots\" ORDER BY committed_at,snapshot_id;",
+    "history": "SELECT * FROM iceberg.bronze.\"synthetic_events$history\" ORDER BY made_current_at;",
+    "files": "SELECT file_path,file_format,record_count,file_size_in_bytes FROM iceberg.bronze.\"synthetic_events$files\" ORDER BY file_path;",
+    "counts": "SELECT count(*) AS input_rows,count(DISTINCT event_id) AS distinct_event_ids,count_if(sensor_id='sensor-a') AS sensor_a,count_if(sensor_id='sensor-b') AS sensor_b,count_if(try(from_iso8601_timestamp(event_time_raw)) IS NULL) AS bad_timestamp,count_if(sensor_value<0 OR sensor_value>100) AS out_of_range FROM iceberg.bronze.synthetic_events;"
+  },
+  "expected": {
+    "initial": {
+      "rows": 0,
+      "distinctEventIds": 0,
+      "sensorA": 0,
+      "sensorB": 0,
+      "addedRecordsSummary": null,
+      "goldenRowsSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    "first": {
+      "rows": 6,
+      "distinctEventIds": 5,
+      "sensorA": 5,
+      "sensorB": 1,
+      "goldenRowsSha256": "411dc42e274b9c0e73e08b1725fd08fcc75cc3217c1f10d3102f79c8319b48ec"
+    },
+    "second": {
+      "rows": 12,
+      "distinctEventIds": 10,
+      "sensorA": 8,
+      "sensorB": 4,
+      "badTimestamp": 1,
+      "outOfRange": 1,
+      "goldenRowsSha256": "1c31bc6976083c78549cb0a6b1a48517d16e5bd683da474d75bea1756f1d8514"
+    }
+  },
+  "snapshotInspectionMode": "INITIAL_EMPTY_PLUS_TWO_DATA_APPENDS",
+  "initialEmptySnapshots": 1,
+  "dataAppendSnapshots": 2,
+  "totalSnapshots": 3,
+  "timeTravelExpectedRows": [
+    0,
+    6,
+    12
+  ],
+  "httpWireNormalization": "ONE_TERMINAL_SEMICOLON_ONLY",
+  "operatorQueryResubmissionRetries": 0,
+  "dropOrExpireOrGcPlanned": false,
+  "silverProcessorImplemented": false,
+  "runtimeResultsVerified": false
+}
