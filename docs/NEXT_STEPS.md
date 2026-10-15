@@ -1,8 +1,8 @@
 # Platform Lab 다음 개발 계획
 
-초기 계획: 2026년 10월 12일 · 최근 실제 runtime 배포·관측 게시: 2026년 10월 15일
+초기 계획: 2026년 10월 12일 · 최근 실제 runtime·PVC 격리 복원 검증: 2026년 10월 15일
 
-Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접 확인할 수 있는 포트폴리오로 발전시킵니다. 외부 백업·격리 DB 복원·재부팅과 CI/CD의 정상 배포·실패 차단·이전 image digest 복구를 확인했습니다. **기존 플랫폼 관측의 2026-10-12 수집·실패 보존·Pages 게시·공개 화면과 자동 운영·반복 게시 11회를 검증**했습니다. 게시 순서 회귀 교정, API·웹 중단 후 같은 정상 B 복원에 이어 전용 Pages 자격증명으로 수동 host cycle·실제 systemd service·timer 자동 실행을 확인했습니다. 실제 완료 간격은 약 30~31분이었고 자격증명 만료·회전과 장기간 운영은 별도 후속입니다. Kafka·Garage·상시 worker의 실제 배포와 정상 재시작, 총 3작업·파일 6개·슬롯 해제도 확인했습니다. 새 job timer의 자동 게시 2회와 완료 간격 1개를 검증했으며, 다음은 격리 PVC 복원·보존·자원 한도와 AI 개선·데이터 플랫폼 사례입니다.
+Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접 확인할 수 있는 포트폴리오로 발전시킵니다. 외부 백업·격리 DB 복원·재부팅과 CI/CD의 정상 배포·실패 차단·이전 image digest 복구를 확인했습니다. **기존 플랫폼 관측의 2026-10-12 수집·실패 보존·Pages 게시·공개 화면과 자동 운영·반복 게시 11회를 검증**했습니다. 게시 순서 회귀 교정, API·웹 중단 후 같은 정상 B 복원에 이어 전용 Pages 자격증명으로 수동 host cycle·실제 systemd service·timer 자동 실행을 확인했습니다. 실제 완료 간격은 약 30~31분이었고 자격증명 만료·회전과 장기간 운영은 별도 후속입니다. Kafka·Garage·상시 worker의 실제 배포와 정상 재시작, 총 3작업·파일 6개·슬롯 해제도 확인했습니다. 새 job timer의 자동 게시 2회·완료 간격 1개와 전용 PVC 외부 사본의 격리 복원·clone 물리 블록 복원을 검증했습니다. 다음은 보존·자원 한도와 AI 개선·데이터 플랫폼 사례입니다.
 
 [공개 Lab](https://devdooly.github.io/devdooly-platform-lab/) · [전체 진행 목록](ROADMAP.md) · [현재 접속 안내](START_HERE.md)
 
@@ -10,13 +10,14 @@ Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접
 
 | 영역 | 확인한 내용 | 다음에 채울 부분 |
 | --- | --- | --- |
-| Java API·worker | 기본 128개, Kafka·Garage K3s 연동, worker 정상 교체·총 3작업/6파일 확인·lag 0 | 진행 중 작업 장애·격리 PVC 복원·보존/자원 한도 |
+| Java API·worker | 기본 128개, Kafka·Garage K3s 연동, worker 정상 교체·총 3작업/6파일 확인·lag 0 | 진행 중 작업 장애·보존/자원 한도 |
+| Kafka·Garage 복구 | 외부 사본의 전용 3PVC 격리 복원, clone 물리 블록·Pod 교체 후 보존 | 장기간 보존/정리·디스크 증가량·복구 절차 유지 |
 | 포트폴리오 | 웹 34개, 기존 플랫폼 11회와 별도 새 job timer 자동 게시 2회·간격 1개 확인 | 장기간 반복 운영·자격증명 회전 |
 | Jenkins·Actions | 같은 SHA의 두 CI 성공·게시·draft GitOps PR·정상 B 배포·실제 실패 차단, main의 공개 status 수집 | credential 만료·회전과 게시 이력 보존 운영 |
 | Argo CD와 Helm | 정상 A → B → A GitOps 복구, Synced·Healthy·데이터 보존과 제한된 실제 상태 수집 | 주기 관측의 반복 운영과 실패 대응 |
 | 운영 | 외부 암호화 백업·격리 DB 복원·호스트 재부팅, 사용자 kubectl 복구 | 초기 비밀번호 교체, 추가 장치 사본·전체 archive 복원 |
 
-GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins status credential과 같은 source SHA의 두 CI 성공을 게시 조건으로 활성화했습니다. 사용자 승인으로 Actions PR 설정과 draft GitOps PR 자동 제안도 켰습니다. 공개 Lab은 기존 앱의 마지막 실제 관측본을 보여줍니다. 별도 플랫폼 collector는 최소 읽기 권한으로 실제 상태를 수집했으며 새 관측본을 수동 게시했고, 게시 순서 회귀 교정 후 실제 복구·순서 보존을 재검증했습니다. 실시간 공개 API와 조회 API 내부의 플랫폼 수집은 아직 연결하지 않았습니다. Windows 외부 암호문은 인증·해시를 확인했고, DB는 서버의 새 논리 dump로 격리 복원했습니다. 외부 암호문을 K3s에 되돌리는 통합 복구와 K3s·Jenkins archive 전체 복원은 별도로 남아 있습니다.
+GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins status credential과 같은 source SHA의 두 CI 성공을 게시 조건으로 활성화했습니다. 사용자 승인으로 Actions PR 설정과 draft GitOps PR 자동 제안도 켰습니다. 공개 Lab은 기존 앱의 마지막 실제 관측본을 보여줍니다. 별도 플랫폼 collector는 최소 읽기 권한으로 실제 상태를 수집했으며 새 관측본을 수동 게시했고, 게시 순서 회귀 교정 후 실제 복구·순서 보존을 재검증했습니다. 실시간 공개 API와 조회 API 내부의 플랫폼 수집은 아직 연결하지 않았습니다. Windows 외부 암호문은 인증·해시를 확인했고, DB는 서버의 새 논리 dump로 격리 복원했습니다. 이후 Kafka/Garage 전용 PVC 3개는 인증한 외부 사본에서 격리 복원했습니다. K3s·Jenkins archive 전체 복원은 별도로 남아 있습니다.
 
 실행 근거는 [미니 PC 배포](evidence/mini-pc/README.md), [Jenkins 빌드](evidence/jenkins-ci/README.md), [후속 접속과 재기동 검증](evidence/operator-access/README.md), [앱 관측 계약](../apps/lab-web/OBSERVATION.md)에 있습니다. [플랫폼 관측 수집 검증](evidence/platform-observation/README.md)과 [허용 필드 계약](../apps/lab-web/PLATFORM_OBSERVATION.md)을 별도로 연결합니다. 완료 항목은 실제 검증 근거와 함께 표시합니다. [백업·복원·재부팅 검증](evidence/recovery/README.md)을 추가했습니다.
 
@@ -105,7 +106,10 @@ GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins 
 - [ ] 새 job 수집의 장기간 반복 운영·실제 자격증명 만료/회전을 검증합니다.
 - [x] 실제 idle worker Pod를 UID 조건으로 정상 교체하고 STOPPED→새 RUNNING·정상 TERM 종료·기존 두 작업/파일/offset·다른 서비스 보존을 확인했습니다: [근거](evidence/runtime-recovery/README.md)
 - [x] 교체 worker에 새 고정 fixture를 접수해 처리·EXPORTED·파일 2개 실제 Get·슬롯 해제·Kafka offset 3/lag 0을 확인하고 원래 두 작업 전체를 보존했습니다.
-- [ ] Kafka/Garage metadata·data의 일관된 외부 사본과 기존 PVC를 보존하는 격리 복원을 검증합니다.
+- [x] Kafka/Garage 전용 3PVC의 cold copy·외부 AES-256-GCM 사본 인증·반환 해시·새 PVC 전체 manifest 복원을 검증했습니다: [근거](evidence/runtime-pvc-restore/README.md)
+- [x] 격리 정책의 실제 원본 접근 차단과 Kafka 3 record/offset·Garage 9개 inline 객체의 GET 일치를 확인했습니다.
+- [x] clone에만 128KiB canary를 한 번 PUT해 물리 블록을 만들고, 추가 2PVC 복원·Pod 교체 전후 각 GET10을 확인했습니다.
+- [x] 복제 Kafka도 정상 TERM 교체 후 같은 PVC·3개 record의 key/value/시각·offset 3·lag 0을 보존했습니다.
 - [ ] 미완료 원본을 보존하는 정리 정책과 CPU/RSS/디스크 증가량·지연 한도를 검증합니다.
 - [ ] 진행 중 작업의 장애 복구·호스트 재시작 범위를 별도로 검증합니다.
 - [ ] 실패 데이터 재처리와 미완료 객체를 보존하는 명시적 정리 절차를 만듭니다.
@@ -114,6 +118,8 @@ GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins 
 실제 worker 정상 재시작의 관측 절차는 17.808초였고 새 Pod의 restartCount는 0입니다. 기존 두 작업의 전체 SQL·시각과 파일 4개의 전체 Get·크기·SHA, Kafka offset 2·log end 2·lag 0이 유지됐습니다. 23개 보존 검사에서 다른 5개 Pod·Docker 전체 38개/실행 26개·전체 PVC 6개/Lab 4개·호스트 상태를 확인했습니다. 이 범위는 작업이 없는 정상 TERM 교체이며 진행 중 crash·PVC 복원·고가용성 검증으로 확대하지 않습니다.
 
 교체된 worker에 별도 고정 fixture `lab-fixture-20261015-recovery`를 접수해 입력 12 = 성공 7 + 실패 3 + 업무상 중복 2 + 대기 0, EXPORTED와 슬롯 해제를 확인했습니다. 새 결과·실패 파일 2개도 실제 Get의 전체 내용·크기·SHA-256을 대조했습니다. 전체 작업은 3개·확인 파일 6개가 됐고 Kafka offset 3·log end 3·lag 0입니다. 원래 두 작업의 전체 SQL·시각·HTTP 요약과 파일 4개는 그대로 보존했습니다.
+
+원본 전용 PVC 3개의 외부 사본 복원과 별도 clone 물리 블록 복원을 구분했습니다. 원본의 9개 객체는 모두 inline이므로, data 블록 복원은 clone 전용 128KiB canary로 별도 입증했습니다. 원본 객체 쓰기·운영 PVC 덮어쓰기는 하지 않았고 시험 대상 5PVC의 요청량은 총 29Gi입니다. 이 요청량은 실제 사용량이나 처리 용량 측정이 아닙니다. 시험용 workload 3개를 정상 종료해 Pod 0개·Retain PVC 5개를 남겼습니다. 최종 보존 검사 28개에서 원본 SQL·작업/파일 정보·PVC 6개·Ready Pod 6개와 기존 Docker 38개/실행 26개의 상태를 확인했습니다. [실행 절차](runbooks/runtime-pvc-recovery.md)를 따릅니다.
 
 실제 job·플랫폼 공개 JSON은 수집 원본과 일치했습니다. 새 job의 원래 timer 자동 수집·게시 2회와 완료 간격 1개(1809.371239초)를 확인했습니다. [후속 검증 근거](evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다. 공개 화면은 약 30분 주기의 마지막 기록이며 실시간 조회가 아닙니다. 5분 heartbeat 경고는 마지막 실행 신호의 나이이고 프로세스 중단 판정이 아닙니다. 공개 POST는 없고 내부 `--lab-runtime=stage`가 고정 fixture만 접수합니다.
 
@@ -154,8 +160,8 @@ CKA 학습은 Lab과 연결합니다. context·RBAC·Service와 DNS·probe·requ
 
 ## 바로 다음 작업
 
-1. **Kafka/Garage 외부 사본과 격리 PVC 복원:** metadata·data를 일관되게 보관할 방법과 별도 복원 대상을 정합니다. 기존 PVC를 건드리지 않고 원본·결과/실패 파일·DB 작업·Kafka offset을 대조합니다. 현재 외부 SQL/config/export 백업을 전체 Kafka/Garage PVC 복원 완료로 간주하지 않습니다.
-2. **보존과 자원 한도:** 미완료·PAUSED 원본을 정리 대상에서 제외하는 규칙을 정하고, 고정 fixture 조건에서 CPU/RSS·디스크 증가량·지연을 측정합니다. 정리는 dry-run 목록과 소유 prefix를 확인한 뒤 별도 검증하며 최대 1,000개 입력이나 무제한 부하를 먼저 열지 않습니다.
+1. **보존 정책과 정리:** 완료·미완료·PAUSED 원본의 보존 범위를 정하고, dry-run 목록과 소유 prefix를 대조하는 정리 절차를 검증합니다. 이번 [전용 PVC 복원](evidence/runtime-pvc-restore/README.md)의 외부 사본·manifest와 보관한 trial 볼륨의 수명도 관리합니다.
+2. **자원 한도:** 고정 fixture 조건에서 CPU/RSS·디스크 증가량·처리 및 export 지연을 측정합니다. PVC 요청량·컨테이너 limits를 실측 처리 용량으로 표현하지 않으며 최대 1,000개 입력이나 무제한 부하를 먼저 열지 않습니다.
 3. **장기간 수집 운영:** 원래 timer의 자동 게시 2회·실제 간격 1개는 확인했습니다. 더 긴 반복·실패 후 이전 기록 보존·자격증명 만료/회전을 이어서 검증합니다. 초기 관리자 비밀번호 교체·K3s/Jenkins archive 전체 복원도 별도 운영 후속입니다.
 4. **이후 확장:** 진행 중 작업의 장애·호스트 재시작은 이번 idle 정상 교체와 분리하고, AI 개선 사례는 5단계의 독립 합성 예제로 연결합니다. 공개 실행은 내부 고정 fixture 명령으로 제한하며 새 inbound 경로는 필요성을 먼저 판단합니다.
 

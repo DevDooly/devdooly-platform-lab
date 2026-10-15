@@ -35,6 +35,8 @@
 
 브라우저의 `job-observation.ts` validator는 모든 객체 경계를 allowlist로 닫고 상태·오류 코드·시간·hash·크기·건수·작업 수·환경/범위 조합과 export 상태의 관계를 검증한다. 요청에는 인증 정보·cookie를 보내지 않는다. 기존 두 관측 계약은 유지하며 host cycle은 job 기록을 별도 허용 입력으로 함께 게시한다. Pages v2는 배포 회차별 존재 manifest와 기록 artifact에서 마지막 유효 job 기록을 복원하고, 더 오래된 입력은 반영하지 않고 동일 시각 충돌·누락된 예상 artifact는 게시를 차단한다. 새 job의 원래 timer 자동 수집·Pages 게시 2회와 공개 JSON 전체의 원본 일치를 확인했다. 완료 간격은 1개·1809.371239초였으며 [후속 검증 근거](../../docs/evidence/runtime-recovery/README.md)는 기존 플랫폼 collector 11회와 구분한다. 장기간 반복 운영은 후속이다.
 
+전용 PVC의 [격리 복원 근거](../../docs/evidence/runtime-pvc-restore/README.md)는 이 화면의 저장소 probe 기능이 아니다. raw 3개·export 6개의 GET과 clone 전용 128KiB data 블록 복원을 별도 관리 시험에서 확인했다. clone canary나 복원 namespace를 공개 job 수집 입력으로 연결하지 않았으며 공개 3작업·파일 정보 6개와 계약은 그대로다.
+
 ## 최상위 형식
 
 ```text
@@ -53,6 +55,6 @@ jobs: 최대 20개의 공개 작업 요약
 
 현재 [K3s 배포·두 작업·파일 확인·공개 게시 근거](../../docs/evidence/runtime-deployment/README.md)와 이전 [격리 실행기·중단·복구 근거](../../docs/evidence/continuous-runtime/README.md)를 구분한다. 실행은 [운영 절차](../../docs/runbooks/continuous-runtime.md), API는 [계약](../../docs/contracts/job-observation.md)에 연결한다. 공개 기록의 source commit은 실제 API/worker 이미지의 실행 소스이며 Pages 빌드 commit과 다를 수 있다. 실제 systemd 수집의 9자리 소수초 capturedAt도 변환 없이 공개 기록에 보존했으며 전체 JSON을 대조했다.
 
-실제 작업 없는 worker의 정상 재시작에서는 기존 startedAt의 STOPPED와 종료 로그를 먼저 포착한 뒤, 같은 image/source의 새 RUNNING·새 startedAt·전진하는 heartbeat를 관측했다. 새 RUNNING은 stoppedAt을 NULL로 바꾸므로 최종 공개 JSON 하나로 이전 종료를 증명하지 않는다. 기존 두 작업의 전체 SQL·시각·파일 4개·Kafka offset 보존은 별도 [실제 재시작 근거](../../docs/evidence/runtime-recovery/README.md)를 따른다. 이 결과는 진행 중 작업의 강제 종료나 PVC 복원과 구분한다. 이후 교체 worker에 새 fixture를 접수해 총 3개 EXPORTED 작업·파일 정보 6개와 offset 3/lag 0을 확인했다. 새 파일 2개의 실제 저장소 Get 검증도 별도로 수행했으며 원래 두 작업의 HTTP 요약 전체는 그대로였다. 이어진 두 번째 원래 주기 Pages 게시에서도 새 worker startedAt·3개 EXPORTED 작업·파일 정보 6개·빈 슬롯과 수집 원본의 전체 일치를 확인했다. 공개 Pages는 이 마지막 수집 회차를 따른다.
+실제 작업 없는 worker의 정상 재시작에서는 기존 startedAt의 STOPPED와 종료 로그를 먼저 포착한 뒤, 같은 image/source의 새 RUNNING·새 startedAt·전진하는 heartbeat를 관측했다. 새 RUNNING은 stoppedAt을 NULL로 바꾸므로 최종 공개 JSON 하나로 이전 종료를 증명하지 않는다. 기존 두 작업의 전체 SQL·시각·파일 4개·Kafka offset 보존은 별도 [실제 재시작 근거](../../docs/evidence/runtime-recovery/README.md)를 따른다. 이 결과는 진행 중 작업의 강제 종료나 PVC 복원과 구분한다. 이후 교체 worker에 새 fixture를 접수해 총 3개 EXPORTED 작업·파일 정보 6개와 offset 3/lag 0을 확인했다. 새 파일 2개의 실제 저장소 Get 검증도 별도로 수행했으며 원래 두 작업의 HTTP 요약 전체는 그대로였다. 이어진 두 번째 원래 주기 Pages 게시에서도 새 worker startedAt·3개 EXPORTED 작업·파일 정보 6개·빈 슬롯과 수집 원본의 전체 일치를 확인했다. 이는 당시 공개 Pages에서 확인한 수집 회차의 범위다.
 
-수집은 약 30분 주기로 구성한다. 이 주기보다 짧은 heartbeat 5분 경고 때문에 다음 수집 전에는 공개 기록에 오래된 실행 신호가 표시될 수 있다. 이는 마지막 DB 신호의 나이이며 현재 프로세스 중단이나 Kafka/S3 장애를 직접 확인한 값이 아니다. 새로고침도 정적 파일을 다시 읽는 동작이고 서버 수집을 실행하지 않는다. 공개 POST·작업 제어는 제공하지 않으며 내부 stage 명령의 고정 12개 fixture만 허용한다. 단일 노드·partition 1/RF1, 장기간 운영과 Kafka/Garage PVC 전체 복원은 별도 범위다.
+수집은 약 30분 주기로 구성한다. 이 주기보다 짧은 heartbeat 5분 경고 때문에 다음 수집 전에는 공개 기록에 오래된 실행 신호가 표시될 수 있다. 이는 마지막 DB 신호의 나이이며 현재 프로세스 중단이나 Kafka/S3 장애를 직접 확인한 값이 아니다. 새로고침도 정적 파일을 다시 읽는 동작이고 서버 수집을 실행하지 않는다. 공개 POST·작업 제어는 제공하지 않으며 내부 stage 명령의 고정 12개 fixture만 허용한다. 단일 노드·partition 1/RF1이며 장기간 운영·고가용성은 검증하지 않았다. 전용 PVC의 격리 복원은 별도 운영 근거로 기록한다.
