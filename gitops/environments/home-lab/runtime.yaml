@@ -15,6 +15,6 @@ runtime:
     progressProbeEnabled: true
     image:
       repository: ghcr.io/devdooly/devdooly-platform-lab-api
-      digest: sha256:9e7eff6c647df889395b068eb36504e9a6ad7ad601f4d0937d4f089108022ac6
-    sourceCommit: 3e0d85be2f529026cb44812602e31c0e18797b45
+      digest: sha256:e128652b6a28704bc2cb0a1e8bec318948df8dd467ed660b12d22c921d720399
+    sourceCommit: 74a8e98844a8fea0653951136ede0e7de0d7ac08
     existingS3Secret: platform-lab-runtime-s3
