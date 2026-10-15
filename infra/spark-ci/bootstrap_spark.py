@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import re
+import time
 
 PROOF = Path('/proof')
 PHASES = ('PYTHON_START', 'IMPORT_SILVER', 'SESSION', 'GZIP_DEFAULT', 'VERSIONS', 'FRESH_TABLES',
@@ -66,6 +67,25 @@ def write_new(path, value):
         stream.write(raw)
         stream.flush()
         os.fsync(stream.fileno())
+
+
+def write_progress(milestones, mount_flag, elapsed_millis):
+    """Publish one complete fixed-field transition file; never a completion proof."""
+    if (not 1 <= len(milestones) <= 32 or any(value not in PHASES for value in milestones)
+            or milestones[0] != 'PYTHON_START' or len(set(milestones)) != len(milestones)
+            or mount_flag not in ('NOEXEC', 'EXEC', 'UNOBSERVED')
+            or type(elapsed_millis) is not int or not 0 <= elapsed_millis <= 3_600_000):
+        raise ValueError('BOUNDED_FIXED_PROGRESS_ONLY')
+    value = {'schemaVersion': 1, 'scope': 'ISOLATED_SPARK_BOOTSTRAP_PROGRESS',
+        'sequence': len(milestones), 'lastPhase': milestones[-1], 'milestones': list(milestones),
+        'elapsedMillis': elapsed_millis, 'tmpMountFlag': mount_flag, 'completionNotProven': True}
+    name = 'bootstrap-progress-%02d.json' % len(milestones)
+    temporary = PROOF / ('.' + name + '.tmp')
+    write_new(temporary, value)
+    # Link only after the complete bytes are fsynced. Both names are new and
+    # private to this fresh proof directory; no prior transition is replaced.
+    os.link(temporary, PROOF / name, follow_symlinks=False)
+    temporary.unlink()
 
 
 def exception_classes(error):
@@ -171,6 +191,7 @@ def main():
     spark, failure, failure_phase = None, None, None
     phase, milestones, stop_failed = 'PYTHON_START', [], False
     mount_flag = tmp_mount_flag()
+    progress_started = time.monotonic()
 
     def advance(value):
         nonlocal phase
@@ -178,6 +199,11 @@ def main():
             raise RuntimeError('BOUNDED_FIXED_BOOTSTRAP_MILESTONE')
         phase = value
         milestones.append(value)
+        try:
+            write_progress(milestones, mount_flag, int((time.monotonic() - progress_started) * 1000))
+        except Exception:
+            # Missing transition evidence is never repaired into a success claim.
+            print('BOOTSTRAP_PROGRESS_WRITE_UNAVAILABLE', flush=True)
 
     try:
         advance('PYTHON_START')

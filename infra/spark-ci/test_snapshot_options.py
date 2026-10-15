@@ -10,8 +10,7 @@ ROOT=Path(__file__).resolve().parents[2]
 SILVER=ROOT/'infra/spark-silver/spark_silver.py'
 BOOTSTRAP=Path(__file__).with_name('bootstrap_spark.py')
 OLD_SILVER_SHA='189ec387433784e4623ba8b24efeeeed40b90213b2582450170ba687bcf067ec'
-OLD_BOOTSTRAP_SHA='d44e05c8ecf188ba0f50dda797a4b15a7e3ce5fc101ce3d3017b8a5c9fc18b60'
-OLD_RUNNER_SHA='45ecfcf27c762bdf4375f6bacc49b24b5ebbd888f001ae1fc90c010fae8cd340'
+BOOTSTRAP_EXECUTE_AST_SHA='f231cfd9b5c70f5699b1bba8444fd8644be4bf5d7fb641c1b50f2e0df41c8579'
 
 
 class Reader:
@@ -50,18 +49,19 @@ class SnapshotOptions(unittest.TestCase):
                 'silver':SimpleNamespace(SOURCE_TABLE=table),'FIELDS':fields})
             self.assertEqual(('option','versionAsOf',str(snapshots[index]['snapshot_id'])),reader.calls[0])
 
-    def test_silver_and_bootstrap_only_change_one_option_literal_preserving_every_other_byte(self):
-        for path,old in ((SILVER,OLD_SILVER_SHA),(BOOTSTRAP,OLD_BOOTSTRAP_SHA)):
-            raw=path.read_bytes()
-            self.assertEqual(1,raw.count(b"option('versionAsOf',"));self.assertNotIn(b"option('snapshot-id',",raw)
-            restored=raw.replace(b"option('versionAsOf',",b"option('snapshot-id',")
-            self.assertEqual(old,hashlib.sha256(restored).hexdigest())
+    def test_silver_bytes_and_bootstrap_computation_are_unchanged_by_diagnostics(self):
+        raw=SILVER.read_bytes()
+        self.assertEqual(1,raw.count(b"option('versionAsOf',"));self.assertNotIn(b"option('snapshot-id',",raw)
+        self.assertEqual(OLD_SILVER_SHA,hashlib.sha256(raw.replace(b"option('versionAsOf',",b"option('snapshot-id',")).hexdigest())
+        tree=ast.parse(BOOTSTRAP.read_text('utf-8'))
+        execute=next(node for node in tree.body if isinstance(node,ast.FunctionDef)and node.name=='execute')
+        self.assertEqual(BOOTSTRAP_EXECUTE_AST_SHA,hashlib.sha256(ast.dump(execute,include_attributes=False).encode()).hexdigest())
 
-    def test_runner_binds_new_module_and_only_its_one_frozen_pin_changes(self):
+    def test_runner_still_binds_the_same_new_time_travel_module(self):
         current=hashlib.sha256(SILVER.read_bytes()).hexdigest()
         self.assertEqual(current,run_ci.MODULES['spark_silver.py']);self.assertNotEqual(OLD_SILVER_SHA,current)
+        self.assertEqual('71bd63230704c6d880eb1208abc63ef5080448cfd46bf3295f1bc77f38ddd9f7',current)
         raw=Path(run_ci.__file__).read_bytes();self.assertEqual(1,raw.count(current.encode()))
-        self.assertEqual(OLD_RUNNER_SHA,hashlib.sha256(raw.replace(current.encode(),OLD_SILVER_SHA.encode())).hexdigest())
 
 
 if __name__=='__main__':unittest.main()

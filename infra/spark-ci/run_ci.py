@@ -13,6 +13,8 @@ import shutil
 import ssl
 import subprocess
 import sys
+import stat
+import threading
 import time
 import urllib.request
 import uuid
@@ -298,14 +300,103 @@ def log_signature(raw):
     return next((name for name, pattern in signatures if re.search(pattern, raw)), 'NO_RECOGNIZED_SIGNATURE')
 
 
-def spark_diagnostics(attempt, expected, diagnostic):
+def safe_progress(value):
+    fields = {'schemaVersion', 'scope', 'sequence', 'lastPhase', 'milestones',
+        'elapsedMillis', 'tmpMountFlag', 'completionNotProven'}
+    require(isinstance(value, dict) and set(value) == fields and type(value['schemaVersion']) is int
+        and value['schemaVersion'] == 1 and value['scope'] == 'ISOLATED_SPARK_BOOTSTRAP_PROGRESS'
+        and type(value['sequence']) is int and 1 <= value['sequence'] <= 32
+        and type(value['elapsedMillis']) is int and 0 <= value['elapsedMillis'] <= 3_600_000
+        and value['tmpMountFlag'] in ('NOEXEC', 'EXEC', 'UNOBSERVED')
+        and value['completionNotProven'] is True, 'FIXED_TRANSITION_PROGRESS_ONLY')
+    milestones = value['milestones']
+    require(isinstance(milestones, list) and len(milestones) == value['sequence']
+        and len(set(milestones)) == len(milestones) and milestones[0] == 'PYTHON_START'
+        and all(v in BOOTSTRAP_PHASES for v in milestones) and value['lastPhase'] == milestones[-1],
+        'EXACT_ALLOWLISTED_TRANSITION_SEQUENCE')
+    return value
+
+
+def read_progress(root):
+    paths = sorted((root / 'proof').glob('bootstrap-progress-*.json'))
+    require(len(paths) <= 32, 'PROGRESS_FILE_COUNT_BOUND')
+    if not paths:
+        return None
+    path = paths[-1]
+    require(re.fullmatch(r'bootstrap-progress-(?:0[1-9]|[12][0-9]|3[0-2])\.json', path.name), 'FIXED_PROGRESS_FILE_NAME')
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+    with os.fdopen(descriptor, 'rb') as stream:
+        before = os.fstat(stream.fileno())
+        require(stat.S_ISREG(before.st_mode) and 0 < before.st_size <= 4096, 'BOUNDED_REGULAR_PROGRESS_FILE')
+        raw = stream.read(4097)
+        after = os.fstat(stream.fileno())
+    require(len(raw) == before.st_size and (before.st_ino, before.st_mtime_ns, before.st_size)
+        == (after.st_ino, after.st_mtime_ns, after.st_size), 'STABLE_COMPLETE_PROGRESS_BYTES')
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            require(key not in result, 'DUPLICATE_PROGRESS_FIELD'); result[key] = value
+        return result
+    value = safe_progress(json.loads(raw, object_pairs_hook=pairs))
+    require(path.name == 'bootstrap-progress-%02d.json' % value['sequence'], 'PROGRESS_SEQUENCE_FILE_MATCH')
+    return value
+
+
+def bounded_deadline_logs(cid):
+    """Bound memory and time for a new readonly docker-logs child, never a container kill."""
+    require(re.fullmatch('[a-f0-9]{64}', cid), 'EXACT_FULL_LOG_TARGET_ID')
+    argv = ['docker', 'logs', '--tail', '200', cid]
+    child = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    chunks, overflow, reader_error = [bytearray(), bytearray()], threading.Event(), threading.Event()
+    def collect(stream, target):
+        try:
+            while True:
+                raw = stream.read1(8192)
+                if not raw:
+                    return
+                remaining = 262144 - len(target)
+                target.extend(raw[:remaining])
+                if len(raw) > remaining:
+                    overflow.set(); return
+        except Exception:
+            reader_error.set()
+    readers = [threading.Thread(target=collect, args=(stream, target), daemon=True)
+        for stream, target in zip((child.stdout, child.stderr), chunks)]
+    for reader in readers:
+        reader.start()
+    timed_out = False
+    try:
+        deadline = time.monotonic() + 10
+        while child.poll() is None and not overflow.is_set() and not reader_error.is_set():
+            if time.monotonic() >= deadline:
+                timed_out = True; break
+            time.sleep(0.025)
+    finally:
+        if child.poll() is None:
+            child.terminate()
+            try:
+                child.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                child.kill(); child.wait(timeout=2)
+        for reader in readers:
+            reader.join(timeout=2)
+        child.stdout.close(); child.stderr.close()
+    require(not any(reader.is_alive() for reader in readers) and not reader_error.is_set(), 'BOUNDED_LOG_CHILD_READ_COMPLETED')
+    result = subprocess.CompletedProcess(argv, child.returncode, bytes(chunks[0]), bytes(chunks[1]))
+    result.capture_truncated = overflow.is_set()
+    result.capture_timed_out = timed_out
+    return result
+
+
+def spark_diagnostics(attempt, expected, diagnostic, deadline_capture=False):
     before = next(v for v in attempt.containers() if v['role'] == 'spark')
     require(before['id'] == expected['id'], 'SAME_EXACT_SPARK_CONTAINER_FOR_DIAGNOSTICS')
     require(type(before['running']) is bool and type(before['oom']) is bool and type(before['exitCode']) is int,
         'ACTUAL_SPARK_STATE_TYPES')
     diagnostic.update(stateObserved=True, runningAtCapture=before['running'],
         exitCode=None if before['running'] else before['exitCode'], oomKilled=before['oom'])
-    logs = attempt.command(['docker', 'logs', '--tail', '200', before['id']], sensitive=True, check=False)
+    logs = bounded_deadline_logs(before['id']) if deadline_capture else attempt.command(
+        ['docker', 'logs', '--tail', '200', before['id']], sensitive=True, check=False)
     # These files remain in the private runner directory and are never artifacts.
     save(attempt.root / 'spark-diagnostic.stdout', logs.stdout)
     save(attempt.root / 'spark-diagnostic.stderr', logs.stderr)
@@ -314,8 +405,9 @@ def spark_diagnostics(attempt, expected, diagnostic):
     require(type(after['running']) is bool and type(after['oom']) is bool and type(after['exitCode']) is int,
         'ACTUAL_SPARK_STATE_TYPES')
     diagnostic.update(runningAtCapture=after['running'], exitCode=None if after['running'] else after['exitCode'],
-        oomKilled=after['oom'], logCollection='COLLECTED' if logs.returncode == 0 else 'UNAVAILABLE',
+        oomKilled=after['oom'], logCollection='TRUNCATED' if getattr(logs, 'capture_truncated', False) else 'COLLECTED' if logs.returncode == 0 else 'UNAVAILABLE',
         logSignature=log_signature(logs.stdout + b'\n' + logs.stderr) if logs.returncode == 0 else 'LOG_UNAVAILABLE')
+    diagnostic['progress'] = read_progress(attempt.root)
     bootstrap = None
     path = attempt.root / 'proof/bootstrap-diagnostic.json'
     if path.exists() or path.is_symlink():
@@ -325,6 +417,29 @@ def spark_diagnostics(attempt, expected, diagnostic):
         require(len(raw) == info.st_size, 'STABLE_BOOTSTRAP_DIAGNOSTIC_BYTES')
         bootstrap = safe_bootstrap_diagnostic(json.loads(raw))
     diagnostic['bootstrap'] = bootstrap
+
+
+def wait_spark_once(attempt, expected, diagnostic):
+    until = time.monotonic() + 600
+    try:
+        while True:
+            require(time.monotonic() < until, 'ONE_SPARK_PROCESS_DEADLINE')
+            current = next(v for v in attempt.containers() if v['role'] == 'spark')
+            require(current['id'] == expected['id'], 'SAME_CREATED_SPARK_CONTAINER_WHILE_WAITING')
+            if not current['running']:
+                spark_diagnostics(attempt, current, diagnostic)
+                require(current['exitCode'] == 0 and current['oom'] is False, 'ACTUAL_SPARK_CLEAN_EXIT_WITHOUT_OOM')
+                require(diagnostic['bootstrap'] is not None and diagnostic['bootstrap']['passed'] is True, 'ACTUAL_BOOTSTRAP_COMPLETION_DIAGNOSTIC')
+                return
+            time.sleep(2)
+    except Exception as error:
+        if str(error) == 'ONE_SPARK_PROCESS_DEADLINE':
+            try:
+                spark_diagnostics(attempt, expected, diagnostic, deadline_capture=True)
+                diagnostic['deadlineCapture'] = 'CAPTURED'
+            except Exception:
+                diagnostic['deadlineCapture'] = 'PARTIAL' if diagnostic['stateObserved'] else 'UNOBSERVED'
+        raise
 
 
 def main():
@@ -346,7 +461,8 @@ def main():
     attempt = Attempt(root, project)
     results, failure, passed, stopped, initializer_stopped = {}, None, False, False, False
     diagnostics = {'stateObserved': False, 'runningAtCapture': None, 'exitCode': None, 'oomKilled': None,
-        'logCollection': 'NOT_CAPTURED', 'logSignature': 'LOG_UNAVAILABLE', 'bootstrap': None}
+        'logCollection': 'NOT_CAPTURED', 'logSignature': 'LOG_UNAVAILABLE', 'bootstrap': None,
+        'progress': None, 'deadlineCapture': 'NOT_REQUESTED'}
     checks = {'vendorBytesVerified': False, 'pinnedImagesPulled': False, 'internalNetworkVerified': False, 'containerLimitsVerified': False}
     try:
         require(shutil.disk_usage(root).free >= 6*1024**3, 'GITHUB_RUNNER_DISK_RESERVE')
@@ -439,16 +555,7 @@ def main():
         require({v['role'] for v in actual} == {'postgres', 'garage', 'spark'}, 'EXACT_THREE_OWNED_ROLES_BEFORE_SPARK')
         checks['containerLimitsVerified'] = True
         attempt.cli('start', 'spark')
-        until = time.monotonic() + 600
-        while True:
-            require(time.monotonic() < until, 'ONE_SPARK_PROCESS_DEADLINE')
-            current = next(v for v in attempt.containers() if v['role'] == 'spark')
-            if not current['running']:
-                spark_diagnostics(attempt, current, diagnostics)
-                require(current['exitCode'] == 0 and current['oom'] is False, 'ACTUAL_SPARK_CLEAN_EXIT_WITHOUT_OOM')
-                require(diagnostics['bootstrap'] is not None and diagnostics['bootstrap']['passed'] is True, 'ACTUAL_BOOTSTRAP_COMPLETION_DIAGNOSTIC')
-                break
-            time.sleep(2)
+        wait_spark_once(attempt, next(v for v in actual if v['role'] == 'spark'), diagnostics)
         raw = (root / 'proof/spark-result.json').read_bytes()
         require(0 < len(raw) <= 16384, 'BOUNDED_SPARK_PUBLIC_PROOF')
         results = safe_spark_result(json.loads(raw))
