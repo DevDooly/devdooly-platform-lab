@@ -112,3 +112,9 @@ reader는 고정 HTTPS GitHub API와 이 저장소의 허용 GET 경로만 요�
 단위검사 82개에는 실제 Request/opener 경계의 인증·redirect·401 fallback 금지·403/429 선별 진단·proposal reader/writer 분리 검사 13개가 포함됩니다. workflow YAML의 네 metadata step과 job별 권한도 확인했습니다. 실제 Actions job token으로 조회·이미지 게시하는 결과는 이 후보의 main 반영 후 별도 근거로 기록합니다.
 
 GitHub는 익명 REST 조회를 IP 기준 시간당 60회, Actions의 `GITHUB_TOKEN` 조회를 저장소 기준 시간당 1,000회로 설명합니다. 403만으로 rate-limit 원인을 판정하지 않고 응답 헤더와 실제 실행 결과를 확인합니다. [GitHub REST rate limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api), [GITHUB_TOKEN 최소 권한](https://docs.github.com/en/actions/tutorials/authenticate-with-github_token)
+
+### 실제 job token 형식 검사의 후속 수정
+
+source `c9e49f57a5cd9849a13d5d8ec267c34006bd21cc`의 [게시 실행 38741425623](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38741425623)은 `INVALID_METADATA_TOKEN`으로 게시 전에 중단됐습니다. reader가 토큰을 영문·숫자·밑줄 20~255자로 가정한 코드 결함입니다. 실제 토큰을 읽거나 출력하지 않았으며 구체적인 토큰 형식은 추정하지 않습니다.
+
+후속 검사는 20~8,192자의 공백·제어문자 없는 visible ASCII만 허용합니다. 길고 구두점이 포함된 opaque 값도 실제 Request/opener 경로에서 헤더로 전달하는 회귀 검사를 추가했습니다. 토큰의 유효성은 GitHub 응답으로 판단하며 고정 HTTPS host·허용 GET 경로·redirect 거부·명시적 step token·401 후 fallback 금지는 유지합니다. 후속 focused 검사 56개가 통과했으며, 실제 게시 성공 여부는 새 main의 실행으로 별도 확인합니다.
