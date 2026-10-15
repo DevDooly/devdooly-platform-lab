@@ -1,10 +1,12 @@
 # 상시 worker/export 실행과 작업 관측 검증
 
+이 문서는 최초 **격리 검증**의 조건과 재현 절차다. 현재 K3s의 실제 상시 CLI 배포·내부 stage는 [배포 근거](../evidence/runtime-deployment/README.md), [ADR 0009](../adr/0009-mini-pc-runtime-deployment.md), [Helm bootstrap·운영 조건](../../infra/charts/platform-lab/README.md)을 따른다. 아래 loopback·시험 수치는 당시 범위로 유지한다.
+
 2026-10-15 KST · 기본 120개·실제 IT 4개·웹 34개와 기존 운영 보존 검증 완료. [ADR 0008](../adr/0008-continuous-runtime-observation.md)에 따라 기본 조회 API와 상시 실행 명령을 구분한다.
 
 ## 먼저 확인할 조건
 
-API/관리 절차가 V3 `lab_runtime` migration을 성공적으로 적용해야 한다. 실행기 자체는 Flyway·SQL 초기화·schema 수정을 실행하지 않고 Hibernate validate와 V3 확인만 수행한다. 기존 V1/V2와 완료 샘플을 유지한다. 현재 연결은 숫자 loopback/SSH 터널의 전용 격리 Kafka·Garage 범위이며 운영 K8s DNS·인증·서비스 배치는 후속이다.
+API/관리 절차가 V3 `lab_runtime` migration을 성공적으로 적용해야 한다. 실행기 자체는 Flyway·SQL 초기화·schema 수정을 실행하지 않고 Hibernate validate와 V3 확인만 수행한다. 기존 V1/V2와 완료 샘플을 유지한다. 이 격리 시험의 연결은 숫자 loopback/SSH 터널의 전용 Kafka·Garage 범위였다. 이후 운영 K3s의 전체 서비스 DNS·Secret·자원 배치는 위 별도 근거에서 검증했다.
 
 Java 21을 사용하며 비공개 환경 파일에서 아래 설정을 준비한다. 토큰·DB/S3 비밀번호·실제 host·포트를 채팅·Git·CI artifact·shell tracing에 옮기지 않는다.
 

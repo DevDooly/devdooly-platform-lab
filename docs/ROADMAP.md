@@ -60,6 +60,8 @@
 
 ## 3 외부 공개
 
+아래 자동 게시 11회와 실제 간격은 2026-10-12 기존 플랫폼 수집기의 검증이다. 새 job 수집 코드의 실제 systemd 게시·timer 설정과 미관측 정기 회차는 4단계에 구분한다.
+
 - [x] 관리 도구의 SSH 인증 접속과 localhost 화면 응답 검증 ([접속 안내](runbooks/admin-access.md))
 - [ ] 미니 PC 공개 Lab의 HTTPS 경로와 실시간 API 연결
 - [x] 공개 플랫폼 관측의 strict allowlist 계약·validator와 읽기 전용 collector 구현: [계약](../apps/lab-web/PLATFORM_OBSERVATION.md)
@@ -86,7 +88,7 @@
 
 ## 4 Kafka와 객체 저장소
 
-검토용 DB foundation을 구현했으며 운영에는 배포하지 않았다. [격리 검증 결과](evidence/db-job-foundation/README.md)와 [내부 서비스 절차](runbooks/db-job-foundation.md)를 연결한다.
+2026-10-15 미니 PC K3s의 Kafka·Garage·상시 worker에 배포했습니다. 두 고정 fixture 작업의 처리·파일 4개 저장 확인·슬롯 해제·lag 0과 실제 job 관측의 Pages 게시를 확인했습니다. [현재 배포·보존·게시 근거](evidence/runtime-deployment/README.md)를 따릅니다. 아래 격리 검증은 당시 조건의 별도 근거입니다.
 
 - [x] V2 작업·outbox·단일 슬롯, raw 원본 hash·DB 멱등 경계 구현
 - [x] 실제 MariaDB의 V1 업그레이드·빈 DB 초기화·반복 시작, 동시 제출·rollback·재전달·Asia/Seoul 시각 일치 검증
@@ -98,8 +100,12 @@
 - [x] 실제 MariaDB/Garage 정상·반복/다음 슬롯 보존·부분 저장·손상 거부·최종 DB rollback·JVM 중단 2개 경계와 재시도, 기존 운영 보존: [근거](evidence/result-export/README.md)
 - [x] 명시적 상시 publisher/worker/export 실행기·MariaDB named lock·V3 영속 정지와 별도 resume: [ADR 0008](adr/0008-continuous-runtime-observation.md)
 - [x] 실제 연속 두 작업·JVM 중단/재시작·PAUSED 재시작/경쟁 CLI 거부·resume, 작업/export HTTP 관측·기록 화면·운영 보존: [근거](evidence/continuous-runtime/README.md)
-- [ ] 운영용 Kafka/S3 접속·인증·배치·자원/보존 조건과 제한된 worker GitOps 배포 검증
-- [ ] job 관측 자동 outbound 수집·Pages 게시와 OS 재시작 정책 검증
+- [x] ClusterIP Kafka/Garage·별도 worker GitOps 배포, 실제 두 작업·파일 4개 검증·슬롯 해제와 기존 seed/PVC/Docker 보존: [근거](evidence/runtime-deployment/README.md)
+- [x] 실제 배포 job·플랫폼 관측의 outbound Pages 게시·공개 JSON 전체 일치 확인
+- [x] 새 job 관측의 실제 systemd service 성공·Pages 게시·공개 JSON 전체 일치와 private 0600·임시 SA token 정리
+- [x] 기존 timer enabled·active와 30분 주기·최대 60초 임의 지연 설정 복구
+- [ ] 새 job 코드의 다음 정기 회차·반복 게시와 실제 간격 검증
+- [ ] worker OS/Pod 재시작 정책과 Kafka/Garage 외부 백업·PVC 전체 복원 검증
 - [ ] 다중 partition·이벤트별 전달 순서 검증이 필요할 때 별도 확장
 - [x] Garage·Java SDK의 필요한 API·기본 checksum 실패와 호환성 교정 검증 후 한정 선정: [ADR 0005](adr/0005-verified-raw-source-storage.md)
 - [x] 원본 전체 bytes·크기·SHA-256, 상태 전환 전 실패·재시도와 컨테이너 재생성 후 Get-only 보존: [근거](evidence/s3-source-storage/README.md)
@@ -109,6 +115,8 @@
 - [ ] 제한을 검증한 뒤 공개 샘플 실행 기능 추가
 
 완료 조건: 입력 건수가 성공·실패·중복·대기로 설명되고, 데이터 유실이나 무제한 실행 없이 결과를 확인할 수 있습니다.
+
+새 job 관측은 실제 systemd service 실행·Pages 게시와 공개 JSON의 원본 전체 일치를 확인했습니다. timer는 기존 30분 주기·최대 60초 임의 지연 설정으로 enabled·active를 복구했습니다. 새 job 수집 코드의 다음 정기 회차·반복 실행은 아직 관측하지 않았습니다. 공개 페이지는 약 30분 주기로 수집하는 마지막 기록이며 heartbeat 5분 경고와 구분합니다. 현재 단일 노드·partition 1/RF1, 고정 12개 fixture와 내부 stage 명령만 검증했고 공개 POST는 제공하지 않습니다. 최대 1,000개·장기간 운영·전체 PVC 복원은 완료 표시하지 않습니다.
 
 ## 5 LLM 개선 사례와 복구
 
