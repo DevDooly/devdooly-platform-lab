@@ -1,0 +1,52 @@
+{
+  "baseImage": {
+    "anonymousRegistryAndCriVerifiedByThisPreparation": false,
+    "digestSource": "https://hub.docker.com/layers/apache/spark/4.1.1-java21-python3/images/sha256%3A0b8f5befe00d258df03b252158b3894b8654390f1958741accf98155539a662a",
+    "layersPulled": false,
+    "platform": "linux/amd64",
+    "reference": "docker.io/apache/spark@sha256:0b8f5befe00d258df03b252158b3894b8654390f1958741accf98155539a662a"
+  },
+  "customImageBuilt": false,
+  "downloadOnly": true,
+  "garageSparkCompatibilityVerified": false,
+  "imageBuilt": false,
+  "jarClassLoadingPerformed": false,
+  "jars": [
+    {
+      "bytes": 47959591,
+      "coordinate": "org.apache.iceberg:iceberg-spark-runtime-4.1_2.13:1.11.0",
+      "downloadUrl": "https://repo.maven.apache.org/maven2/org/apache/iceberg/iceberg-spark-runtime-4.1_2.13/1.11.0/iceberg-spark-runtime-4.1_2.13-1.11.0.jar",
+      "filename": "iceberg-spark-runtime-4.1_2.13-1.11.0.jar",
+      "sha256": "d6ea6c5d099288daeb7d5a92061bd3d7d8f296492632b42378e5f2f0e3066242",
+      "sha512": "f4620bb2d20777146a769a8a939a5bed658e1d5708b6a5155e1f6e831c0bfd29bd1f82618dc59bc0f30399ffcb03add3e66656286692dc6c2be94e4e1f4e7479",
+      "sha512SidecarVerified": true
+    },
+    {
+      "bytes": 63613165,
+      "coordinate": "org.apache.iceberg:iceberg-aws-bundle:1.11.0",
+      "downloadUrl": "https://repo.maven.apache.org/maven2/org/apache/iceberg/iceberg-aws-bundle/1.11.0/iceberg-aws-bundle-1.11.0.jar",
+      "filename": "iceberg-aws-bundle-1.11.0.jar",
+      "sha256": "38f01da7e96850cdd05e6616d758b77b43314b712a8808e3f9a824d56976162f",
+      "sha512": "bb50f7dc5f36a001efecf15e4d03eff955466f06557261fbacdd7fe0d88113c82e0b9b2af96cd554cef4a1d4c2348fc950270bc3f51cf6bf1e4526f46ce336a0",
+      "sha512SidecarVerified": true
+    },
+    {
+      "bytes": 1221004,
+      "coordinate": "org.postgresql:postgresql:42.7.14",
+      "downloadUrl": "https://repo.maven.apache.org/maven2/org/postgresql/postgresql/42.7.14/postgresql-42.7.14.jar",
+      "filename": "postgresql-42.7.14.jar",
+      "sha256": "73914527305a40cce504b0d3d90b23caf565136912d607ae8ae7c5895512332c",
+      "sha512": "2a7c94c3f86f7ad6cfa16a964fe79dec8b122449679c8bbdb18f7052593349c2d11dd07992034de88d6effd840e2edf5ea8542e947de19905c75677d0dd44abc",
+      "sha512SidecarVerified": false
+    }
+  ],
+  "javaMajor": 21,
+  "nativeTrinoBronzePassedProofRequired": true,
+  "runtimeCompatibilityVerified": false,
+  "scalaBinaryVersion": "2.13",
+  "schemaVersion": 1,
+  "sparkRuntimeExecuted": false,
+  "sparkVersion": "4.1.1",
+  "status": "OFFICIAL_MAVEN_CENTRAL_BYTES_DOWNLOADED",
+  "unresolvedChecksumOrImageMustBlockExecution": true
+}

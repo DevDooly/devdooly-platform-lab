@@ -1,0 +1,11 @@
+{
+  "catalogName": "phase6",
+  "jdbcSchemaVersion": "V1",
+  "jdbcUser": "iceberg_catalog",
+  "liveConnectionVerified": false,
+  "s3Region": "garage",
+  "schemaVersion": 1,
+  "scope": "OFFLINE_PINNED_PHASE6_CONNECTION_CONTRACT",
+  "sourceRelativePath": "infra/iceberg-lab/render_plan.py",
+  "sourceSha256": "ff86e1925307c46c20a807f767e484d313d03204a350153754df9823ead85622"
+}

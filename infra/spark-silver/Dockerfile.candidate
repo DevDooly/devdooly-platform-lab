@@ -1,0 +1,12 @@
+# Source candidate only: vendor bytes/checksums and actual OCI verification are required before build.
+FROM --platform=linux/amd64 docker.io/apache/spark@sha256:0b8f5befe00d258df03b252158b3894b8654390f1958741accf98155539a662a
+USER root
+COPY vendor/iceberg-spark-runtime-4.1_2.13-1.11.0.jar /opt/spark/jars/
+COPY vendor/iceberg-aws-bundle-1.11.0.jar /opt/spark/jars/
+COPY vendor/postgresql-42.7.14.jar /opt/spark/jars/
+COPY vendor/vendor.sha256 /tmp/silver-vendor.sha256
+RUN sha256sum --strict --check /tmp/silver-vendor.sha256 && rm /tmp/silver-vendor.sha256
+COPY silver_contract.py spark_silver.py synthetic-v1.ndjson /opt/silver/
+RUN chmod 0444 /opt/silver/* /opt/spark/jars/iceberg-spark-runtime-4.1_2.13-1.11.0.jar /opt/spark/jars/iceberg-aws-bundle-1.11.0.jar /opt/spark/jars/postgresql-42.7.14.jar
+USER 185:185
+WORKDIR /opt/spark/work-dir

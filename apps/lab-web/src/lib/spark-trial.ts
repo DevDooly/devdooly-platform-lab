@@ -1,0 +1,55 @@
+/** One audited cloud trial. Parsing this record cannot execute Spark or the Lab. */
+export const sparkTrialSource = '0552a28a0b360543c9b84be2e5c5ccc7d28c2459';
+export const sparkTrialSummary = '00068fc7a88961374e57b4964a4819d70dc51706c3c16de9b28a54d2b8920838';
+export const sparkTrialRun = '38805412935';
+export type SparkTrial = {
+  schemaVersion: 1; scope: 'ISOLATED_GITHUB_RUNNER_SPARK_JDBC_GARAGE'; status: 'VERIFIED'; capturedAt: string; sourceCommit: string;
+  run: { id: string; url: string; attempt: 8 }; summary: { sha256: string; bytes: 5387 };
+  fixture: { scenario: 'sensor-validation-v1'; sha256: string; bytes: 1100; rows: 12 };
+  versions: { spark: '4.1.1'; java: '21.0.9'; scala: '2.13.17' };
+  bronze: { rows: 12; snapshots: 2; snapshotIds: [string, string]; rowsSha256: string };
+  silver: { rows: 12; snapshots: 1; success: 7; failure: 3; duplicate: 2; pending: 0; mergeInvocations: 1;
+    sequentialReplayInvocations: 1; replayWriteInvocations: 0; rowsSha256: string };
+  stop: { bootstrapCompleted: true; sessionStopFailed: false; exitCode: 0; oomKilled: false; ownedComposeStopped: true; ownedInitializerStopped: true };
+  resources: { sparkCpu: 1; sparkMemoryBytes: 3221225472; sparkDriverHeapMiB: 1536; sparkPidLimit: 512;
+    postgresGaragePidLimit: 256; deadlineSeconds: 600; hostPublishedPorts: 0 };
+  timing: { bootstrapCompletedElapsedMillis: 24871; scope: 'BOOTSTRAP_START_WORK_AND_STOP'; stageDurationsOrThroughputMeasured: false };
+  exclusions: { miniPcContacted: false; nativeTrinoVerified: false; kubernetesVerified: false;
+    distributedConcurrencyOrCrashRecoveryVerified: false; pidSoleCauseProven: false; liveService: false; cgroupPeakOrDeltaMeasured: false };
+};
+const object = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
+const exact = (value: Record<string, unknown>, keys: readonly string[]) => Object.keys(value).length === keys.length && keys.every(key => Object.hasOwn(value, key));
+const fixed = (value: unknown, expected: Record<string, unknown>) => object(value) && exact(value, Object.keys(expected)) && Object.entries(expected).every(([key, item]) => value[key] === item);
+function utc(value: unknown): value is string {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.[0-9]{1,9})?Z$/.test(value)) return false;
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 19) === value.slice(0, 19);
+}
+function snapshot(value: unknown): value is string {
+  return typeof value === 'string' && /^[1-9][0-9]{0,18}$/.test(value) && BigInt(value) <= 9_223_372_036_854_775_807n;
+}
+export function parseSparkTrial(value: unknown): SparkTrial | null {
+  if (!object(value) || !exact(value, ['schemaVersion', 'scope', 'status', 'capturedAt', 'sourceCommit', 'run', 'summary', 'fixture',
+    'versions', 'bronze', 'silver', 'stop', 'resources', 'timing', 'exclusions']) || value.schemaVersion !== 1
+    || value.scope !== 'ISOLATED_GITHUB_RUNNER_SPARK_JDBC_GARAGE' || value.status !== 'VERIFIED'
+    || value.sourceCommit !== sparkTrialSource || !utc(value.capturedAt)
+    || value.capturedAt !== '2026-10-15T20:53:21.475236Z') return null;
+  if (!fixed(value.run, { id: sparkTrialRun, url: `https://github.com/DevDooly/devdooly-platform-lab/actions/runs/${sparkTrialRun}`, attempt: 8 })
+    || !fixed(value.summary, { sha256: sparkTrialSummary, bytes: 5387 })
+    || !fixed(value.fixture, { scenario: 'sensor-validation-v1', sha256: '39ba10d8c47dce790f3ccc9c9134fea593d6de31f1f3a7992ca61d9f554da3b5', bytes: 1100, rows: 12 })
+    || !fixed(value.versions, { spark: '4.1.1', java: '21.0.9', scala: '2.13.17' })) return null;
+  const bronze = value.bronze;
+  if (!object(bronze) || !exact(bronze, ['rows', 'snapshots', 'snapshotIds', 'rowsSha256']) || bronze.rows !== 12 || bronze.snapshots !== 2
+    || bronze.rowsSha256 !== '9ad14362736e0ada4f44de4ca32296a2e9082e2f78227884326608952116d016'
+    || !Array.isArray(bronze.snapshotIds) || bronze.snapshotIds.length !== 2 || !bronze.snapshotIds.every(snapshot)
+    || bronze.snapshotIds[0] !== '5876084123105525860' || bronze.snapshotIds[1] !== '711948836478668590') return null;
+  if (!fixed(value.silver, { rows: 12, snapshots: 1, success: 7, failure: 3, duplicate: 2, pending: 0, mergeInvocations: 1,
+    sequentialReplayInvocations: 1, replayWriteInvocations: 0, rowsSha256: '2c51c7447e59bf88cd41c016cf846b47e3e4c46b4257a024e9f67079b2b425eb' })
+    || !fixed(value.stop, { bootstrapCompleted: true, sessionStopFailed: false, exitCode: 0, oomKilled: false, ownedComposeStopped: true, ownedInitializerStopped: true })
+    || !fixed(value.resources, { sparkCpu: 1, sparkMemoryBytes: 3221225472, sparkDriverHeapMiB: 1536, sparkPidLimit: 512,
+      postgresGaragePidLimit: 256, deadlineSeconds: 600, hostPublishedPorts: 0 })
+    || !fixed(value.timing, { bootstrapCompletedElapsedMillis: 24871, scope: 'BOOTSTRAP_START_WORK_AND_STOP', stageDurationsOrThroughputMeasured: false })
+    || !fixed(value.exclusions, { miniPcContacted: false, nativeTrinoVerified: false, kubernetesVerified: false,
+      distributedConcurrencyOrCrashRecoveryVerified: false, pidSoleCauseProven: false, liveService: false, cgroupPeakOrDeltaMeasured: false })) return null;
+  return value as unknown as SparkTrial;
+}

@@ -1,0 +1,762 @@
+"""Explicit GitHub-hosted one-attempt integration; uploads only safe summary.
+
+No SSH, kubeconfig, production endpoint, GHCR login/push or deployment exists.
+"""
+import datetime as dt
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import secrets
+import shutil
+import ssl
+import subprocess
+import sys
+import stat
+import threading
+import time
+import urllib.request
+import uuid
+from compose_plan import POSTGRES, GARAGE, SPARK, plan
+
+sys.dont_write_bytecode = True
+LOCK_SHA = '6ca247b283025189ecf36c67ae03fe9101b25a53fe7b62593725e076276e33e3'
+MODULES = {'spark_silver.py': '71bd63230704c6d880eb1208abc63ef5080448cfd46bf3295f1bc77f38ddd9f7',
+    'silver_contract.py': '889fdb91ec4613d19f62a622e4cc889a27e38012905019f05d4743130f8268df',
+    'synthetic-v1.ndjson': '39ba10d8c47dce790f3ccc9c9134fea593d6de31f1f3a7992ca61d9f554da3b5',
+    'Dockerfile.candidate': '334b4865c926062d40f25801e6c05a6390b9c957c87c4c7b3416aed62001bf24'}
+BASE_URL = 'https://repo.maven.apache.org/maven2/'
+JARS = {
+    'iceberg-spark-runtime-4.1_2.13-1.11.0.jar': ('org/apache/iceberg/iceberg-spark-runtime-4.1_2.13/1.11.0/', 47959591, 'd6ea6c5d099288daeb7d5a92061bd3d7d8f296492632b42378e5f2f0e3066242'),
+    'iceberg-aws-bundle-1.11.0.jar': ('org/apache/iceberg/iceberg-aws-bundle/1.11.0/', 63613165, '38f01da7e96850cdd05e6616d758b77b43314b712a8808e3f9a824d56976162f'),
+    'postgresql-42.7.14.jar': ('org/postgresql/postgresql/42.7.14/', 1221004, '73914527305a40cce504b0d3d90b23caf565136912d607ae8ae7c5895512332c')}
+BOOTSTRAP_PHASES = frozenset(('PYTHON_START', 'IMPORT_SILVER', 'SESSION', 'GZIP_DEFAULT', 'VERSIONS', 'FRESH_TABLES',
+    'CREATE_BRONZE', 'APPEND_FIRST', 'APPEND_SECOND', 'VERIFY_BRONZE', 'SILVER_RUN', 'VERIFY_RESULT',
+    'WRITE_RESULT', 'STOP_SESSION', 'COMPLETED'))
+PYTHON_EXCEPTIONS = frozenset(('Py4JJavaError', 'Py4JNetworkError', 'Py4JError', 'AnalysisException',
+    'IllegalArgumentException', 'SparkRuntimeException', 'ImportError', 'ModuleNotFoundError', 'PermissionError',
+    'FileNotFoundError', 'RuntimeError', 'ValueError', 'OSError', 'TypeError', 'AssertionError', 'OTHER'))
+JAVA_CLASS = re.compile(r'(?:org\.apache\.(?:spark|iceberg)|java|org\.postgresql|software\.amazon)'
+                        r'(?:\.[A-Za-z_$][A-Za-z0-9_$]*){1,12}')
+INITIALIZER_CHECK_FIELDS = ('inspectionObserved', 'fullIdVerified', 'nameVerified', 'projectLabelVerified',
+    'imageVerified', 'entrypointVerified', 'commandVerified', 'networkNoneVerified', 'unprivilegedVerified',
+    'noHostPortsVerified', 'memoryLimitVerified', 'cpuLimitVerified', 'requestedBindsVerified')
+
+
+def initializer_binds_verified(binds, project):
+    """Exactly two requested named-volume rw binds; ordering is immaterial.
+
+    HostConfig.Binds represents requested mounts. Image-declared anonymous
+    volumes in Mounts are deliberately outside this existing two-bind guard.
+    """
+    if not isinstance(binds, list) or len(binds) != 2:
+        return False
+    expected = {(project + '_garage-meta', '/meta', 'rw'), (project + '_garage-data', '/data', 'rw')}
+    actual = []
+    for value in binds:
+        if not isinstance(value, str) or len(value) > 512:
+            return False
+        parts = value.split(':')
+        if len(parts) == 2:
+            parts.append('rw')
+        if len(parts) != 3 or parts[2] != 'rw':
+            return False
+        actual.append(tuple(parts))
+    return len(set(actual)) == 2 and set(actual) == expected
+
+
+def initializer_identity_checks(raw, project, name):
+    """Only fixed verification booleans may leave the private inspect boundary."""
+    checks = {key: False for key in INITIALIZER_CHECK_FIELDS}
+    if not isinstance(raw, dict):
+        return checks
+    checks['inspectionObserved'] = True
+    config = raw.get('Config'); config = config if isinstance(config, dict) else {}
+    host = raw.get('HostConfig'); host = host if isinstance(host, dict) else {}
+    labels = config.get('Labels'); labels = labels if isinstance(labels, dict) else {}
+    cid = raw.get('Id')
+    checks.update(fullIdVerified=isinstance(cid, str) and re.fullmatch('[a-f0-9]{64}', cid) is not None,
+        nameVerified=raw.get('Name') == '/' + name,
+        projectLabelVerified=labels.get('devdooly.io.spark-ci-project') == project,
+        imageVerified=config.get('Image') == POSTGRES,
+        entrypointVerified=config.get('Entrypoint') == ['/bin/chown'],
+        commandVerified=config.get('Cmd') == ['1000:1000', '/meta', '/data'],
+        networkNoneVerified=host.get('NetworkMode') == 'none',
+        unprivilegedVerified='Privileged' in host and not host['Privileged'],
+        noHostPortsVerified='PortBindings' in host and not host['PortBindings'],
+        memoryLimitVerified=host.get('Memory') == 64*1024**2,
+        cpuLimitVerified=host.get('NanoCpus') == 100000000,
+        requestedBindsVerified=initializer_binds_verified(host.get('Binds'), project))
+    return checks
+
+
+def safe_initializer_checks(value):
+    require(isinstance(value, dict) and set(value) == set(INITIALIZER_CHECK_FIELDS)
+        and all(type(item) is bool for item in value.values()), 'FIXED_INITIALIZER_VERIFICATION_BOOLEANS_ONLY')
+    return dict(value)
+
+
+def require(value, code):
+    if not value:
+        raise RuntimeError(code)
+
+
+def utc():
+    return dt.datetime.now(dt.timezone.utc).isoformat()
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def save(path, value, mode=0o600):
+    raw = value if isinstance(value, bytes) else (json.dumps(value, sort_keys=True, indent=2) + '\n').encode()
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, mode)
+    os.fchmod(fd, mode)
+    with os.fdopen(fd, 'wb') as stream:
+        stream.write(raw)
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, *args):
+        return None
+
+
+def validated_lock(raw):
+    require(sha(raw) == LOCK_SHA, 'EXACT_PUBLIC_DOWNLOADED_ARTIFACT_LOCK')
+    value = json.loads(raw)
+    require(len(value['jars']) == 3 and {v['filename'] for v in value['jars']} == set(JARS), 'EXACT_THREE_ARTIFACTS')
+    for row in value['jars']:
+        prefix, size, digest = JARS[row['filename']]
+        require(row['downloadUrl'] == BASE_URL + prefix + row['filename'] and row['bytes'] == size and row['sha256'] == digest
+                and re.fullmatch('[a-f0-9]{128}', row['sha512']), 'FIXED_OFFICIAL_URL_SIZE_AND_HASH')
+    return value
+
+
+def vendor(lock, destination):
+    destination.mkdir(mode=0o700)
+    client = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect(), urllib.request.HTTPSHandler(context=ssl.create_default_context()))
+    deadline = time.monotonic() + 600
+    for row in lock['jars']:
+        url = row['downloadUrl']
+        remaining = deadline - time.monotonic()
+        require(remaining > 0, 'VENDOR_DEADLINE')
+        request = urllib.request.Request(url, headers={'Accept': 'application/octet-stream', 'User-Agent': 'isolated-spark-ci/1'})
+        path = destination / row['filename']
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+        with os.fdopen(fd, 'wb') as stream, client.open(request, timeout=min(20, remaining)) as response:
+            require(response.status == 200 and response.headers.get('Content-Length') == str(row['bytes']), 'EXACT_VENDOR_HTTP_SIZE')
+            h256, h512, count = hashlib.sha256(), hashlib.sha512(), 0
+            while True:
+                require(time.monotonic() < deadline, 'VENDOR_DEADLINE')
+                chunk = response.read(min(1024**2, row['bytes'] - count + 1))
+                if not chunk:
+                    break
+                count += len(chunk)
+                require(count <= row['bytes'], 'VENDOR_OVERFLOW')
+                stream.write(chunk)
+                h256.update(chunk)
+                h512.update(chunk)
+            require(count == row['bytes'] and h256.hexdigest() == row['sha256'] and h512.hexdigest() == row['sha512'], 'WHOLE_PINNED_VENDOR_BYTES')
+            stream.flush()
+            os.fsync(stream.fileno())
+    save(destination / 'vendor.sha256', ''.join(v['sha256'] + '  /opt/spark/jars/' + v['filename'] + '\n' for v in lock['jars']).encode())
+
+
+def pg_init(password):
+    require(re.fullmatch('[a-f0-9]{64}', password), 'RANDOM_HEX_CATALOG_PASSWORD')
+    return ("BEGIN;\nCREATE ROLE iceberg_catalog LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE PASSWORD '" + password + "';\n"
+        "ALTER DATABASE iceberg_lab OWNER TO iceberg_catalog;\nREVOKE CREATE ON SCHEMA public FROM PUBLIC;\nALTER SCHEMA public OWNER TO iceberg_catalog;\nSET ROLE iceberg_catalog;\n"
+        "CREATE TABLE iceberg_tables(catalog_name VARCHAR(255) NOT NULL,table_namespace VARCHAR(255) NOT NULL,table_name VARCHAR(255) NOT NULL,metadata_location VARCHAR(1000),previous_metadata_location VARCHAR(1000),iceberg_type VARCHAR(5),PRIMARY KEY(catalog_name,table_namespace,table_name));\n"
+        "CREATE TABLE iceberg_namespace_properties(catalog_name VARCHAR(255) NOT NULL,namespace VARCHAR(255) NOT NULL,property_key VARCHAR(255),property_value VARCHAR(1000),PRIMARY KEY(catalog_name,namespace,property_key));\nCOMMIT;\n").encode()
+
+
+def garage_config():
+    return ('metadata_dir="/var/lib/garage/meta"\ndata_dir="/var/lib/garage/data"\ndb_engine="sqlite"\nreplication_factor=1\n'
+        'rpc_bind_addr="127.0.0.1:3901"\nrpc_public_addr="127.0.0.1:3901"\nrpc_secret="' + secrets.token_hex(32) + '"\n'
+        '[s3_api]\napi_bind_addr="0.0.0.0:3900"\ns3_region="garage"\n').encode()
+
+
+class Attempt:
+    def __init__(self, root, project):
+        self.root, self.project, self.sequence = root, project, 0
+        self.compose = ['docker', 'compose', '-p', project, '-f', str(root / 'compose.json')]
+        self.initializer_intended = False
+        self.initializer_name = project + '-volume-init'
+        self.initializer_identity_checks = {key: False for key in INITIALIZER_CHECK_FIELDS}
+
+    def command(self, args, timeout=60, sensitive=False, check=True):
+        self.sequence += 1
+        result = subprocess.run(args, input=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
+        require(len(result.stdout) <= 8*1024**2 and len(result.stderr) <= 8*1024**2, 'COMMAND_OUTPUT_BOUND')
+        if not sensitive:
+            save(self.root / ('command-%03d.stdout' % self.sequence), result.stdout)
+            save(self.root / ('command-%03d.stderr' % self.sequence), result.stderr)
+        require(not check or result.returncode == 0, 'ISOLATED_COMMAND_FAILED_NO_RETRY')
+        return result
+
+    def cli(self, *args, **kwargs):
+        return self.command([*self.compose, *args], **kwargs)
+
+    def garage(self, *args, sensitive=False):
+        return self.cli('exec', '-T', 'garage', '/garage', '-c', '/etc/garage.toml', *args, sensitive=sensitive).stdout
+
+    def containers(self):
+        ids = self.command(['docker', 'ps', '-aq', '--no-trunc', '--filter', 'label=com.docker.compose.project=' + self.project]).stdout.decode().split()
+        require(len(ids) <= 3 and all(re.fullmatch('[a-f0-9]{64}', value) for value in ids), 'ONLY_THREE_EXACT_PROJECT_CONTAINERS')
+        result = []
+        for cid in ids:
+            raw = json.loads(self.command(['docker', 'inspect', cid], sensitive=True).stdout)[0]
+            role = raw['Config']['Labels']['com.docker.compose.service']
+            require(raw['Id'] == cid and raw['Config']['Labels']['com.docker.compose.project'] == self.project and role in ('postgres', 'garage', 'spark')
+                    and not raw['HostConfig']['Privileged'] and not raw['HostConfig'].get('PortBindings'), 'OWN_ISOLATED_NO_PORT_CONTAINER')
+            require(len(raw['NetworkSettings']['Networks']) == 1 and list(raw['NetworkSettings']['Networks']) == [self.project + '_trial'], 'ONLY_OWN_INTERNAL_NETWORK')
+            expected_cpu, expected_memory = (1000000000, 3*1024**3) if role == 'spark' else (500000000, 512*1024**2)
+            require(raw['HostConfig']['NanoCpus'] == expected_cpu and raw['HostConfig']['Memory'] == expected_memory, 'ACTUAL_CONTAINER_LIMITS')
+            expected_pids = 512 if role == 'spark' else 256
+            require(type(raw['HostConfig'].get('PidsLimit')) is int and raw['HostConfig']['PidsLimit'] == expected_pids, 'ACTUAL_ROLE_PID_LIMITS')
+            result.append({'id': cid, 'role': role, 'running': raw['State']['Running'], 'exitCode': raw['State']['ExitCode'], 'oom': raw['State']['OOMKilled']})
+        require(len({v['role'] for v in result}) == len(result), 'UNIQUE_OWN_CONTAINER_ROLES')
+        return result
+
+    def initializer(self):
+        if not self.initializer_intended:
+            return None
+        value = self.command(['docker', 'inspect', self.initializer_name], sensitive=True, check=False)
+        if value.returncode != 0:
+            # A failed inspect is not interpreted as absence (daemon/network
+            # failure could otherwise conceal a live initializer).
+            ids = self.command(['docker', 'ps', '-aq', '--no-trunc', '--filter', 'name=^/' + self.initializer_name + '$']).stdout.decode().split()
+            require(ids == [], 'INITIALIZER_IDENTITY_LOOKUP_UNRESOLVED')
+            return None
+        raw = json.loads(value.stdout)[0]
+        self.initializer_identity_checks = initializer_identity_checks(raw, self.project, self.initializer_name)
+        require(all(self.initializer_identity_checks.values()), 'EXACT_FRESH_INITIALIZER_IDENTITY_AND_SCOPE')
+        return {'id': raw['Id'], 'running': raw['State']['Running'], 'exitCode': raw['State']['ExitCode'], 'oom': raw['State']['OOMKilled']}
+
+
+def safe_spark_result(value):
+    fields = {'schemaVersion', 'passed', 'scope', 'spark', 'java', 'scala', 'fixtureSha256', 'bronzeRows', 'bronzeSnapshotCount', 'bronzeRowsSha256',
+        'bronzeSnapshotIds', 'silverRows', 'success', 'failure', 'duplicate', 'pending', 'silverRowsSha256', 'silverSnapshotCount', 'mergeInvocations',
+        'sequentialReplayInvocations', 'replayWriteInvocations', 'sparkApplicationCount', 'nativeTrinoVerified', 'miniPcPreservationVerified', 'kubernetesVerified',
+        'distributedConcurrencyOrCrashRecoveryVerified', 'compressionExperiment'}
+    require(isinstance(value, dict) and set(value) == fields and value['schemaVersion'] == 1 and value['passed'] is True
+        and value['scope'] == 'ISOLATED_GITHUB_RUNNER_SPARK_JDBC_GARAGE' and value['spark'] == '4.1.1'
+        and value['fixtureSha256'] == MODULES['synthetic-v1.ndjson'], 'EXACT_PUBLIC_SPARK_RESULT')
+    counts = {'bronzeRows': 12, 'bronzeSnapshotCount': 2, 'silverRows': 12, 'success': 7, 'failure': 3, 'duplicate': 2, 'pending': 0,
+              'silverSnapshotCount': 1, 'mergeInvocations': 1, 'sequentialReplayInvocations': 1, 'replayWriteInvocations': 0, 'sparkApplicationCount': 1}
+    require(all(type(value[key]) is int and value[key] == count for key, count in counts.items()), 'EXACT_FIXED_COUNTS')
+    require(all(value[key] is False for key in ('nativeTrinoVerified', 'miniPcPreservationVerified', 'kubernetesVerified', 'distributedConcurrencyOrCrashRecoveryVerified')), 'NO_PRODUCTION_OR_TRINO_OVERCLAIM')
+    compression = {'requestedCodec': 'gzip', 'catalogDefaultSetBeforeFirstCatalogAccess': True,
+        'bronzePropertyBeforeAppend': 'gzip', 'bronzePropertyAfterRun': 'gzip',
+        'silverPropertyAfterWriteAndReplay': 'gzip', 'silverPropertyBeforeWriteObserved': False,
+        'verification': 'SHOW_TBLPROPERTIES_ONLY', 'actualParquetFooterCodecVerified': False,
+        'priorFailureSoleCauseProven': False}
+    require(isinstance(value['compressionExperiment'], dict) and set(value['compressionExperiment']) == set(compression)
+        and all(type(value['compressionExperiment'][key]) is type(expected)
+            and value['compressionExperiment'][key] == expected for key, expected in compression.items()), 'EXPLICIT_GZIP_TABLE_PROPERTY_EXPERIMENT_ONLY')
+    require(re.fullmatch(r'21(?:\.[A-Za-z0-9+._-]+)?', value['java']) and re.fullmatch(r'2\.13\.[0-9]+', value['scala']), 'BOUNDED_ACTUAL_JAVA_SCALA')
+    require(all(re.fullmatch('[a-f0-9]{64}', value[key]) for key in ('bronzeRowsSha256', 'silverRowsSha256'))
+        and len(value['bronzeSnapshotIds']) == 2 and all(re.fullmatch('[1-9][0-9]{0,18}', v) and int(v) < 2**63 for v in value['bronzeSnapshotIds'])
+        and len(set(value['bronzeSnapshotIds'])) == 2, 'BOUNDED_SAFE_HASH_AND_SNAPSHOT_IDS')
+    return value
+
+
+def safe_bootstrap_diagnostic(value):
+    fields = {'schemaVersion', 'scope', 'passed', 'lastPhase', 'milestones', 'pythonExceptionClass', 'javaCauseClasses', 'sessionStopFailed',
+        'nativeLibraryCategories', 'failedMapSegmentObserved', 'tmpMountFlag'}
+    require(isinstance(value, dict) and set(value) == fields and type(value['schemaVersion']) is int and value['schemaVersion'] == 1
+        and value['scope'] == 'ISOLATED_SPARK_BOOTSTRAP_DIAGNOSTIC' and type(value['passed']) is bool
+        and value['lastPhase'] in BOOTSTRAP_PHASES and type(value['sessionStopFailed']) is bool
+        and type(value['failedMapSegmentObserved']) is bool and value['tmpMountFlag'] in ('NOEXEC', 'EXEC', 'UNOBSERVED'),
+        'BOUNDED_MESSAGE_FREE_BOOTSTRAP_DIAGNOSTIC')
+    milestones, causes = value['milestones'], value['javaCauseClasses']
+    require(isinstance(milestones, list) and 1 <= len(milestones) <= 32 and all(v in BOOTSTRAP_PHASES for v in milestones)
+        and milestones[0] == 'PYTHON_START' and isinstance(causes, list) and len(causes) <= 8
+        and all(isinstance(v, str) and len(v) <= 160 and JAVA_CLASS.fullmatch(v) for v in causes), 'ONLY_FIXED_MILESTONES_AND_JAVA_CLASS_NAMES')
+    libraries = value['nativeLibraryCategories']
+    require(isinstance(libraries, list) and len(libraries) <= 4 and all(v in ('zstd', 'snappy', 'lz4', 'hadoop') for v in libraries)
+        and libraries == sorted(set(libraries)), 'ONLY_NATIVE_LIBRARY_WHITELIST_CATEGORIES')
+    if value['passed']:
+        require(value['lastPhase'] == milestones[-1] == 'COMPLETED' and value['pythonExceptionClass'] is None
+            and causes == [] and value['sessionStopFailed'] is False and libraries == []
+            and value['failedMapSegmentObserved'] is False, 'SUCCESSFUL_BOOTSTRAP_DIAGNOSTIC')
+    else:
+        require(value['pythonExceptionClass'] in PYTHON_EXCEPTIONS and value['lastPhase'] in milestones, 'FAILED_BOOTSTRAP_CLASS_ONLY')
+    return value
+
+
+def log_signature(raw):
+    # Categories indicate signatures in a bounded tail, never a proven cause.
+    raw = raw[-262144:]
+    signatures = (
+        ('JAVA_OUT_OF_MEMORY_SIGNATURE', rb'java\.lang\.OutOfMemoryError'),
+        ('JAVA_CLASS_LOADING_SIGNATURE', rb'(?:ClassNotFoundException|NoClassDefFoundError|UnsupportedClassVersionError)'),
+        ('PYTHON_IMPORT_SIGNATURE', rb'(?:ModuleNotFoundError|ImportError):'),
+        ('EXECUTABLE_NOT_FOUND_SIGNATURE', rb'(?:exec:.*(?:no such file or directory|not found)|tini:.*No such file)'),
+        ('PERMISSION_DENIED_SIGNATURE', rb'(?:PermissionError:|[Pp]ermission denied)'),
+        ('SPARK_ARGUMENT_SIGNATURE', rb'(?:Error: Unrecognized option|Unknown option:|Missing application resource)'))
+    return next((name for name, pattern in signatures if re.search(pattern, raw)), 'NO_RECOGNIZED_SIGNATURE')
+
+
+def oom_subtype_signature(raw):
+    """Fixed bounded-tail signatures, not a diagnosis or a kernel-OOM claim."""
+    raw = raw[-262144:]
+    prefix = rb'java\.lang\.OutOfMemoryError: '
+    signatures = (
+        ('JAVA_HEAP_SPACE_SIGNATURE', prefix + rb'Java heap space(?:\r?\n|$)'),
+        ('NATIVE_THREAD_SIGNATURE', prefix + rb'unable to create native thread(?:[:\r\n]|$)'),
+        ('DIRECT_BUFFER_SIGNATURE', prefix + rb'(?:Direct buffer memory(?:\r?\n|$)|Cannot reserve [0-9]{1,20} bytes of direct buffer memory(?:[ (\r\n]|$))'),
+        ('METASPACE_SIGNATURE', prefix + rb'Metaspace(?:\r?\n|$)'))
+    found = [name for name, pattern in signatures if re.search(pattern, raw)]
+    return found[0] if len(found) == 1 else 'MULTIPLE_OOM_SUBTYPE_SIGNATURES' if found else 'OOM_SUBTYPE_UNOBSERVED'
+
+
+CGROUP_FILES = ('pids.current', 'pids.max', 'pids.events', 'memory.current', 'memory.max', 'memory.events')
+CGROUP_SCRIPT = '''set -eu
+count=0
+while IFS= read -r membership; do
+    [ "$membership" = "0::/" ] || exit 42
+    count=$((count + 1))
+done < /proc/self/cgroup
+[ "$count" = 1 ] && [ -f /sys/fs/cgroup/cgroup.controllers ] || exit 42
+printf 'CGROUP_V2_CONTAINER_ROOT\\n'
+for name in pids.current pids.max pids.events memory.current memory.max memory.events; do
+    printf 'BEGIN %s\\n' "$name"
+    while IFS= read -r line; do printf '%s\\n' "$line"; done < "/sys/fs/cgroup/$name"
+    printf 'END %s\\n' "$name"
+done
+'''
+
+
+def parse_cgroup_sample(raw):
+    require(isinstance(raw, bytes) and 0 < len(raw) <= 8192, 'BOUNDED_CGROUP_SAMPLE')
+    lines = raw.decode('ascii').splitlines()
+    require(lines and lines.pop(0) == 'CGROUP_V2_CONTAINER_ROOT', 'CONTAINER_ROOT_CGROUP_V2_REQUIRED')
+    sections = {}
+    for name in CGROUP_FILES:
+        require(lines and lines.pop(0) == 'BEGIN ' + name, 'FIXED_CGROUP_SECTION_ORDER')
+        section = []
+        while lines and lines[0] != 'END ' + name:
+            section.append(lines.pop(0))
+            require(len(section) <= 16, 'BOUNDED_CGROUP_EVENT_KEYS')
+        require(lines and lines.pop(0) == 'END ' + name, 'COMPLETE_CGROUP_SECTION')
+        sections[name] = section
+    require(not lines, 'NO_EXTRA_CGROUP_OUTPUT')
+    def number(value):
+        require(re.fullmatch(r'(?:0|[1-9][0-9]{0,18})', value) is not None, 'NONNEGATIVE_CGROUP_INTEGER')
+        result = int(value)
+        require(result < 2**63, 'BOUNDED_CGROUP_INTEGER')
+        return result
+    def scalar(name, unlimited=False):
+        require(len(sections[name]) == 1, 'ONE_CGROUP_SCALAR')
+        value = sections[name][0]
+        return None if unlimited and value == 'max' else number(value)
+    def events(name, required):
+        parsed = {}
+        for line in sections[name]:
+            fields = line.split(' ')
+            require(len(fields) == 2 and re.fullmatch('[a-z_]{1,32}', fields[0]) is not None
+                and fields[0] not in parsed, 'UNIQUE_NUMERIC_CGROUP_EVENTS')
+            parsed[fields[0]] = number(fields[1])
+        require(set(required) <= set(parsed), 'REQUIRED_CGROUP_EVENTS_OBSERVED')
+        return parsed
+    pids = events('pids.events', ('max',))
+    memory = events('memory.events', ('low', 'high', 'max', 'oom', 'oom_kill'))
+    pid_max, memory_max = scalar('pids.max', True), scalar('memory.max', True)
+    return {'pidsCurrent': scalar('pids.current'), 'pidsMax': pid_max, 'pidsMaxUnlimited': pid_max is None,
+        'pidsEventsMax': pids['max'], 'memoryCurrentBytes': scalar('memory.current'), 'memoryMaxBytes': memory_max,
+        'memoryMaxUnlimited': memory_max is None, 'memoryEventsLow': memory['low'], 'memoryEventsHigh': memory['high'],
+        'memoryEventsMax': memory['max'], 'memoryEventsOom': memory['oom'], 'memoryEventsOomKill': memory['oom_kill'],
+        'memoryEventsOomGroupKill': memory.get('oom_group_kill'), 'pidsLimitMatchesPlan': pid_max == 512,
+        'memoryLimitMatchesPlan': memory_max == 3*1024**3}
+
+
+def empty_cgroup_diagnostic():
+    return {'collection': 'NOT_REQUESTED', 'identityBound': False, 'execAttempted': False,
+        'scope': 'POINT_IN_TIME_CGROUP_V2_SEQUENTIAL_READS', 'eventCounterScope': 'CONTAINER_LIFETIME_KERNEL_COUNTERS_NO_BASELINE',
+        'diagnosticExecOverheadIncluded': False, 'baselineOrDeltaMeasured': False, 'values': {}}
+
+
+def bounded_cgroup_exec(cid):
+    """One fixed readonly shell; caps both pipes and only terminates its CLI child."""
+    require(re.fullmatch('[a-f0-9]{64}', cid), 'EXACT_FULL_CGROUP_TARGET_ID')
+    argv = ['docker', 'exec', '--user', '185:185', cid, '/bin/sh', '-c', CGROUP_SCRIPT]
+    child = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    chunks, overflow, reader_error = [bytearray(), bytearray()], threading.Event(), threading.Event()
+    def collect(stream, target):
+        try:
+            while True:
+                raw = stream.read1(1024)
+                if not raw:
+                    return
+                remaining = 8192 - len(target)
+                target.extend(raw[:remaining])
+                if len(raw) > remaining:
+                    overflow.set(); return
+        except Exception:
+            reader_error.set()
+    readers = [threading.Thread(target=collect, args=(stream, target), daemon=True)
+        for stream, target in zip((child.stdout, child.stderr), chunks)]
+    for reader in readers:
+        reader.start()
+    timed_out = False
+    try:
+        deadline = time.monotonic() + 5
+        while child.poll() is None and not overflow.is_set() and not reader_error.is_set():
+            if time.monotonic() >= deadline:
+                timed_out = True; break
+            time.sleep(0.025)
+    finally:
+        if child.poll() is None:
+            child.terminate()
+            try:
+                child.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                child.kill(); child.wait(timeout=2)
+        for reader in readers:
+            reader.join(timeout=2)
+        child.stdout.close(); child.stderr.close()
+    require(not any(reader.is_alive() for reader in readers) and not reader_error.is_set(), 'BOUNDED_CGROUP_CHILD_READ_COMPLETED')
+    result = subprocess.CompletedProcess(argv, child.returncode, bytes(chunks[0]), bytes(chunks[1]))
+    result.capture_truncated = overflow.is_set()
+    result.capture_timed_out = timed_out
+    return result
+
+
+def capture_spark_cgroup(attempt, expected):
+    diagnostic = empty_cgroup_diagnostic()
+    diagnostic['collection'] = 'UNOBSERVED'
+    try:
+        before = next(v for v in attempt.containers() if v['role'] == 'spark')
+        require(before['id'] == expected['id'] and type(before['running']) is bool, 'EXACT_CGROUP_OWNER_BEFORE_READ')
+        if not before['running']:
+            diagnostic['collection'] = 'NOT_RUNNING'
+            return diagnostic
+        diagnostic['execAttempted'] = True
+        result = bounded_cgroup_exec(before['id'])
+        # Raw fixed-command output/errors stay private, including OCI exec errors.
+        save(attempt.root / 'spark-cgroup.stdout', result.stdout)
+        save(attempt.root / 'spark-cgroup.stderr', result.stderr)
+        after = next(v for v in attempt.containers() if v['role'] == 'spark')
+        require(after['id'] == before['id'] and after['running'] is True, 'SAME_LIVE_CGROUP_OWNER_AFTER_READ')
+        require(result.returncode == 0 and not result.capture_truncated and not result.capture_timed_out,
+            'COMPLETE_SUCCESSFUL_CGROUP_READ')
+        values = parse_cgroup_sample(result.stdout)
+        diagnostic.update(collection='OBSERVED', identityBound=True, diagnosticExecOverheadIncluded=True, values=values)
+    except Exception:
+        # PID saturation can prevent even this single diagnostic shell from starting.
+        # Failure proves neither zero counters nor that a particular limit was hit.
+        pass
+    return diagnostic
+
+
+def safe_progress(value):
+    fields = {'schemaVersion', 'scope', 'sequence', 'lastPhase', 'milestones',
+        'elapsedMillis', 'tmpMountFlag', 'completionNotProven'}
+    require(isinstance(value, dict) and set(value) == fields and type(value['schemaVersion']) is int
+        and value['schemaVersion'] == 1 and value['scope'] == 'ISOLATED_SPARK_BOOTSTRAP_PROGRESS'
+        and type(value['sequence']) is int and 1 <= value['sequence'] <= 32
+        and type(value['elapsedMillis']) is int and 0 <= value['elapsedMillis'] <= 3_600_000
+        and value['tmpMountFlag'] in ('NOEXEC', 'EXEC', 'UNOBSERVED')
+        and value['completionNotProven'] is True, 'FIXED_TRANSITION_PROGRESS_ONLY')
+    milestones = value['milestones']
+    require(isinstance(milestones, list) and len(milestones) == value['sequence']
+        and len(set(milestones)) == len(milestones) and milestones[0] == 'PYTHON_START'
+        and all(v in BOOTSTRAP_PHASES for v in milestones) and value['lastPhase'] == milestones[-1],
+        'EXACT_ALLOWLISTED_TRANSITION_SEQUENCE')
+    return value
+
+
+def read_progress(root):
+    paths = sorted((root / 'proof').glob('bootstrap-progress-*.json'))
+    require(len(paths) <= 32, 'PROGRESS_FILE_COUNT_BOUND')
+    if not paths:
+        return None
+    path = paths[-1]
+    require(re.fullmatch(r'bootstrap-progress-(?:0[1-9]|[12][0-9]|3[0-2])\.json', path.name), 'FIXED_PROGRESS_FILE_NAME')
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+    with os.fdopen(descriptor, 'rb') as stream:
+        before = os.fstat(stream.fileno())
+        require(stat.S_ISREG(before.st_mode) and 0 < before.st_size <= 4096, 'BOUNDED_REGULAR_PROGRESS_FILE')
+        raw = stream.read(4097)
+        after = os.fstat(stream.fileno())
+    require(len(raw) == before.st_size and (before.st_ino, before.st_mtime_ns, before.st_size)
+        == (after.st_ino, after.st_mtime_ns, after.st_size), 'STABLE_COMPLETE_PROGRESS_BYTES')
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            require(key not in result, 'DUPLICATE_PROGRESS_FIELD'); result[key] = value
+        return result
+    value = safe_progress(json.loads(raw, object_pairs_hook=pairs))
+    require(path.name == 'bootstrap-progress-%02d.json' % value['sequence'], 'PROGRESS_SEQUENCE_FILE_MATCH')
+    return value
+
+
+def bounded_deadline_logs(cid):
+    """Bound memory and time for a new readonly docker-logs child, never a container kill."""
+    require(re.fullmatch('[a-f0-9]{64}', cid), 'EXACT_FULL_LOG_TARGET_ID')
+    argv = ['docker', 'logs', '--tail', '200', cid]
+    child = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    chunks, overflow, reader_error = [bytearray(), bytearray()], threading.Event(), threading.Event()
+    def collect(stream, target):
+        try:
+            while True:
+                raw = stream.read1(8192)
+                if not raw:
+                    return
+                remaining = 262144 - len(target)
+                target.extend(raw[:remaining])
+                if len(raw) > remaining:
+                    overflow.set(); return
+        except Exception:
+            reader_error.set()
+    readers = [threading.Thread(target=collect, args=(stream, target), daemon=True)
+        for stream, target in zip((child.stdout, child.stderr), chunks)]
+    for reader in readers:
+        reader.start()
+    timed_out = False
+    try:
+        deadline = time.monotonic() + 10
+        while child.poll() is None and not overflow.is_set() and not reader_error.is_set():
+            if time.monotonic() >= deadline:
+                timed_out = True; break
+            time.sleep(0.025)
+    finally:
+        if child.poll() is None:
+            child.terminate()
+            try:
+                child.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                child.kill(); child.wait(timeout=2)
+        for reader in readers:
+            reader.join(timeout=2)
+        child.stdout.close(); child.stderr.close()
+    require(not any(reader.is_alive() for reader in readers) and not reader_error.is_set(), 'BOUNDED_LOG_CHILD_READ_COMPLETED')
+    result = subprocess.CompletedProcess(argv, child.returncode, bytes(chunks[0]), bytes(chunks[1]))
+    result.capture_truncated = overflow.is_set()
+    result.capture_timed_out = timed_out
+    return result
+
+
+def spark_diagnostics(attempt, expected, diagnostic, deadline_capture=False):
+    before = next(v for v in attempt.containers() if v['role'] == 'spark')
+    require(before['id'] == expected['id'], 'SAME_EXACT_SPARK_CONTAINER_FOR_DIAGNOSTICS')
+    require(type(before['running']) is bool and type(before['oom']) is bool and type(before['exitCode']) is int,
+        'ACTUAL_SPARK_STATE_TYPES')
+    diagnostic.update(stateObserved=True, runningAtCapture=before['running'],
+        exitCode=None if before['running'] else before['exitCode'], oomKilled=before['oom'])
+    diagnostic['cgroup'] = capture_spark_cgroup(attempt, before)
+    logs = bounded_deadline_logs(before['id']) if deadline_capture else attempt.command(
+        ['docker', 'logs', '--tail', '200', before['id']], sensitive=True, check=False)
+    # These files remain in the private runner directory and are never artifacts.
+    save(attempt.root / 'spark-diagnostic.stdout', logs.stdout)
+    save(attempt.root / 'spark-diagnostic.stderr', logs.stderr)
+    after = next(v for v in attempt.containers() if v['role'] == 'spark')
+    require(after['id'] == before['id'], 'SAME_EXACT_SPARK_CONTAINER_AFTER_DIAGNOSTICS')
+    require(type(after['running']) is bool and type(after['oom']) is bool and type(after['exitCode']) is int,
+        'ACTUAL_SPARK_STATE_TYPES')
+    diagnostic.update(runningAtCapture=after['running'], exitCode=None if after['running'] else after['exitCode'],
+        oomKilled=after['oom'], logCollection='TRUNCATED' if getattr(logs, 'capture_truncated', False) else 'COLLECTED' if logs.returncode == 0 else 'UNAVAILABLE',
+        logSignature=log_signature(logs.stdout + b'\n' + logs.stderr) if logs.returncode == 0 else 'LOG_UNAVAILABLE')
+    diagnostic['oomSubtypeSignature'] = oom_subtype_signature(logs.stdout + b'\n' + logs.stderr) if logs.returncode == 0 else 'OOM_SUBTYPE_UNOBSERVED'
+    diagnostic['progress'] = read_progress(attempt.root)
+    bootstrap = None
+    path = attempt.root / 'proof/bootstrap-diagnostic.json'
+    if path.exists() or path.is_symlink():
+        info = path.lstat()
+        require(not path.is_symlink() and path.is_file() and 0 < info.st_size <= 16384, 'BOUNDED_REGULAR_BOOTSTRAP_DIAGNOSTIC')
+        raw = path.read_bytes()
+        require(len(raw) == info.st_size, 'STABLE_BOOTSTRAP_DIAGNOSTIC_BYTES')
+        bootstrap = safe_bootstrap_diagnostic(json.loads(raw))
+    diagnostic['bootstrap'] = bootstrap
+
+
+def wait_spark_once(attempt, expected, diagnostic):
+    until = time.monotonic() + 600
+    try:
+        while True:
+            require(time.monotonic() < until, 'ONE_SPARK_PROCESS_DEADLINE')
+            current = next(v for v in attempt.containers() if v['role'] == 'spark')
+            require(current['id'] == expected['id'], 'SAME_CREATED_SPARK_CONTAINER_WHILE_WAITING')
+            if not current['running']:
+                spark_diagnostics(attempt, current, diagnostic)
+                require(current['exitCode'] == 0 and current['oom'] is False, 'ACTUAL_SPARK_CLEAN_EXIT_WITHOUT_OOM')
+                require(diagnostic['bootstrap'] is not None and diagnostic['bootstrap']['passed'] is True, 'ACTUAL_BOOTSTRAP_COMPLETION_DIAGNOSTIC')
+                return
+            time.sleep(2)
+    except Exception as error:
+        if str(error) == 'ONE_SPARK_PROCESS_DEADLINE':
+            try:
+                spark_diagnostics(attempt, expected, diagnostic, deadline_capture=True)
+                diagnostic['deadlineCapture'] = 'CAPTURED'
+            except Exception:
+                diagnostic['deadlineCapture'] = 'PARTIAL' if diagnostic['stateObserved'] else 'UNOBSERVED'
+        raise
+
+
+def main():
+    require(sys.platform == 'linux' and os.environ.get('GITHUB_ACTIONS') == 'true' and os.environ.get('RUNNER_ENVIRONMENT') == 'github-hosted', 'GITHUB_HOSTED_LINUX_ONLY')
+    source = os.environ.get('SOURCE_COMMIT', '')
+    require(re.fullmatch('[a-f0-9]{40}', source), 'ACTUAL_CHECKOUT_SOURCE_COMMIT')
+    os.umask(0o077)
+    repo = Path(__file__).resolve().parents[2]
+    require((repo / 'infra/spark-silver').is_dir(), 'TRACKED_SOURCE_PACKET_REQUIRED')
+    local = repo / '.local'
+    local.mkdir(exist_ok=True)
+    public = local / 'spark-ci-public'
+    require(not public.exists() and not public.is_symlink(), 'NEW_PUBLIC_SUMMARY_FOLDER_ONLY')
+    public.mkdir(mode=0o700)
+    nonce = uuid.uuid4().hex
+    root = local / ('spark-ci-private-' + nonce)
+    root.mkdir(mode=0o700)
+    project, image = 'spark-ci-' + nonce, 'spark-isolated-ci:' + nonce
+    attempt = Attempt(root, project)
+    results, failure, passed, stopped, initializer_stopped = {}, None, False, False, False
+    diagnostics = {'stateObserved': False, 'runningAtCapture': None, 'exitCode': None, 'oomKilled': None,
+        'logCollection': 'NOT_CAPTURED', 'logSignature': 'LOG_UNAVAILABLE', 'bootstrap': None,
+        'progress': None, 'deadlineCapture': 'NOT_REQUESTED', 'oomSubtypeSignature': 'OOM_SUBTYPE_UNOBSERVED',
+        'cgroup': empty_cgroup_diagnostic()}
+    checks = {'vendorBytesVerified': False, 'pinnedImagesPulled': False, 'internalNetworkVerified': False, 'containerLimitsVerified': False}
+    try:
+        require(shutil.disk_usage(root).free >= 6*1024**3, 'GITHUB_RUNNER_DISK_RESERVE')
+        for kind in ('container', 'volume', 'network'):
+            args = ['docker', 'ps', '-aq'] if kind == 'container' else ['docker', kind, 'ls', '-q']
+            require(not attempt.command([*args, '--filter', 'label=com.docker.compose.project=' + project]).stdout.strip(), 'FRESH_UUID_PROJECT_ONLY')
+        packet = repo / 'infra/spark-silver'
+        lock = validated_lock((packet / 'artifact-lock.downloaded.json').read_bytes())
+        build = root / 'build'
+        build.mkdir(mode=0o700)
+        for name, expected in MODULES.items():
+            raw = (packet / name).read_bytes()
+            require(sha(raw) == expected, 'EXACT_FROZEN_SPARK_MODULE_BYTES')
+            save(build / name, raw)
+        save(build / 'bootstrap_spark.py', Path(__file__).with_name('bootstrap_spark.py').read_bytes())
+        save(build / 'Dockerfile.ci', (build / 'Dockerfile.candidate').read_bytes() + b'\nCOPY --chown=185:185 --chmod=0444 bootstrap_spark.py /opt/silver/bootstrap_spark.py\n')
+        vendor(lock, build / 'vendor')
+        checks['vendorBytesVerified'] = True
+        for reference in (POSTGRES, GARAGE, SPARK):
+            attempt.command(['docker', 'pull', '--platform=linux/amd64', reference], timeout=240)
+            actual = json.loads(attempt.command(['docker', 'image', 'inspect', reference], sensitive=True).stdout)[0]
+            require(actual['Architecture'] == 'amd64' and actual['Os'] == 'linux'
+                and any(v.endswith('@' + reference.rsplit('@', 1)[1]) for v in actual['RepoDigests']), 'ACTUAL_PINNED_LINUX_AMD64_IMAGE')
+        checks['pinnedImagesPulled'] = True
+        attempt.command(['docker', 'build', '--network=none', '--pull=false', '-f', str(build / 'Dockerfile.ci'), '-t', image, str(build)], timeout=240)
+        catalog_password = secrets.token_hex(32)
+        for name in ('postgres-secrets', 'silver-secrets'):
+            (root / name).mkdir(mode=0o755)
+            os.chmod(root / name, 0o755)
+        save(root / 'postgres-secrets/bootstrap-password', secrets.token_hex(32).encode(), 0o444)
+        save(root / 'postgres-init.sql', pg_init(catalog_password), 0o444)
+        save(root / 'garage.toml', garage_config(), 0o444)
+        (root / 'proof').mkdir(mode=0o777)
+        os.chmod(root / 'proof', 0o777)
+        save(root / 'compose.json', plan(image))
+        attempt.cli('create', '--no-build', 'postgres', 'garage')
+        network = json.loads(attempt.command(['docker', 'network', 'inspect', project + '_trial']).stdout)[0]
+        require(network['Internal'] is True and network['Labels']['com.docker.compose.project'] == project, 'ACTUAL_INTERNAL_ONLY_NETWORK')
+        checks['internalNetworkVerified'] = True
+        volumes = [project + '_garage-meta', project + '_garage-data']
+        for name in volumes:
+            actual = json.loads(attempt.command(['docker', 'volume', 'inspect', name]).stdout)[0]
+            require(actual['Labels']['com.docker.compose.project'] == project, 'ONLY_FRESH_OWN_GARAGE_VOLUMES')
+        require(not attempt.command(['docker', 'ps', '-aq', '--no-trunc', '--filter', 'name=^/' + attempt.initializer_name + '$']).stdout.strip(), 'FRESH_INITIALIZER_NAME_ABSENT')
+        save(root / 'initializer-intent.json', {'name': attempt.initializer_name, 'project': project, 'automaticRetry': False, 'network': 'none'})
+        attempt.initializer_intended = True
+        attempt.command(['docker', 'create', '--name', attempt.initializer_name, '--label', 'devdooly.io.spark-ci-project=' + project,
+            '--cidfile', str(root / 'initializer.cid'), '--network=none', '--read-only', '--memory=64m', '--cpus=0.1', '--pids-limit=16', '--cap-drop=ALL', '--cap-add=CHOWN',
+            '--security-opt=no-new-privileges:true', '--entrypoint=/bin/chown', '-v', volumes[0] + ':/meta', '-v', volumes[1] + ':/data', POSTGRES, '1000:1000', '/meta', '/data'])
+        init = attempt.initializer()
+        require(init is not None and not init['running'], 'EXACT_CREATED_INITIALIZER_BEFORE_START')
+        attempt.command(['docker', 'start', '-a', init['id']])
+        init = attempt.initializer()
+        require(init is not None and not init['running'] and init['exitCode'] == 0 and init['oom'] is False, 'ACTUAL_INITIALIZER_SUCCESS')
+        attempt.cli('start', 'postgres', 'garage')
+        until = time.monotonic() + 120
+        while True:
+            require(time.monotonic() < until, 'POSTGRES_READY_DEADLINE')
+            ready = attempt.cli('exec', '-T', 'postgres', 'pg_isready', '-h', '127.0.0.1', '-U', 'lab_bootstrap', '-d', 'iceberg_lab', check=False)
+            if ready.returncode == 0:
+                break
+            time.sleep(1)
+        pg = attempt.cli('exec', '-T', 'postgres', 'psql', '-X', '-A', '-t', '-U', 'lab_bootstrap', '-d', 'iceberg_lab', '-c', 'SHOW server_version;').stdout.decode().strip()
+        require(re.match(r'^17\.11(?:\s|$)', pg), 'ACTUAL_POSTGRES_17_11')
+        version = attempt.garage('--version').decode().strip()
+        require(re.match(r'^garage v2\.4\.1(?:\s|$)', version), 'ACTUAL_GARAGE_2_4_1')
+        until = time.monotonic() + 60
+        while True:
+            require(time.monotonic() < until, 'GARAGE_RPC_READY_DEADLINE')
+            ready = attempt.cli('exec', '-T', 'garage', '/garage', '-c', '/etc/garage.toml', 'node', 'id', '--quiet', check=False)
+            if ready.returncode == 0:
+                node = ready.stdout.decode().strip().split('@')[0]
+                break
+            time.sleep(1)
+        require(re.fullmatch('[a-f0-9]{64}', node), 'FRESH_GARAGE_NODE_ID')
+        attempt.garage('layout', 'assign', '-z', 'github-isolated', '-c', '128M', node)
+        attempt.garage('layout', 'apply', '--version', '1')
+        bucket = json.loads(attempt.garage('json-api', 'CreateBucket', '{"globalAlias":"platform-lab-iceberg-20261015"}'))
+        attempt.garage('json-api', 'UpdateBucket', json.dumps({'id': bucket['id'], 'body': {'quotas': {'maxSize': 64*1024**2, 'maxObjects': 128}}}))
+        key = json.loads(attempt.garage('json-api', 'CreateKey', '{"name":"github-isolated-spark"}', sensitive=True))
+        attempt.garage('json-api', 'AllowBucketKey', json.dumps({'bucketId': bucket['id'], 'accessKeyId': key['accessKeyId'], 'permissions': {'read': True, 'write': True, 'owner': False}}), sensitive=True)
+        acl = json.loads(attempt.garage('json-api', 'GetKeyInfo', json.dumps({'id': key['accessKeyId'], 'showSecretKey': False}), sensitive=True))
+        require(acl['accessKeyId'] == key['accessKeyId'] and acl['permissions']['createBucket'] is False and len(acl['buckets']) == 1
+            and acl['buckets'][0]['id'] == bucket['id'] and acl['buckets'][0]['permissions'] == {'read': True, 'write': True, 'owner': False}, 'ACTUAL_SINGLE_BUCKET_NONOWNER_KEY')
+        for name, value in {'catalog-password': catalog_password, 'endpoint': 'http://garage.platform-lab.svc.cluster.local:3900', 'access-key': key['accessKeyId'], 'secret-key': key['secretAccessKey']}.items():
+            save(root / 'silver-secrets' / name, value.encode('ascii'), 0o444)
+        del key, catalog_password
+        attempt.cli('create', '--no-build', 'spark')
+        actual = attempt.containers()
+        require({v['role'] for v in actual} == {'postgres', 'garage', 'spark'}, 'EXACT_THREE_OWNED_ROLES_BEFORE_SPARK')
+        checks['containerLimitsVerified'] = True
+        attempt.cli('start', 'spark')
+        wait_spark_once(attempt, next(v for v in actual if v['role'] == 'spark'), diagnostics)
+        raw = (root / 'proof/spark-result.json').read_bytes()
+        require(0 < len(raw) <= 16384, 'BOUNDED_SPARK_PUBLIC_PROOF')
+        results = safe_spark_result(json.loads(raw))
+        passed = True
+    except Exception as error:
+        text = str(error)
+        failure = {'type': type(error).__name__, 'code': text if re.fullmatch('[A-Z0-9_]{1,128}', text) else 'ISOLATED_ATTEMPT_FAILED_OR_UNKNOWN'}
+    finally:
+        try:
+            init = attempt.initializer()
+            if init and init['running']:
+                attempt.command(['docker', 'stop', '--time=30', init['id']], timeout=45)
+            init = attempt.initializer()
+            require(init is None or not init['running'], 'OWN_INITIALIZER_STOPPED_OR_NOT_CREATED')
+            initializer_stopped = True
+        except Exception:
+            initializer_stopped = False
+            passed = False
+        try:
+            owned = attempt.containers()
+            for row in owned:
+                if row['running']:
+                    attempt.command(['docker', 'stop', '--time=30', row['id']], timeout=45)
+            final = attempt.containers()
+            require(all(not row['running'] for row in final), 'ALL_OWNED_CONTAINERS_STOPPED')
+            stopped = True
+        except Exception:
+            stopped = False
+            passed = False
+    summary = {'schemaVersion': 1, 'passed': passed, 'scope': 'ISOLATED_GITHUB_RUNNER_SPARK_JDBC_GARAGE', 'capturedAt': utc(),
+        'sourceCommit': source, 'result': results, 'failure': failure, 'ownedComposeContainersStopped': stopped,
+        'sparkDiagnostic': diagnostics,
+        'ownedInitializerCreationAttempted': attempt.initializer_intended, 'ownedInitializerStoppedOrNotCreated': initializer_stopped,
+        'initializerIdentityChecks': safe_initializer_checks(attempt.initializer_identity_checks),
+        'fixedImagePlan': {'postgres': POSTGRES, 'garage': GARAGE, 'sparkBase': SPARK}, 'plannedJarCount': 3, 'plannedJarBytes': 112793760,
+        'localImageOnly': True, 'imagePushed': False, 'plannedHostPublishedPortCount': 0, 'checks': checks,
+        'plannedSparkCpuLimit': 1, 'plannedSparkMemoryLimitBytes': 3*1024**3, 'plannedPostgresAndGarageEachMemoryLimitBytes': 512*1024**2,
+        'rawLogsOrCredentialsUploaded': False, 'automaticRetryPerformed': False,
+        'nativeTrinoVerified': False, 'miniPcContacted': False, 'kubernetesVerified': False,
+        'trialVolumesDeletedByHarness': False, 'runnerStorageIsEphemeral': True}
+    save(public / 'summary.json', summary)
+    print(json.dumps({'passed': passed, 'scope': summary['scope'], 'ownedContainersStopped': stopped}), flush=True)
+    return 0 if passed else 1
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())
