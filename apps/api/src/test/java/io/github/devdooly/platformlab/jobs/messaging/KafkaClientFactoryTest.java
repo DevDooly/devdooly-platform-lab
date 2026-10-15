@@ -6,6 +6,14 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.*;
 
 class KafkaClientFactoryTest {
+    @Test void continuousRuntimeChangesOnlyTheBoundedPollInterval() {
+        var baseline = new java.util.LinkedHashMap<>(KafkaClientFactory.consumerProperties("127.0.0.1:19092", "unit-runtime"));
+        var runtime = KafkaClientFactory.runtimeConsumerProperties("127.0.0.1:19092", "unit-runtime");
+        assertThat(baseline.get(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG)).isEqualTo(120000);
+        baseline.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 600000);
+        assertThat(runtime).isEqualTo(baseline);
+    }
+
     @Test void producerUsesBoundedAcknowledgedIdempotentPublication() {
         var properties = KafkaClientFactory.producerProperties("127.0.0.1:19092");
         assertThat(properties).containsEntry("security.protocol", "PLAINTEXT")

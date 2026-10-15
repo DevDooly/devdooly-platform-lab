@@ -26,6 +26,17 @@ public final class KafkaClientFactory {
         return new KafkaConsumer<>(consumerProperties(bootstrap, group));
     }
 
+    /** Single-runtime export can perform several bounded S3 calls between consumer polls. */
+    public static Consumer<String, String> consumerForRuntime(String bootstrap, String group) {
+        return new KafkaConsumer<>(runtimeConsumerProperties(bootstrap, group));
+    }
+
+    static Map<String, Object> runtimeConsumerProperties(String bootstrap, String group) {
+        var properties = new LinkedHashMap<String, Object>(consumerProperties(bootstrap, group));
+        properties.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 600000);
+        return Map.copyOf(properties);
+    }
+
     static Map<String, Object> producerProperties(String bootstrap) {
         var properties = baseProperties(bootstrap);
         properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
