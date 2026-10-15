@@ -127,7 +127,7 @@ def execute(spark, silver, FIELDS, SOURCE_SHA, golden_bronze, require, row_sha, 
     require(len(snapshots) == 2 and all(v['operation'] == 'append' for v in snapshots)
         and snapshots[0]['parent_id'] is None and snapshots[1]['parent_id'] == snapshots[0]['snapshot_id'], 'TWO_ACTUAL_APPEND_SNAPSHOT_CHAIN')
     for index, expected in enumerate((rows[:6], rows)):
-        frame = spark.read.option('snapshot-id', str(snapshots[index]['snapshot_id'])).table(silver.SOURCE_TABLE).select(*FIELDS)
+        frame = spark.read.option('versionAsOf', str(snapshots[index]['snapshot_id'])).table(silver.SOURCE_TABLE).select(*FIELDS)
         require(silver.ordered(frame) == expected, 'ACTUAL_BRONZE_TIME_TRAVEL_ROWS')
     before = row_sha(silver.ordered(spark.table(silver.SOURCE_TABLE).select(*FIELDS)))
     advance('SILVER_RUN')

@@ -82,7 +82,7 @@ def snapshots(spark):
 
 def run(spark,snapshot_id):
     require(not spark.catalog.tableExists(TARGET_TABLE),'NEW_SILVER_TARGET_MUST_BE_ABSENT_NO_UNKNOWN_RETRY')
-    source=spark.read.option('snapshot-id',str(snapshot_id)).table(SOURCE_TABLE).select(*FIELDS)
+    source=spark.read.option('versionAsOf',str(snapshot_id)).table(SOURCE_TABLE).select(*FIELDS)
     validate_bronze(ordered(source));outcomes=transform(source);expected=ordered(outcomes);validate_silver(expected)
     spark.sql("CREATE NAMESPACE phase6.silver LOCATION '"+WAREHOUSE+"/silver'")
     spark.sql('CREATE TABLE '+TARGET_TABLE+' (batch_id STRING,input_sequence INT,event_id STRING,sensor_id STRING,event_time_raw STRING,sensor_value DOUBLE,source_sha256 STRING,status STRING,reason STRING) USING iceberg LOCATION '\

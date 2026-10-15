@@ -20,7 +20,7 @@ from compose_plan import POSTGRES, GARAGE, SPARK, plan
 
 sys.dont_write_bytecode = True
 LOCK_SHA = '6ca247b283025189ecf36c67ae03fe9101b25a53fe7b62593725e076276e33e3'
-MODULES = {'spark_silver.py': '189ec387433784e4623ba8b24efeeeed40b90213b2582450170ba687bcf067ec',
+MODULES = {'spark_silver.py': '71bd63230704c6d880eb1208abc63ef5080448cfd46bf3295f1bc77f38ddd9f7',
     'silver_contract.py': '889fdb91ec4613d19f62a622e4cc889a27e38012905019f05d4743130f8268df',
     'synthetic-v1.ndjson': '39ba10d8c47dce790f3ccc9c9134fea593d6de31f1f3a7992ca61d9f554da3b5',
     'Dockerfile.candidate': '334b4865c926062d40f25801e6c05a6390b9c957c87c4c7b3416aed62001bf24'}
