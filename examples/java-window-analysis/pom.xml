@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-parent</artifactId><version>4.1.1</version><relativePath/></parent>
+  <groupId>io.github.devdooly</groupId><artifactId>java-window-analysis</artifactId><version>0.1.0</version>
+  <name>Synthetic UTC Session Window Analysis</name>
+  <description>Independent bounded Java example and JMH experiment; no production ETL runtime.</description>
+  <properties><java.version>21</java.version><jmh.version>1.37</jmh.version><project.build.outputTimestamp>2026-10-15T00:00:00Z</project.build.outputTimestamp></properties>
+  <dependencies>
+    <dependency><groupId>org.openjdk.jmh</groupId><artifactId>jmh-core</artifactId><version>${jmh.version}</version></dependency>
+    <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><configuration><annotationProcessorPaths><path><groupId>org.openjdk.jmh</groupId><artifactId>jmh-generator-annprocess</artifactId><version>${jmh.version}</version></path></annotationProcessorPaths></configuration></plugin>
+      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-shade-plugin</artifactId><executions><execution><phase>package</phase><goals><goal>shade</goal></goals><configuration><finalName>benchmarks</finalName><createDependencyReducedPom>false</createDependencyReducedPom><transformers combine.self="override"><transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer"><mainClass>org.openjdk.jmh.Main</mainClass></transformer></transformers><filters><filter><artifact>*:*</artifact><excludes><exclude>META-INF/*.SF</exclude><exclude>META-INF/*.DSA</exclude><exclude>META-INF/*.RSA</exclude></excludes></filter></filters></configuration></execution></executions></plugin>
+    </plugins>
+  </build>
+</project>

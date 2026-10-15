@@ -1,19 +1,21 @@
 # 현재 상태에서 이어서 구축하기
 
-최신 배포 검증(2026-10-15): API·worker의 실제 V2 지원 이미지 확인 후 고정 1,000건 작업을 처리했습니다. 총 7개 EXPORTED 작업·파일 정보 14개·Kafka lag 0과 기존 18개 객체 보존을 확인했고, 공개 JSON 전체가 실제 수집 원본과 일치했습니다. [최신 배포·게시 근거](evidence/input-v2-deployment/README.md)를 먼저 확인하세요. 아래 단계별 기록은 각각 당시의 검증 조건을 보존합니다.
+최신 배포 검증(2026-10-15): API·worker를 source `202ab6806130cfb37e8829ce7d52c89990d8a54a`·schema V4로 전환해 API·웹 32/32, worker 35/35를 확인했습니다. [V4 실제 전환](evidence/admission-v4-deployment/README.md)을 먼저 확인하세요. 신규 V4 stage는 아직 수행하지 않았으며, 아래 V2 처리 결과는 이전 검증입니다. API·worker의 V2 지원 이미지 확인 후 고정 1,000건 작업을 처리했습니다. 총 7개 EXPORTED 작업·파일 정보 14개·Kafka lag 0과 기존 18개 객체 보존을 확인했고, 공개 JSON 전체가 실제 수집 원본과 일치했습니다. [이전 V2 배포·게시 근거](evidence/input-v2-deployment/README.md)에 당시 조건을 남겼습니다. 아래 단계별 기록은 각각 당시의 검증 조건을 보존합니다.
 
 Java API·포트폴리오와 K3s·Jenkins·Argo CD를 Ubuntu 미니 PC에서 운영합니다. 2026-10-15 최초 Kafka·Garage·상시 worker 배포에서는 두 합성 작업의 자동 처리·파일 확인·슬롯 해제와 공개 Pages의 실제 job 관측을 확인했습니다. [최초 배포·게시 근거](evidence/runtime-deployment/README.md)를 보존합니다. 초기 설치는 [미니 PC 근거](evidence/mini-pc/README.md), CI/CD는 [Jenkins 근거](evidence/jenkins-ci/README.md), 이전 플랫폼 collector의 실패 보존·반복 게시 11회는 [플랫폼 수집 근거](evidence/platform-observation/README.md)에 구분해 기록했습니다. 전체 단계는 [진행 목록](ROADMAP.md)을 따릅니다.
 
 실제 V2 배포 전 후보판의 최대 1,000개 입력·단일 슬롯 동시 2/8개 접수·초과 입력 거부는 격리 통합 검사 5개로 확인했습니다. 별도 Linux Docker worker에서도 1 CPU·768MiB 제한으로 1,000개 작업 3회와 원본·export 파일 9개의 전체 GET을 검증했습니다. [입력·동시 접수 검증](evidence/input-concurrency-load/README.md)은 현재 운영판과 구분합니다. 그 시험 당시 운영 source `ed5815e7`·기존 6개 작업과 서비스는 보존했으며, 운영 처리 용량이나 SLA를 검증한 결과는 아닙니다.
 
-새 내부 승인 간격 후보는 기본 API 157개·실제 backend 19개·복원본 호환 8개를 통과했습니다. [승인 간격 근거](evidence/admission-cooldown/README.md)를 연결하며 운영 V4 적용은 별도 후속입니다. 단일 슬롯과 승인 간격, 구형 API/idle worker 호환과 구형 stage의 policy 우회 위험을 구분합니다.
+내부 승인 간격의 기본 API 157개·격리 backend 19개·복원본 호환 8개는 [기존 검증](evidence/admission-cooldown/README.md)에 보존합니다. 실제 운영 V4의 API·웹/worker 전환은 [별도 근거](evidence/admission-v4-deployment/README.md)로 확인했으며 기존 7개 작업·파일 정보 14개·Kafka lag 0을 유지했습니다. 첫 runtime 초기화 전 관측 실패와 이전 container exit UNOBSERVED를 함께 남깁니다. 기존 timer의 11:40:08.792Z V4 기록은 [Pages 실행](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38728965840) 성공 후 12:01:58 UTC에 두 공개 JSON 전체가 서버 원본과 같음을 확인했습니다. [정기 게시 후속 근거](evidence/admission-v4-deployment/PUBLICATION.md)에 실제 hash를 보존합니다. 새 V4 fixture와 charged cooldown 검증은 후속이며, 단일 슬롯·승인 간격·구형 stage 우회 위험을 구분합니다.
+
+별도 [AI 개선 예제](../examples/java-window-analysis/README.md)는 시간대 오류 회귀와 같은 답을 내는 두 알고리즘의 비교입니다. Java 테스트 20개·runner 검사 3개, 실제 Windows Java 21 JMH 16조합·48 fork·240 interval을 [근거](evidence/ai-window-analysis/README.md)에 보존했고 [포트폴리오](https://devdooly.github.io/devdooly-platform-lab/#ai-window)에서 코드와 측정 기록을 선택해 볼 수 있습니다. 선택은 정적 기록 조회이며 Java를 실행하지 않습니다. 일부 큰 오차·미커밋 source manifest·사람 검토 대기 상태를 표시하고 운영 ETL 개선율로 일반화하지 않습니다. [CI 검증](evidence/ai-window-analysis/ci-validation.md)과 수동 JMH 측정도 구분합니다.
 
 ## 확인한 결과
 
 - 서버 지문 대조와 전용 키 SSH 인증, Ubuntu·포트·기존 서비스 읽기 전용 점검
 - 초기 설치 당시 Docker 컨테이너 23개와 방화벽 설정 보존, 새 Lab 전용 설치·저장 경로
 - K3s Node Ready와 클러스터 API·DNS·외부 HTTPS 통신 확인
-- 초기 API 테스트 15개·웹 테스트 13개; 현재 소스의 기본 API verify 140개·웹 34개 통과
+- 초기 API 테스트 15개·웹 테스트 13개; 현재 소스의 기본 API verify 157개·웹 41개 통과
 - Linux runner의 이미지 빌드·MariaDB·API 교체·데이터 보존 검증
 - GHCR 이미지 게시와 미니 PC에서 익명 다운로드
 - Jenkins Kubernetes agent의 테스트·패키징·필수 산출물과 같은 SHA의 commit status 전달 확인
@@ -78,7 +80,7 @@ Kafka·Garage의 전용 PVC 3개는 외부 사본에서 새 볼륨으로 복원�
 3. 전용 status credential의 만료·회전과 게시 산출물 보존 운영 정리
 4. Pages 자격증명의 실제 만료·회전과 장기간 반복 운영 검증
 5. 필요한 경우 기존 프록시·DDNS·TLS 조건을 확인한 뒤 공개 읽기 API와 외부망 검증
-6. [보존·자원 기준](runbooks/retention-resource-budget.md)을 유지하며 객체 GC·요청 빈도 제한·과부하 용량·진행 중 장애를 검증하고 AI 개선 사례를 추가
+6. [보존·자원 기준](runbooks/retention-resource-budget.md)을 유지하며 객체 GC·요청 빈도 제한·과부하 용량·진행 중 장애를 검증하고, 공개한 AI 합성 예제의 사람 검토와 데이터 플랫폼 설계를 이어가기
 
 CI/CD의 정상 배포·실패 차단·이전 digest 복구를 확인했으며, 3단계는 제한된 실제 수집·인증 실패·회복과 수동 공개 게시·브라우저를 확인했습니다. 게시 순서 회귀 교정 후 실제 재검증도 완료했고 API·웹 중단·같은 정상 B 복원도 확인했고 정기 운영 검증을 이어가며 새로운 inbound 경로는 열지 않았습니다. 기존 서비스가 있으므로 재부팅·방화벽 변경·프록시 교체를 일괄 실행하지 않습니다. Windows 외부 사본의 무결성, 격리 DB 복원과 호스트 재부팅을 검증했습니다. K3s·Jenkins archive 전체 복원은 아직 별도 작업입니다. PV의 Delete 정책 때문에 PVC·namespace를 수동 삭제하면 데이터가 지워질 수 있습니다.
 
