@@ -14,6 +14,6 @@ runtime:
     enabled: true
     image:
       repository: ghcr.io/devdooly/devdooly-platform-lab-api
-      digest: sha256:7672a1ee63eaba55a771a9e5fbe4db6a2ec3571e5c59fe13aa8384e9f43b68c6
-    sourceCommit: ed5815e7d72c6ea4f52456d902b7407c7a4a67b0
+      digest: sha256:b669d7e03712f436e20baedb2ed50cb8c41136164e6b2cc6bd4b4c5b7e7d43e6
+    sourceCommit: 6c5aff948770982dd44c8d44547131b3ccf6ddd9
     existingS3Secret: platform-lab-runtime-s3
