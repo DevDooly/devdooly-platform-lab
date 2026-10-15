@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "scope": "ISOLATED_SYNTHETIC_ICEBERG_JDBC_NATIVE7",
+  "status": "RECORDED_PASSED_WORKLOADS_STOPPED",
+  "runtimeProofCompletedAt": "2026-10-15T19:05:20.198054Z",
+  "applicationSourceCommit": "3e0d85be2f529026cb44812602e31c0e18797b45",
+  "gitopsRevision": "75eb569b016c38c9cc1b1f5819a611b830f2b83d",
+  "engines": {
+    "catalog": "JDBC_V1",
+    "postgresql": "17.11",
+    "tableFormat": "ICEBERG",
+    "trino": "483",
+    "trinoJava": "25.0.3"
+  },
+  "fixture": {
+    "bytes": 1100,
+    "firstRowsSha256": "411dc42e274b9c0e73e08b1725fd08fcc75cc3217c1f10d3102f79c8319b48ec",
+    "fullRowsSha256": "1c31bc6976083c78549cb0a6b1a48517d16e5bd683da474d75bea1756f1d8514",
+    "inputRows": 12,
+    "sha256": "39ba10d8c47dce790f3ccc9c9134fea593d6de31f1f3a7992ca61d9f554da3b5"
+  },
+  "snapshots": [
+    {
+      "addedRecordsSummary": null,
+      "distinctEventIds": 0,
+      "id": "2998009981322509692",
+      "operation": "append",
+      "parentId": null,
+      "phase": "INITIAL_EMPTY",
+      "sensorA": 0,
+      "sensorB": 0,
+      "totalRows": 0
+    },
+    {
+      "addedRecordsSummary": 6,
+      "distinctEventIds": 5,
+      "id": "12640090016022793",
+      "operation": "append",
+      "parentId": "2998009981322509692",
+      "phase": "DATA_APPEND",
+      "sensorA": 5,
+      "sensorB": 1,
+      "totalRows": 6
+    },
+    {
+      "addedRecordsSummary": 6,
+      "distinctEventIds": 10,
+      "id": "4204764411108512937",
+      "operation": "append",
+      "parentId": "12640090016022793",
+      "phase": "DATA_APPEND",
+      "sensorA": 8,
+      "sensorB": 4,
+      "totalRows": 12
+    }
+  ],
+  "checks": {
+    "nativeWriteRead": true,
+    "originalJobsPreserved": 8,
+    "originalObjectDeletes": 0,
+    "originalWholeObjectsVerified": 24,
+    "postgresSameProcess": true,
+    "queryResultsUnchanged": true,
+    "timeTravel": true,
+    "trinoNormalRestart": true,
+    "workloadsStopped": true
+  },
+  "retention": {
+    "ownPvcCount": 2,
+    "policy": "Retain",
+    "warehouseRetained": true
+  },
+  "window": {
+    "completedDdlAdopted": true,
+    "dataAppendSnapshots": 2,
+    "explicitFreshWindow": true,
+    "firstAttemptPassed": false,
+    "initialEmptySnapshots": 1,
+    "totalSnapshots": 3
+  },
+  "provenance": {
+    "adoptedCapabilityAttempt": 3,
+    "adoptedDdlAttempt": 6,
+    "adoptedDdlDiagnosticSha256": "6ec72ddcc67967d94c1b529becd8ccbc8a39af88f87ab6a1128f6e494af303e2",
+    "adoptedPrepareAttempt": 3,
+    "executorSourceSha256": {
+      "baseline7.py": "f92ac82d3117a3a14ec69b281a54110f9cc9a46b08fec345b3be100dfb5f7a03",
+      "network_control7.py": "d6a38f780af5d59839565317a61db68ae06f4c44574e46840f1ef10fb1ea5373",
+      "phase6_continuation_attempt7.py": "46338719990a0880c4cc204489e65b48c52c537a4d7147012e4bc937538000fc",
+      "resume_sql7.py": "3e46fa276290507071e00ec61aba3ce25e9dfa5627010304a7c3aa9d72dfa307"
+    },
+    "frozenSqlPlanSourceChanged": false,
+    "nativeAttempt": 7,
+    "priorSixthProofSha256": {
+      "baseline": "7c2d06ba4f650d6616b0e7fde1adcc46dd08f0f8d49e658143023703b3dee101",
+      "catalog": "766dbe92bc3166e2ad5e8027a52c27bbf1eb5e3fda2c82d2f72cd3599b8341b7",
+      "query": "1762f987881f835f7b758e1ec9b094231396198a50848b911a315626eeb8a0f4",
+      "stop": "f9babfab3af19609876e9905b4c491de362c18afc921bb29d570deaecc5715c8",
+      "supervisor": "a32a73a633c6d504c2f5ea3c9a1e6da12bc353db9f503d7940a0a7512d8e0056"
+    },
+    "priorSixthQueryPassed": false,
+    "priorSixthSupervisorPassed": false,
+    "privateExecutorCommit": null,
+    "snapshotInspectionSqlAdjusted": true
+  },
+  "proofSha256": {
+    "baseline": "0e9742fdf2fca7ced9fd2e3360a16a364434796fa326c69bcfe556a709275fd3",
+    "capability": "6e5f993174a0824c797b4f344a521a2c00de8337acf53204472de7b4853baac4",
+    "catalog": "c66d1485ee16fa8be9b230296026f725e5d4da075e59786074b50cf6a1389b20",
+    "final": "0f15e2e83db4861d4afe2967ed3d2351a3eb53fb340f29e8934628738193db7d",
+    "prepare": "0725e7363423c850b884ecb6afcf5ef4edc69fc0f3663f9c40ecec479096f6e1",
+    "query": "c579e623aa81dc927e0797c7914eb56d6d3e75fa236a5f78831db0f9f334cbc6",
+    "restart": "d9e77c951566d43a91c0b98e327d55d3bcd3a56a068afa5b70dc3dd43bc4057a",
+    "stop": "e7437cdd2166e4d07f3e2a6638cae3205a26aa09664c18ebd97c1f9d2df7574e",
+    "supervisor": "bd78686717598c1fe544e116e965c6ecec6300554788c763d1d1f5e960dd6d8b"
+  },
+  "warehouse": {
+    "wholeObjectsPerPostwritePass": 12,
+    "beforeAfterRestartBytesUnchanged": true,
+    "initialObjectsPreserved": 2
+  },
+  "originalPreservation": {
+    "jobs": 8,
+    "distinctObjects": 24,
+    "copiedWholeGetPassesVerified": 2,
+    "objectsPerPass": 24,
+    "originalObjectDeletes": 0,
+    "sameOriginalObjectSetAcrossPasses": true,
+    "businessSqlAndExistingResourceIdentitiesVerified": true
+  },
+  "projection": {
+    "attempt": 3,
+    "collectorSourceSha256": "75c4221602a75a18b50827fdd1a9cff3d44336cd2b9fa386424ac55540167ad3",
+    "actualCollectorReceiptSha256": "cc93e601a032dc70ae3e53f6f4c520eaa71139429ab04e4c12e24dfc42246c52",
+    "recordSha256": "7ee2f1be1c2018731d5af9b183ac26011f818700e42bed276cd19dd4b73dcc55",
+    "recordBytes": 4244,
+    "actualSavedQueryColumnOrderVerified": true,
+    "actualSavedQueryPreinsertStateVerified": true,
+    "freshNetworkRequestsPerformed": 0,
+    "nativeOperationsPerformed": 0,
+    "publicAssetPublishedByCollector": false
+  },
+  "preservedCollectorFailures": [
+    {
+      "attempt": 1,
+      "sourceSha256": "5e49b3088dec941bbfc569995320aac7254a91ab7582017bd8e520eca9b2a779",
+      "status": "FAILED_BEFORE_DTO",
+      "reason": "ORDER_SENSITIVE_ROW_HASH_FROM_SORTED_RECEIPT_KEYS"
+    },
+    {
+      "attempt": 2,
+      "sourceSha256": "3a5d4980034f2af682a47000412b62ece3bff68c1e053e8733a1cef1930d6245",
+      "status": "FAILED_BEFORE_DTO",
+      "reason": "NONEXISTENT_QUERY_INITIAL_STATE_FIELD"
+    }
+  ],
+  "sourceValidation": {
+    "collectorOfflineTests": 17,
+    "uiParserTests": 8,
+    "uiStrictTypeScriptPassed": true,
+    "actualDtoAcceptedBySchema2": true,
+    "integratedWebOrBrowserVerificationIncluded": false
+  },
+  "notVerified": [
+    "SPARK_SILVER",
+    "COMPACTION",
+    "AIRFLOW",
+    "POSTGRESQL_RESTART",
+    "HOST_RESTART",
+    "HA",
+    "THROUGHPUT_SLA",
+    "CURRENT_AVAILABILITY",
+    "ENTIRE_PHASE6_ROADMAP"
+  ]
+}

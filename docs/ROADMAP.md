@@ -88,7 +88,7 @@
 
 ## 4 Kafka와 객체 저장소
 
-2026-10-15 미니 PC K3s에 Kafka·Garage·상시 worker를 배포했고 이후 API·worker를 V2 지원 소스로 함께 교체했습니다. 실제 고정 1,000건 작업은 성공 500·실패 300·중복 200·대기 0으로 완료됐습니다. 기존 18개와 신규 3개 파일의 전체 GET, 슬롯 해제·Kafka offset 7/lag 0, 총 7개 작업·파일 정보 14개의 공개 JSON 일치를 확인했습니다. [최신 실제 배포·게시 근거](evidence/input-v2-deployment/README.md)를 따릅니다. 아래 과거 격리 검증은 당시 조건의 별도 근거입니다.
+2026-10-15 미니 PC K3s에 Kafka·Garage·상시 worker를 배포했고 이후 API·worker를 V2 지원 소스로 함께 교체했습니다. 실제 고정 1,000건 작업은 성공 500·실패 300·중복 200·대기 0으로 완료됐습니다. 기존 18개와 신규 3개 파일의 전체 GET, 슬롯 해제·Kafka offset 7/lag 0, 총 7개 작업·파일 정보 14개의 공개 JSON 일치를 확인했습니다. [이전 V2 배포·게시 근거](evidence/input-v2-deployment/README.md)는 당시 조건이며, 마지막 readiness 검증의 8작업·16파일·24객체는 [후속 근거](evidence/worker-readiness/CORRECTED_IMAGE.md)에서 확인합니다. 아래 과거 격리 검증은 당시 조건의 별도 근거입니다.
 
 - [x] V2 작업·outbox·단일 슬롯, raw 원본 hash·DB 멱등 경계 구현
 - [x] 실제 MariaDB의 V1 업그레이드·빈 DB 초기화·반복 시작, 동시 제출·rollback·재전달·Asia/Seoul 시각 일치 검증
@@ -125,10 +125,10 @@
 - [x] 별도 Linux worker의 1 CPU·768MiB 제한에서 1,000개 작업 3회·전체 파일 GET·자원/지연 관측: [근거](evidence/input-concurrency-load/README.md)
 - [x] V2 지원 API·worker 실제 배포, 1,000건 처리·기존 18개/신규 3개 객체와 7개 작업 공개 게시: [근거](evidence/input-v2-deployment/README.md)
 - [x] DB에 보관하는 기본 30초의 내부 새 작업 승인 간격과 기본 157개·실제 backend 19개·외부 SQL 복원 후 이전 binary 호환 8개를 확인했습니다: [근거](evidence/admission-cooldown/README.md)
-- [x] API V4 migration→worker 운영 전환과 동일 source·immutable 이미지·기존 7작업/14파일 정보를 보존했습니다: [API·웹 32/32·worker 35/35](evidence/admission-v4-deployment/README.md). 구형 stage 혼용은 금지하며 신규 V4 stage는 아직 수행하지 않았습니다.
+- [x] API V4 migration→worker 운영 전환과 동일 source·immutable 이미지·기존 7작업/14파일 정보를 보존했습니다: [API·웹 32/32·worker 35/35](evidence/admission-v4-deployment/README.md). 구형 stage 혼용은 금지합니다. 후속 고정 V1 fixture의 접수·charged30·idle 교체·같은 ID 읽기 전용 재시도는 [최신 근거](evidence/worker-readiness/CORRECTED_IMAGE.md)로 구분합니다.
 - [x] 기존 timer의 V4 source 정기 수집·Pages 게시와 job/platform 전체 JSON 원본 일치: [후속 근거](evidence/admission-v4-deployment/PUBLICATION.md)
 - [x] worker의 같은 PID1 진행 기록과 stdlib exec readiness 구현·Windows 기본 검사 176개(실행 169·POSIX skip 7): [적용 조건](runbooks/worker-readiness.md)
-- [ ] worker readiness의 Linux 파일 검사·자원 관측·실제 GitOps Ready 전환 확인(현재 default false·미배포)
+- [x] corrected Linux API 180개 + 독립 예제 20개, 격리 readiness 10종·OCI 출처·실제 GitOps Ready 전환과 idle worker 교체 확인: [근거](evidence/worker-readiness/CORRECTED_IMAGE.md). 이전 worker exit는 UNOBSERVED이며 처리 중 호스트 장애·장기간 비용은 후속입니다.
 - [ ] 공개 진입 요청의 인증·HTTP QPS 제한 구현·검증(현재 공개 실행 없음)
 - [x] 전체 운영 DB·S3 참조21개를 모두 보호하는 dry-run과 새 Garage의 합성 객체2개 자연 GC·공유 블록 보존을 검증했습니다: [근거](evidence/object-reference-gc/README.md)
 - [ ] 운영 객체의 tombstone·삭제 intent·재전달/resume·백업 의존성을 조율하는 삭제 프로토콜과 metadata GC를 검증합니다.
@@ -158,12 +158,16 @@
 
 ## 6 데이터 플랫폼 확장
 
-- [ ] Iceberg의 영속 catalog와 backing store 결정
+- [x] 별도 합성 실증의 PostgreSQL JDBC V1 영속 catalog·Garage backing store 선정과 실제 연결: [native7 근거](evidence/iceberg-jdbc/README.md)
+- [x] Trino에서 원본 0→6→12행·초기 빈 snapshot 1개와 데이터 append 2개·세 시점 조회 검증: [실제 기록](evidence/iceberg-jdbc/summary.json)
 - [ ] Spark 적재·compaction과 Trino 조회 연결
-- [ ] 재시작 후 메타데이터와 데이터 조회 검증
+- [x] Trino만 정상 재시작한 뒤 같은 행·metadata pointer·warehouse 전체 bytes 조회 검증. PostgreSQL은 같은 프로세스를 유지했으며 재시작은 검증하지 않음: [범위](evidence/iceberg-jdbc/README.md)
+- [x] 시험 PostgreSQL·Trino workload 0·Retain PVC 2개·warehouse 보관과 원래 8개 작업·객체 24개 보존: [종료·보존](evidence/iceberg-jdbc/README.md)
 - [ ] 필요한 경우 Airflow DAG 추가
-- [ ] CI 빌드와 겹치지 않는 실행 예산·종료·복구 절차 기록
+- [x] 이번 실증의 명시적 새 20분 예산·heavy 단계 전 CI 유휴 시점 관측·단발 detached 실행·소유 workload 종료와 실패 기록 보존 절차 작성: [runbook](runbooks/iceberg-jdbc-native.md)
 
-완료 조건: 동일 warehouse에서 쓰기·조회·재시작·compaction이 검증되고 실행 시 자원 사용량이 남습니다.
+완료 조건: 동일 warehouse에서 쓰기·조회·재시작·compaction이 검증되고 실행 시 자원 사용량이 남습니다. 현재는 **Trino·JDBC catalog의 작은 합성 실증만 부분 완료**입니다. 2026-10-15 19:05:20 UTC의 일곱 번째 실행에서 시점 조회·Trino 정상 재시작·종료·원본 보존을 확인했습니다. 이전 실패와 완료된 DDL의 채택 관계는 [근거](evidence/iceberg-jdbc/README.md)에 보존했습니다.
+
+Spark/Silver 적재·compaction과 필요한 경우의 Airflow는 남아 있으며 전체 6단계를 완료로 표시하지 않습니다. PostgreSQL 재시작·호스트 장애·HA·처리량 SLA·현재 가용성은 이번 검증 범위가 아닙니다. CI 유휴 관측은 각 확인 시점의 근거이며, 전체 실행 동안의 비활성을 보장하는 잠금이 아닙니다.
 
 단계는 의존 순서이며 기간 약속이 아닙니다. 각 단계 완료 후 다음 확장의 필요성과 자원을 다시 판단합니다.
