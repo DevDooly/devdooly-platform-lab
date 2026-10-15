@@ -6,6 +6,8 @@ Java API·포트폴리오와 K3s·Jenkins·Argo CD를 Ubuntu 미니 PC에서 운
 
 실제 V2 배포 전 후보판의 최대 1,000개 입력·단일 슬롯 동시 2/8개 접수·초과 입력 거부는 격리 통합 검사 5개로 확인했습니다. 별도 Linux Docker worker에서도 1 CPU·768MiB 제한으로 1,000개 작업 3회와 원본·export 파일 9개의 전체 GET을 검증했습니다. [입력·동시 접수 검증](evidence/input-concurrency-load/README.md)은 현재 운영판과 구분합니다. 그 시험 당시 운영 source `ed5815e7`·기존 6개 작업과 서비스는 보존했으며, 운영 처리 용량이나 SLA를 검증한 결과는 아닙니다.
 
+새 내부 승인 간격 후보는 기본 API 157개·실제 backend 19개·복원본 호환 8개를 통과했습니다. [승인 간격 근거](evidence/admission-cooldown/README.md)를 연결하며 운영 V4 적용은 별도 후속입니다. 단일 슬롯과 승인 간격, 구형 API/idle worker 호환과 구형 stage의 policy 우회 위험을 구분합니다.
+
 ## 확인한 결과
 
 - 서버 지문 대조와 전용 키 SSH 인증, Ubuntu·포트·기존 서비스 읽기 전용 점검

@@ -124,7 +124,9 @@
 - [x] 격리 환경의 최대 1,000개 입력·단일 슬롯 동시 2/8개 접수·초과 입력 거부: [근거](evidence/input-concurrency-load/README.md)
 - [x] 별도 Linux worker의 1 CPU·768MiB 제한에서 1,000개 작업 3회·전체 파일 GET·자원/지연 관측: [근거](evidence/input-concurrency-load/README.md)
 - [x] V2 지원 API·worker 실제 배포, 1,000건 처리·기존 18개/신규 3개 객체와 7개 작업 공개 게시: [근거](evidence/input-v2-deployment/README.md)
-- [ ] 요청 빈도 제한 구현·검증
+- [x] DB에 보관하는 기본 30초의 내부 새 작업 승인 간격과 기본 157개·실제 backend 19개·외부 SQL 복원 후 이전 binary 호환 8개를 확인했습니다: [근거](evidence/admission-cooldown/README.md)
+- [ ] 승인 간격 후보의 새 API V4 migration→worker 운영 전환과 동일 source·immutable 이미지·기존 자료 보존을 확인합니다. 구형 stage 혼용은 금지합니다.
+- [ ] 공개 진입 요청의 인증·HTTP QPS 제한 구현·검증(현재 공개 실행 없음)
 - [ ] 객체 tombstone/GC와 참조 확인 기반 삭제 경계 검증
 - [ ] 과부하·운영 처리 용량과 중단/회복 한계 검증
 - [ ] 제한을 검증한 뒤 공개 샘플 실행 기능 추가

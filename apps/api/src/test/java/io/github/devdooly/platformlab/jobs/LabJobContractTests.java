@@ -34,6 +34,7 @@ abstract class LabJobContractTests {
 
     @BeforeEach void preserveSeedAndRemoveOnlyOwnPreviousFixtures() {
         cleanFixtures();
+        AdmissionTestFixtures.makeEligible(jdbc);
         demos.ensureSample();
         seedRun = jdbc.queryForList("SELECT * FROM demo_run WHERE id = ?", SyntheticScenario.RUN_ID);
         seedOutcomes = jdbc.queryForList("SELECT * FROM demo_outcome WHERE run_id = ? ORDER BY input_sequence", SyntheticScenario.RUN_ID);
@@ -197,6 +198,7 @@ abstract class LabJobContractTests {
         assertThat(exported.exportStatus()).isEqualTo(LabJobService.ExportStatus.EXPORTED);
         assertThat(exported.exportCompletedAt()).isNotNull();
         assertThat(jobs.completeExport(RUN, queued.sourceSha256())).isEqualTo(exported);
+        AdmissionTestFixtures.makeEligible(jdbc); // This test concerns export replay and the next slot.
         assertThat(jobs.prepareSource(OTHER, SyntheticScenario.NAME, CanonicalSource.fixtureBytes()).status()).isEqualTo(LabJobService.Status.STAGING);
         assertThat(jobs.prepareSource(RUN, SyntheticScenario.NAME, CanonicalSource.fixtureBytes())).isEqualTo(exported);
         assertExpectedResult(RUN);
@@ -212,6 +214,7 @@ abstract class LabJobContractTests {
         assertThat(jdbc.queryForObject("SELECT status FROM lab_outbox WHERE job_run_id = ?", String.class, RUN)).isEqualTo("CANCELLED");
         assertThatThrownBy(() -> jobs.process(RUN, queued.sourceSha256())).isInstanceOf(LabJobService.JobStateException.class);
         assertThat(jobs.terminate(RUN, queued.sourceSha256())).isEqualTo(stopped);
+        AdmissionTestFixtures.makeEligible(jdbc); // Explicit independent next-job fixture.
         jobs.prepareSource(OTHER, SyntheticScenario.NAME, CanonicalSource.fixtureBytes());
     }
 
@@ -226,6 +229,7 @@ abstract class LabJobContractTests {
         assertThatThrownBy(() -> jobs.completeExport(RUN, queued.sourceSha256())).isInstanceOf(LabJobService.JobStateException.class);
         assertThat(jobs.process(RUN, queued.sourceSha256())).isEqualTo(stopped);
         assertExpectedResult(RUN);
+        AdmissionTestFixtures.makeEligible(jdbc); // Explicit independent next-job fixture.
         jobs.prepareSource(OTHER, SyntheticScenario.NAME, CanonicalSource.fixtureBytes());
     }
 

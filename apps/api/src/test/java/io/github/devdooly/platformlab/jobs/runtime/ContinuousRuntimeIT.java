@@ -178,6 +178,7 @@ public class ContinuousRuntimeIT {
     @BeforeEach void createOwnedTopicAndResetOnlyDisposableJournal() throws Exception {
         assertEmptyJobs(); assertThat(probes).isEmpty(); assertThat(ownedRuns).isEmpty();
         resetDisposableJournal();
+        io.github.devdooly.platformlab.jobs.AdmissionTestFixtures.makeEligible(jdbc);
         String id = UUID.randomUUID().toString();
         topic = "platform-lab-runtime-test-topic-" + id; group = "platform-lab-runtime-test-group-" + id;
         requireOwnedName(topic); requireOwnedName(group);
@@ -280,6 +281,7 @@ public class ContinuousRuntimeIT {
     }
 
     private String stageNewRun() {
+        io.github.devdooly.platformlab.jobs.AdmissionTestFixtures.makeEligible(jdbc); // This test verifies runtime behavior, not elapsed admission cooldown.
         String run = "runtime-it-" + UUID.randomUUID(); requireOwnedRun(run); ownedRuns.add(run);
         var admitted = new SourceStagingService(jobs, raw).stage(run, SyntheticScenario.NAME, source);
         assertThat(admitted.status()).isEqualTo(LabJobService.Status.QUEUED); return run;

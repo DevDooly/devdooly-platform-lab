@@ -170,6 +170,7 @@ class KafkaRedeliveryIT {
     @BeforeEach void createOnlyUniqueTestTopicAndRun() throws Exception {
         runId = null; topic = null; group = null; rawKey = null;
         assertEmptyJobs();
+        io.github.devdooly.platformlab.jobs.AdmissionTestFixtures.makeEligible(jdbc);
         assertThat(probes).isEmpty();
         String unique = UUID.randomUUID().toString();
         runId = "kafka-it-" + unique;

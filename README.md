@@ -48,6 +48,8 @@ Kafka·Garage 전용 PVC 3개를 정상 정지 구간에서 보관하고 AES-256
 
 별도 Linux worker의 1,000건 작업은 결과 파일 저장·GET 후 실패 파일 PUT을 Garage에 전달하기 직전에 SIGKILL 1회로 중단했습니다. 동일 JAR의 새 worker가 재계산 없이 export를 완료했고 첫 결과 파일·기존 4개 작업/12개 객체를 보존했습니다. 격리 검사 12/12·후속 운영 보존 18/18을 통과했으며 [정확한 중단 경계·준비 실패·회복 근거](docs/evidence/maximum-export-crash/README.md)를 제공합니다. 운영 worker 강제 종료나 진행 중 호스트 재부팅 결과는 아닙니다.
 
+새 작업 승인 간격을 DB에 보관하는 V4 후보를 구현했습니다. 기본 API 157개·실제 MariaDB/Garage 19개와 외부 암호화 SQL 복원본의 이전 binary 호환 검사 8개를 통과했습니다. [검증 근거](docs/evidence/admission-cooldown/README.md)에 실제 JAR·CI·우회 위험을 구분합니다. 운영은 아직 source `6c5aff94`·schema V3이며 새 immutable 이미지 확인 후 API→worker 순서로 전환합니다.
+
 ## 로컬 실행
 
 Java 21과 Node 24.19.0을 사용합니다. API와 화면을 별도 터미널에서 실행합니다.

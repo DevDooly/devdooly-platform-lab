@@ -137,6 +137,7 @@ public class MaximumInputConcurrencyIT {
         org.junit.jupiter.api.Assumptions.assumeFalse(failurePreserved, "Earlier isolated failure is preserved for operator inspection; no blind retry");
         casePassed = false;
         assertEmpty(); assertThat(ownedRuns).isEmpty(); assertThat(children).isEmpty();
+        io.github.devdooly.platformlab.jobs.AdmissionTestFixtures.makeEligible(jdbc);
         try (var lease = MariaDbRuntimeLease.acquire(dataSource)) { lease.verifyHeld(); }
         jdbc.update("UPDATE lab_runtime SET status='NOT_STARTED',stage='IDLE',failure_code=NULL,source_commit='unknown',started_at=NULL,heartbeat_at=NULL,stopped_at=NULL WHERE id=1");
         String id = UUID.randomUUID().toString();
@@ -304,6 +305,7 @@ public class MaximumInputConcurrencyIT {
     }
     private String newRun() { String run = "maximum-it-" + UUID.randomUUID(); ownedRuns.add(run); return run; }
     private void stage(String run, String scenario, byte[] bytes) {
+        io.github.devdooly.platformlab.jobs.AdmissionTestFixtures.makeEligible(jdbc); // Independent maximum-input fixtures; cooldown has a separate real DB IT.
         assertThat(new SourceStagingService(jobs, raw).stage(run, scenario, bytes).status()).isEqualTo(LabJobService.Status.QUEUED);
     }
     private void awaitExported(String run) throws Exception {
