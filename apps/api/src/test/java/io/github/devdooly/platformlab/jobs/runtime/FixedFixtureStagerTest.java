@@ -60,6 +60,17 @@ class FixedFixtureStagerTest {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM demo_run WHERE id=?", Long.class, FIRST)).isZero();
     }
 
+    @Test void explicitMaximumScenarioStagesThousandFixedInputsWithoutChangingRuntimeJournal() {
+        var journal = states.read(); var calls = new AtomicInteger();
+        var stager = stager((job, bytes) -> {
+            assertThat(job.scenarioVersion()).isEqualTo("sensor-validation-v2");
+            assertThat(CanonicalSource.validate(job.scenarioVersion(), bytes).events()).hasSize(1000); calls.incrementAndGet();
+        });
+        var queued = stager.stage(FIRST, "sensor-validation-v2");
+        assertThat(queued.status()).isEqualTo(LabJobService.Status.QUEUED);
+        assertThat(states.read()).isEqualTo(journal); assertThat(calls.get()).isEqualTo(1);
+    }
+
     @Test void secondAdmissionIsRejectedBeforeStorageAndRepeatOfFirstDoesNotChangeAdmissionTimesOrJournal() {
         var writes = new AtomicInteger(); var stager = stager((job, bytes) -> writes.incrementAndGet());
         var first = stager.stage(FIRST); var journal = states.read();

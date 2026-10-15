@@ -56,7 +56,7 @@
 
 완료 조건: 소스 commit부터 image digest, GitOps commit, 실행 버전까지 추적되고 실패·복구 결과가 남습니다.
 
-정상 A → B 배포, 실제 main의 실패 차단, GitOps A 복구를 확인했습니다. 2단계의 세 운영 시나리오를 완료했고 3단계 관측 공개를 진행합니다. token의 실제 만료·회전, 동시 요청 실험과 K3s·Jenkins archive 전체 복원은 별도 운영 후속으로 남깁니다.
+정상 A → B 배포, 실제 main의 실패 차단, GitOps A 복구를 확인했습니다. 2단계의 세 운영 시나리오를 완료했고 3단계 관측 공개를 진행합니다. token의 실제 만료·회전, 공개 요청 빈도 제한과 K3s·Jenkins archive 전체 복원은 별도 운영 후속으로 남깁니다.
 
 ## 3 외부 공개
 
@@ -120,15 +120,20 @@
 - [x] 실제 MariaDB·Garage 결합의 정상·손상·DB statement 오류 rollback과 원본 보존·재시도, 같은 DB 반복 및 운영 보존: [근거](evidence/mariadb-s3/README.md)
 - [x] 검증 백업·trial·미완료/키를 보호하는 삭제 없는 계획기와 새 합성 PVC만의 실제 정리 경계 검증: [기준](runbooks/retention-resource-budget.md)
 - [x] 기존 cgroup 설정 일치·고정 입력 12개 3회의 CPU/RSS/PSS·디스크 snapshot·지연 관측: [근거](evidence/retention-resource-budget/README.md)
-- [ ] 객체 tombstone/GC와 최대 입력·과부하의 자원 한도 검증
-- [ ] 최대 1,000개 이벤트·전체 동시 작업 1개·요청 빈도 제한 검증
+- [x] 격리 환경의 최대 1,000개 입력·단일 슬롯 동시 2/8개 접수·초과 입력 거부: [근거](evidence/input-concurrency-load/README.md)
+- [x] 별도 Linux worker의 1 CPU·768MiB 제한에서 1,000개 작업 3회·전체 파일 GET·자원/지연 관측: [근거](evidence/input-concurrency-load/README.md)
+- [ ] 요청 빈도 제한 구현·검증
+- [ ] 객체 tombstone/GC와 참조 확인 기반 삭제 경계 검증
+- [ ] 과부하·운영 처리 용량과 중단/회복 한계 검증
 - [ ] 제한을 검증한 뒤 공개 샘플 실행 기능 추가
 
 완료 조건: 입력 건수가 성공·실패·중복·대기로 설명되고, 데이터 유실이나 무제한 실행 없이 결과를 확인할 수 있습니다.
 
-새 job의 원래 timer 자동 수집·게시 2회와 완료 간격 1개(1809.371239초)를 확인했습니다. [후속 검증 근거](evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다. 공개 페이지는 약 30분 주기로 수집하는 마지막 기록이며 heartbeat 5분 경고와 구분합니다. 현재 단일 노드·partition 1/RF1, 고정 12개 fixture와 내부 stage 명령만 검증했고 공개 POST는 제공하지 않습니다. 전용 PVC의 격리 복원은 [별도 근거](evidence/runtime-pvc-restore/README.md)로 확인했습니다. 운영 PVC 덮어쓰기·진행 중 crash·최대 1,000개·장기간 운영은 검증하지 않았습니다.
+새 job의 원래 timer 자동 수집·게시 2회와 완료 간격 1개(1809.371239초)를 확인했습니다. [후속 검증 근거](evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다. 공개 페이지는 약 30분 주기로 수집하는 마지막 기록이며 heartbeat 5분 경고와 구분합니다. 현재 운영판은 단일 노드·partition 1/RF1의 고정 12개 fixture와 내부 stage 명령을 사용하며 공개 POST는 제공하지 않습니다. 새 1,000개 시나리오와 동시 접수 검증은 아래의 별도 격리 후보판 결과입니다. 전용 PVC의 격리 복원은 [별도 근거](evidence/runtime-pvc-restore/README.md)로 확인했습니다. 운영 PVC 덮어쓰기·진행 중 crash·과부하 용량·장기간 운영은 검증하지 않았습니다.
 
-보존 정책은 dry-run만 제공하며 실제 백업·기존 trial은 삭제하지 않았습니다. 별도 60초 validation TTL의 새 합성 PVC만 정리했고 기존 11PVC/PV를 보존했습니다. 약 63초의 작은 작업 관측에서는 기존 6개 container/image/source와 limit을 유지했고 총 6개 EXPORTED 작업·파일 12개 전체 Get·offset 6/lag 0을 확인했습니다. 최종 25개 검사에서 기존 11PVC/PV·6개 원본 Pod·Docker 38개/실행 26개·기존 업무 SQL/객체와 timer 설정·주기를 보존했습니다. 이는 운영 처리 용량·최대 입력·SLA 검증이 아닙니다. [관측 방법과 한계](runbooks/retention-resource-budget.md)를 따릅니다.
+보존 정책은 dry-run만 제공하며 실제 백업·기존 trial은 삭제하지 않았습니다. 별도 60초 validation TTL의 새 합성 PVC만 정리했고 기존 11PVC/PV를 보존했습니다. 약 63초의 작은 작업 관측에서는 기존 6개 container/image/source와 limit을 유지했고 총 6개 EXPORTED 작업·파일 12개 전체 Get·offset 6/lag 0을 확인했습니다. 최종 25개 검사에서 기존 11PVC/PV·6개 원본 Pod·Docker 38개/실행 26개·기존 업무 SQL/객체와 timer 설정·주기를 보존했습니다. 이 작은 작업 관측은 운영 처리 용량·SLA 검증이 아닙니다. [관측 방법과 한계](runbooks/retention-resource-budget.md)를 따릅니다.
+
+이후 격리 MariaDB·Kafka·Garage의 통합 검사 5개에서 최대 1,000개/1MiB 입력과 기존 V1 호환성, 동시 2·8개 접수 중 한 작업만 허용하는 단일 슬롯, 초과 입력의 부작용 없는 거부를 확인했습니다. 별도 Linux Docker worker의 고정 1,000개 작업 3회는 각각 성공 500·실패 300·중복 200·대기 0으로 끝났고 파일 9개 전체 GET·Kafka offset 3/end 3/lag 0을 확인했습니다. 약 74.39초·72개 샘플의 자원·지연 수치는 [격리 검증 근거](evidence/input-concurrency-load/README.md)에 기록합니다. 최종 21개 검사에서 운영 source와 기존 6개 작업·11PVC/PV·원본 Pod 6개·Docker 38개/실행 26개를 보존했습니다. 요청 빈도 제한·공개 실행·운영 용량 검증은 남아 있습니다.
 
 ## 5 LLM 개선 사례와 복구
 

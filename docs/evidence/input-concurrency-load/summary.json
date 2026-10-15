@@ -1,0 +1,328 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-15T08:29:48.470378+00:00",
+  "scope": "ISOLATED_MAXIMUM_INPUT_CONCURRENCY_AND_FIXED_LINUX_LOAD",
+  "synthetic": true,
+  "status": "VERIFIED_ISOLATED_NOT_DEPLOYED",
+  "passed": true,
+  "sourceCommit": "5a1495be4973d43b34dc5c169dbf66bec7459968",
+  "candidateJarSha256": "ac13f7045eba661d2e90c15b7df661c6fde7039311d0a067010981914664ddc9",
+  "candidateDeployedToOriginalRuntime": false,
+  "branchCi": {
+    "runId": 38704327628,
+    "conclusion": "success",
+    "sourceCommit": "5a1495be4973d43b34dc5c169dbf66bec7459968"
+  },
+  "reviewPullRequest": 27,
+  "contract": {
+    "defaultScenario": "sensor-validation-v1",
+    "defaultInputs": 12,
+    "maximumScenario": "sensor-validation-v2",
+    "maximumFixedInputs": 1000,
+    "maximumSourceBytes": 1048576,
+    "maximumExportDocumentBytes": 4194304,
+    "maximumDispatchEnvelopeBytes": 1024,
+    "activeJobSlots": 1,
+    "slotHeldUntilBothExportsVerified": true,
+    "arbitraryPayloadOrCountAccepted": false,
+    "publicExecutionEnabled": false,
+    "rateLimiterImplemented": false,
+    "legacyV1FingerprintsPreserved": true,
+    "previousCodeSupportsV2": false,
+    "apiAndWorkerUpgradeRequiredBeforeV2Admission": true
+  },
+  "defaultValidation": {
+    "tests": 140,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "functionalIntegration": {
+    "scope": "ISOLATED_FUNCTIONAL_BOUNDARIES",
+    "driverOperatingSystem": "Windows",
+    "javaVersion": 21,
+    "jvmTimezone": "Asia/Seoul",
+    "backendOperatingSystem": "Linux",
+    "databaseVersion": "11.8.9",
+    "kafkaVersion": "4.3.1",
+    "garageVersion": "2.4.1",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "sameDaemonMaximumBytesAndLegacy": {
+      "legacyV1Runs": 1,
+      "maximumV2Runs": 3,
+      "bytesPerV2Source": 1048576,
+      "inputsPerV2Run": 1000,
+      "outcomeRows": 3012,
+      "verifiedExportFiles": 8,
+      "committedOffset": 4,
+      "logEnd": 4,
+      "lag": 0,
+      "slotFree": true,
+      "legacySqlAndTimestampsPreserved": true,
+      "rawAndExportWholeGetBytesVerified": true,
+      "actualObservationHttpVerified": true,
+      "pointerReadPerformedWithoutGroupOrAutoCommit": true
+    },
+    "distinctAdmissionCohorts": [
+      {
+        "callers": 2,
+        "accepted": 1,
+        "slotConflicts": 1,
+        "losingJobRows": 0,
+        "losingOutboxRows": 0,
+        "losingRawObjects": 0,
+        "completedRuns": 1,
+        "verifiedExportFiles": 2
+      },
+      {
+        "callers": 8,
+        "accepted": 1,
+        "slotConflicts": 7,
+        "losingJobRows": 0,
+        "losingOutboxRows": 0,
+        "losingRawObjects": 0,
+        "completedRuns": 1,
+        "verifiedExportFiles": 2
+      }
+    ],
+    "admissionTestConditions": {
+      "barrierBeforeDatabaseConnectionAcquisition": true,
+      "winnerHeldAfterAdmissionCommitBeforeExternalStore": true,
+      "workerStartedAfterCompetingAdmissions": true,
+      "existingConnectionPoolSize": 5,
+      "connectionPoolIncreased": false
+    },
+    "invalidInputs": {
+      "countOverflow": 1001,
+      "byteOverflow": 1048577,
+      "declaredV1WithV2BytesRejected": true,
+      "rejectedCalls": 3,
+      "jobRows": 0,
+      "outboxRows": 0,
+      "outcomeRows": 0,
+      "rawOrExportObjectsCreated": 0,
+      "logEnd": 0,
+      "slotFree": true
+    },
+    "replayAndConflict": {
+      "existingRowsAndTimestampsPreserved": true,
+      "differentSourceRejectedBeforeExternalIo": true,
+      "observedCorruptObjectNotOverwrittenByApplication": true,
+      "corruptOwnedFixtureExplicitlyRepairedForTest": true,
+      "previousCompletedJobCannotReleaseNextJobSlot": true,
+      "completedRuns": 2,
+      "verifiedExportFiles": 4,
+      "committedOffset": 2,
+      "logEnd": 2,
+      "lag": 0,
+      "conditionalCreateOrWormGuaranteeProven": false
+    },
+    "linuxProductionResourcePerformanceProvenByThisPhase": false
+  },
+  "isolatedLinuxFixedLoad": {
+    "scope": "ISOLATED_LINUX_DOCKER_FIXED_V2_LOAD",
+    "completedAt": "2026-10-15T08:29:29.040531+00:00",
+    "passed": true,
+    "checksPassed": 10,
+    "checksTotal": 10,
+    "connectionMode": "PINNED_OWN_DOCKER_IPS_VIA_EXPLICIT_HOSTS_MAPPING",
+    "kubernetesDeploymentValidated": false,
+    "attemptedStageCount": 3,
+    "verifiedCompletedJobCount": 3,
+    "fixedInputsPerJob": 1000,
+    "countsPerJob": {
+      "input": 1000,
+      "success": 500,
+      "failure": 300,
+      "duplicate": 200,
+      "pending": 0
+    },
+    "sourceBytesPerJob": 99600,
+    "exactOneMiBSourceUsedInThisPhase": false,
+    "outcomeRows": 3000,
+    "outboxRows": 6,
+    "pendingOutboxRows": 0,
+    "slotFree": true,
+    "kafka": {
+      "partition": 0,
+      "committedOffset": 3,
+      "logEnd": 3,
+      "lag": 0
+    },
+    "freshObjectVerification": {
+      "actualFreshGetCount": 9,
+      "wholeRawObjectsVerified": 3,
+      "wholeExportObjectsVerified": 6,
+      "rawBytesPerObject": 99600,
+      "resultBytesPerObject": 157909,
+      "failureBytesPerObject": 88185,
+      "totalLogicalObjectBytes": 1037082,
+      "independentOrderedOutcomesPerJob": 1000,
+      "losslessFailureInputsAndRawLinesPerJob": 300,
+      "hashSizeAndWholeBytesVerified": true
+    },
+    "workerLimits": {
+      "cpuCores": 1,
+      "memoryBytes": 805306368,
+      "memorySwapLimitEqualsMemory": true,
+      "sameWorkerIdentityAndLimitsDuringSamples": true,
+      "originalResourceLimitsModified": false
+    },
+    "sampling": {
+      "intervalTargetSeconds": 1,
+      "measuredContainers": 1,
+      "ephemeralStageContainerMetricsMeasured": false,
+      "sampledMaxMayMissSubsecondPeaks": true,
+      "lifetimeMemoryPeakWasReset": false,
+      "idleBefore": {
+        "sampleCount": 15,
+        "observedDurationSeconds": 14.631505296,
+        "meanCpuCores": 0.019943470893577425,
+        "maxObservedIntervalCpuCores": 0.07822630420279904,
+        "windowMaxMemoryCurrentBytes": 249430016
+      },
+      "workload": {
+        "sampleCount": 43,
+        "observedDurationSeconds": 44.055114877,
+        "meanCpuCores": 0.10110639848371947,
+        "maxObservedIntervalCpuCores": 0.9502958514398921,
+        "windowMaxMemoryCurrentBytes": 274259968,
+        "cpuDelta": {
+          "usage_usec": 4454254,
+          "nr_periods": 295,
+          "nr_throttled": 38,
+          "throttled_usec": 2902705
+        }
+      },
+      "idleAfter": {
+        "sampleCount": 14,
+        "observedDurationSeconds": 13.598102362,
+        "meanCpuCores": 0.00785962608272944,
+        "maxObservedIntervalCpuCores": 0.011361551433150735,
+        "windowMaxMemoryCurrentBytes": 274460672
+      },
+      "wholeWindow": {
+        "sampleCount": 72,
+        "observedDurationSeconds": 74.38567705,
+        "meanCpuCores": 0.06553971400600433,
+        "maxObservedIntervalCpuCores": 0.9502958514398921,
+        "windowMaxMemoryCurrentBytes": 274460672,
+        "windowMaxJavaRssBytes": 279965696,
+        "windowMaxJavaPssBytes": 279961600,
+        "lifetimeMemoryPeakAtWindowStartBytes": 250155008,
+        "lifetimeMemoryPeakAtWindowEndBytes": 275161088,
+        "oomDelta": 0,
+        "oomKillDelta": 0,
+        "hostMinimumMemAvailableBytes": 17481723904,
+        "hostMinimumDiskAvailableBytes": 221603688448,
+        "hostMinimumFreeInodes": 28983086,
+        "cpuDelta": {
+          "usage_usec": 4875216,
+          "nr_periods": 485,
+          "nr_throttled": 39,
+          "throttled_usec": 2903281
+        }
+      },
+      "hostAndOomSwapAbortGuardsStayedClear": true
+    },
+    "latencySeconds": {
+      "sampleCount": 3,
+      "createdToExportVerified": {
+        "mean": 2.1938936666666664,
+        "max": 3.584745
+      },
+      "coldStageRequestToJobCreated": {
+        "mean": 11.915178,
+        "max": 12.127927
+      },
+      "coldStageRequestToExportVerified": {
+        "mean": 14.109071666666667,
+        "max": 15.224021
+      },
+      "coldStageRequestToCompletedAndFilesObserved": {
+        "mean": 14.896442534673648,
+        "max": 16.09407456504414
+      }
+    },
+    "automaticResubmissionUsed": false,
+    "workerGracefullyStopped": true,
+    "stageContainersExitedZero": 3,
+    "workerOrStageContainersRunningAfterSuccess": 0,
+    "backendContainersRunningAfterSuccess": 3,
+    "trialDataAndVolumesRetained": true,
+    "containerOrVolumeDeletionPerformed": false,
+    "originalResourceMutationsPerformed": false
+  },
+  "trialDiskAllocation": {
+    "beforeCapturedAt": "2026-10-15T08:27:19.399706+00:00",
+    "afterCapturedAt": "2026-10-15T08:29:48.158030+00:00",
+    "observedIntervalSeconds": 148.758324,
+    "sameWindowAsResourceSampling": false,
+    "beforeAllocatedBytes": {
+      "database": 181809152,
+      "kafka": 937984,
+      "garageMetadata": 4825088,
+      "garageData": 147456
+    },
+    "afterAllocatedBytes": {
+      "database": 181809152,
+      "kafka": 983040,
+      "garageMetadata": 4853760,
+      "garageData": 225280
+    },
+    "allocatedDeltaBytes": {
+      "database": 0,
+      "kafka": 45056,
+      "garageMetadata": 28672,
+      "garageData": 77824,
+      "total": 151552
+    },
+    "backgroundMetadataAndTombstoneWritesIncluded": true,
+    "zeroDatabaseAllocationDeltaProvesNoDataGrowth": false,
+    "perJobPureGrowthProven": false
+  },
+  "originalRuntimePreservation": {
+    "sourceCommit": "ed5815e7d72c6ea4f52456d902b7407c7a4a67b0",
+    "baselineCapturedAt": "2026-10-15T08:18:30.569875+00:00",
+    "baselineChecksPassed": 16,
+    "baselineChecksTotal": 16,
+    "finalCapturedAt": "2026-10-15T08:29:48.470378+00:00",
+    "finalChecksPassed": 21,
+    "finalChecksTotal": 21,
+    "passed": true,
+    "dockerCount": 38,
+    "runningDockerCount": 26,
+    "dockerStateStartedAtAndNormalizedMountsPreserved": true,
+    "readyPodCount": 6,
+    "existingPvcCount": 11,
+    "existingPvCount": 11,
+    "podAndVolumeIdentitiesPreserved": true,
+    "businessSqlTablesCompared": 6,
+    "businessSqlRowsAndTimestampsPreserved": true,
+    "completedExportedJobCount": 6,
+    "committedExportFileMetadataCount": 12,
+    "freshOriginalObjectGetsPerformedByThisPhase": false,
+    "originalSourceAndImagesChanged": false
+  },
+  "preparatoryFailures": {
+    "missingActualSourceCommitRejectedBeforeS3KafkaClientCreation": true,
+    "imageRepositoryTagAssertionFailedDuringReadOnlyPreparation": true,
+    "actualSourceAndPinnedDigestChecksCorrected": true,
+    "workloadJobsSubmittedDuringTheseFailures": 0
+  },
+  "limits": {
+    "productionV2DeploymentVerified": false,
+    "exactOneMiBLinuxResourceLoadVerified": false,
+    "throughputOrCapacityProven": false,
+    "publicHttpLoadTestPerformed": false,
+    "rateLimitBehaviorProven": false,
+    "p95OrServiceLevelObjectiveProven": false,
+    "instantaneousSubsecondCpuPeakMeasured": false,
+    "longTermRuntimeOrInflightMaximumCrashVerified": false,
+    "jobObjectGcEnabled": false,
+    "privateReportCommandsEnvironmentsOrHostPathsPublished": false
+  }
+}

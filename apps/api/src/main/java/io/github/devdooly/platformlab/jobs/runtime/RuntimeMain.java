@@ -78,6 +78,7 @@ public final class RuntimeMain {
 
     private static void stageFixture(RuntimeStateStore states, LabJobService jobs) {
         String runId = required("LAB_RUNTIME_STAGE_RUN_ID"); FixedFixtureStager.validateRunId(runId);
+        String scenarioVersion = FixedFixtureStager.scenarioFromSetting(System.getenv("LAB_RUNTIME_STAGE_SCENARIO"));
         URI endpoint = URI.create(required("LAB_RUNTIME_S3_ENDPOINT"));
         String region = required("LAB_RUNTIME_S3_REGION"), bucket = required("LAB_RUNTIME_S3_BUCKET");
         var credentials = StaticCredentialsProvider.create(AwsBasicCredentials.create(
@@ -86,8 +87,9 @@ public final class RuntimeMain {
         // nor creates Kafka/export clients, so an already-running worker may process the admitted job.
         try (var s3 = S3ClientFactory.createGarage(endpoint, region, credentials)) {
             var stager = new FixedFixtureStager(states, new SourceStagingService(jobs, new S3RawSourceStore(s3, bucket)));
-            var job = stager.stage(runId);
-            System.out.println("RUNTIME_FIXTURE_STAGED " + job.runId() + " " + job.status().name() + " INPUTS_12");
+            var job = stager.stage(runId, scenarioVersion);
+            System.out.println("RUNTIME_FIXTURE_STAGED " + job.runId() + " " + job.status().name() + " INPUTS_"
+                + io.github.devdooly.platformlab.demo.SyntheticScenario.expectedCounts(scenarioVersion).input());
         }
     }
 

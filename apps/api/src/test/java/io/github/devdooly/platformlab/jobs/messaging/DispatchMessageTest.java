@@ -32,11 +32,16 @@ class DispatchMessageTest {
         assertThatThrownBy(() -> DispatchMessage.decode(null)).isInstanceOf(IllegalArgumentException.class);
     }
 
+    @Test void maximumScenarioRoundTripsWithoutChangingEnvelopeSchemaVersion() {
+        var maximum = new DispatchMessage(1, "maximum-message", "sensor-validation-v2", "b".repeat(64));
+        assertThat(DispatchMessage.decode(maximum.encode())).isEqualTo(maximum);
+    }
+
     @Test void rejectsUnsupportedVersionScenarioRunIdAndNoncanonicalHash() {
         String json = MESSAGE.encode();
         for (String invalid : new String[] {
             json.replace("\"schemaVersion\":1", "\"schemaVersion\":2"),
-            json.replace("sensor-validation-v1", "sensor-validation-v2"),
+            json.replace("sensor-validation-v1", "sensor-validation-v3"),
             json.replace("foundation-kafka-job", "UpperCase"),
             json.replace("foundation-kafka-job", "../escape"),
             json.replace("foundation-kafka-job", "a".repeat(81)),

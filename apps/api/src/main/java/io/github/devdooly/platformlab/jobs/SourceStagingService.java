@@ -23,7 +23,7 @@ public final class SourceStagingService {
             throw new IllegalTransactionStateException("Source staging must not run inside an outer database transaction");
         }
         // Clone/validate before DB admission so caller mutation cannot change the bytes later.
-        var source = CanonicalSource.validate(rawNdjson);
+        var source = CanonicalSource.validate(scenarioVersion, rawNdjson);
         var prepared = jobs.prepareSource(runId, scenarioVersion, source.bytes());
         if (prepared.status() == LabJobService.Status.TERMINATED || prepared.terminatedAt() != null) {
             throw new LabJobService.JobStateException();

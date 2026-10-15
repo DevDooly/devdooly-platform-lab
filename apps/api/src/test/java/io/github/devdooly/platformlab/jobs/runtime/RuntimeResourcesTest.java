@@ -14,6 +14,15 @@ class RuntimeResourcesTest {
         resources.close(); assertThat(closed).containsExactly("consumer", "producer", "object store");
     }
 
+    @Test void stageScenarioSettingIsAnExactAllowlistWithLegacyDefault() {
+        assertThat(FixedFixtureStager.scenarioFromSetting(null)).isEqualTo("sensor-validation-v1");
+        assertThat(FixedFixtureStager.scenarioFromSetting("sensor-validation-v1")).isEqualTo("sensor-validation-v1");
+        assertThat(FixedFixtureStager.scenarioFromSetting("sensor-validation-v2")).isEqualTo("sensor-validation-v2");
+        for (String invalid : new String[]{"", " sensor-validation-v2", "sensor-validation-v3", "1000", "file:///private/input", "https://example.com/input"}) {
+            assertThatThrownBy(() -> FixedFixtureStager.scenarioFromSetting(invalid)).isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
     @Test void consoleRoutingRequiresAnExplicitRuntimeArgument() {
         assertThat(RuntimeMain.isRuntimeCommand(new String[0])).isFalse();
         assertThat(RuntimeMain.isRuntimeCommand(new String[]{"--server.port=8080"})).isFalse();

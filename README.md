@@ -8,7 +8,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 | 영역 | 확인한 결과 | 근거 |
 | --- | --- | --- |
-| Java 21·Spring Boot | JPA·Flyway, 작업/outbox·export, 기본 verify 128개 | [API 계약](docs/contracts/demo-api.md), [실제 배포](docs/evidence/runtime-deployment/README.md) |
+| Java 21·Spring Boot | JPA·Flyway, 작업/outbox·export, 기본 verify 140개 | [API 계약](docs/contracts/demo-api.md), [실제 배포](docs/evidence/runtime-deployment/README.md) |
 | Astro·React | 결과·실패 필터·차트, 웹 테스트 34개, 작업/export 관측 | [기존 화면 검증](apps/lab-web/VALIDATION.md), [작업 관측 계약](apps/lab-web/JOB_OBSERVATION.md) |
 | GitHub Actions·GHCR | Linux 컨테이너 통합 검증 후 immutable digest 이미지 게시 | [컨테이너 근거](docs/evidence/compose-ci/README.md), [이미지 게시](docs/runbooks/image-publication.md) |
 | K3s·Helm·Argo CD | 미니 PC에서 앱 자동 동기화, Synced·Healthy, MariaDB PVC | [실제 서버 근거](docs/evidence/mini-pc/README.md), [GitOps 선언](gitops/README.md) |
@@ -18,6 +18,9 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 | 관리자 접속 | ClusterIP 관리 화면과 SSH 접속 도우미 | [접속 방법](docs/runbooks/admin-access.md) |
 | 백업과 복구 | 외부 암호화 사본의 Kafka/Garage PVC 격리 복원·별도 물리 블록 복원, 이전 DB/재부팅 검증 | [PVC 복원](docs/evidence/runtime-pvc-restore/README.md), [기존 복구 검증](docs/evidence/recovery/README.md) |
 | 보존·자원 예산 | 삭제 없는 보존 계획기·별도 합성 PVC 정리, 실제 cgroup 설정과 작은 작업 3회 관측 | [운영 기준](docs/runbooks/retention-resource-budget.md), [실제 근거](docs/evidence/retention-resource-budget/README.md) |
+| 입력·동시 접수 | 격리 환경의 최대 1,000개 입력·동시 2/8개 접수, 통합 검사 5개와 별도 Linux 작업 3회 | [조건과 결과](docs/evidence/input-concurrency-load/README.md) |
+
+별도 격리 환경에서 최대 1,000개 입력, 동시 2·8개 접수 중 한 작업만 허용하는 단일 슬롯, 초과 입력 거부를 통합 검사 5개로 확인했습니다. 미니 PC의 격리 Docker worker에서도 1 CPU·768MiB 제한으로 1,000개 작업을 세 번 처리하고 원본·결과·실패 파일 9개를 전체 GET으로 검증했습니다. 약 74.39초·72개 샘플에서 작업 구간 평균 CPU는 0.1011 core, 관측 간격별 최대는 0.9503 core, 전체 구간 `memory.current` 최대는 261.75MiB였습니다. DB 작업 생성부터 export 확인까지 평균 2.19초·최대 3.58초이며 CLI 기동 시간은 포함하지 않습니다. 운영 source `ed5815e7`와 기존 6개 작업·Pod·PVC·Docker는 그대로 보존했습니다. 이는 운영 처리 용량이나 SLA 검증이 아니며 [검증 조건과 한계](docs/evidence/input-concurrency-load/README.md)를 함께 기록합니다.
 
 미니 PC의 웹을 통해 API·MariaDB를 조회하고 합성 입력 12건의 결과를 확인했습니다. 기대 결과는 성공 7·실패 3·중복 2·대기 0입니다. 공개 Pages는 **미니 PC에서 확인한 마지막 기록**과 수집 시각·source commit을 표시합니다. 현재 공개 홈에 미니 PC 실시간 API는 연결하지 않았습니다.
 

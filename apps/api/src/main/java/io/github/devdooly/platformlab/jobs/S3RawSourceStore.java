@@ -35,7 +35,7 @@ public final class S3RawSourceStore implements RawSourceStore, VerifiedSourceRea
         if (job.runId() == null || !job.runId().matches("[a-z0-9][a-z0-9._-]{0,79}")) {
             throw new IllegalArgumentException("Invalid raw object run ID");
         }
-        var source = CanonicalSource.validate(rawNdjson);
+        var source = CanonicalSource.validate(job.scenarioVersion(), rawNdjson);
         if (source.size() != job.sourceSize() || !source.sha256().equals(job.sourceSha256())) {
             throw new SourceVerificationException("Prepared source metadata differs from the supplied bytes");
         }
@@ -54,6 +54,7 @@ public final class S3RawSourceStore implements RawSourceStore, VerifiedSourceRea
         Objects.requireNonNull(job, "Admitted job is required");
         if (job.runId() == null || !job.runId().matches("[a-z0-9][a-z0-9._-]{0,79}")
             || job.sourceSha256() == null || !job.sourceSha256().matches("[a-f0-9]{64}")
+            || !io.github.devdooly.platformlab.demo.SyntheticScenario.supports(job.scenarioVersion())
             || job.sourceSize() < 1 || job.sourceSize() > CanonicalSource.MAX_BYTES) {
             throw new IllegalArgumentException("Invalid admitted source metadata");
         }
@@ -73,7 +74,7 @@ public final class S3RawSourceStore implements RawSourceStore, VerifiedSourceRea
             };
             byte[] actual = s3.getObject(GetObjectRequest.builder().bucket(bucket).key(job.sourceObjectKey()).build(), boundedBody);
             final CanonicalSource verified;
-            try { verified = CanonicalSource.validate(actual); }
+            try { verified = CanonicalSource.validate(job.scenarioVersion(), actual); }
             catch (IllegalArgumentException invalid) { throw new SourceVerificationException("Stored source is not the admitted scenario", invalid); }
             if (verified.size() != job.sourceSize() || !verified.sha256().equals(job.sourceSha256())) {
                 throw new SourceVerificationException("Stored source hash differs from admitted metadata");
@@ -108,7 +109,7 @@ public final class S3RawSourceStore implements RawSourceStore, VerifiedSourceRea
             if (!expected.matches(actual)) {
                 throw new SourceVerificationException("Stored object bytes differ from the prepared source");
             }
-            var verified = CanonicalSource.validate(actual);
+            var verified = CanonicalSource.validate(expected.scenarioVersion(), actual);
             if (!verified.sha256().equals(expected.sha256()) || verified.size() != expected.size()) {
                 throw new SourceVerificationException("Stored object hash differs from the prepared source");
             }

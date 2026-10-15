@@ -29,7 +29,7 @@ public record ExportBundle(String runId, String sourceSha256, Document result, D
             bytes = bytes.clone();
             if (bytes.length == 0 || bytes.length > MAX_DOCUMENT_BYTES || sha256 == null
                 || !sha256.matches("[a-f0-9]{64}") || !sha256.equals(hash(bytes)) || key == null
-                || !key.matches("result/[a-z0-9][a-z0-9._-]{0,79}/sensor-validation-v1/[a-f0-9]{64}/(?:result|failures)-v1-[a-f0-9]{64}\\.json")
+                || !key.matches("result/[a-z0-9][a-z0-9._-]{0,79}/sensor-validation-v(?:1|2)/[a-f0-9]{64}/(?:result|failures)-v1-[a-f0-9]{64}\\.json")
                 || !key.endsWith("-v1-" + sha256 + ".json")) {
                 throw new IllegalArgumentException("Invalid bounded content-addressed export document");
             }
@@ -44,16 +44,17 @@ public record ExportBundle(String runId, String sourceSha256, Document result, D
     public static ExportBundle from(LabJobService.ExportSnapshot snapshot) {
         Objects.requireNonNull(snapshot);
         var job = snapshot.job(); var run = snapshot.run();
-        var source = CanonicalSource.validate(snapshot.sourceBytes());
+        var source = CanonicalSource.validate(job.scenarioVersion(), snapshot.sourceBytes());
+        var expected = SyntheticScenario.expectedCounts(job.scenarioVersion());
         if (job.status() != LabJobService.Status.COMPLETED || job.terminatedAt() != null
             || (job.exportStatus() != LabJobService.ExportStatus.PENDING && job.exportStatus() != LabJobService.ExportStatus.EXPORTED)
-            || !SyntheticScenario.NAME.equals(job.scenarioVersion()) || !job.scenarioVersion().equals(run.scenario())
-            || run.seed() != SyntheticScenario.SEED || !source.sha256().equals(job.sourceSha256()) || source.size() != job.sourceSize()
+            || !SyntheticScenario.supports(job.scenarioVersion()) || !job.scenarioVersion().equals(run.scenario())
+            || run.seed() != SyntheticScenario.seed(job.scenarioVersion()) || !source.sha256().equals(job.sourceSha256()) || source.size() != job.sourceSize()
             || job.createdAt() == null || job.sourceVerifiedAt() == null || job.queuedAt() == null
             || job.completedAt() == null || run.startedAt() == null || run.completedAt() == null
             || run.completedAt().isBefore(run.startedAt()) || !job.completedAt().equals(run.completedAt())
-            || run.inputCount() != 12 || run.successCount() != 7 || run.failureCount() != 3
-            || run.duplicateCount() != 2 || run.pendingCount() != 0 || snapshot.outcomes().size() != run.inputCount()) {
+            || run.inputCount() != expected.input() || run.successCount() != expected.success() || run.failureCount() != expected.failure()
+            || run.duplicateCount() != expected.duplicate() || run.pendingCount() != expected.pending() || snapshot.outcomes().size() != run.inputCount()) {
             throw new ExportValidationException("Persisted export snapshot is not a complete admitted result");
         }
         String[] lines = new String(source.bytes(), StandardCharsets.UTF_8).split("\\r?\\n", -1);

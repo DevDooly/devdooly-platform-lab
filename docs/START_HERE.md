@@ -2,12 +2,14 @@
 
 Java API·포트폴리오와 K3s·Jenkins·Argo CD를 Ubuntu 미니 PC에서 운영합니다. 2026-10-15에는 Kafka·Garage·상시 worker를 GitOps로 배포하고 두 합성 작업의 자동 처리·파일 확인·슬롯 해제와 공개 Pages의 실제 job 관측을 확인했습니다. [현재 배포·게시 근거](evidence/runtime-deployment/README.md)를 먼저 확인합니다. 초기 설치는 [미니 PC 근거](evidence/mini-pc/README.md), CI/CD는 [Jenkins 근거](evidence/jenkins-ci/README.md), 이전 플랫폼 collector의 실패 보존·반복 게시 11회는 [플랫폼 수집 근거](evidence/platform-observation/README.md)에 구분해 기록했습니다. 전체 단계는 [진행 목록](ROADMAP.md)을 따릅니다.
 
+새 후보판의 최대 1,000개 입력·단일 슬롯 동시 2/8개 접수·초과 입력 거부는 격리 통합 검사 5개로 확인했습니다. 별도 Linux Docker worker에서도 1 CPU·768MiB 제한으로 1,000개 작업 3회와 원본·export 파일 9개의 전체 GET을 검증했습니다. [입력·동시 접수 검증](evidence/input-concurrency-load/README.md)은 현재 운영판과 구분합니다. 운영 source `ed5815e7`·기존 6개 작업과 서비스는 보존했으며, 운영 처리 용량이나 SLA를 검증한 결과는 아닙니다.
+
 ## 확인한 결과
 
 - 서버 지문 대조와 전용 키 SSH 인증, Ubuntu·포트·기존 서비스 읽기 전용 점검
 - 초기 설치 당시 Docker 컨테이너 23개와 방화벽 설정 보존, 새 Lab 전용 설치·저장 경로
 - K3s Node Ready와 클러스터 API·DNS·외부 HTTPS 통신 확인
-- 초기 API 테스트 15개·웹 테스트 13개; 현재 기본 API verify 128개·웹 34개 통과
+- 초기 API 테스트 15개·웹 테스트 13개; 현재 소스의 기본 API verify 140개·웹 34개 통과
 - Linux runner의 이미지 빌드·MariaDB·API 교체·데이터 보존 검증
 - GHCR 이미지 게시와 미니 PC에서 익명 다운로드
 - Jenkins Kubernetes agent의 테스트·패키징·필수 산출물과 같은 SHA의 commit status 전달 확인
@@ -70,7 +72,7 @@ Kafka·Garage의 전용 PVC 3개는 외부 사본에서 새 볼륨으로 복원�
 3. 전용 status credential의 만료·회전과 게시 산출물 보존 운영 정리
 4. Pages 자격증명의 실제 만료·회전과 장기간 반복 운영 검증
 5. 필요한 경우 기존 프록시·DDNS·TLS 조건을 확인한 뒤 공개 읽기 API와 외부망 검증
-6. [보존·자원 기준](runbooks/retention-resource-budget.md)을 유지하며 객체 GC·최대 입력/부하·진행 중 장애의 후속 범위를 검증하고 AI 개선 사례를 추가
+6. [보존·자원 기준](runbooks/retention-resource-budget.md)을 유지하며 객체 GC·요청 빈도 제한·과부하 용량·진행 중 장애를 검증하고 AI 개선 사례를 추가
 
 CI/CD의 정상 배포·실패 차단·이전 digest 복구를 확인했으며, 3단계는 제한된 실제 수집·인증 실패·회복과 수동 공개 게시·브라우저를 확인했습니다. 게시 순서 회귀 교정 후 실제 재검증도 완료했고 API·웹 중단·같은 정상 B 복원도 확인했고 정기 운영 검증을 이어가며 새로운 inbound 경로는 열지 않았습니다. 기존 서비스가 있으므로 재부팅·방화벽 변경·프록시 교체를 일괄 실행하지 않습니다. Windows 외부 사본의 무결성, 격리 DB 복원과 호스트 재부팅을 검증했습니다. K3s·Jenkins archive 전체 복원은 아직 별도 작업입니다. PV의 Delete 정책 때문에 PVC·namespace를 수동 삭제하면 데이터가 지워질 수 있습니다.
 
@@ -83,6 +85,7 @@ CI/CD의 정상 배포·실패 차단·이전 digest 복구를 확인했으며, 
 - [플랫폼 관측 수집·게시 운영](runbooks/platform-observation.md)
 - [상시 worker 실행](runbooks/continuous-runtime.md), [현재 배포·job 공개 관측](evidence/runtime-deployment/README.md)
 - [보존 정책과 자원 예산](runbooks/retention-resource-budget.md), [실제 정리·측정 근거](evidence/retention-resource-budget/README.md)
+- [최대 입력·동시 접수와 별도 Linux 자원/지연 검증](evidence/input-concurrency-load/README.md)
 - [Kafka/Garage PVC 격리 복원](runbooks/runtime-pvc-recovery.md), [외부 사본·블록 복원 근거](evidence/runtime-pvc-restore/README.md)
 - [K3s bootstrap](runbooks/k3s-bootstrap.md), [플랫폼 설치](runbooks/platform-install.md)
 - [이미지 게시](runbooks/image-publication.md), [앱 Helm](runbooks/app-helm.md)

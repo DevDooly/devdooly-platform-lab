@@ -18,7 +18,7 @@ public record DispatchMessage(int schemaVersion, String runId, String scenarioVe
 
     public DispatchMessage {
         if (schemaVersion != VERSION || runId == null || !runId.matches("[a-z0-9][a-z0-9._-]{0,79}")
-            || !SyntheticScenario.NAME.equals(scenarioVersion)
+            || !SyntheticScenario.supports(scenarioVersion)
             || sourceSha256 == null || !sourceSha256.matches("[0-9a-f]{64}")) {
             throw new IllegalArgumentException("Unsupported dispatch envelope");
         }
