@@ -19,12 +19,19 @@ import job_collector
 import job_contract
 import pages_uploader
 import host_cycle
+import platform_contract
 from test_phase3_automation import Files, NoLock, snapshot as platform_snapshot, response
 import test_pages_observation as previous_tests
 pages=previous_tests.module
 run=previous_tests.run
 
 NOW=datetime(2000,1,2,tzinfo=timezone.utc)
+
+class NoIsoParserDatetime(datetime):
+    """Catches regression to the parser that cannot read 9 digits on Python 3.10."""
+    @classmethod
+    def fromisoformat(cls,value):
+        raise AssertionError('Do not delegate nanosecond timestamps to fromisoformat')
 
 def job_record(captured='2000-01-01T00:00:04Z'):
     return {'schemaVersion':1,'kind':'job-observation','capturedAt':captured,'environment':'MINI_PC','sourceCommit':'a'*40,
@@ -44,6 +51,25 @@ def service():
         'ports':[{'name':'http','port':8080,'targetPort':'http','protocol':'TCP'}]}}
 
 class ContractTests(unittest.TestCase):
+    def test_calendar_constructor_preserves_all_nine_digits_without_iso_parser(self):
+        ceiling=NoIsoParserDatetime(2000,1,2,tzinfo=timezone.utc)
+        with patch.object(platform_contract,'datetime',NoIsoParserDatetime):
+            for digits in range(1,10):
+                fraction='123456789'[:digits]
+                precise=platform_contract.moment('2000-01-01T00:00:04.'+fraction+'Z',ceiling)
+                self.assertEqual(precise[0],datetime(2000,1,1,0,0,4,tzinfo=timezone.utc))
+                self.assertEqual(precise[1],int(fraction.ljust(9,'0')))
+            limit=platform_contract.moment('2000-01-01T00:00:04.123456788Z',ceiling)
+            with self.assertRaises(platform_contract.InvalidObservation):
+                platform_contract.moment('2000-01-01T00:00:04.123456789Z',limit)
+            for invalid in ('2000-02-30T00:00:00.123456789Z','2000-01-01T25:00:00Z','0000-01-01T00:00:00Z'):
+                with self.subTest(invalid=invalid),self.assertRaises(platform_contract.InvalidObservation):platform_contract.moment(invalid,ceiling)
+
+    def test_java_instant_nine_digit_capture_is_preserved_by_job_contract(self):
+        value=job_record('2000-01-01T00:00:04.845617298Z')
+        self.assertIs(job_contract.validate_job_snapshot(value,NOW),value)
+        self.assertEqual(value['capturedAt'],'2000-01-01T00:00:04.845617298Z')
+
     def test_accepts_only_actual_deployed_environment_and_sha(self):
         value=job_record();self.assertIs(job_contract.validate_job_snapshot(value,NOW),value)
         for change in ({'environment':'ISOLATED_LAB','scope':'ISOLATED_LAB'},{'sourceCommit':'unknown'},{'publicExecutionEnabled':True},{'schemaVersion':True}):
@@ -152,12 +178,13 @@ class CycleFeatureTests(Files):
             'collector_path':'/PRIVATE/platform_collector.py','state_directory':str(self.root/'state'),'runtime_directory':str(self.root/'runtime'),
             'pages_token_file':str(self.token),'jobs_enabled':'true'}
 
-    def execute(self,job_failure=False):
+    def execute(self,job_failure=False,nanoseconds=False):
         config=self.config();calls=[];posted=[]
         def runner(arguments,**kwargs):
             calls.append(arguments)
             if len(calls)==1:return SimpleNamespace(returncode=0,stdout=b'aaa.bbb.ccc')
-            output=Path(arguments[arguments.index('--output')+1]);instant=datetime.now(timezone.utc).isoformat().replace('+00:00','Z')
+            output=Path(arguments[arguments.index('--output')+1]);instant=datetime.now(timezone.utc).isoformat(timespec='microseconds').replace('+00:00','Z')
+            if nanoseconds:instant=instant[:-1]+'298Z'
             if len(calls)==2:output.write_text(json.dumps(platform_snapshot(instant)));os.chmod(output,0o600);return SimpleNamespace(returncode=0)
             self.assertNotIn('--kubeconfig',arguments)
             if job_failure:
@@ -175,6 +202,15 @@ class CycleFeatureTests(Files):
         self.assertEqual(posted[0][1]['job_snapshot']['environment'],'MINI_PC')
         self.assertEqual(list(Path(config['runtime_directory']).iterdir()),[])
         self.assertEqual(json.loads((Path(config['state_directory'])/'jobs-capture.json').read_text())['status'],'success')
+
+    def test_nine_digit_http_capture_is_dispatched_without_loss_or_legacy_iso_parser(self):
+        with patch.object(host_cycle,'datetime',NoIsoParserDatetime):
+            config,calls,posted,report=self.execute(nanoseconds=True)
+        self.assertEqual(report['attemptStatus'],'DISPATCHED')
+        captured=posted[0][1]['job_snapshot']['capturedAt']
+        self.assertRegex(captured,r'\.[0-9]{6}298Z$')
+        self.assertEqual(json.loads((Path(config['state_directory'])/'jobs-capture.json').read_text())['capturedAt'],captured)
+        self.assertEqual(list(Path(config['runtime_directory']).iterdir()),[])
 
     def test_job_timeout_still_publishes_platform_and_keeps_last_good_job_file(self):
         config,calls,posted,report=self.execute(job_failure=True)

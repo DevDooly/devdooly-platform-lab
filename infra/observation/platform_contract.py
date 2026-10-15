@@ -13,7 +13,7 @@ HEALTH = frozenset({'Healthy', 'Progressing', 'Degraded', 'Suspended', 'Missing'
 SYNC = frozenset({'Synced', 'OutOfSync', 'Unknown'})
 SHA = re.compile(r'[0-9a-f]{40}')
 DIGEST = re.compile(r'sha256:[0-9a-f]{64}')
-UTC_TIME = re.compile(r'\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,9})?Z')
+UTC_TIME = re.compile(r'([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})(?:\.([0-9]{1,9}))?Z')
 SAFE_INTEGER = 9007199254740991
 MAX_BUILD_NUMBER = 2147483647
 
@@ -43,16 +43,20 @@ def commit(value: Any) -> str:
 
 
 def moment(value: Any, ceiling: datetime | tuple[datetime, int]) -> tuple[datetime, int]:
-    require(isinstance(value, str) and UTC_TIME.fullmatch(value) is not None)
+    matched = UTC_TIME.fullmatch(value) if isinstance(value, str) else None
+    require(matched is not None)
     try:
-        parsed = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        # Python 3.10 fromisoformat rejects Java Instant's 7..9 fractional
+        # digits. Validate the whole calendar second independently, then keep
+        # every fractional digit in the integer tuple below.
+        parsed = datetime(*(int(part) for part in matched.groups()[:6]), tzinfo=timezone.utc)
     except ValueError:
         raise InvalidObservation('INVALID_OBSERVATION') from None
-    fraction = value.partition('.')[2].removesuffix('Z') if '.' in value else ''
-    precise = (parsed.replace(microsecond=0), int(fraction.ljust(9, '0')) if fraction else 0)
+    fraction = matched[7] or ''
+    precise = (parsed, int(fraction.ljust(9, '0')) if fraction else 0)
     limit = (ceiling.replace(microsecond=0), ceiling.microsecond * 1000) if isinstance(ceiling, datetime) else ceiling
-    # datetime truncates >6 fractional digits. Compare all nine explicitly so
-    # a one-nanosecond future observation cannot pass the Python validator.
+    # Compare all nine explicitly so a one-nanosecond future observation
+    # cannot pass, including on the mini PC's Python 3.10 runtime.
     require(precise <= limit)
     return precise
 
