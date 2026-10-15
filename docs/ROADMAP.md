@@ -127,7 +127,8 @@
 - [x] DB에 보관하는 기본 30초의 내부 새 작업 승인 간격과 기본 157개·실제 backend 19개·외부 SQL 복원 후 이전 binary 호환 8개를 확인했습니다: [근거](evidence/admission-cooldown/README.md)
 - [ ] 승인 간격 후보의 새 API V4 migration→worker 운영 전환과 동일 source·immutable 이미지·기존 자료 보존을 확인합니다. 구형 stage 혼용은 금지합니다.
 - [ ] 공개 진입 요청의 인증·HTTP QPS 제한 구현·검증(현재 공개 실행 없음)
-- [ ] 객체 tombstone/GC와 참조 확인 기반 삭제 경계 검증
+- [x] 전체 운영 DB·S3 참조21개를 모두 보호하는 dry-run과 새 Garage의 합성 객체2개 자연 GC·공유 블록 보존을 검증했습니다: [근거](evidence/object-reference-gc/README.md)
+- [ ] 운영 객체의 tombstone·삭제 intent·재전달/resume·백업 의존성을 조율하는 삭제 프로토콜과 metadata GC를 검증합니다.
 - [ ] 과부하·운영 처리 용량과 중단/회복 한계 검증
 - [ ] 제한을 검증한 뒤 공개 샘플 실행 기능 추가
 
