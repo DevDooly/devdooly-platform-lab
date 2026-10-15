@@ -100,3 +100,15 @@ main에서 독립 기대 성공 건수를 8로 바꾼 실제 JUnit 음성 실험
 Pod spec의 @digest는 선언 값과 비교한다. status.imageID가 OCI index와 다르면 linux/amd64 child manifest 관계를 확인한다. API 런타임의 env 기반 SHA/digest만으로 실행 이미지 일치를 주장하지 않는다. 실제 HTTP·성공 7/실패 3/중복 2/대기 0·기존 처리 시각·DB PVC 보존과 기존 서비스 응답을 함께 확인한다.
 
 정상 B 배포·실제 실패 차단·이전 정상 A digest 복구의 세 시나리오를 실제로 확인했다. 게시 결과·자동 draft 제안과 main 반영·실제 배포는 서로 구분하며 최종 실행 버전은 A다. 초기 비밀번호 교체, token 만료·실제 회전, 동시 요청 실험, K3s·Jenkins archive 전체 복원, 3단계 실시간 collector와 외부 API는 별도의 미완료 범위다.
+
+## GitHub metadata 조회의 임시 인증과 실패 진단
+
+2026-10-15 source `f7bdffeeb0e8806d6d17503a2bc8867e8656af64`의 실제 Actions·Jenkins 성공 뒤 [게시 실행 38735192254](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38735192254)는 gate의 `PUBLIC_METADATA_HTTP_403`에서 끝났습니다. 이미지 게시와 배포 PR 생성은 실행되지 않았습니다. 당시 응답의 rate-limit 헤더가 없어 403 원인을 확정할 수 없습니다.
+
+게시 workflow는 각 metadata 조회 step에만 `LAB_GITHUB_METADATA_TOKEN`으로 임시 `github.token`을 전달합니다. gate job은 contents·actions·statuses 읽기만 사용하며, publish·proposal job의 기존 package/PR 쓰기와 reader 경로를 구분합니다. 개발자 PAT나 Jenkins/Pages 토큰을 대신 사용하지 않습니다. 토큰이 없는 로컬 호출은 공개 metadata만 익명 조회할 수 있으며, 명시한 토큰의 401 실패 후 익명으로 재시도하지 않습니다.
+
+reader는 고정 HTTPS GitHub API와 이 저장소의 허용 GET 경로만 요청하고 모든 redirect를 거부합니다. 403/429에서는 허용한 숫자 `rate_limit_remaining`, `rate_limit_reset`, `retry_after_seconds`만 진단에 추가하며 응답 본문·토큰·다른 헤더를 기록하지 않습니다. 오류가 나면 게시를 차단하고 자동 재시도하지 않습니다. 현재 main·같은 SHA의 두 실제 CI 성공·최신 status/issuer·중복 게시 확인 조건은 그대로 유지합니다.
+
+단위검사 82개에는 실제 Request/opener 경계의 인증·redirect·401 fallback 금지·403/429 선별 진단·proposal reader/writer 분리 검사 13개가 포함됩니다. workflow YAML의 네 metadata step과 job별 권한도 확인했습니다. 실제 Actions job token으로 조회·이미지 게시하는 결과는 이 후보의 main 반영 후 별도 근거로 기록합니다.
+
+GitHub는 익명 REST 조회를 IP 기준 시간당 60회, Actions의 `GITHUB_TOKEN` 조회를 저장소 기준 시간당 1,000회로 설명합니다. 403만으로 rate-limit 원인을 판정하지 않고 응답 헤더와 실제 실행 결과를 확인합니다. [GitHub REST rate limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api), [GITHUB_TOKEN 최소 권한](https://docs.github.com/en/actions/tutorials/authenticate-with-github_token)
