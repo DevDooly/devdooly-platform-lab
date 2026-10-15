@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "kind": "retention-policy",
+  "minimumVerifiedPerCompatibilityFamily": 1,
+  "dailyUtcDays": 7,
+  "weeklyIsoWeeks": 4,
+  "trialMinimumAgeDays": 7,
+  "maxInventoryAgeSeconds": 300,
+  "requiredTrialPurpose": "runtime-pvc-restore",
+  "jobObjectDeletionEnabled": false,
+  "applyEnabled": false
+}

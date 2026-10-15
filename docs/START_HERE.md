@@ -38,6 +38,8 @@ Java API·포트폴리오와 K3s·Jenkins·Argo CD를 Ubuntu 미니 PC에서 운
 - 격리 정책의 원본 접근 차단·DNS 허용, Kafka 3개 record/offset과 Garage 9개 inline 객체의 전체 GET 일치
 - clone에만 128KiB 물리 블록 canary를 만들어 추가 2PVC 복원·Pod 교체 전후 각 GET10, 복제 Kafka 정상 재시작 후 같은 PVC/record 보존
 - 시험용 3개 workload 정상 종료·Pod 0·Retain PVC 5개 보관, 최종 28개 보존 검사에서 원본 SQL/PVC/6개 Ready Pod·기존 Docker 38개/실행 26개 유지
+- 백업·trial 보호의 순수 dry-run 계획기 31개 테스트·실제 삭제 후보 0, 새 합성 PVC만의 실제 정리 검증과 기존 PVC/PV 11개·원본 Pod 6개·Docker 38개 보존
+- 기존 cgroup limit 유지·고정 12개 입력 3회/약 63초 관측, 총 6개 EXPORTED 작업·파일 12개 전체 Get·Kafka offset 6/lag 0과 최종 보존 검사 25개 통과: [보존·자원 근거](evidence/retention-resource-budget/README.md)
 
 Jenkins의 첫 빌드는 플러그인 충돌로 단계가 실행되지 않아 성공으로 인정하지 않았습니다. 교정 후 실제 단계·JUnit·산출물을 확인했고, 전용 status credential을 등록해 Actions 게시 gate에 연결했습니다. Actions가 유일한 이미지 게시자이며 사용자 승인으로 Actions의 PR 생성·승인 허용 설정과 draft GitOps PR 제안을 활성화했습니다. 워크플로는 PR을 자동 승인하거나 병합하지 않습니다. [정상 배포와 실패 차단](evidence/cicd-gate/README.md)을 확인합니다.
 
@@ -68,7 +70,7 @@ Kafka·Garage의 전용 PVC 3개는 외부 사본에서 새 볼륨으로 복원�
 3. 전용 status credential의 만료·회전과 게시 산출물 보존 운영 정리
 4. Pages 자격증명의 실제 만료·회전과 장기간 반복 운영 검증
 5. 필요한 경우 기존 프록시·DDNS·TLS 조건을 확인한 뒤 공개 읽기 API와 외부망 검증
-6. 미완료 원본의 보존/정리·자원 한도와 진행 중 작업의 장애 복구 범위를 검증하고 AI 개선 사례를 추가
+6. [보존·자원 기준](runbooks/retention-resource-budget.md)을 유지하며 객체 GC·최대 입력/부하·진행 중 장애의 후속 범위를 검증하고 AI 개선 사례를 추가
 
 CI/CD의 정상 배포·실패 차단·이전 digest 복구를 확인했으며, 3단계는 제한된 실제 수집·인증 실패·회복과 수동 공개 게시·브라우저를 확인했습니다. 게시 순서 회귀 교정 후 실제 재검증도 완료했고 API·웹 중단·같은 정상 B 복원도 확인했고 정기 운영 검증을 이어가며 새로운 inbound 경로는 열지 않았습니다. 기존 서비스가 있으므로 재부팅·방화벽 변경·프록시 교체를 일괄 실행하지 않습니다. Windows 외부 사본의 무결성, 격리 DB 복원과 호스트 재부팅을 검증했습니다. K3s·Jenkins archive 전체 복원은 아직 별도 작업입니다. PV의 Delete 정책 때문에 PVC·namespace를 수동 삭제하면 데이터가 지워질 수 있습니다.
 
@@ -80,6 +82,7 @@ CI/CD의 정상 배포·실패 차단·이전 digest 복구를 확인했으며, 
 - [플랫폼 관측 계약](../apps/lab-web/PLATFORM_OBSERVATION.md), [실제 수집 검증](evidence/platform-observation/README.md)
 - [플랫폼 관측 수집·게시 운영](runbooks/platform-observation.md)
 - [상시 worker 실행](runbooks/continuous-runtime.md), [현재 배포·job 공개 관측](evidence/runtime-deployment/README.md)
+- [보존 정책과 자원 예산](runbooks/retention-resource-budget.md), [실제 정리·측정 근거](evidence/retention-resource-budget/README.md)
 - [Kafka/Garage PVC 격리 복원](runbooks/runtime-pvc-recovery.md), [외부 사본·블록 복원 근거](evidence/runtime-pvc-restore/README.md)
 - [K3s bootstrap](runbooks/k3s-bootstrap.md), [플랫폼 설치](runbooks/platform-install.md)
 - [이미지 게시](runbooks/image-publication.md), [앱 Helm](runbooks/app-helm.md)

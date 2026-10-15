@@ -1,0 +1,660 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-15T07:40:32.846315+00:00",
+  "scope": "RETENTION_PLAN_AND_BOUNDED_SYNTHETIC_RESOURCE_OBSERVATION",
+  "synthetic": true,
+  "status": "VERIFIED",
+  "passed": true,
+  "sourceCommit": "ed5815e7d72c6ea4f52456d902b7407c7a4a67b0",
+  "plannerValidation": {
+    "windowsLocalTestsPassed": 31,
+    "windowsLocalTestsTotal": 31,
+    "python310SyntaxValidated": true,
+    "actualUbuntuTests": {
+      "passed": true,
+      "operatingSystem": "Ubuntu",
+      "interpreter": "python3",
+      "testsPassed": 31,
+      "skipCount": 0,
+      "credentialsUsed": false,
+      "kubernetesOrDataDeletionPerformed": false
+    },
+    "plannerSource": "infra/maintenance/retention.py",
+    "testsSource": "tests/maintenance/test_retention.py",
+    "policySource": "infra/maintenance/policy.json",
+    "deletionExecutorImplemented": false
+  },
+  "policy": {
+    "schemaVersion": 1,
+    "kind": "retention-policy",
+    "minimumVerifiedPerCompatibilityFamily": 1,
+    "dailyUtcDays": 7,
+    "weeklyIsoWeeks": 4,
+    "trialMinimumAgeDays": 7,
+    "maxInventoryAgeSeconds": 300,
+    "requiredTrialPurpose": "runtime-pvc-restore",
+    "jobObjectDeletionEnabled": false,
+    "applyEnabled": false
+  },
+  "inventoryBaseline": {
+    "passed": true,
+    "globalPvcCount": 11,
+    "originalLabPvcCount": 4,
+    "runtimeTrialPvcCount": 5,
+    "readyOriginalPods": 6,
+    "originalSqlExactlyPreserved": true,
+    "dockerCount": 38,
+    "runningDockerCount": 26,
+    "backupRootEntries": 19,
+    "runtimeTrialAllocatedBytes": 6844416,
+    "otherTrialPvcCount": 1,
+    "capturedAt": "2026-10-15T07:11:34.302621+00:00"
+  },
+  "actualRetentionPlan": {
+    "passed": true,
+    "actualDryRun": true,
+    "clockSource": "SYSTEM_UTC",
+    "inventoryFresh": true,
+    "verifiedBackupGroups": 1,
+    "unclassifiedBackupEntriesProtected": 18,
+    "retainedTrialGroups": 2,
+    "retainedTrialPvcs": 6,
+    "backupDeleteCandidates": 0,
+    "trialDeleteCandidates": 0,
+    "existingBackupsDeleted": 0,
+    "existingTrialPvcsDeleted": 0,
+    "jobRawExportGcEnabled": false,
+    "deletionExecutorImplemented": false,
+    "plannerSha256": "eabc07093debb1f28d4f61a7f5477ed8c05c56edb0c2ce342b004da096d8e80f",
+    "policySha256": "88893b27b124f9b55386a1ed9e807d09f3b8bc5813ac40ec09b3237ed2e635fa",
+    "plannedAt": "2026-10-15T07:34:16.228362257Z"
+  },
+  "resourceProbe": {
+    "passed": true,
+    "sourceCommit": "ed5815e7d72c6ea4f52456d902b7407c7a4a67b0",
+    "capturedAt": "2026-10-15T07:15:14.015253+00:00",
+    "checksPassed": 5,
+    "checksTotal": 5,
+    "componentCount": 6,
+    "capabilities": {
+      "cgroupVersion": 2,
+      "componentCount": 6,
+      "cpuAndThrottleCountersAvailableComponents": 6,
+      "javaRssAndPssAvailableServices": 3,
+      "memoryPeakAvailableComponents": 6,
+      "memorySwapCountersAvailableComponents": 6
+    },
+    "hostFreeInodes": 28984308,
+    "hostMemAvailableBytes": 19885096960,
+    "hostStorageAvailableBytes": 222023766016,
+    "labPvcAllocatedBytes": 173649920,
+    "labPvcCount": 4,
+    "retainedTrialPvcCount": 5,
+    "trialPvcAllocatedBytes": 6844416,
+    "backupAllocatedBytes": 4081627136,
+    "resourceLimitsModified": false,
+    "workloadsRestarted": false,
+    "workloadFixturesStaged": 0,
+    "processCommandLinesOrEnvironmentsRead": false,
+    "components": {
+      "api": {
+        "cpuLimitCores": 1.0,
+        "memoryLimitBytes": 805306368,
+        "memoryCurrentBytes": 281907200,
+        "memoryLifetimePeakBytes": 288219136,
+        "oomCount": 0,
+        "oomKillCount": 0,
+        "javaProcessCount": 1,
+        "javaRssBytes": 298840064,
+        "javaPssBytes": 287356928
+      },
+      "database": {
+        "cpuLimitCores": 1.0,
+        "memoryLimitBytes": 1610612736,
+        "memoryCurrentBytes": 158531584,
+        "memoryLifetimePeakBytes": 167415808,
+        "oomCount": 0,
+        "oomKillCount": 0,
+        "javaProcessCount": 0,
+        "javaRssBytes": 0,
+        "javaPssBytes": 0
+      },
+      "garage": {
+        "cpuLimitCores": 1.0,
+        "memoryLimitBytes": 1610612736,
+        "memoryCurrentBytes": 5615616,
+        "memoryLifetimePeakBytes": 8577024,
+        "oomCount": 0,
+        "oomKillCount": 0,
+        "javaProcessCount": 0,
+        "javaRssBytes": 0,
+        "javaPssBytes": 0
+      },
+      "kafka": {
+        "cpuLimitCores": 2.0,
+        "memoryLimitBytes": 2147483648,
+        "memoryCurrentBytes": 463101952,
+        "memoryLifetimePeakBytes": 509702144,
+        "oomCount": 0,
+        "oomKillCount": 0,
+        "javaProcessCount": 1,
+        "javaRssBytes": 488980480,
+        "javaPssBytes": 488976384
+      },
+      "web": {
+        "cpuLimitCores": 0.25,
+        "memoryLimitBytes": 201326592,
+        "memoryCurrentBytes": 10809344,
+        "memoryLifetimePeakBytes": 11595776,
+        "oomCount": 0,
+        "oomKillCount": 0,
+        "javaProcessCount": 0,
+        "javaRssBytes": 0,
+        "javaPssBytes": 0
+      },
+      "worker": {
+        "cpuLimitCores": 1.0,
+        "memoryLimitBytes": 805306368,
+        "memoryCurrentBytes": 251166720,
+        "memoryLifetimePeakBytes": 257179648,
+        "oomCount": 0,
+        "oomKillCount": 0,
+        "javaProcessCount": 1,
+        "javaRssBytes": 272932864,
+        "javaPssBytes": 261449728
+      }
+    }
+  },
+  "disposableSyntheticPvc": {
+    "prepare": {
+      "passed": true,
+      "scope": "OWN_NEW_SYNTHETIC_VALIDATION_ONLY",
+      "mode": "prepare",
+      "productionRetentionApplied": false,
+      "existingResourceDeletionPerformed": false,
+      "validationTtlSeconds": 60,
+      "checksPassed": 11,
+      "checksTotal": 11,
+      "failedChecks": [],
+      "verdict": "KEEP_UNEXPIRED",
+      "eligibleAt": "2026-10-15T07:23:45+00:00",
+      "syntheticCanaryBytes": 16384,
+      "syntheticCanarySha256": "a1f259d4365ed4320c377ce26f5c8c56dcdc9a89e7b641bfd8eabfbbeac86654",
+      "deletionPerformed": false,
+      "completedAt": "2026-10-15T07:22:53.442894+00:00",
+      "existingPvcCount": 11,
+      "existingPvCount": 11,
+      "originalPodCount": 6,
+      "dockerCount": 38,
+      "runningDockerCount": 26
+    },
+    "cleanup": {
+      "passed": true,
+      "scope": "OWN_NEW_SYNTHETIC_VALIDATION_ONLY",
+      "mode": "cleanup",
+      "productionRetentionApplied": false,
+      "existingResourceDeletionPerformed": false,
+      "validationTtlSeconds": 60,
+      "checksPassed": 10,
+      "checksTotal": 10,
+      "failedChecks": [],
+      "verdict": "DELETE_ELIGIBLE_VALIDATION_ONLY",
+      "eligibleAt": null,
+      "syntheticCanaryBytes": 16384,
+      "syntheticCanarySha256": "a1f259d4365ed4320c377ce26f5c8c56dcdc9a89e7b641bfd8eabfbbeac86654",
+      "deletionPerformed": true,
+      "completedAt": "2026-10-15T07:24:19.736977+00:00",
+      "existingPvcCount": 11,
+      "existingPvCount": 11,
+      "originalPodCount": 6,
+      "dockerCount": 38,
+      "runningDockerCount": 26
+    }
+  },
+  "boundedFixtureMeasurement": {
+    "passed": true,
+    "sourceCommit": "ed5815e7d72c6ea4f52456d902b7407c7a4a67b0",
+    "checksPassed": 10,
+    "checksTotal": 10,
+    "completedAt": "2026-10-15T07:26:20.146215+00:00",
+    "submittedJobCount": 3,
+    "fixedInputsPerJob": 12,
+    "plannedIdleSeconds": 15,
+    "sampleCount": 64,
+    "sampleWindowMaximumSeconds": 180,
+    "measuredPersistentContainerCount": 6,
+    "abortTriggered": false,
+    "acceptedWorkloadKilledByHelper": false,
+    "automaticResubmissionUsed": false,
+    "existingWorkloadsRestarted": false,
+    "resourceLimitsModified": false,
+    "actualNewExportObjectGetsPerformed": false,
+    "ephemeralStageContainerMetricsMeasured": false,
+    "hostReadingsIncludeStageAndOtherServices": true,
+    "memoryLifetimePeakDistinctFromSampledWindowMax": true,
+    "sampledMaxMayMissSubsecondPeaks": true,
+    "throughputOrProductionCapacityProven": false,
+    "actualKafka": {
+      "partition": 0,
+      "committedOffset": 6,
+      "logEnd": 6,
+      "lag": 0
+    },
+    "latencySummary": {
+      "createdToCompletedSeconds": {
+        "mean": 1.3343526666666667,
+        "max": 2.193121
+      },
+      "queuedToCompletedSeconds": {
+        "mean": 0.63827,
+        "max": 1.458897
+      },
+      "completedToExportVerifiedSeconds": {
+        "mean": 0.25993266666666665,
+        "max": 0.551967
+      },
+      "createdToExportVerifiedSeconds": {
+        "mean": 1.5942853333333333,
+        "max": 2.745088
+      },
+      "requestToExportVerifiedSeconds": {
+        "mean": 14.075737666666667,
+        "max": 15.394661
+      },
+      "requestToStageSuccessObservedSeconds": {
+        "mean": 16.106387671975728,
+        "max": 16.79502360895276
+      }
+    },
+    "sampling": {
+      "idle": {
+        "sampleCount": 16,
+        "observedDurationSeconds": 14.999788251996506,
+        "hostMinimumMemAvailableBytes": 18904903680,
+        "hostMinimumDiskAvailableBytes": 222006210560,
+        "hostMinimumFreeInodes": 28984275,
+        "components": {
+          "api": {
+            "meanCpuCores": 0.01373472722007116,
+            "maxObservedIntervalCpuCores": 0.18790491525620667,
+            "windowMaxMemoryCurrentBytes": 282218496,
+            "windowMaxJavaRssBytes": 298938368,
+            "windowMaxJavaPssBytes": 287455232,
+            "lifetimeMemoryPeakAtWindowStartBytes": 288219136,
+            "lifetimeMemoryPeakAtWindowEndBytes": 288219136,
+            "oomDelta": 0,
+            "oomKillDelta": 0,
+            "cpuDelta": {
+              "usage_usec": 206018,
+              "nr_periods": 36,
+              "nr_throttled": 0,
+              "throttled_usec": 0
+            }
+          },
+          "database": {
+            "meanCpuCores": 0.008499719986582494,
+            "maxObservedIntervalCpuCores": 0.04550898270751448,
+            "windowMaxMemoryCurrentBytes": 158810112,
+            "windowMaxJavaRssBytes": 0,
+            "windowMaxJavaPssBytes": 0,
+            "lifetimeMemoryPeakAtWindowStartBytes": 167415808,
+            "lifetimeMemoryPeakAtWindowEndBytes": 167415808,
+            "oomDelta": 0,
+            "oomKillDelta": 0,
+            "cpuDelta": {
+              "usage_usec": 127494,
+              "nr_periods": 61,
+              "nr_throttled": 0,
+              "throttled_usec": 0
+            }
+          },
+          "garage": {
+            "meanCpuCores": 0.00019626943731076648,
+            "maxObservedIntervalCpuCores": 0.0009339996450991787,
+            "windowMaxMemoryCurrentBytes": 5615616,
+            "windowMaxJavaRssBytes": 0,
+            "windowMaxJavaPssBytes": 0,
+            "lifetimeMemoryPeakAtWindowStartBytes": 8577024,
+            "lifetimeMemoryPeakAtWindowEndBytes": 8577024,
+            "oomDelta": 0,
+            "oomKillDelta": 0,
+            "cpuDelta": {
+              "usage_usec": 2944,
+              "nr_periods": 6,
+              "nr_throttled": 0,
+              "throttled_usec": 0
+            }
+          },
+          "kafka": {
+            "meanCpuCores": 0.011077756379519771,
+            "maxObservedIntervalCpuCores": 0.012968685957602992,
+            "windowMaxMemoryCurrentBytes": 466407424,
+            "windowMaxJavaRssBytes": 491417600,
+            "windowMaxJavaPssBytes": 491413504,
+            "lifetimeMemoryPeakAtWindowStartBytes": 585396224,
+            "lifetimeMemoryPeakAtWindowEndBytes": 585396224,
+            "oomDelta": 0,
+            "oomKillDelta": 0,
+            "cpuDelta": {
+              "usage_usec": 166164,
+              "nr_periods": 134,
+              "nr_throttled": 0,
+              "throttled_usec": 0
+            }
+          },
+          "web": {
+            "meanCpuCores": 0.0001922693808438351,
+            "maxObservedIntervalCpuCores": 0.0006199997203844929,
+            "windowMaxMemoryCurrentBytes": 10809344,
+            "windowMaxJavaRssBytes": 0,
+            "windowMaxJavaPssBytes": 0,
+            "lifetimeMemoryPeakAtWindowStartBytes": 11595776,
+            "lifetimeMemoryPeakAtWindowEndBytes": 11595776,
+            "oomDelta": 0,
+            "oomKillDelta": 0,
+            "cpuDelta": {
+              "usage_usec": 2884,
+              "nr_periods": 6,
+              "nr_throttled": 0,
+              "throttled_usec": 0
+            }
+          },
+          "worker": {
+            "meanCpuCores": 0.0027995728535974923,
+            "maxObservedIntervalCpuCores": 0.003265905592557999,
+            "windowMaxMemoryCurrentBytes": 251334656,
+            "windowMaxJavaRssBytes": 273092608,
+            "windowMaxJavaPssBytes": 261609472,
+            "lifetimeMemoryPeakAtWindowStartBytes": 257179648,
+            "lifetimeMemoryPeakAtWindowEndBytes": 257179648,
+            "oomDelta": 0,
+            "oomKillDelta": 0,
+            "cpuDelta": {
+              "usage_usec": 41993,
+              "nr_periods": 66,
+              "nr_throttled": 0,
+              "throttled_usec": 0
+            }
+          }
+        }
+      },
+      "workload": {
+        "sampleCount": 48,
+        "observedDurationSeconds": 46.99995711602969,
+        "hostMinimumMemAvailableBytes": 18630152192,
+        "hostMinimumDiskAvailableBytes": 222003818496,
+        "hostMinimumFreeInodes": 28984207,
+        "components": {
+          "api": {
+            "meanCpuCores": 0.02385304304070616,
+            "maxObservedIntervalCpuCores": 0.17114124550305887,
+            "windowMaxMemoryCurrentBytes": 283439104,
+            "windowMaxJavaRssBytes": 300359680,
+            "windowMaxJavaPssBytes": 288876544,
+            "lifetimeMemoryPeakAtWindowStartBytes": 288219136,
+            "lifetimeMemoryPeakAtWindowEndBytes": 288219136,
+            "oomDelta": 0,
+            "oomKillDelta": 0,
+            "cpuDelta": {
+              "usage_usec": 1121092,
+              "nr_periods": 182,
+              "nr_throttled": 0,
+              "throttled_usec": 0
+            }
+          },
+          "database": {
+            "meanCpuCores": 0.014662034654601253,
+            "maxObservedIntervalCpuCores": 0.06933008991995498,
+            "windowMaxMemoryCurrentBytes": 159248384,
+            "windowMaxJavaRssBytes": 0,
+            "windowMaxJavaPssBytes": 0,
+            "lifetimeMemoryPeakAtWindowStartBytes": 167415808,
+            "lifetimeMemoryPeakAtWindowEndBytes": 167415808,
+            "oomDelta": 0,
+            "oomKillDelta": 0,
+            "cpuDelta": {
+              "usage_usec": 689115,
+              "nr_periods": 266,
+              "nr_throttled": 0,
+              "throttled_usec": 0
+            }
+          },
+          "garage": {
+            "meanCpuCores": 0.001275979887640077,
+            "maxObservedIntervalCpuCores": 0.011665856825302127,
+            "windowMaxMemoryCurrentBytes": 6791168,
+            "windowMaxJavaRssBytes": 0,
+            "windowMaxJavaPssBytes": 0,
+            "lifetimeMemoryPeakAtWindowStartBytes": 8577024,
+            "lifetimeMemoryPeakAtWindowEndBytes": 8577024,
+            "oomDelta": 0,
+            "oomKillDelta": 0,
+            "cpuDelta": {
+              "usage_usec": 59971,
+              "nr_periods": 44,
+              "nr_throttled": 0,
+              "throttled_usec": 0
+            }
+          },
+          "kafka": {
+            "meanCpuCores": 0.014963673227696137,
+            "maxObservedIntervalCpuCores": 0.04604871150450195,
+            "windowMaxMemoryCurrentBytes": 473153536,
+            "windowMaxJavaRssBytes": 498741248,
+            "windowMaxJavaPssBytes": 498737152,
+            "lifetimeMemoryPeakAtWindowStartBytes": 585396224,
+            "lifetimeMemoryPeakAtWindowEndBytes": 585396224,
+            "oomDelta": 0,
+            "oomKillDelta": 0,
+            "cpuDelta": {
+              "usage_usec": 703292,
+              "nr_periods": 429,
+              "nr_throttled": 0,
+              "throttled_usec": 0
+            }
+          },
+          "web": {
+            "meanCpuCores": 0.00016710653545088733,
+            "maxObservedIntervalCpuCores": 0.0007230358408817736,
+            "windowMaxMemoryCurrentBytes": 10809344,
+            "windowMaxJavaRssBytes": 0,
+            "windowMaxJavaPssBytes": 0,
+            "lifetimeMemoryPeakAtWindowStartBytes": 11595776,
+            "lifetimeMemoryPeakAtWindowEndBytes": 11595776,
+            "oomDelta": 0,
+            "oomKillDelta": 0,
+            "cpuDelta": {
+              "usage_usec": 7854,
+              "nr_periods": 14,
+              "nr_throttled": 0,
+              "throttled_usec": 0
+            }
+          },
+          "worker": {
+            "meanCpuCores": 0.042352357792282004,
+            "maxObservedIntervalCpuCores": 0.6662164672051714,
+            "windowMaxMemoryCurrentBytes": 265515008,
+            "windowMaxJavaRssBytes": 287051776,
+            "windowMaxJavaPssBytes": 275568640,
+            "lifetimeMemoryPeakAtWindowStartBytes": 257179648,
+            "lifetimeMemoryPeakAtWindowEndBytes": 266203136,
+            "oomDelta": 0,
+            "oomKillDelta": 0,
+            "cpuDelta": {
+              "usage_usec": 1990559,
+              "nr_periods": 237,
+              "nr_throttled": 12,
+              "throttled_usec": 431612
+            }
+          }
+        }
+      },
+      "wholeWindow": {
+        "sampleCount": 64,
+        "observedDurationSeconds": 62.99974956799997,
+        "hostMinimumMemAvailableBytes": 18630152192,
+        "hostMinimumDiskAvailableBytes": 222003818496,
+        "hostMinimumFreeInodes": 28984207,
+        "components": {
+          "api": {
+            "meanCpuCores": 0.022331549087849234,
+            "maxObservedIntervalCpuCores": 0.18790491525620667,
+            "windowMaxMemoryCurrentBytes": 283439104,
+            "windowMaxJavaRssBytes": 300359680,
+            "windowMaxJavaPssBytes": 288876544,
+            "lifetimeMemoryPeakAtWindowStartBytes": 288219136,
+            "lifetimeMemoryPeakAtWindowEndBytes": 288219136,
+            "oomDelta": 0,
+            "oomKillDelta": 0,
+            "cpuDelta": {
+              "usage_usec": 1406882,
+              "nr_periods": 224,
+              "nr_throttled": 0,
+              "throttled_usec": 0
+            }
+          },
+          "database": {
+            "meanCpuCores": 0.013088988538120285,
+            "maxObservedIntervalCpuCores": 0.06933008991995498,
+            "windowMaxMemoryCurrentBytes": 159248384,
+            "windowMaxJavaRssBytes": 0,
+            "windowMaxJavaPssBytes": 0,
+            "lifetimeMemoryPeakAtWindowStartBytes": 167415808,
+            "lifetimeMemoryPeakAtWindowEndBytes": 167415808,
+            "oomDelta": 0,
+            "oomKillDelta": 0,
+            "cpuDelta": {
+              "usage_usec": 824603,
+              "nr_periods": 332,
+              "nr_throttled": 0,
+              "throttled_usec": 0
+            }
+          },
+          "garage": {
+            "meanCpuCores": 0.0010032579563158182,
+            "maxObservedIntervalCpuCores": 0.011665856825302127,
+            "windowMaxMemoryCurrentBytes": 6791168,
+            "windowMaxJavaRssBytes": 0,
+            "windowMaxJavaPssBytes": 0,
+            "lifetimeMemoryPeakAtWindowStartBytes": 8577024,
+            "lifetimeMemoryPeakAtWindowEndBytes": 8577024,
+            "oomDelta": 0,
+            "oomKillDelta": 0,
+            "cpuDelta": {
+              "usage_usec": 63205,
+              "nr_periods": 51,
+              "nr_throttled": 0,
+              "throttled_usec": 0
+            }
+          },
+          "kafka": {
+            "meanCpuCores": 0.013964119000988096,
+            "maxObservedIntervalCpuCores": 0.04604871150450195,
+            "windowMaxMemoryCurrentBytes": 473153536,
+            "windowMaxJavaRssBytes": 498741248,
+            "windowMaxJavaPssBytes": 498737152,
+            "lifetimeMemoryPeakAtWindowStartBytes": 585396224,
+            "lifetimeMemoryPeakAtWindowEndBytes": 585396224,
+            "oomDelta": 0,
+            "oomKillDelta": 0,
+            "cpuDelta": {
+              "usage_usec": 879736,
+              "nr_periods": 572,
+              "nr_throttled": 0,
+              "throttled_usec": 0
+            }
+          },
+          "web": {
+            "meanCpuCores": 0.00017044512198274275,
+            "maxObservedIntervalCpuCores": 0.0007230358408817736,
+            "windowMaxMemoryCurrentBytes": 10809344,
+            "windowMaxJavaRssBytes": 0,
+            "windowMaxJavaPssBytes": 0,
+            "lifetimeMemoryPeakAtWindowStartBytes": 11595776,
+            "lifetimeMemoryPeakAtWindowEndBytes": 11595776,
+            "oomDelta": 0,
+            "oomKillDelta": 0,
+            "cpuDelta": {
+              "usage_usec": 10738,
+              "nr_periods": 20,
+              "nr_throttled": 0,
+              "throttled_usec": 0
+            }
+          },
+          "worker": {
+            "meanCpuCores": 0.03230257285076072,
+            "maxObservedIntervalCpuCores": 0.6662164672051714,
+            "windowMaxMemoryCurrentBytes": 265515008,
+            "windowMaxJavaRssBytes": 287051776,
+            "windowMaxJavaPssBytes": 275568640,
+            "lifetimeMemoryPeakAtWindowStartBytes": 257179648,
+            "lifetimeMemoryPeakAtWindowEndBytes": 266203136,
+            "oomDelta": 0,
+            "oomKillDelta": 0,
+            "cpuDelta": {
+              "usage_usec": 2035054,
+              "nr_periods": 309,
+              "nr_throttled": 12,
+              "throttled_usec": 431612
+            }
+          }
+        }
+      }
+    }
+  },
+  "freshObjectVerification": {
+    "passed": true,
+    "originalWholeBytesUnchangedCount": 9,
+    "newWholeBytesVerifiedCount": 9,
+    "newRawObjects": 3,
+    "newExportObjects": 6,
+    "actualFreshGetCount": 18,
+    "objectWritesPerformed": false
+  },
+  "stageAndDiskCleanup": {
+    "passed": true,
+    "removedOwnedCompletedStageJobs": 3,
+    "originalPodsRemaining": 6,
+    "jobDatabaseRecordsRemoved": 0,
+    "diskSnapshotBeforeAt": "2026-10-15T07:15:14.015253+00:00",
+    "diskSnapshotAfterAt": "2026-10-15T07:26:19.185023+00:00",
+    "diskComparisonIncludesBackgroundWrites": true,
+    "newNineObjectsLogicalBytes": 14727,
+    "activeLabPvcAllocatedDeltaBytes": 995328,
+    "retainedRuntimeTrialPvcAllocatedDeltaBytes": 0
+  },
+  "finalPreservation": {
+    "capturedAt": "2026-10-15T07:40:32.846315+00:00",
+    "passed": true,
+    "checksPassed": 25,
+    "checksTotal": 25,
+    "failedChecks": [],
+    "committedExportFileMetadataCount": 12,
+    "completedExportedJobCount": 6,
+    "dockerCount": 38,
+    "existingPvCount": 11,
+    "existingPvcCount": 11,
+    "freshS3GetsPerformedByThisHelper": false,
+    "kafkaCommittedOffset": 6,
+    "kafkaLag": 0,
+    "kafkaLogEnd": 6,
+    "observerServiceExecStartComparedToBefore": false,
+    "observerUnitBytesComparedToBefore": false,
+    "originalPodCount": 6,
+    "resourceDeletionPerformedByThisHelper": false,
+    "resourceLimitsModifiedByThisHelper": false,
+    "runningDockerCount": 26,
+    "sourceCommit": "ed5815e7d72c6ea4f52456d902b7407c7a4a67b0"
+  },
+  "limits": {
+    "existingBackupOrTrialDeletionPerformed": false,
+    "jobRawExportGcEnabled": false,
+    "productionRetentionApplyImplemented": false,
+    "maximumLoadOrThroughputProven": false,
+    "p95OrServiceLevelObjectiveProven": false,
+    "ephemeralStageContainerResourcesMeasured": false,
+    "subsecondInstantaneousCpuPeakMeasured": false,
+    "filesystemCapacityHardLimitProven": false,
+    "longTermRetentionOrKeyRotationVerified": false
+  }
+}

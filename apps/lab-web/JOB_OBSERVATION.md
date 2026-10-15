@@ -35,7 +35,9 @@
 
 브라우저의 `job-observation.ts` validator는 모든 객체 경계를 allowlist로 닫고 상태·오류 코드·시간·hash·크기·건수·작업 수·환경/범위 조합과 export 상태의 관계를 검증한다. 요청에는 인증 정보·cookie를 보내지 않는다. 기존 두 관측 계약은 유지하며 host cycle은 job 기록을 별도 허용 입력으로 함께 게시한다. Pages v2는 배포 회차별 존재 manifest와 기록 artifact에서 마지막 유효 job 기록을 복원하고, 더 오래된 입력은 반영하지 않고 동일 시각 충돌·누락된 예상 artifact는 게시를 차단한다. 새 job의 원래 timer 자동 수집·Pages 게시 2회와 공개 JSON 전체의 원본 일치를 확인했다. 완료 간격은 1개·1809.371239초였으며 [후속 검증 근거](../../docs/evidence/runtime-recovery/README.md)는 기존 플랫폼 collector 11회와 구분한다. 장기간 반복 운영은 후속이다.
 
-전용 PVC의 [격리 복원 근거](../../docs/evidence/runtime-pvc-restore/README.md)는 이 화면의 저장소 probe 기능이 아니다. raw 3개·export 6개의 GET과 clone 전용 128KiB data 블록 복원을 별도 관리 시험에서 확인했다. clone canary나 복원 namespace를 공개 job 수집 입력으로 연결하지 않았으며 공개 3작업·파일 정보 6개와 계약은 그대로다.
+전용 PVC의 [격리 복원 근거](../../docs/evidence/runtime-pvc-restore/README.md)는 이 화면의 저장소 probe 기능이 아니다. raw 3개·export 6개의 GET과 clone 전용 128KiB data 블록 복원을 별도 관리 시험에서 확인했다. clone canary나 복원 namespace를 공개 job 수집 입력으로 연결하지 않았으며 공개 계약은 그대로다. 작업 수는 각 실제 수집 회차의 기록을 따른다.
+
+별도 [보존·자원 관측](../../docs/evidence/retention-resource-budget/README.md)에서는 새 고정 fixture 3개를 추가해 DB에 총 6개 EXPORTED 작업·파일 정보 12개가 생겼고 기존 세 작업의 요약은 유지됐다. raw·export 전체 Get 18개는 관리 시험으로 확인했다. 최종 보존 검사 25개에서도 기존 기록·객체·기존 workload를 유지했다. CPU/RSS/PSS·디스크·정리 결과를 이 공개 DTO에 추가한 것은 아니며 Pages는 다음 실제 수집 회차가 반영되기 전까지 이전 유효 기록을 표시한다. EXPORTED나 공개 파일 hash를 객체 GC 허가로 사용하지 않으며 [보존 기준](../../docs/runbooks/retention-resource-budget.md)을 따른다.
 
 ## 최상위 형식
 
