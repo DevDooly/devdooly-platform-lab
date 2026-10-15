@@ -48,3 +48,11 @@ Pages는 실시간 API가 아니라 마지막 수집 기록입니다. heartbeat�
 ## 확인하지 않은 범위
 
 단일 미니 PC, Kafka 1 partition/RF1, Garage 복제 1 구성입니다. StatefulSet PVC Retain은 디스크 고장 대비 백업을 대신하지 않습니다. Kafka/Garage PVC 전체 복원, 여러 노드 장애 복구, 운영 Pod 종료·재개 장애 시험과 새 job timer의 장기 반복·자격증명 만료/회전은 후속입니다. 앞선 격리 중단 IT를 실제 운영 장애 시험으로 바꾸어 표기하지 않습니다.
+
+## 이후 검증
+
+위 본문과 `summary.json`은 최초 배포·두 작업·수동/systemd 게시를 확인한 당시 기록이다. 이후 실제 idle worker Pod의 UID 조건 정상 교체에서 기존 STOPPED·정상 TERM exit 143·새 RUNNING/heartbeat를 관측하고, 기존 두 작업의 전체 SQL·시각·파일 4개·Kafka offset과 다른 서비스/PVC 보존을 확인했다. [후속 worker 재시작·정기 수집 근거](../runtime-recovery/README.md)에 별도로 기록한다. 최초 배포 당시의 미확인 목록을 이후 결과로 덮어쓰지 않으며, 진행 중 작업의 강제 종료·PVC 전체 복원·장기 운영은 계속 별도 범위다.
+
+후속 정상 재시작 뒤에는 별도 `lab-fixture-20261015-recovery` 작업을 접수해 12/7/3/2/0·EXPORTED·슬롯 해제와 새 파일 2개의 실제 전체 Get·크기·SHA를 검증했다. 전체 3개 작업·파일 6개·Kafka offset 3/log end 3/lag 0이며 원래 두 작업의 전체 SQL·시각·HTTP 요약과 파일 4개는 보존했다. 이 후속 수치는 위 최초 배포의 두 작업·offset 2 기록과 구분해 [후속 근거](../runtime-recovery/README.md)에 남긴다.
+
+같은 후속 검증에서 원래 timer의 새 job 자동 수집·Pages 게시를 2회 확인했다. 04:53:35→38 UTC 회차와 05:23:43→48 UTC 회차가 모두 성공했고 공개 jobs/platform JSON 전체가 실제 수집 원본과 같았다. 확인한 서비스 완료 간격은 1개·1809.371239초(30분 9.371초)이며 unit·collector를 바꾸거나 중간에 수동 observer를 실행하지 않았다. 두 번째 공개 기록은 새 worker 시작 시각과 전체 3개 EXPORTED 작업·파일 정보 6개·빈 슬롯을 포함했다. 위 최초 배포 summary의 미관측 flag는 당시 상태로 보존하며 [후속 정기 실행 근거](../runtime-recovery/README.md)에서 이후 결과를 확인한다. 과거 플랫폼 collector의 11회나 장기간 운영 검증과 합산하지 않는다.
