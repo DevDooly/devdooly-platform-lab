@@ -16,7 +16,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 | 플랫폼 관측 수집 | 최소 읽기 수집·실패 보존·게시 순서 교정과 timer 자동 게시 11회 성공 | [수집 검증과 남은 범위](docs/evidence/platform-observation/README.md), [공개 필드 계약](apps/lab-web/PLATFORM_OBSERVATION.md) |
 | Kafka·Garage·상시 worker | 정상 재시작 후 새 fixture까지 총 3개 작업·파일 6개 확인·슬롯 해제·lag 0 | [최초 배포](docs/evidence/runtime-deployment/README.md), [재시작·후속 처리](docs/evidence/runtime-recovery/README.md) |
 | 관리자 접속 | ClusterIP 관리 화면과 SSH 접속 도우미 | [접속 방법](docs/runbooks/admin-access.md) |
-| 백업과 복구 | 외부 암호화 백업·격리 DB 복원·호스트 재부팅 | [실제 검증과 한계](docs/evidence/recovery/README.md) |
+| 백업과 복구 | 외부 암호화 사본의 Kafka/Garage PVC 격리 복원·별도 물리 블록 복원, 이전 DB/재부팅 검증 | [PVC 복원](docs/evidence/runtime-pvc-restore/README.md), [기존 복구 검증](docs/evidence/recovery/README.md) |
 
 미니 PC의 웹을 통해 API·MariaDB를 조회하고 합성 입력 12건의 결과를 확인했습니다. 기대 결과는 성공 7·실패 3·중복 2·대기 0입니다. 공개 Pages는 **미니 PC에서 확인한 마지막 기록**과 수집 시각·source commit을 표시합니다. 현재 공개 홈에 미니 PC 실시간 API는 연결하지 않았습니다.
 
@@ -26,11 +26,15 @@ API의 Jenkins·Argo CD·Kubernetes `NOT_CONFIGURED`는 **조회 API 내부의 �
 
 4단계의 Kafka·Garage·상시 worker를 미니 PC K3s에 GitOps로 배포했습니다. 최초 배포 검증에서 내부 `--lab-runtime=stage` 명령으로 고정 합성 입력 12개를 두 번 접수했고, 각 작업이 성공 7·실패 3·업무상 중복 2·대기 0으로 완료됐습니다. 결과·실패 파일 총 4개의 전체 Get·크기·SHA-256을 확인한 뒤 실행 슬롯이 비었으며 Kafka offset 2·log end 2·lag 0을 확인했습니다. 기존 seed·V1 행과 처리 시각, 기존 PVC와 Docker 전체 38개·실행 중 26개의 상태를 보존했습니다. [실제 배포·게시 근거](docs/evidence/runtime-deployment/README.md), [실행 절차](docs/runbooks/continuous-runtime.md), [관측 계약](docs/contracts/job-observation.md)을 연결합니다.
 
-실제 미니 PC의 작업 관측과 플랫폼 관측을 Pages에 게시하고 공개 JSON 전체가 수집 원본과 일치함을 확인했습니다. 공개 화면은 실시간 API 대신 마지막 수집 기록을 읽으며, 약 30분 수집 주기·수집 시각과 5분 heartbeat 경고를 구분합니다. 새 job의 원래 timer 자동 수집·Pages 게시 2회와 공개 JSON 전체의 원본 일치를 확인했으며, 관측한 완료 간격은 1개·1809.371239초(30분 9.371초)입니다. [정기 실행 근거](docs/evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다. 공개 POST는 제공하지 않고 고정 fixture 접수는 내부 명령으로만 수행합니다. 단일 노드·partition 1/RF1의 Lab이며 Kafka/Garage PVC 전체 복원과 장기간 운영은 후속입니다.
+실제 미니 PC의 작업 관측과 플랫폼 관측을 Pages에 게시하고 공개 JSON 전체가 수집 원본과 일치함을 확인했습니다. 공개 화면은 실시간 API 대신 마지막 수집 기록을 읽으며, 약 30분 수집 주기·수집 시각과 5분 heartbeat 경고를 구분합니다. 새 job의 원래 timer 자동 수집·Pages 게시 2회와 공개 JSON 전체의 원본 일치를 확인했으며, 관측한 완료 간격은 1개·1809.371239초(30분 9.371초)입니다. [정기 실행 근거](docs/evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다. 공개 POST는 제공하지 않고 고정 fixture 접수는 내부 명령으로만 수행합니다. 단일 노드·partition 1/RF1의 Lab이며 고가용성·장기간 운영은 검증하지 않았습니다.
 
 작업이 없는 실제 worker Pod 하나를 UID 조건·300초 종료 유예로 교체했습니다. 종료 로그와 STOPPED → 새 RUNNING, 정상 TERM exit 143, 교체 Pod의 restartCount 0·heartbeat 전진을 확인했습니다. 관측 절차는 17.808초였으며 같은 image/source를 사용했습니다. 기존 두 작업의 전체 SQL·처리 시각, 파일 4개의 실제 Get 결과와 Kafka offset 2·lag 0이 유지됐고 다른 Pod·Docker·PVC·호스트도 보존됐습니다. [실제 worker 재시작·원래 주기 게시 근거](docs/evidence/runtime-recovery/README.md)를 연결합니다. 진행 중 작업의 crash나 PVC 복원 시험과 구분합니다.
 
 교체된 worker에 별도 고정 fixture `lab-fixture-20261015-recovery`를 접수해 입력 12 = 성공 7 + 실패 3 + 업무상 중복 2 + 대기 0, EXPORTED와 슬롯 해제를 확인했습니다. 새 결과·실패 파일 2개도 실제 Get의 전체 내용·크기·SHA-256을 대조했습니다. 전체 작업은 3개·확인 파일 6개가 됐고 Kafka offset 3·log end 3·lag 0입니다. 원래 두 작업의 전체 SQL·시각·HTTP 요약과 파일 4개는 그대로 보존했습니다.
+
+Kafka·Garage 전용 PVC 3개를 정상 정지 구간에서 보관하고 AES-256-GCM 외부 사본의 인증·전체 해시를 확인한 뒤, 새 namespace·PVC에 복원했습니다. 전체 파일의 bytes·소유자·mode·나노초 mtime과 Kafka 3개 record의 key/value/시각·offset 3·lag 0, Garage의 원본 입력 3개·export 6개 GET을 대조했습니다. 원본 접근이 가능했던 probe가 격리 정책 적용 후 두 회차 모두 차단되고 DNS는 허용됨을 확인했습니다. [실제 PVC 복원 근거](docs/evidence/runtime-pvc-restore/README.md), [복원 절차](docs/runbooks/runtime-pvc-recovery.md)를 연결합니다.
+
+기존 객체 9개는 모두 3,072 bytes 미만으로 metadata DB에 inline 저장돼 있었습니다. 별도 clone에만 128KiB canary를 한 번 PUT해 실제 data 블록 1개를 만든 뒤, 두 개의 추가 PVC로 cold 복원하고 Pod 교체 전후 각 10개 객체를 GET했습니다. 복제 Kafka도 UID 조건의 정상 TERM 교체 후 같은 PVC에서 3개 record와 offset을 보존했습니다. 원본 객체에는 쓰지 않았고 실행 image/source도 바꾸지 않았습니다. 시험용 workload 3개를 정상 종료해 Pod 0개·Retain PVC 5개를 남겼습니다. 최종 보존 검사 28개에서 원본 SQL·작업/파일 정보·PVC 6개·Ready Pod 6개와 기존 Docker 38개/실행 26개의 상태를 확인했습니다.
 
 기반 검증은 [DB](docs/evidence/db-job-foundation/README.md), [원본 S3](docs/evidence/s3-source-storage/README.md), [실제 MariaDB/Garage 결합](docs/evidence/mariadb-s3/README.md), [Kafka 중단·재전달](docs/evidence/kafka-redelivery/README.md), [결과 export](docs/evidence/result-export/README.md)에 구분해 기록했습니다.
 

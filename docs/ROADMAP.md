@@ -108,7 +108,11 @@
 - [ ] 새 job 수집의 장기간 반복 운영·실제 자격증명 만료/회전 검증
 - [x] 실제 idle worker Pod의 UID 조건 정상 교체·종료 marker/STOPPED/exit 143·새 RUNNING과 기존 작업/파일/offset·다른 서비스 보존: [근거](evidence/runtime-recovery/README.md)
 - [x] 교체 worker의 새 고정 fixture 처리·두 파일 실제 Get·슬롯 해제, 총 3작업/6파일·Kafka offset 3/lag 0과 원래 두 작업 전체 보존
-- [ ] Kafka/Garage metadata·data의 일관된 외부 사본과 기존 PVC를 보존하는 격리 복원 검증
+- [x] Kafka/Garage 전용 3PVC cold copy·AES-256-GCM 외부 반환 사본의 전체 일치·새 namespace/PVC 전체 manifest 복원: [근거](evidence/runtime-pvc-restore/README.md)
+- [x] 실제 정책 적용 전 원본 접근 성공·적용 후 두 회차 차단/DNS 허용, Kafka 3 record/offset 3·Garage 원본 9개 inline 객체 GET 보존
+- [x] clone 전용 128KiB canary 1 PUT·물리 블록 1개, 추가 2PVC 복원·Pod 교체 전후 각 GET10
+- [x] 복제 Kafka의 UID 조건 정상 TERM·새 Pod와 같은 PVC, 3 record key/value/시각·offset/lag 보존
+- [x] 시험용 workload 3개 정상 종료·Pod 0·Retain PVC 5개 보관과 최종 원본 SQL/객체/PVC·6개 Ready Pod·Docker 보존 28개 검사
 - [ ] 진행 중 작업 장애·호스트 재시작 복구 검증
 - [ ] 다중 partition·이벤트별 전달 순서 검증이 필요할 때 별도 확장
 - [x] Garage·Java SDK의 필요한 API·기본 checksum 실패와 호환성 교정 검증 후 한정 선정: [ADR 0005](adr/0005-verified-raw-source-storage.md)
@@ -120,7 +124,7 @@
 
 완료 조건: 입력 건수가 성공·실패·중복·대기로 설명되고, 데이터 유실이나 무제한 실행 없이 결과를 확인할 수 있습니다.
 
-새 job의 원래 timer 자동 수집·게시 2회와 완료 간격 1개(1809.371239초)를 확인했습니다. [후속 검증 근거](evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다. 공개 페이지는 약 30분 주기로 수집하는 마지막 기록이며 heartbeat 5분 경고와 구분합니다. 현재 단일 노드·partition 1/RF1, 고정 12개 fixture와 내부 stage 명령만 검증했고 공개 POST는 제공하지 않습니다. 최대 1,000개·장기간 운영·전체 PVC 복원은 완료 표시하지 않습니다.
+새 job의 원래 timer 자동 수집·게시 2회와 완료 간격 1개(1809.371239초)를 확인했습니다. [후속 검증 근거](evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다. 공개 페이지는 약 30분 주기로 수집하는 마지막 기록이며 heartbeat 5분 경고와 구분합니다. 현재 단일 노드·partition 1/RF1, 고정 12개 fixture와 내부 stage 명령만 검증했고 공개 POST는 제공하지 않습니다. 전용 PVC의 격리 복원은 [별도 근거](evidence/runtime-pvc-restore/README.md)로 확인했습니다. 운영 PVC 덮어쓰기·진행 중 crash·최대 1,000개·장기간 운영은 검증하지 않았습니다.
 
 ## 5 LLM 개선 사례와 복구
 

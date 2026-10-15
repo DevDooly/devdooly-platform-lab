@@ -105,4 +105,14 @@ Deployment Recreate는 template rollout 정책이며 수동 Pod 삭제 때 종�
 
 관측한 서비스 완료 간격은 **1개·1809.371239초**이고 첫 service 비활성 뒤 다음 trigger까지는 1805.060428초였다. OnUnitInactiveSec 30분, RandomizedDelaySec 60초, AccuracySec 1분을 유지했다. service 비활성 시점·임의 지연·실행 시간과 Pages 완료 시각을 구분하며 정확히 1800초마다 게시된다고 표현하지 않는다. 두 자동 실행·한 간격을 확인한 결과이며 과거 플랫폼 collector 11회와 합산하거나 장기간 운영·자격증명 회전으로 확대하지 않는다.
 
-다음은 Kafka/Garage metadata·data의 일관된 외부 사본과 기존 PVC를 보존하는 격리 복원, 미완료 원본의 보존/정리와 자원 한도 검증이다. 이번 재시작·정기 게시 시험을 반복하는 것보다 남은 복원 경계를 먼저 다룬다.
+이후 전용 PVC의 외부 사본 격리 복원도 아래와 같이 검증했다. 다음은 미완료 원본의 보존/정리와 자원 한도·장기간 운영 검증이다.
+
+## Kafka·Garage 전용 PVC 격리 복원
+
+2026-10-15의 [복원 근거](../evidence/runtime-pvc-restore/README.md)와 [별도 실행 절차](runtime-pvc-recovery.md)를 따른다. worker를 먼저 정상 종료하고 Kafka/Garage가 완전히 멈춘 구간에서 전용 PVC 3개를 cold 보관했다. AES-256-GCM 외부 사본의 인증·반환 bytes/SHA를 확인한 뒤 원본과 분리한 namespace·PVC에 전체 파일 bytes·UID/GID·mode·나노초 mtime을 복원했다. 원본 접근의 positive probe와 정책 적용 후 두 회차의 차단·DNS 허용을 실제 대조했으며 network policy 객체 존재만으로 격리 성공을 표시하지 않았다.
+
+복제 Kafka의 3개 record key/value/시각·cluster/topic/group identity·committed 3/log end 3/lag 0과 Garage의 raw 3개·export 6개 전체 GET을 확인했다. 기존 9개는 모두 3,072 bytes 미만 inline 객체였고 원본 data PVC는 64-byte marker만 있었다. 따라서 별도 clone에만 128KiB canary를 한 번 PUT해 data 블록 1개를 만든 뒤, 그 clone을 정상 종료하고 metadata/data를 추가 새 PVC 2개로 복원했다. 대체 Garage의 Pod 교체 전후 각 GET10을 확인했고 원본 객체에는 PUT하지 않았다.
+
+복제 Kafka도 UID 조건으로 정상 TERM 종료·exit 143을 확인하고 같은 PVC·spec·digest의 새 Ready Pod에서 같은 record/offset을 재검증했다. 이 관측 절차는 12.71초였으며 복구 SLA가 아니다. 애플리케이션 image/source는 변경하지 않았다. 운영 PVC 덮어쓰기·원본 디스크 손실·진행 중 쓰기의 crash 복원·다중 노드 HA·K3s/Jenkins 전체 복원은 이 시험 범위가 아니다.
+
+시험을 마친 clone StatefulSet 3개는 정상 종료하고 Pod를 남기지 않았으며, 원본과 분리한 PVC 5개는 Retain으로 보관했다. 최종 28개 검사에서 원래 6PVC·6개 Ready Pod, 업무 SQL 전체와 3개 작업/6개 파일 정보, 기존 Docker 전체 38개/실행 26개의 상태·시작 시각·mount를 확인했다. 원본 객체 9개도 별도 GET으로 전체 bytes를 대조했다. 원래 PVC에 덮어쓰거나 시험 볼륨을 삭제한 결과는 아니다.
