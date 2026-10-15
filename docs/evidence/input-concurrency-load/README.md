@@ -85,3 +85,5 @@ DB 사전 할당 안에서 데이터가 늘 수 있으므로 allocated 증가량
 첫 기능 시험 준비에서는 실제 `SOURCE_COMMIT` 미주입으로 S3/Kafka 시험 client 생성 전에 설정 검사가 실패했습니다. Linux 준비에서는 image RepoDigest의 tag 문자열 비교가 맞지 않아 읽기 검사에서 한 번 중단됐습니다. 실제 source 주입과 고정 digest 대조로 각각 준비를 바로잡았으며 이 두 실패에서 workload 작업을 접수하지 않았습니다. 이를 실패한 작업을 숨기거나 자동 재접수해 성공시킨 결과로 표시하지 않습니다.
 
 공개 요약은 source·artifact 지문, 시간·수량·제한·메트릭·판정만 선택했습니다. 접속 주소·host 경로·IP·PID·cgroup 경로·credentials·환경 변수 값·실행 명령 원문·SQL 원문·private 보고서는 공개하지 않습니다. 현재 운영의 V2 반영, 공개 관측 게시와 source/image 일치는 별도 배포 근거에서 검증해야 합니다.
+
+이후 V2 지원 API·worker를 실제 K3s에 배포하고 고정 1,000건 처리·기존 객체 보존·공개 관측 게시를 확인했습니다. [후속 실제 배포 근거](../input-v2-deployment/README.md)는 이 보고서의 당시 격리 조건·운영 소스·수치를 변경하지 않습니다.

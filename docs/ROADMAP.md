@@ -88,11 +88,11 @@
 
 ## 4 Kafka와 객체 저장소
 
-2026-10-15 미니 PC K3s의 Kafka·Garage·상시 worker에 배포했습니다. 두 고정 fixture 작업의 처리·파일 4개 저장 확인·슬롯 해제·lag 0과 실제 job 관측의 Pages 게시를 확인했습니다. [현재 배포·보존·게시 근거](evidence/runtime-deployment/README.md)를 따릅니다. 아래 격리 검증은 당시 조건의 별도 근거입니다.
+2026-10-15 미니 PC K3s에 Kafka·Garage·상시 worker를 배포했고 이후 API·worker를 V2 지원 소스로 함께 교체했습니다. 실제 고정 1,000건 작업은 성공 500·실패 300·중복 200·대기 0으로 완료됐습니다. 기존 18개와 신규 3개 파일의 전체 GET, 슬롯 해제·Kafka offset 7/lag 0, 총 7개 작업·파일 정보 14개의 공개 JSON 일치를 확인했습니다. [최신 실제 배포·게시 근거](evidence/input-v2-deployment/README.md)를 따릅니다. 아래 과거 격리 검증은 당시 조건의 별도 근거입니다.
 
 - [x] V2 작업·outbox·단일 슬롯, raw 원본 hash·DB 멱등 경계 구현
 - [x] 실제 MariaDB의 V1 업그레이드·빈 DB 초기화·반복 시작, 동시 제출·rollback·재전달·Asia/Seoul 시각 일치 검증
-- [x] 이전 image의 V2 DB 호환성과 기존 운영 SQL·PVC·Docker 보존, 임시 자원 정리 확인
+- [x] 이전 image의 Flyway V2 DB migration 호환성(시나리오 V2 전방 호환성과 별개)과 기존 운영 SQL·PVC·Docker 보존, 임시 자원 정리 확인
 
 - [x] 명시적 Kafka publisher·worker, ACK 뒤 outbox 확인·Get-only 원본 검증·DB commit 뒤 수동 offset 구현: [ADR 0006](adr/0006-explicit-kafka-dispatch.md)
 - [x] 실제 Kafka·MariaDB·Garage에서 JVM 중단 세 경계·재전달 멱등·손상 원본 fail-stop/명시적 fixture 복구, 결과 건수·offset·lag 0·기존 운영 보존: [근거](evidence/kafka-redelivery/README.md)
@@ -122,6 +122,7 @@
 - [x] 기존 cgroup 설정 일치·고정 입력 12개 3회의 CPU/RSS/PSS·디스크 snapshot·지연 관측: [근거](evidence/retention-resource-budget/README.md)
 - [x] 격리 환경의 최대 1,000개 입력·단일 슬롯 동시 2/8개 접수·초과 입력 거부: [근거](evidence/input-concurrency-load/README.md)
 - [x] 별도 Linux worker의 1 CPU·768MiB 제한에서 1,000개 작업 3회·전체 파일 GET·자원/지연 관측: [근거](evidence/input-concurrency-load/README.md)
+- [x] V2 지원 API·worker 실제 배포, 1,000건 처리·기존 18개/신규 3개 객체와 7개 작업 공개 게시: [근거](evidence/input-v2-deployment/README.md)
 - [ ] 요청 빈도 제한 구현·검증
 - [ ] 객체 tombstone/GC와 참조 확인 기반 삭제 경계 검증
 - [ ] 과부하·운영 처리 용량과 중단/회복 한계 검증
@@ -129,7 +130,7 @@
 
 완료 조건: 입력 건수가 성공·실패·중복·대기로 설명되고, 데이터 유실이나 무제한 실행 없이 결과를 확인할 수 있습니다.
 
-새 job의 원래 timer 자동 수집·게시 2회와 완료 간격 1개(1809.371239초)를 확인했습니다. [후속 검증 근거](evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다. 공개 페이지는 약 30분 주기로 수집하는 마지막 기록이며 heartbeat 5분 경고와 구분합니다. 현재 운영판은 단일 노드·partition 1/RF1의 고정 12개 fixture와 내부 stage 명령을 사용하며 공개 POST는 제공하지 않습니다. 새 1,000개 시나리오와 동시 접수 검증은 아래의 별도 격리 후보판 결과입니다. 전용 PVC의 격리 복원은 [별도 근거](evidence/runtime-pvc-restore/README.md)로 확인했습니다. 운영 PVC 덮어쓰기·진행 중 crash·과부하 용량·장기간 운영은 검증하지 않았습니다.
+새 job의 원래 timer 자동 수집·게시 2회와 완료 간격 1개(1809.371239초)를 확인했습니다. [후속 검증 근거](evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다. 공개 페이지는 약 30분 주기로 수집하는 마지막 기록이며 heartbeat 5분 경고와 구분합니다. 현재 운영판은 단일 노드·partition 1/RF1이며 내부 stage 명령의 기본 12개 V1 fixture와 선택적 고정 1,000개 V2 fixture를 지원합니다. 실제 V2 한 작업의 처리·파일·공개 관측은 [후속 배포 근거](evidence/input-v2-deployment/README.md)에서 확인했고, 정확한 1MiB 경계·동시 접수·자원 수치는 아래 별도 격리 시험 조건입니다. 공개 POST는 제공하지 않습니다. 전용 PVC의 격리 복원은 [별도 근거](evidence/runtime-pvc-restore/README.md)로 확인했습니다. 운영 PVC 덮어쓰기·진행 중 crash·과부하 용량·장기간 운영은 검증하지 않았습니다.
 
 보존 정책은 dry-run만 제공하며 실제 백업·기존 trial은 삭제하지 않았습니다. 별도 60초 validation TTL의 새 합성 PVC만 정리했고 기존 11PVC/PV를 보존했습니다. 약 63초의 작은 작업 관측에서는 기존 6개 container/image/source와 limit을 유지했고 총 6개 EXPORTED 작업·파일 12개 전체 Get·offset 6/lag 0을 확인했습니다. 최종 25개 검사에서 기존 11PVC/PV·6개 원본 Pod·Docker 38개/실행 26개·기존 업무 SQL/객체와 timer 설정·주기를 보존했습니다. 이 작은 작업 관측은 운영 처리 용량·SLA 검증이 아닙니다. [관측 방법과 한계](runbooks/retention-resource-budget.md)를 따릅니다.
 
