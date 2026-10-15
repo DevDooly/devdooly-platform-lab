@@ -282,7 +282,11 @@ class RejectMetadataRedirects(HTTPRedirectHandler):
 
 class PublicGitHub:
     def __init__(self, token: str | None = None):
-        if token is not None and (not isinstance(token, str) or not re.fullmatch(r"[A-Za-z0-9_]{20,255}", token)):
+        # GitHub job tokens are opaque and may change format. Validate only the
+        # bounded HTTP header framing; GitHub validates the credential itself.
+        # Visible ASCII excludes whitespace, CR/LF, controls, DEL and Unicode.
+        if token is not None and (not isinstance(token, str) or not 20 <= len(token) <= 8192
+                                  or not all(33 <= ord(character) <= 126 for character in token)):
             raise GateError("INVALID_METADATA_TOKEN")
         self._token = token
         self._opener = build_opener(ProxyHandler({}), RejectMetadataRedirects())

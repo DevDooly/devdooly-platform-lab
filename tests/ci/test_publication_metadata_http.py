@@ -58,10 +58,24 @@ class MetadataHttpTest(unittest.TestCase):
         self.assertIsNone(transport.requests[0].get_header("Authorization"))
 
     def test_invalid_present_tokens_fail_before_any_request(self):
-        for token in ("", "short", "a" * 256, TOKEN + "\r\nX-Injected: true", TOKEN + " ", "é" * 30, 123):
+        for token in ("", "short", "a" * 8193, TOKEN + "\r\nX-Injected: true", TOKEN + " ", TOKEN + "\t",
+                      TOKEN + "\x00", TOKEN + "\x1f", TOKEN + "\x7f", "é" * 30, 123):
             with self.subTest(kind=type(token).__name__, length=len(token) if isinstance(token, str) else 0):
                 with self.assertRaisesRegex(gate.GateError, "^INVALID_METADATA_TOKEN$"):
                     gate.PublicGitHub(token)
+
+    def test_long_dotted_hyphenated_opaque_job_tokens_use_real_request_path(self):
+        values = ["synthetic.header.payload-signature_" * 10,
+                  "opaque.synthetic-token.~+/=" * 160,
+                  "Z" * 8192,
+                  "visible-ascii-only:" + "!#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"]
+        for token in values:
+            with self.subTest(length=len(token)):
+                transport=MemoryHTTPS();remote=client(transport,token)
+                self.assertEqual("refs/heads/main",remote("git/ref/heads/main")["ref"])
+                self.assertEqual("Bearer "+token,transport.requests[0].get_header("Authorization"))
+                self.assertNotIn(token,transport.requests[0].full_url)
+                self.assertEqual(1,len(transport.requests))
 
     def test_wrong_routes_and_url_injection_fail_before_transport(self):
         transport = MemoryHTTPS(); remote = client(transport, TOKEN)
