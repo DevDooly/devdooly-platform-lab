@@ -127,6 +127,8 @@
 - [x] DB에 보관하는 기본 30초의 내부 새 작업 승인 간격과 기본 157개·실제 backend 19개·외부 SQL 복원 후 이전 binary 호환 8개를 확인했습니다: [근거](evidence/admission-cooldown/README.md)
 - [x] API V4 migration→worker 운영 전환과 동일 source·immutable 이미지·기존 7작업/14파일 정보를 보존했습니다: [API·웹 32/32·worker 35/35](evidence/admission-v4-deployment/README.md). 구형 stage 혼용은 금지하며 신규 V4 stage는 아직 수행하지 않았습니다.
 - [x] 기존 timer의 V4 source 정기 수집·Pages 게시와 job/platform 전체 JSON 원본 일치: [후속 근거](evidence/admission-v4-deployment/PUBLICATION.md)
+- [x] worker의 같은 PID1 진행 기록과 stdlib exec readiness 구현·Windows 기본 검사 176개(실행 169·POSIX skip 7): [적용 조건](runbooks/worker-readiness.md)
+- [ ] worker readiness의 Linux 파일 검사·자원 관측·실제 GitOps Ready 전환 확인(현재 default false·미배포)
 - [ ] 공개 진입 요청의 인증·HTTP QPS 제한 구현·검증(현재 공개 실행 없음)
 - [x] 전체 운영 DB·S3 참조21개를 모두 보호하는 dry-run과 새 Garage의 합성 객체2개 자연 GC·공유 블록 보존을 검증했습니다: [근거](evidence/object-reference-gc/README.md)
 - [ ] 운영 객체의 tombstone·삭제 intent·재전달/resume·백업 의존성을 조율하는 삭제 프로토콜과 metadata GC를 검증합니다.
@@ -150,9 +152,9 @@
 - [x] 별도 테스트 볼륨으로 DB 복원 검증: [실제 검증](evidence/recovery/README.md)
 - [ ] 파일·K3s·Jenkins archive 전체 복원 검증
 - [x] 전후 코드·기대 결과·측정 조건과 한계를 [포트폴리오 UI](https://devdooly.github.io/devdooly-platform-lab/#ai-window) 소스에 연결: 웹 41개·check/build, 정적 fixture 선택
-- [ ] AI 사례를 TIL 문서와 연결
+- [x] AI 사례를 [TIL의 UTC 구간 계산 글](https://devdooly.github.io/TIL/LLM_Development/UTC_Window_Analysis_Case/)에 연결: 문서 검사 42개·strict build 후 게시
 
-완료 조건: 개선 전 실패·개선 후 성공과 측정 원본을 재현할 수 있고, 백업한 데이터의 복원 결과가 있습니다. 독립 예제의 Java 테스트 20개·runner 검사 3개를 통과했으며 측정 당시 sourceCommit은 null과 실제 manifest hash로 보존합니다. 큰 오차가 있는 로컬 합성 측정으로 운영 처리량·SLA를 주장하지 않습니다. 사람 검토, TIL 연결과 전체 archive 복원은 남아 있습니다. [CI 연결 범위](evidence/ai-window-analysis/ci-validation.md)는 별도로 기록합니다.
+완료 조건: 개선 전 실패·개선 후 성공과 측정 원본을 재현할 수 있고, 백업한 데이터의 복원 결과가 있습니다. 독립 예제의 Java 테스트 20개·runner 검사 3개를 통과했으며 측정 당시 sourceCommit은 null과 실제 manifest hash로 보존합니다. 큰 오차가 있는 로컬 합성 측정으로 운영 처리량·SLA를 주장하지 않습니다. TIL 연결을 마쳤으며 사람 검토와 전체 archive 복원은 남아 있습니다. [CI 연결 범위](evidence/ai-window-analysis/ci-validation.md)는 별도로 기록합니다.
 
 ## 6 데이터 플랫폼 확장
 

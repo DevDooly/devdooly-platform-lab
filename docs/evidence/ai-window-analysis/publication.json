@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "status": "VERIFIED",
+  "scope": "ACTUAL_AI_EXAMPLE_CI_PAGES_AND_TIL_PUBLICATION",
+  "recordedAt": "2026-10-15T12:34:41.540726Z",
+  "publishedMainCommit": "f7bdffeeb0e8806d6d17503a2bc8867e8656af64",
+  "branchValidation": {
+    "passed": true,
+    "sourceCommit": "5de626b5bd1726aab8fe0ed2fb941e764f9b5502",
+    "actionsRunId": 38733618008,
+    "apiJUnit": {
+      "files": 24,
+      "tests": 157,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "exampleJUnit": {
+      "files": 1,
+      "tests": 20,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "totalJUnit": 177,
+    "requiredExampleJarPresent": true,
+    "exampleJarSha256": "97c0b6bfed0575209593cf0f74b3ba08389ec36765a022c7e097d39c6b7918a9",
+    "composeBeforeAndAfterEvidencePresent": true,
+    "checkedAt": "2026-10-15T12:24:06.693310+00:00"
+  },
+  "mainActions": {
+    "runId": 38734388503,
+    "sourceCommit": "f7bdffeeb0e8806d6d17503a2bc8867e8656af64",
+    "succeeded": true
+  },
+  "mainJenkins": {
+    "buildNumber": 35,
+    "sourceCommit": "f7bdffeeb0e8806d6d17503a2bc8867e8656af64",
+    "junitTests": 177,
+    "failures": 0,
+    "skipped": 0,
+    "requiredApiExampleWebAndSourceArchivesVerified": true,
+    "verifiedAt": "2026-10-15T12:31:23.835028+00:00"
+  },
+  "pages": {
+    "passed": true,
+    "pagesRunId": 38734388547,
+    "pagesSourceCommit": "f7bdffeeb0e8806d6d17503a2bc8867e8656af64",
+    "pagesBuildAndDeploySucceeded": true,
+    "fullAiDtoMatchesCommittedSource": true,
+    "aiDtoSha256": "d3b6f141150a5b71ff50c92c0ec33e71f07e505d5d25240df89871ddf68d4385",
+    "aiFixtureRecords": 8,
+    "measuredSourceCommitPreservedAsNull": true,
+    "humanReview": "PENDING",
+    "aiAndJobSectionsPresent": true,
+    "existingSevenExportedJobsPreserved": true,
+    "runtimeSourceCommit": "202ab6806130cfb37e8829ce7d52c89990d8a54a",
+    "jobCapturedAt": "2026-10-15T12:11:04.538424701Z",
+    "checkedAt": "2026-10-15T12:26:24.084147Z"
+  },
+  "til": {
+    "commit": "c6864ed2df2f28d11d3cde1b6c63eef27edfaa2f",
+    "actionsRunId": 38734848920,
+    "deploySucceeded": true,
+    "localTests": 42,
+    "strictBuildSucceeded": true,
+    "publicArticleHttp200AndCorrectedProvenanceObserved": true,
+    "publicUrl": "https://devdooly.github.io/TIL/LLM_Development/UTC_Window_Analysis_Case/"
+  },
+  "humanReview": "PENDING",
+  "measuredSourceCommit": null,
+  "benchmarkRerunPerformed": false,
+  "publishedJarEqualsMeasuredJarClaimed": false
+}
