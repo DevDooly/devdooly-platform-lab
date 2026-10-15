@@ -60,7 +60,7 @@
 
 ## 3 외부 공개
 
-아래 자동 게시 11회와 실제 간격은 2026-10-12 기존 플랫폼 수집기의 검증이다. 새 job 수집 코드의 실제 systemd 게시·timer 설정과 미관측 정기 회차는 4단계에 구분한다.
+아래 자동 게시 11회와 실제 간격은 2026-10-12 기존 플랫폼 수집기의 검증이다. 새 job 수집 코드의 자동 게시 2회·실제 간격 1개는 4단계에 구분한다.
 
 - [x] 관리 도구의 SSH 인증 접속과 localhost 화면 응답 검증 ([접속 안내](runbooks/admin-access.md))
 - [ ] 미니 PC 공개 Lab의 HTTPS 경로와 실시간 API 연결
@@ -104,19 +104,23 @@
 - [x] 실제 배포 job·플랫폼 관측의 outbound Pages 게시·공개 JSON 전체 일치 확인
 - [x] 새 job 관측의 실제 systemd service 성공·Pages 게시·공개 JSON 전체 일치와 private 0600·임시 SA token 정리
 - [x] 기존 timer enabled·active와 30분 주기·최대 60초 임의 지연 설정 복구
-- [ ] 새 job 코드의 다음 정기 회차·반복 게시와 실제 간격 검증
-- [ ] worker OS/Pod 재시작 정책과 Kafka/Garage 외부 백업·PVC 전체 복원 검증
+- [x] 새 job 코드의 원래 timer 자동 실행·Pages 게시 2회, 완료 간격 1개(1809.371239초), unit/collector 무변경·공개 JSON 전체 일치: [근거](evidence/runtime-recovery/README.md)
+- [ ] 새 job 수집의 장기간 반복 운영·실제 자격증명 만료/회전 검증
+- [x] 실제 idle worker Pod의 UID 조건 정상 교체·종료 marker/STOPPED/exit 143·새 RUNNING과 기존 작업/파일/offset·다른 서비스 보존: [근거](evidence/runtime-recovery/README.md)
+- [x] 교체 worker의 새 고정 fixture 처리·두 파일 실제 Get·슬롯 해제, 총 3작업/6파일·Kafka offset 3/lag 0과 원래 두 작업 전체 보존
+- [ ] Kafka/Garage metadata·data의 일관된 외부 사본과 기존 PVC를 보존하는 격리 복원 검증
+- [ ] 진행 중 작업 장애·호스트 재시작 복구 검증
 - [ ] 다중 partition·이벤트별 전달 순서 검증이 필요할 때 별도 확장
 - [x] Garage·Java SDK의 필요한 API·기본 checksum 실패와 호환성 교정 검증 후 한정 선정: [ADR 0005](adr/0005-verified-raw-source-storage.md)
 - [x] 원본 전체 bytes·크기·SHA-256, 상태 전환 전 실패·재시도와 컨테이너 재생성 후 Get-only 보존: [근거](evidence/s3-source-storage/README.md)
 - [x] 실제 MariaDB·Garage 결합의 정상·손상·DB statement 오류 rollback과 원본 보존·재시도, 같은 DB 반복 및 운영 보존: [근거](evidence/mariadb-s3/README.md)
-- [ ] 자동 보존 정책·지연·자원 지표 연결
+- [ ] 미완료 원본 보존·정리 정책과 CPU/RSS/디스크 증가량·지연 한도 검증
 - [ ] 최대 1,000개 이벤트·전체 동시 작업 1개·요청 빈도 제한 검증
 - [ ] 제한을 검증한 뒤 공개 샘플 실행 기능 추가
 
 완료 조건: 입력 건수가 성공·실패·중복·대기로 설명되고, 데이터 유실이나 무제한 실행 없이 결과를 확인할 수 있습니다.
 
-새 job 관측은 실제 systemd service 실행·Pages 게시와 공개 JSON의 원본 전체 일치를 확인했습니다. timer는 기존 30분 주기·최대 60초 임의 지연 설정으로 enabled·active를 복구했습니다. 새 job 수집 코드의 다음 정기 회차·반복 실행은 아직 관측하지 않았습니다. 공개 페이지는 약 30분 주기로 수집하는 마지막 기록이며 heartbeat 5분 경고와 구분합니다. 현재 단일 노드·partition 1/RF1, 고정 12개 fixture와 내부 stage 명령만 검증했고 공개 POST는 제공하지 않습니다. 최대 1,000개·장기간 운영·전체 PVC 복원은 완료 표시하지 않습니다.
+새 job의 원래 timer 자동 수집·게시 2회와 완료 간격 1개(1809.371239초)를 확인했습니다. [후속 검증 근거](evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다. 공개 페이지는 약 30분 주기로 수집하는 마지막 기록이며 heartbeat 5분 경고와 구분합니다. 현재 단일 노드·partition 1/RF1, 고정 12개 fixture와 내부 stage 명령만 검증했고 공개 POST는 제공하지 않습니다. 최대 1,000개·장기간 운영·전체 PVC 복원은 완료 표시하지 않습니다.
 
 ## 5 LLM 개선 사례와 복구
 

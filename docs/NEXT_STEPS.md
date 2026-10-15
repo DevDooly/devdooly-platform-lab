@@ -2,7 +2,7 @@
 
 초기 계획: 2026년 10월 12일 · 최근 실제 runtime 배포·관측 게시: 2026년 10월 15일
 
-Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접 확인할 수 있는 포트폴리오로 발전시킵니다. 외부 백업·격리 DB 복원·재부팅과 CI/CD의 정상 배포·실패 차단·이전 image digest 복구를 확인했습니다. **기존 플랫폼 관측의 2026-10-12 수집·실패 보존·Pages 게시·공개 화면과 자동 운영·반복 게시 11회를 검증**했습니다. 게시 순서 회귀 교정, API·웹 중단 후 같은 정상 B 복원에 이어 전용 Pages 자격증명으로 수동 host cycle·실제 systemd service·timer 자동 실행을 확인했습니다. 실제 완료 간격은 약 30~31분이었고 자격증명 만료·회전과 장기간 운영은 별도 후속입니다. Kafka·Garage·상시 worker의 실제 배포와 두 작업의 처리·export·슬롯 해제도 확인했습니다. 이후 복원·보존·자원 한도를 검증하고 AI 개선과 데이터 플랫폼 사례를 추가합니다.
+Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접 확인할 수 있는 포트폴리오로 발전시킵니다. 외부 백업·격리 DB 복원·재부팅과 CI/CD의 정상 배포·실패 차단·이전 image digest 복구를 확인했습니다. **기존 플랫폼 관측의 2026-10-12 수집·실패 보존·Pages 게시·공개 화면과 자동 운영·반복 게시 11회를 검증**했습니다. 게시 순서 회귀 교정, API·웹 중단 후 같은 정상 B 복원에 이어 전용 Pages 자격증명으로 수동 host cycle·실제 systemd service·timer 자동 실행을 확인했습니다. 실제 완료 간격은 약 30~31분이었고 자격증명 만료·회전과 장기간 운영은 별도 후속입니다. Kafka·Garage·상시 worker의 실제 배포와 정상 재시작, 총 3작업·파일 6개·슬롯 해제도 확인했습니다. 새 job timer의 자동 게시 2회와 완료 간격 1개를 검증했으며, 다음은 격리 PVC 복원·보존·자원 한도와 AI 개선·데이터 플랫폼 사례입니다.
 
 [공개 Lab](https://devdooly.github.io/devdooly-platform-lab/) · [전체 진행 목록](ROADMAP.md) · [현재 접속 안내](START_HERE.md)
 
@@ -10,8 +10,8 @@ Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접
 
 | 영역 | 확인한 내용 | 다음에 채울 부분 |
 | --- | --- | --- |
-| Java API·worker | 기본 128개, Kafka·Garage K3s 연동, 두 작업 처리·파일 4개 확인·슬롯 해제·lag 0 | 운영 재시작·PVC 복원·보존/자원 한도 |
-| 포트폴리오 | 웹 34개, 기존 플랫폼 관측 11회와 새 job의 실제 systemd 게시·공개 JSON 확인 | 새 job 정기 회차·반복 운영·자격증명 회전 |
+| Java API·worker | 기본 128개, Kafka·Garage K3s 연동, worker 정상 교체·총 3작업/6파일 확인·lag 0 | 진행 중 작업 장애·격리 PVC 복원·보존/자원 한도 |
+| 포트폴리오 | 웹 34개, 기존 플랫폼 11회와 별도 새 job timer 자동 게시 2회·간격 1개 확인 | 장기간 반복 운영·자격증명 회전 |
 | Jenkins·Actions | 같은 SHA의 두 CI 성공·게시·draft GitOps PR·정상 B 배포·실제 실패 차단, main의 공개 status 수집 | credential 만료·회전과 게시 이력 보존 운영 |
 | Argo CD와 Helm | 정상 A → B → A GitOps 복구, Synced·Healthy·데이터 보존과 제한된 실제 상태 수집 | 주기 관측의 반복 운영과 실패 대응 |
 | 운영 | 외부 암호화 백업·격리 DB 복원·호스트 재부팅, 사용자 kubectl 복구 | 초기 비밀번호 교체, 추가 장치 사본·전체 archive 복원 |
@@ -101,12 +101,21 @@ GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins 
 - [x] 별도 작업 관측에 상태·시각·입력 회계식·예상 파일 SHA/크기를 연결하고 실제 배포 기록을 Pages에 게시했습니다.
 - [x] 새 job 관측의 실제 systemd service 성공·Pages 게시·공개 JSON 전체 일치, private 0600·임시 SA token 정리를 확인했습니다.
 - [x] 기존 timer의 enabled·active와 30분 주기·최대 60초 임의 지연 설정을 복구했습니다.
-- [ ] 새 job 코드의 다음 정기 회차·반복 게시와 실제 간격을 검증합니다.
-- [ ] 운영 worker의 재시작 정책과 Kafka/Garage PVC 전체 복원·새 외부 백업을 검증합니다.
+- [x] 원래 timer의 새 job 자동 실행·Pages 게시 2회와 완료 간격 1개(1809.371239초), unit/collector 무변경·공개 JSON 전체 일치를 검증했습니다.
+- [ ] 새 job 수집의 장기간 반복 운영·실제 자격증명 만료/회전을 검증합니다.
+- [x] 실제 idle worker Pod를 UID 조건으로 정상 교체하고 STOPPED→새 RUNNING·정상 TERM 종료·기존 두 작업/파일/offset·다른 서비스 보존을 확인했습니다: [근거](evidence/runtime-recovery/README.md)
+- [x] 교체 worker에 새 고정 fixture를 접수해 처리·EXPORTED·파일 2개 실제 Get·슬롯 해제·Kafka offset 3/lag 0을 확인하고 원래 두 작업 전체를 보존했습니다.
+- [ ] Kafka/Garage metadata·data의 일관된 외부 사본과 기존 PVC를 보존하는 격리 복원을 검증합니다.
+- [ ] 미완료 원본을 보존하는 정리 정책과 CPU/RSS/디스크 증가량·지연 한도를 검증합니다.
+- [ ] 진행 중 작업의 장애 복구·호스트 재시작 범위를 별도로 검증합니다.
 - [ ] 실패 데이터 재처리와 미완료 객체를 보존하는 명시적 정리 절차를 만듭니다.
 - [ ] consumer lag의 자동 공개 관측·지연/자원 지표·최대 1,000개와 부하 한도를 검증합니다.
 
-실제 job·플랫폼 공개 JSON은 수집 원본과 일치했습니다. 새 job 관측은 실제 systemd service 실행·Pages 게시와 공개 JSON의 원본 전체 일치를 확인했습니다. timer는 기존 30분 주기·최대 60초 임의 지연 설정으로 enabled·active를 복구했습니다. 새 job 수집 코드의 다음 정기 회차·반복 실행은 아직 관측하지 않았습니다. 공개 화면은 약 30분 주기의 마지막 기록이며 실시간 조회가 아닙니다. 5분 heartbeat 경고는 마지막 실행 신호의 나이이고 프로세스 중단 판정이 아닙니다. 공개 POST는 없고 내부 `--lab-runtime=stage`가 고정 fixture만 접수합니다.
+실제 worker 정상 재시작의 관측 절차는 17.808초였고 새 Pod의 restartCount는 0입니다. 기존 두 작업의 전체 SQL·시각과 파일 4개의 전체 Get·크기·SHA, Kafka offset 2·log end 2·lag 0이 유지됐습니다. 23개 보존 검사에서 다른 5개 Pod·Docker 전체 38개/실행 26개·전체 PVC 6개/Lab 4개·호스트 상태를 확인했습니다. 이 범위는 작업이 없는 정상 TERM 교체이며 진행 중 crash·PVC 복원·고가용성 검증으로 확대하지 않습니다.
+
+교체된 worker에 별도 고정 fixture `lab-fixture-20261015-recovery`를 접수해 입력 12 = 성공 7 + 실패 3 + 업무상 중복 2 + 대기 0, EXPORTED와 슬롯 해제를 확인했습니다. 새 결과·실패 파일 2개도 실제 Get의 전체 내용·크기·SHA-256을 대조했습니다. 전체 작업은 3개·확인 파일 6개가 됐고 Kafka offset 3·log end 3·lag 0입니다. 원래 두 작업의 전체 SQL·시각·HTTP 요약과 파일 4개는 그대로 보존했습니다.
+
+실제 job·플랫폼 공개 JSON은 수집 원본과 일치했습니다. 새 job의 원래 timer 자동 수집·게시 2회와 완료 간격 1개(1809.371239초)를 확인했습니다. [후속 검증 근거](evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다. 공개 화면은 약 30분 주기의 마지막 기록이며 실시간 조회가 아닙니다. 5분 heartbeat 경고는 마지막 실행 신호의 나이이고 프로세스 중단 판정이 아닙니다. 공개 POST는 없고 내부 `--lab-runtime=stage`가 고정 fixture만 접수합니다.
 
 **완료 조건:** producer ACK·DB 멱등 처리·offset·export 확인을 각각 설명하고 실제 운영 한계를 기록합니다. 단일 노드·partition 1/RF1을 고가용성이나 전체 exactly-once로 표현하지 않습니다. [Kafka producer 설정](https://kafka.apache.org/42/configuration/producer-configs/)
 
@@ -145,9 +154,9 @@ CKA 학습은 Lab과 연결합니다. context·RBAC·Service와 DNS·probe·requ
 
 ## 바로 다음 작업
 
-1. 외부 백업·격리 DB 복원·호스트 재부팅 검증을 완료했습니다. 초기 관리자 비밀번호 교체는 별도로 남아 있습니다.
-2. CI/CD의 정상 B 배포·실제 실패 차단·이전 정상 A 복구를 완료했습니다. 전용 credential의 만료·회전은 운영 후속으로 관리합니다.
-3. 게시 순서 보존과 API·웹 중단 시 공개 기록 유지·같은 정상 B 복원을 검증했습니다. 전용 자격증명의 수동 host cycle·실제 systemd service·timer 자동 실행과 반복 Pages 게시 11회·실제 간격까지 확인했습니다. 이후 장기간 운영과 credential 만료·회전을 별도로 확인합니다.
-4. Kafka·Garage·상시 worker의 [실제 배포](evidence/runtime-deployment/README.md), 두 작업 처리·파일 4개 확인·슬롯 해제·lag 0과 실제 job 관측의 Pages 게시를 완료했습니다. 새 job의 실제 systemd 게시와 timer 활성 설정도 확인했습니다. 다음은 새 job 수집 코드의 정기 회차·반복 게시, Kafka/Garage 외부 백업·PVC 복원과 보존/자원 한도입니다. 합성 작업 접수는 계속 내부 명령으로 제한하며 AI 개선 사례는 5단계에 연결합니다.
+1. **Kafka/Garage 외부 사본과 격리 PVC 복원:** metadata·data를 일관되게 보관할 방법과 별도 복원 대상을 정합니다. 기존 PVC를 건드리지 않고 원본·결과/실패 파일·DB 작업·Kafka offset을 대조합니다. 현재 외부 SQL/config/export 백업을 전체 Kafka/Garage PVC 복원 완료로 간주하지 않습니다.
+2. **보존과 자원 한도:** 미완료·PAUSED 원본을 정리 대상에서 제외하는 규칙을 정하고, 고정 fixture 조건에서 CPU/RSS·디스크 증가량·지연을 측정합니다. 정리는 dry-run 목록과 소유 prefix를 확인한 뒤 별도 검증하며 최대 1,000개 입력이나 무제한 부하를 먼저 열지 않습니다.
+3. **장기간 수집 운영:** 원래 timer의 자동 게시 2회·실제 간격 1개는 확인했습니다. 더 긴 반복·실패 후 이전 기록 보존·자격증명 만료/회전을 이어서 검증합니다. 초기 관리자 비밀번호 교체·K3s/Jenkins archive 전체 복원도 별도 운영 후속입니다.
+4. **이후 확장:** 진행 중 작업의 장애·호스트 재시작은 이번 idle 정상 교체와 분리하고, AI 개선 사례는 5단계의 독립 합성 예제로 연결합니다. 공개 실행은 내부 고정 fixture 명령으로 제한하며 새 inbound 경로는 필요성을 먼저 판단합니다.
 
 각 결과는 소스 변경, 실행 방법, 실제 검증 결과, TIL 설명, 포트폴리오 링크로 연결합니다. 작업 완료 시 [진행 목록](ROADMAP.md)을 갱신하고 프로필에는 구현한 범위만 반영합니다.
