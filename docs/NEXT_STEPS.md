@@ -147,7 +147,8 @@ GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins 
 - [x] 독립 JMH 1.37의 실제 Windows Java 21·3 fork·1 thread·256MiB/G1 측정: 16조합·48 fork·240 interval과 원본 hash 보존
 - [x] 전후 코드, 선택한 fixture의 기대 결과·ns/op·B/op·큰 오차·측정 조건을 정적 포트폴리오에 연결: 웹 41개·check/build, [실제 근거](evidence/ai-window-analysis/README.md)
 - [x] CI에 예제 verify·runner 검사와 필수 JAR guard 연결, 로컬 guard 검사 2개와 실제 Jenkins Declarative linter 확인: [검증 범위](evidence/ai-window-analysis/ci-validation.md)
-- [ ] 저장소 소유자의 사람 검토와 실제 채택 판단, TIL 연결
+- [x] [TIL의 UTC 구간 계산 사례](https://devdooly.github.io/TIL/LLM_Development/UTC_Window_Analysis_Case/)로 연결: 문서 검사 42개·strict build 후 게시
+- [ ] 저장소 소유자의 사람 검토와 실제 채택 판단
 
 **측정 한계:** UTC 파싱·정규화는 trial setup으로 제외했습니다. sparse/2048 기준 구현은 평균 11,933us에 JMH 오차 10,205us로 큰 분산이 포함됩니다. 이 짧은 로컬 합성 비교를 운영 처리량·p95·SLA·보장 개선율로 사용하지 않습니다. 측정 당시 미커밋 sourceCommit:null과 실제 source manifest/JAR/fixture/raw JSON hash를 유지하며, 사람 검토는 PENDING입니다. CI에서는 성능 benchmark를 재실행하지 않습니다.
 
