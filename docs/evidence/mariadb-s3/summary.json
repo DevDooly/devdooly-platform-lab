@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "verifiedAt": "2026-10-15T00:21:15.850741+00:00",
+  "scope": "Disposable MariaDB plus Garage source-staging integration; no production deployment or Kafka",
+  "javaMajor": 21,
+  "jvmTimezone": "Asia/Seoul",
+  "awsSdkVersion": "2.55.16",
+  "services": {
+    "mariadbVersion": "11.8.9-MariaDB-ubu2404",
+    "garageVersion": "2.4.1",
+    "mariadbImage": "mariadb:11.8.9@sha256:6422478cb8e159f080fb1d8ccf65101e26fe51385787fde7d16c3b165a331f15",
+    "garageImage": "dxflrs/garage@sha256:0d7c74fc8ca6fef68a5a941c0e7558c8b1e92ba3588fa7505400e1350456c796",
+    "noPublishedPorts": true,
+    "internalNetwork": true,
+    "dbMemoryLimitBytes": 1073741824,
+    "garageMemoryLimitBytes": 1610612736
+  },
+  "defaultVerify": {
+    "tests": 54,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "jarBuilt": true
+  },
+  "integration": {
+    "first": {
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": true
+    },
+    "interruptedRepeat": {
+      "tests": 3,
+      "failures": 0,
+      "errors": 1,
+      "skipped": 0,
+      "passed": false,
+      "sshConnectionResetObserved": true
+    },
+    "afterOwnedRecovery": {
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": true,
+      "methodOrderRandomSeed": 15
+    },
+    "cases": [
+      "verifiedSourceAndDispatchCommitTogetherAndAllRepeatMetadataRemainsUnchanged",
+      "dispatchInsertSignalAfterQueuedUpdateRollsBackOnlyDatabaseAndSameObjectRetryRecovers",
+      "corruptedExistingObjectKeepsStagingAndSlotUntilExplicitFixtureRemovalAndRetry"
+    ],
+    "differentMethodOrderObserved": true
+  },
+  "rollbackInjection": {
+    "sqlState": "45000",
+    "mariaDbErrorNumber": 1644,
+    "marker": "S3DB_IT_DISPATCH_AFTER_QUEUED",
+    "observedInFirstAndFinalLogs": true,
+    "triggerReadsQueuedBeforeSignal": true,
+    "stagingSourceSlotAndNoDispatchVerifiedAfterRollback": true,
+    "sameRawSourceRetryRecovers": true,
+    "commitAcknowledgementLossTested": false
+  },
+  "interruptedTrial": {
+    "servicesRestarted": false,
+    "servicesOomKilled": false,
+    "queuedJobsRetained": 1,
+    "dispatchRowsRetained": 1,
+    "processedRunsRetained": 0,
+    "underlyingSshResetCauseIdentified": false,
+    "ownedRawGetVerifiedBeforeRecoveryDelete": true,
+    "recoveryForeignKeyOrderErrorPreserved": true,
+    "ownedRecoveryCompleted": true
+  },
+  "cleanup": {
+    "singletonSlotFree": true,
+    "ownedRowsRemoved": true,
+    "noTriggersRemain": true,
+    "migrationsOneAndTwoSuccessfulOnce": true
+  },
+  "ownedResources": {
+    "removed": true,
+    "allExistingDockerIdsUnchanged": true,
+    "existingAllDockerContainerCount": 38,
+    "privateGarageDataAndDiagnosticsRetained": true
+  },
+  "productionPreservation": {
+    "observedAt": "2026-10-15T00:21:15.850741+00:00",
+    "passed": true,
+    "productionPvcCount": 2,
+    "labPodCount": 3,
+    "existingDockerCount": 26,
+    "counts": {
+      "inputCount": 12,
+      "successCount": 7,
+      "failureCount": 3,
+      "duplicateCount": 2,
+      "pendingCount": 0
+    },
+    "checks": {
+      "threeLabPodsReady": true,
+      "canonicalTwelveResults": true,
+      "persistedRunAndEventTimesPresent": true,
+      "argoSyncedHealthyAtExpectedRevision": true,
+      "apiSourceAndDigestMatch": true,
+      "podSpecsMatchPins": true,
+      "ociContentDigestsAndAmd64Relationship": true,
+      "criConfigMatchesAmd64Manifest": true,
+      "sqlStableDuringObservation": true,
+      "dockerAllRunning": true,
+      "productionPvcUidsBindingsAndStorageUnchanged": true,
+      "databasePodImageAndMountsUnchanged": true,
+      "allSqlRowsTimestampsAndFlywayUnchanged": true,
+      "allPersistedApiFieldsExceptObservedAtUnchanged": true,
+      "existingDockerIdsMountsStartTimesUnchanged": true,
+      "hostBootUnchanged": true,
+      "nodesUnchanged": true,
+      "ufwUnchanged": true,
+      "originalApiWebPinsAndSourceRestored": true
+    }
+  },
+  "sourceIdentity": {
+    "method": "sha256 of LF-normalized files",
+    "fingerprintFile": "source-fingerprint.json"
+  },
+  "productionImagePinsChanged": false,
+  "publicExecutionEnabled": false,
+  "limits": [
+    "No Kafka ACK/offset/worker or export validation",
+    "No exact wire-level PUT count or exactly-once claim",
+    "No DB commit acknowledgement loss, storage host failure or performance validation"
+  ]
+}

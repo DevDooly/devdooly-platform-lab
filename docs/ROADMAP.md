@@ -96,6 +96,7 @@
 - [ ] 중복·역순·중단·재시작 후 결과 건수와 lag 확인
 - [x] Garage·Java SDK의 필요한 API·기본 checksum 실패와 호환성 교정 검증 후 한정 선정: [ADR 0005](adr/0005-verified-raw-source-storage.md)
 - [x] 원본 전체 bytes·크기·SHA-256, 상태 전환 전 실패·재시도와 컨테이너 재생성 후 Get-only 보존: [근거](evidence/s3-source-storage/README.md)
+- [x] 실제 MariaDB·Garage 결합의 정상·손상·DB statement 오류 rollback과 원본 보존·재시도, 같은 DB 반복 및 운영 보존: [근거](evidence/mariadb-s3/README.md)
 - [ ] 결과 파일과 보존 정책, 지연·자원 지표 연결
 - [ ] 최대 1,000개 이벤트·전체 동시 작업 1개·요청 빈도 제한 검증
 - [ ] 제한을 검증한 뒤 공개 샘플 실행 기능 추가

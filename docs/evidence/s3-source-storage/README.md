@@ -34,3 +34,8 @@ Docker 내부 network에서 published port가 생성될 것이라고 가정한 �
 ## 남은 범위
 
 조건부 쓰기·CAS·WORM·Object Lock을 보장하지 않는다. 다른 writer를 배제한 작은 관리 실행을 전제로 하며, 동시에 같은 작업을 재시도하면 같은 bytes의 Put은 중복될 수 있다. 실제 Kafka ACK/offset·worker의 S3 재처리·결과 export·운영 배포는 다음 작업이다. 업로드 ACK 유실·저장 도중 운영자 종료·다중 writer·디스크 손실 복원·성능은 검증하지 않았다. 원문 로그·endpoint·access key·secret·host 경로는 공개본에 포함하지 않는다.
+
+
+## 실제 MariaDB 결합 후속
+
+위 2026-10-14 SDK 시험의 DB는 H2다. 이후 [2026-10-15 MariaDB·Garage 결합 검증](../mariadb-s3/README.md)을 별도로 수행했다. 실제 DB의 QUEUED UPDATE 뒤 DISPATCH trigger 오류·rollback·원본 보존·재시도와 같은 DB 반복을 확인했으며 H2 결과를 실제 DB 결과로 바꾸어 표기하지 않았다.

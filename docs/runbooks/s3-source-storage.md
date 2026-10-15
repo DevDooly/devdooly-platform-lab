@@ -108,3 +108,38 @@ mark 진입 전 오류 주입은 **실제 DB 트랜잭션 중간 rollback 검증
 첫 실제 4개 시험은 기본 요청 checksum 경로에서 PutObject HTTP 400 `Invalid payload signature`로 실패했다(3 error·1 failure). Garage 전용 `createGarage()`의 요청 checksum만 `WHEN_REQUIRED`로 바꾸며 응답 checksum·일반 `create()`·TLS 검증은 기본대로 유지한다. 호환성 조정 후 기본 verify 54개·실제 4개·재생성 before/after 각 1개가 통과했고 기존 운영 보존도 비교했다. 실패 원문과 후속 성공을 같은 결과로 덮어쓰지 않는다.
 
 공개 근거에는 source SHA·SDK·image 식별값·시험 조건·실행 시각·실제 통과 수·보존 비교만 남긴다. 원본 로그와 endpoint·credentials·host 경로는 비공개로 보관한다. S3 실험 통과 뒤에도 운영 배포, Kafka ACK/offset, 결과 export·원본 replay는 [4단계 계획](../plans/phase4-messaging-storage.md)의 별도 관문이다.
+
+
+## 실제 MariaDB와 Garage의 결합 검증
+
+`MariaDbGarageRawSourceIT`는 H2 시험을 상속하지 않고 `db-test`, `worker` profile을 사용한다. [2026-10-15 실행 결과와 실패 기록](../evidence/mariadb-s3/README.md)에서 첫 통과·연결 실패·소유 데이터 복구·반복 통과를 구분한다.
+
+기존 S3 환경변수 4개에 아래 값을 추가한다. 자격증명은 환경 파일에만 보관하고 출력·커밋하지 않는다. 같은 이름의 DB라도 운영 자원에는 실행하지 않는다.
+
+| 환경변수 | 조건 |
+| --- | --- |
+| `DB_TEST_URL` | `jdbc:mariadb://127.0.0.1:<유효 포트>/platform_lab_s3_it` 또는 `_fresh`. query 옵션 없음 |
+| `DB_TEST_USERNAME` | 해당 폐기 가능한 schema에만 권한이 있는 전용 사용자 |
+| `DB_TEST_PASSWORD` | 해당 시험 사용자 비밀번호 |
+
+전용 MariaDB를 별도 내부 network·DB 볼륨으로 준비하고 schema 사용자에게 Flyway의 DDL·DML과 그 schema의 TRIGGER 권한만 제공한다. Java에 DB root나 Garage 관리 토큰을 전달하지 않는다. 실행 이미지는 공개 요약의 digest로 고정하고 기존 서비스와 분리한다. 실제 실행은 MariaDB 1 GiB·Garage 1.5 GiB·CPU 각 1개, host published port 없이 SSH loopback 터널 두 개를 사용했다.
+
+DB URL 검사는 Flyway 이전에 적용된다. 초기 job·outbox가 0개이고 singleton 슬롯이 비어 있어야 한다. JVM은 Asia/Seoul, 실제 DB product는 MariaDB여야 하며 lab_outbox의 기존 trigger가 있으면 중단한다. 공개 POST를 활성화하거나 기본 Spring 앱의 S3 bean을 추가하지 않는다.
+
+```sh
+./mvnw -B -ntp -Dlab.s3.database.tests=true \
+  -Dtest=MariaDbGarageRawSourceIT \
+  -DargLine=-Duser.timezone=Asia/Seoul test
+```
+
+세 시험은 정상 QUEUED·DISPATCH와 완료 후 재요청 보존, 손상 원본 보존, QUEUED UPDATE 이후 실제 MariaDB SIGNAL rollback·원본 보존·재시도를 확인한다. 같은 DB에서 새 JVM과 재현 가능한 순서로 반복하려면 다음 옵션을 추가한다.
+
+```sh
+./mvnw -B -ntp -Dlab.s3.database.tests=true \
+  -Dtest=MariaDbGarageRawSourceIT \
+  '-Djunit.jupiter.testmethod.order.default=org.junit.jupiter.api.MethodOrderer$Random' \
+  -Djunit.jupiter.execution.order.random.seed=15 \
+  -DargLine=-Duser.timezone=Asia/Seoul test
+```
+
+각 시험은 생성한 UUID run·객체·trigger만 정리한다. 종료 후 job·outbox·run·outcome·trigger 0개, 빈 singleton 슬롯 1개, V1·V2 migration 각 성공 1회를 별도 확인한다. 연결이 끊겨 teardown이 실패하면 즉시 반복하지 않는다. 폐기 가능한 시험 대상과 소유 UUID, DB 상태·outbox·슬롯·원본 Get을 먼저 확인하고 진단을 보존한다. 해당 UUID만 정리할 때 FK 때문에 같은 짧은 DB 트랜잭션 안에서 슬롯 해제를 job 삭제보다 먼저 수행한다. 운영 namespace·PVC·bucket 전체 삭제나 자동 원본 재Put으로 실패 흔적을 지우지 않는다.
