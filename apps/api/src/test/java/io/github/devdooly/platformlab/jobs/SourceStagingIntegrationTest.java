@@ -39,6 +39,24 @@ class SourceStagingIntegrationTest {
         });
     }
 
+    @Test void maximumScenarioPersistsThousandOutcomesBeforePendingExportAndKeepsSlot() {
+        byte[] maximum = CanonicalSource.fixtureBytes(SyntheticScenario.MAXIMUM_NAME);
+        var stage = new SourceStagingService(jobs, (job, source) -> {
+            assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
+            assertThat(source).isEqualTo(maximum);
+        });
+        var queued = stage.stage(RUN, SyntheticScenario.MAXIMUM_NAME, maximum);
+        var completed = jobs.process(RUN, queued.sourceSha256());
+        var snapshot = jobs.exportSnapshot(RUN, completed.sourceSha256());
+        assertThat(snapshot.run().inputCount()).isEqualTo(1000); assertThat(snapshot.run().successCount()).isEqualTo(500);
+        assertThat(snapshot.run().failureCount()).isEqualTo(300); assertThat(snapshot.run().duplicateCount()).isEqualTo(200);
+        assertThat(snapshot.outcomes()).hasSize(1000);
+        assertThat(completed.exportStatus()).isEqualTo(LabJobService.ExportStatus.PENDING);
+        assertThat(jdbc.queryForObject("SELECT occupied_run_id FROM lab_job_slot WHERE id=1", String.class)).isEqualTo(RUN);
+        var bundle = io.github.devdooly.platformlab.jobs.exporting.ExportBundle.from(snapshot);
+        assertThat(bundle.result().key()).contains("/sensor-validation-v2/");
+    }
+
     @Test void storageFailureKeepsCommittedStagingSlotAndNoDispatch() {
         var calls = new AtomicInteger();
         var stage = new SourceStagingService(jobs, (job, source) -> {

@@ -90,7 +90,7 @@ public final class DispatchWorker {
         } catch (RuntimeException failure) { throw stop(FailureCode.JOB_REJECTED, failure, record); }
         try {
             byte[] raw = sources.readAndVerify(job);
-            var verified = CanonicalSource.validate(raw);
+            var verified = CanonicalSource.validate(job.scenarioVersion(), raw);
             if (verified.size() != job.sourceSize() || !verified.sha256().equals(job.sourceSha256())) {
                 throw new IllegalArgumentException("Retrieved source differs from admitted metadata");
             }

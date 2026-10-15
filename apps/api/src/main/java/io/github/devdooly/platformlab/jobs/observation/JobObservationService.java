@@ -117,8 +117,8 @@ public class JobObservationService {
             require(runs.size() == 1);
             var run = runs.getFirst();
             counts = new Counts(run.inputCount(), run.successCount(), run.failureCount(), run.duplicateCount(), run.pendingCount());
-            require(counts.input() >= 0 && counts.input() <= 1000 && counts.success() >= 0 && counts.success() <= 1000 && counts.failure() >= 0 && counts.failure() <= 1000
-                && counts.duplicate() >= 0 && counts.duplicate() <= 1000 && counts.pending() >= 0 && counts.pending() <= 1000
+            require(counts.input() >= 0 && counts.input() <= CanonicalSource.MAX_EVENTS && counts.success() >= 0 && counts.success() <= CanonicalSource.MAX_EVENTS && counts.failure() >= 0 && counts.failure() <= CanonicalSource.MAX_EVENTS
+                && counts.duplicate() >= 0 && counts.duplicate() <= CanonicalSource.MAX_EVENTS && counts.pending() >= 0 && counts.pending() <= CanonicalSource.MAX_EVENTS
                 && counts.input() == counts.success() + counts.failure() + counts.duplicate() + counts.pending());
             if (job.terminatedAt() == null && (job.exportStatus() == LabJobService.ExportStatus.PENDING || job.exportStatus() == LabJobService.ExportStatus.EXPORTED)) {
                 String expected = job.exportStatus() == LabJobService.ExportStatus.EXPORTED ? "ACKNOWLEDGED" : "PENDING";

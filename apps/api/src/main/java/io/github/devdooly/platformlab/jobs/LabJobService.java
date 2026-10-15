@@ -60,8 +60,7 @@ public class LabJobService {
 
     public Job prepareSource(String runId, String scenarioVersion, byte[] rawNdjson) {
         validateRunId(runId);
-        if (!SyntheticScenario.NAME.equals(scenarioVersion)) { throw new IllegalArgumentException("Unsupported scenario version"); }
-        var source = CanonicalSource.validate(rawNdjson);
+        var source = CanonicalSource.validate(scenarioVersion, rawNdjson);
         return tx.execute(ignored -> {
             String occupied = lockSlot();
             Job existing = findLocked(runId);
@@ -102,7 +101,7 @@ public class LabJobService {
         });
     }
 
-    /** One whole ordered batch is committed with its 12 outcomes and EXPORT intent. */
+    /** One whole admitted ordered batch is committed with at most 1,000 outcomes and EXPORT intent. */
     public Job process(String runId, String sourceSha256) {
         return tx.execute(ignored -> {
             lockSlot();
@@ -110,13 +109,13 @@ public class LabJobService {
             if (job.status() == Status.COMPLETED) { return job; }
             requireState(job.status() == Status.QUEUED);
             requireOccupied(runId);
-            var source = CanonicalSource.validate(jdbc.queryForObject("SELECT source_bytes FROM lab_job WHERE run_id = ?", byte[].class, runId));
+            var source = CanonicalSource.validate(job.scenarioVersion(), jdbc.queryForObject("SELECT source_bytes FROM lab_job WHERE run_id = ?", byte[].class, runId));
             requireHash(job, source.sha256());
             if (source.size() != job.sourceSize()) { throw new SourceConflictException(); }
             Instant started = now();
             var result = new SensorProcessor().process(source.events());
             Instant completed = now();
-            demos.persistProcessedRun(runId, "합성 센서 품질 검증", job.scenarioVersion(), SyntheticScenario.SEED, result, started, completed);
+            demos.persistProcessedRun(runId, "합성 센서 품질 검증", job.scenarioVersion(), SyntheticScenario.seed(job.scenarioVersion()), result, started, completed);
             update("UPDATE lab_job SET status = 'COMPLETED', export_status = 'PENDING', completed_at = ? WHERE run_id = ?",
                 timestamp(completed), runId);
             insertOutbox(job, EventType.EXPORT, completed);
@@ -146,13 +145,15 @@ public class LabJobService {
             String expectedOutbox = job.exportStatus() == ExportStatus.PENDING ? "PENDING" : "ACKNOWLEDGED";
             requireState(jdbc.queryForObject("SELECT COUNT(*) FROM lab_outbox WHERE job_run_id = ? AND event_type = 'EXPORT' AND source_sha256 = ? AND status = ?",
                 Long.class, runId, sourceSha256, expectedOutbox) == 1);
+            Integer storedSize = jdbc.queryForObject("SELECT OCTET_LENGTH(source_bytes) FROM lab_job WHERE run_id = ?", Integer.class, runId);
+            requireState(storedSize != null && storedSize > 0 && storedSize <= CanonicalSource.MAX_BYTES && storedSize == job.sourceSize());
             byte[] source = jdbc.queryForObject("SELECT source_bytes FROM lab_job WHERE run_id = ?", byte[].class, runId);
             List<ExportRun> runs = jdbc.query("SELECT * FROM demo_run WHERE id = ?", (rs, row) -> new ExportRun(
                 rs.getString("scenario"), rs.getLong("seed"), rs.getInt("input_count"), rs.getInt("success_count"),
                 rs.getInt("failure_count"), rs.getInt("duplicate_count"), rs.getInt("pending_count"),
                 instant(rs, "started_at"), instant(rs, "completed_at")), runId);
             requireState(runs.size() == 1);
-            List<SensorProcessor.Outcome> outcomes = jdbc.query("SELECT * FROM demo_outcome WHERE run_id = ? ORDER BY input_sequence", (rs, row) ->
+            List<SensorProcessor.Outcome> outcomes = jdbc.query("SELECT * FROM demo_outcome WHERE run_id = ? ORDER BY input_sequence LIMIT 1001", (rs, row) ->
                 new SensorProcessor.Outcome(rs.getInt("input_sequence"), rs.getString("event_id"), rs.getString("sensor_id"),
                     rs.getString("event_time"), rs.getObject("sensor_value", Double.class),
                     SensorProcessor.Status.valueOf(rs.getString("status")), SensorProcessor.Reason.valueOf(rs.getString("reason"))), runId);
