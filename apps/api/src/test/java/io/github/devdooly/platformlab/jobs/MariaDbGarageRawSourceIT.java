@@ -110,6 +110,7 @@ class MariaDbGarageRawSourceIT {
     @BeforeEach void requireCleanStateAndChooseUniqueOwnedRun() {
         runId = null;
         assertEmptyJobState();
+        io.github.devdooly.platformlab.jobs.AdmissionTestFixtures.makeEligible(jdbc);
         assertThat(ownedKeys).isEmpty();
         assertThat(ownedTrigger).isNull();
         runId = "s3db-it-" + UUID.randomUUID();

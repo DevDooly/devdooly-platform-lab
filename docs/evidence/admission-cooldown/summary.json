@@ -1,0 +1,189 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "scope": "ISOLATED_DURABLE_INTERNAL_ADMISSION_COOLDOWN",
+  "status": "VERIFIED_ISOLATED_NOT_DEPLOYED",
+  "passed": true,
+  "sourceCommit": "9926bd2f714954bcd8d43fa9c5333e503958fd92",
+  "sourceFileManifestSha256": "6e44a2ffb9af7bc42314f3a69be06d76e8abc16ff4c7da6f52a70521d32a6e23",
+  "defaultValidation": {
+    "tests": 157,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "newH2Contracts": 15,
+    "newH2MigrationCases": 2
+  },
+  "realDatabaseValidation": {
+    "passed": true,
+    "sourceCommit": "9926bd2f714954bcd8d43fa9c5333e503958fd92",
+    "exitCode": 0,
+    "totals": {
+      "tests": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "cases": [
+      {
+        "name": "stagingIoFailureChargesOnceAndExactRetryDoesNotSpendAnotherAdmission",
+        "passed": true
+      },
+      {
+        "name": "exactReplayConflictAndOccupiedSlotTakeTheirExistingOrderWithoutChangingGate",
+        "passed": true
+      },
+      {
+        "name": "concurrentDifferentRunsHaveOneAdmissionAndOnlyWinnerCanCallStorage(int)[1]",
+        "passed": true
+      },
+      {
+        "name": "concurrentDifferentRunsHaveOneAdmissionAndOnlyWinnerCanCallStorage(int)[2]",
+        "passed": true
+      },
+      {
+        "name": "terminationAndNewServiceWithDifferentApplicationClockCannotResetDurableGate",
+        "passed": true
+      },
+      {
+        "name": "migrationStartsWithOneUnchargedThirtySecondPolicyAndAdmissionUsesDbTime",
+        "passed": true
+      },
+      {
+        "name": "parallelAttemptsAfterSlotReleaseAllRejectDuringCooldownWithZeroStorageCalls(int)[1]",
+        "passed": true
+      },
+      {
+        "name": "parallelAttemptsAfterSlotReleaseAllRejectDuringCooldownWithZeroStorageCalls(int)[2]",
+        "passed": true
+      },
+      {
+        "name": "outerRollbackRestoresAdmissionDatesJobSlotAndOutboxTogether",
+        "passed": true
+      },
+      {
+        "name": "legacyDemoRunConflictRejectsBeforeGateOrStorageEvenWithoutAJobRow",
+        "passed": true
+      },
+      {
+        "name": "failedJobInsertRollsBackPreviouslyUpdatedGateAndCannotCallStorage",
+        "passed": true
+      },
+      {
+        "name": "invalidInputNeverChargesPolicyOrReservesSlotOrTouchesStorage",
+        "passed": true
+      },
+      {
+        "name": "missingPolicyFailsClosedAndDatabaseRejectsInvalidConfiguration",
+        "passed": true
+      },
+      {
+        "name": "configuredBoundedPeriodIsReadFromDatabaseWithoutAProcessOverride",
+        "passed": true
+      },
+      {
+        "name": "exportedSlotIsFreeButDifferentRunIsRejectedBeforeStorageAndAllRowsStayExact",
+        "passed": true
+      },
+      {
+        "name": "contenderWaitingForSlotEvaluatesFreshDatabaseClockAfterLockRelease",
+        "passed": true
+      },
+      {
+        "name": "aFreshJvmRejectsFromPersistedCooldownWithoutCallingStorage",
+        "passed": true
+      },
+      {
+        "name": "realObjectsHaveOneWinnerAndFreeSlotCooldownLosersHaveZeroRawObjectsOrOutbox",
+        "passed": true
+      },
+      {
+        "name": "exactMicrosecondBeforeAtAndAfterDeadlineUseMariaDbSessionClockOnly",
+        "passed": true
+      }
+    ],
+    "jvmTimezone": [
+      "Asia/Seoul"
+    ],
+    "scope": "ISOLATED_MARIADB_GARAGE_ADMISSION_COOLDOWN",
+    "credentialsPrinted": false,
+    "productionMigrationPerformed": false
+  },
+  "branchCi": {
+    "runId": 38720179414,
+    "sourceCommit": "9926bd2f714954bcd8d43fa9c5333e503958fd92",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "externalSqlCheckpoint": {
+    "authenticatedReadBack": true,
+    "encryption": "AES-256-GCM",
+    "archiveSha256": "fa82a2d77c5ddfffadf03325b9031b3126a5bb81a4d43f520dc3634d602eca98",
+    "jobCount": 7,
+    "verifiedObjectCount": 21,
+    "checkpointKind": "TRANSACTIONAL_SQL_OBJECT_CONFIG_ONLY",
+    "restoredComponent": "SQL_MEMBER_ONLY_TO_ISOLATED_CATALOG",
+    "productionRestorePerformed": false,
+    "objectStoreRestorePerformed": false,
+    "pvcColdCopyPerformed": false
+  },
+  "binaryCompatibility": {
+    "passed": true,
+    "scope": "ISOLATED_RESTORED_SEVEN_JOB_V4_BINARY_COMPATIBILITY",
+    "completedAt": "2026-10-15T10:36:41.447886+00:00",
+    "checksPassed": 8,
+    "checksTotal": 8,
+    "candidateArtifactSourceCommit": "9926bd2f714954bcd8d43fa9c5333e503958fd92",
+    "candidateJarSha256": "b7fd9ceb394218a4b7b27428529e47b83763933b8663e6607c0bf2d04dae6835",
+    "oldArtifactSourceCommit": "5a1495be4973d43b34dc5c169dbf66bec7459968",
+    "oldJarSha256": "ac13f7045eba661d2e90c15b7df661c6fde7039311d0a067010981914664ddc9",
+    "equivalentProductionMainSourceCommit": "6c5aff948770982dd44c8d44547131b3ccf6ddd9",
+    "mainSourceEquivalent": true,
+    "buildPomEquivalent": true,
+    "actualProduction6cOciImageTested": false,
+    "restoredJobCount": 7,
+    "restoredExportMetadataCount": 14,
+    "oldApiStartupAndActualHttpReadVerified": true,
+    "oldWorkerIdleVerified": true,
+    "normalStoppedJvmCount": 3,
+    "objectWritesPerformed": false,
+    "stageOrAdmissionPerformed": false,
+    "originalResourceMutationsPerformed": false,
+    "publicListenerOrPublishedContainerPortAdded": false,
+    "forcedKillFallbackEnabled": false,
+    "operatorInspectionRequired": false
+  },
+  "productionAtVerification": {
+    "sourceCommit": "6c5aff948770982dd44c8d44547131b3ccf6ddd9",
+    "schemaMigrationVersion": 3,
+    "jobs": 7,
+    "exportFileMetadata": 14,
+    "v4Applied": false
+  },
+  "contract": {
+    "databaseMigration": 4,
+    "defaultCooldownSeconds": 30,
+    "minimumConfiguredSeconds": 1,
+    "maximumConfiguredSeconds": 3600,
+    "activeJobSlots": 1,
+    "newDistinctAdmissionOnly": true,
+    "gateEvaluatedUsingDatabaseClockAfterLocks": true,
+    "gateJobAndSlotCommitAtomically": true,
+    "storageIoAfterCommit": true,
+    "sameRunExactRetryChargesAgain": false,
+    "exportOrTerminationResetsGate": false,
+    "invalidBusyOrConflictingRequestChargesGate": false,
+    "automaticRetryOrSleepImplemented": false,
+    "oldStageBinaryCanBypassNewPolicy": true,
+    "publicExecutionEnabled": false,
+    "httpQpsLimited": false
+  },
+  "limits": {
+    "productionMigrated": false,
+    "oldBinaryActualCompatibilityVerified": true,
+    "fullRuntimeCliRestartVerified": false,
+    "chargedCooldownAcrossFullRuntimeCliRestartVerified": false,
+    "freshJvmAdmissionBoundaryOnly": true,
+    "productionThroughputOrSlaVerified": false
+  }
+}

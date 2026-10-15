@@ -33,6 +33,10 @@ class ResultExportIntegrationTest {
     @Autowired JdbcTemplate jdbc;
     @Autowired PlatformTransactionManager manager;
 
+    @org.junit.jupiter.api.BeforeEach void resetOwnAdmissionClock() {
+        io.github.devdooly.platformlab.jobs.AdmissionTestFixtures.makeEligible(jdbc);
+    }
+
     @AfterEach void cleanOwnRows() {
         new TransactionTemplate(manager).executeWithoutResult(ignored -> {
             var owner = jdbc.queryForObject("SELECT occupied_run_id FROM lab_job_slot WHERE id = 1 FOR UPDATE", String.class);
@@ -105,6 +109,7 @@ class ResultExportIntegrationTest {
         var before = completed(CanonicalSource.fixtureBytes()); var verified = new AtomicInteger();
         var service = new ResultExportService(jobs, document -> verified.incrementAndGet());
         var exported = service.export(RUN, before.sourceSha256()); var outbox = exportOutbox(); var rows = businessRows();
+        io.github.devdooly.platformlab.jobs.AdmissionTestFixtures.makeEligible(jdbc);
         var next = jobs.prepareSource(NEXT, SyntheticScenario.NAME, CanonicalSource.fixtureBytes());
         assertThat(service.export(RUN, before.sourceSha256())).isEqualTo(exported);
         assertThat(owner()).isEqualTo(NEXT); assertThat(jobs.get(NEXT)).isEqualTo(next);
@@ -121,6 +126,7 @@ class ResultExportIntegrationTest {
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
             if (calls.incrementAndGet() == 1) {
                 jobs.terminate(RUN, before.sourceSha256());
+                io.github.devdooly.platformlab.jobs.AdmissionTestFixtures.makeEligible(jdbc);
                 jobs.prepareSource(NEXT, SyntheticScenario.NAME, CanonicalSource.fixtureBytes());
             }
         });
@@ -138,6 +144,7 @@ class ResultExportIntegrationTest {
         assertThatThrownBy(() -> service.export(RUN, "0".repeat(64))).isInstanceOf(LabJobService.SourceConflictException.class);
         jobs.terminate(RUN, before.sourceSha256());
         assertThatThrownBy(() -> service.export(RUN, before.sourceSha256())).isInstanceOf(LabJobService.JobStateException.class);
+        io.github.devdooly.platformlab.jobs.AdmissionTestFixtures.makeEligible(jdbc);
         var next = jobs.prepareSource(NEXT, SyntheticScenario.NAME, CanonicalSource.fixtureBytes());
         assertThatThrownBy(() -> service.export(NEXT, next.sourceSha256())).isInstanceOf(LabJobService.JobStateException.class);
         verifyNoInteractions(store);

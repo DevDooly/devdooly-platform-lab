@@ -147,6 +147,7 @@ class VerifiedResultExportIT {
 
     @BeforeEach void chooseUniqueOwnedRunAndRequireCleanState() {
         assertEmptyJobs();
+        io.github.devdooly.platformlab.jobs.AdmissionTestFixtures.makeEligible(jdbc);
         assertThat(ownedRuns).isEmpty(); assertThat(ownedKeys).isEmpty(); assertThat(probes).isEmpty();
         assertThat(ownedTrigger).isNull(); exportPuts.set(0); bundle = null;
         runId = "export-it-" + UUID.randomUUID(); ownedRuns.add(runId);
@@ -169,6 +170,7 @@ class VerifiedResultExportIT {
         String nextRun = "export-it-" + UUID.randomUUID(); ownedRuns.add(nextRun);
         // A real new source upload/admission proves the previous slot was released.
         ownRawKey(nextRun);
+        io.github.devdooly.platformlab.jobs.AdmissionTestFixtures.makeEligible(jdbc); // The next slot is an independent export replay fixture.
         var next = new SourceStagingService(jobs, sources).stage(nextRun, SyntheticScenario.NAME, bytes);
         assertThat(next.status()).isEqualTo(LabJobService.Status.QUEUED);
         var nextRows = jdbc.queryForList("SELECT * FROM lab_outbox WHERE job_run_id = ? ORDER BY id", nextRun);

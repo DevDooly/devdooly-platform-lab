@@ -170,6 +170,10 @@ Kafka·객체 저장소의 흐름이 안정된 뒤 데이터 플랫폼을 확장
 
 CKA 학습은 Lab과 연결합니다. context·RBAC·Service와 DNS·probe·requests/limits·PV·장애 진단을 직접 실습하고 TIL에 재현 방법을 남깁니다. 시험 합격 전에는 프로필의 표기를 준비 중으로 유지합니다.
 
+## 내부 접수 간격 후보 검증
+
+DB의 기본 30초 승인 간격은 구현·격리 검증을 완료했습니다. 기본 157개·실제 MariaDB/Garage 19개·외부 인증 SQL 복원본의 이전 binary 호환 8개와 같은 source CI 성공을 확인했습니다. [근거](evidence/admission-cooldown/README.md), [전환·원복 절차](runbooks/admission-cooldown.md)를 따릅니다. 운영은 아직 source `6c5aff94`·schema V3이며 다음은 새 이미지의 API V4 migration→worker 교체·기존 자료 보존입니다. 구형 stage는 정책을 우회하므로 혼용하지 않습니다. 지속 부하·HTTP QPS 제한·전체 RuntimeMain의 충전된 cooldown 재시작은 별도 미검증입니다.
+
 ## 바로 다음 작업
 
 1. **보존 운영과 객체 GC:** 전체 운영 참조21개 KEEP·후보0과 새 Garage의 합성 객체2개 자연 GC를 확인했습니다. [객체 보호 근거](evidence/object-reference-gc/README.md)의 범위를 유지하며 운영 tombstone·삭제 intent·재전달/resume·백업 의존성을 설계합니다. 운영 삭제 실행기와 metadata DB 축소는 구현하지 않았습니다.

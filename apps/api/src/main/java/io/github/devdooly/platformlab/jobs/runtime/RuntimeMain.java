@@ -51,7 +51,7 @@ public final class RuntimeMain {
                 "spring.sql.init.mode", "never", "spring.jpa.hibernate.ddl-auto", "validate"))));
         try (var context = application.run()) {
             var states = new RuntimeStateStore(context.getBean(JdbcTemplate.class), context.getBean(Clock.class));
-            states.requireSchemaV3();
+            states.requireSchemaV4();
             if (args[0].equals("--lab-runtime=stage")) {
                 if (states.read().status() == RuntimeStateStore.Status.PAUSED_OPERATOR) {
                     throw new RuntimeStateStore.OperatorResumeRequiredException();
@@ -68,7 +68,7 @@ public final class RuntimeMain {
                 }
                 runOwned(states, lease, context.getBean(LabJobService.class));
             }
-        } catch (RuntimeStateStore.OperatorResumeRequiredException | RuntimeLease.LeaseUnavailableException rejected) {
+        } catch (RuntimeStateStore.OperatorResumeRequiredException | RuntimeLease.LeaseUnavailableException | LabJobService.AdmissionCooldownException rejected) {
             throw rejected;
         } catch (RuntimeException failure) {
             // Private connection values and credentials must not be added to console diagnostics.

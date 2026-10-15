@@ -46,6 +46,13 @@ public final class RuntimeStateStore {
         if (count == null || count != 1 || read() == null) { throw new IllegalStateException("A successfully migrated V3 runtime schema is required"); }
     }
 
+    /** New run/resume/stage commands require the API-migrated durable admission policy. */
+    public void requireSchemaV4() {
+        requireSchemaV3();
+        Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM flyway_schema_history WHERE version = '4' AND success = TRUE", Integer.class);
+        if (count == null || count != 1) { throw new IllegalStateException("A successfully migrated V4 admission schema is required"); }
+    }
+
     public void start(RuntimeLease lease, String sourceCommit) {
         requireOwner(lease); validateCommit(sourceCommit); Instant now = now();
         int changed = update("UPDATE lab_runtime SET status = 'RUNNING', stage = 'IDLE', failure_code = NULL, started_at = ?, heartbeat_at = ?, stopped_at = NULL, source_commit = ? WHERE id = 1 AND status <> 'PAUSED_OPERATOR'",
