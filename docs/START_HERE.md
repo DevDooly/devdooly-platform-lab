@@ -65,6 +65,8 @@ DB 작업/outbox·단일 슬롯 → Garage 원본 보관 → Kafka 전달·DB �
 
 Kafka·Garage의 전용 PVC 3개는 외부 사본에서 새 볼륨으로 복원했습니다. 기존 9개 객체의 inline 복원과 별도 clone의 128KiB data 블록 복원을 구분하며 원본 객체를 재Put하지 않았습니다. [PVC 복원 결과와 한계](evidence/runtime-pvc-restore/README.md), [실행 절차](runbooks/runtime-pvc-recovery.md)를 따릅니다. 운영 PVC를 덮어쓰거나 K3s/Jenkins 전체를 복원한 결과는 아닙니다.
 
+별도 Linux worker의 부분 export 중단·복구도 검증했습니다. 결과 파일 확인 후 실패 파일 PUT을 Garage에 전달하기 직전에 SIGKILL 1회로 중단했고 동일 JAR로 pending export만 완료했습니다. 격리 검사 12/12와 운영 보존 18/18을 통과했으며 [중단 경계와 한계](evidence/maximum-export-crash/README.md)를 따릅니다. 진행 중 호스트 재부팅과 구분합니다.
+
 ## 다음 작업
 
 [다음 개발 계획](NEXT_STEPS.md)에 우선순위와 단계별 결과물·완료 조건을 정리했습니다.

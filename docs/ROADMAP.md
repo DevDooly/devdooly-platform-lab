@@ -113,7 +113,8 @@
 - [x] clone 전용 128KiB canary 1 PUT·물리 블록 1개, 추가 2PVC 복원·Pod 교체 전후 각 GET10
 - [x] 복제 Kafka의 UID 조건 정상 TERM·새 Pod와 같은 PVC, 3 record key/value/시각·offset/lag 보존
 - [x] 시험용 workload 3개 정상 종료·Pod 0·Retain PVC 5개 보관과 최종 원본 SQL/객체/PVC·6개 Ready Pod·Docker 보존 28개 검사
-- [ ] 진행 중 작업 장애·호스트 재시작 복구 검증
+- [x] 별도 1,000건 작업의 부분 export 경계 SIGKILL·동일 JAR pending export 복구, 재계산 없음·기존 4작업/12객체 보존: [근거](evidence/maximum-export-crash/README.md)
+- [ ] 계산 중단·진행 중 호스트 재시작 등 다른 장애 경계 복구 검증
 - [ ] 다중 partition·이벤트별 전달 순서 검증이 필요할 때 별도 확장
 - [x] Garage·Java SDK의 필요한 API·기본 checksum 실패와 호환성 교정 검증 후 한정 선정: [ADR 0005](adr/0005-verified-raw-source-storage.md)
 - [x] 원본 전체 bytes·크기·SHA-256, 상태 전환 전 실패·재시도와 컨테이너 재생성 후 Get-only 보존: [근거](evidence/s3-source-storage/README.md)

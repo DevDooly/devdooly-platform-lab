@@ -1,0 +1,229 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "scope": "ISOLATED_THOUSAND_INPUT_PARTIAL_EXPORT_CRASH_AND_PENDING_RECOVERY",
+  "passed": true,
+  "sourceCommit": "5a1495be4973d43b34dc5c169dbf66bec7459968",
+  "candidateJarSha256": "ac13f7045eba661d2e90c15b7df661c6fde7039311d0a067010981914664ddc9",
+  "recordedAt": "2026-10-15T09:52:41.906410+00:00",
+  "crash": {
+    "actualSigkillAttempts": 1,
+    "automaticResubmissionUsed": false,
+    "checksPassed": 12,
+    "checksTotal": 12,
+    "completedAt": "2026-10-15T09:52:41.906410+00:00",
+    "containerOrVolumeDeletionPerformed": false,
+    "firstResultWholeBytesPreserved": true,
+    "forcedKillFallbackEnabled": false,
+    "gracefulShutdownWaitMaximumSeconds": 250,
+    "heldFailurePutForwarded": false,
+    "hostRebootOrHighAvailabilityVerified": false,
+    "kafka": {
+      "committedOffset": 1,
+      "lag": 0,
+      "logEnd": 1,
+      "partition": 0
+    },
+    "newFixedInputCount": 1000,
+    "newWholeGetObjectCount": 3,
+    "noApplicationHooksAdded": true,
+    "operatorInspectionRequired": false,
+    "originalResourceMutationsPerformed": false,
+    "passed": true,
+    "priorVerifiedJobCount": 4,
+    "priorWholeGetObjectCount": 12,
+    "proxyInsideOwnedDockerContainerOnly": true,
+    "proxyListenerActuallyReady": true,
+    "proxySourceRestrictedToExactWorkerIp": true,
+    "publicListenerOrPublishedContainerPortAdded": false,
+    "remainingOwnedRunningCount": 0,
+    "scope": "ISOLATED_LINUX_CONTAINER_PROXY_V3_EXACT_EXPORT_BOUNDARY_CRASH",
+    "sourceCommit": "5a1495be4973d43b34dc5c169dbf66bec7459968",
+    "candidateJarSha256": "ac13f7045eba661d2e90c15b7df661c6fde7039311d0a067010981914664ddc9",
+    "proxyClassSha256": "496df2d9e3a898ad177ced7bca36b981873bec8b99cf86b79c35e95df8915beb",
+    "checkpointSecondsAfterHeld": 2.7641453630058095,
+    "firstResultSize": 157919,
+    "firstResultSha256": "917fbf5cdeff27af1770757222c18211a18b5953c0d8561b226e09036ed353d7",
+    "heldFailureSize": 88195,
+    "heldFailureSha256": "387542813716a610c284a9048899f8f334d2a785db8405d5a787b5fbd1aa671b",
+    "requests": [
+      {
+        "decodedBytes": 0,
+        "encodingClass": "PLAIN",
+        "kindClass": "RAW",
+        "methodClass": "GET",
+        "payloadHashChecked": false,
+        "payloadHashMatchesKey": false,
+        "signingClass": "UNSIGNED",
+        "wireBytes": 0
+      },
+      {
+        "decodedBytes": 0,
+        "encodingClass": "PLAIN",
+        "kindClass": "RESULT",
+        "methodClass": "GET",
+        "payloadHashChecked": false,
+        "payloadHashMatchesKey": false,
+        "signingClass": "UNSIGNED",
+        "wireBytes": 0
+      },
+      {
+        "decodedBytes": 157919,
+        "encodingClass": "AWS_CHUNKED",
+        "kindClass": "RESULT",
+        "methodClass": "PUT",
+        "payloadHashChecked": true,
+        "payloadHashMatchesKey": true,
+        "signingClass": "STREAMING_SIGNED",
+        "wireBytes": 158184
+      },
+      {
+        "decodedBytes": 0,
+        "encodingClass": "PLAIN",
+        "kindClass": "RESULT",
+        "methodClass": "GET",
+        "payloadHashChecked": false,
+        "payloadHashMatchesKey": false,
+        "signingClass": "UNSIGNED",
+        "wireBytes": 0
+      },
+      {
+        "decodedBytes": 0,
+        "encodingClass": "PLAIN",
+        "kindClass": "FAILURES",
+        "methodClass": "GET",
+        "payloadHashChecked": false,
+        "payloadHashMatchesKey": false,
+        "signingClass": "UNSIGNED",
+        "wireBytes": 0
+      },
+      {
+        "decodedBytes": 88195,
+        "encodingClass": "AWS_CHUNKED",
+        "kindClass": "FAILURES",
+        "methodClass": "PUT",
+        "payloadHashChecked": true,
+        "payloadHashMatchesKey": true,
+        "signingClass": "STREAMING_SIGNED",
+        "wireBytes": 88371
+      }
+    ]
+  },
+  "counts": {
+    "input": 1000,
+    "success": 500,
+    "failure": 300,
+    "duplicate": 200,
+    "pending": 0
+  },
+  "finalTrial": {
+    "existingJobs": 5,
+    "outcomes": 5000,
+    "outbox": 10,
+    "pendingOutbox": 0,
+    "slotFree": true,
+    "runtimeStopped": true,
+    "backendContainersRetainedRunning": 3
+  },
+  "priorFailedCases": {
+    "hostGatewayProxy": {
+      "jobAdmitted": false,
+      "sigkillAttempts": 0,
+      "failure": "OWNED_PROXY_TCP_REACHABILITY_TIMEOUT"
+    },
+    "wireHashProxy": {
+      "jobAdmitted": true,
+      "sigkillAttempts": 0,
+      "failure": "STRICT_PROXY_WIRE_HASH_DIFFERED_FROM_DOCUMENT_HASH",
+      "explicitRecovery": {
+        "actualSigkillAttempts": 0,
+        "automaticResubmissionUsed": false,
+        "checksPassed": 11,
+        "checksTotal": 11,
+        "completedAt": "2026-10-15T09:44:11.841030+00:00",
+        "containerOrVolumeDeletionPerformed": false,
+        "crashExperimentSucceeded": false,
+        "finalExistingJobCount": 4,
+        "finalOutcomeCount": 4000,
+        "forcedKillFallbackEnabled": false,
+        "freshDirectWorkerAttempts": 1,
+        "newJobAdmissionPerformed": false,
+        "oldKafka": {
+          "committedOffset": 3,
+          "lag": 0,
+          "logEnd": 3,
+          "partition": 0
+        },
+        "oldLoadJobsPreserved": 3,
+        "oldLoadObjectsPreserved": 9,
+        "operatorInspectionRequired": false,
+        "originalResourceMutationsPerformed": false,
+        "passed": true,
+        "rawPutOrObjectRepairPerformed": false,
+        "recoveredKafka": {
+          "committedOffset": 1,
+          "lag": 0,
+          "logEnd": 1,
+          "partition": 0
+        },
+        "recoveryOnly": true,
+        "remainingKnownOwnRunningCount": 0,
+        "resumeAttempts": 1,
+        "runId": "lab-fixture-20261015-crash-export-v2",
+        "scope": "ISOLATED_KNOWN_EXPORT_PAUSE_EXPLICIT_OPERATOR_RECOVERY",
+        "sourceCommit": "5a1495be4973d43b34dc5c169dbf66bec7459968",
+        "sqlOrObjectDeletionPerformed": false,
+        "unknownCreateOutcomePossible": false,
+        "wholeObjectGets": 23
+      }
+    }
+  },
+  "localRegression": {
+    "javaVersion": 21,
+    "actualCandidateSdkUsed": true,
+    "loopbackOnly": true,
+    "dummyCredentialsOnly": true,
+    "syntheticPayloadsUsed": true,
+    "decoderCasesPassed": 12,
+    "driverCasesPassed": 5,
+    "resultSizedPayload": {
+      "decodedBytes": 157919,
+      "wireBytes": 158184,
+      "encoding": "aws-chunked",
+      "wireShaDiffersFromPayloadSha": true,
+      "decodedShaMatchesPayloadSha": true
+    },
+    "failureSizedPayload": {
+      "decodedBytes": 88195,
+      "wireBytes": 88371,
+      "encoding": "aws-chunked",
+      "wireShaDiffersFromPayloadSha": true,
+      "decodedShaMatchesPayloadSha": true
+    }
+  },
+  "productionPreservation": {
+    "passed": true,
+    "checksPassed": 18,
+    "checksTotal": 18,
+    "failedChecks": [],
+    "capturedAt": "2026-10-15T09:55:56.399755+00:00",
+    "sourceCommit": "6c5aff948770982dd44c8d44547131b3ccf6ddd9",
+    "productionJobs": 7,
+    "productionExportFiles": 14,
+    "originalDockerContainers": 38,
+    "originalPvcs": 11,
+    "originalPods": 6,
+    "freshOriginalObjectGetsPerformed": false,
+    "productionMutationsPerformed": false
+  },
+  "limits": {
+    "productionCrashPerformed": false,
+    "processingInterruptedMidCalculation": false,
+    "hostRebootVerified": false,
+    "highAvailabilityVerified": false,
+    "allFourMiBEncodedPayloadsVerified": false,
+    "applicationReadTimeoutChanged": false,
+    "testHooksAddedToApplication": false,
+    "automaticReadmissionUsed": false
+  }
+}
