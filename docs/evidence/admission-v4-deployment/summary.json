@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "status": "ROLLOUT_VERIFIED_STAGE_AND_PAGES_PENDING",
+  "passed": true,
+  "scope": "ACTUAL_MINI_PC_V4_APIWEB_AND_WORKER_ROLLOUT",
+  "sourceCommit": "202ab6806130cfb37e8829ce7d52c89990d8a54a",
+  "functionalSourceCommit": "9926bd2f714954bcd8d43fa9c5333e503958fd92",
+  "previousSourceCommit": "6c5aff948770982dd44c8d44547131b3ccf6ddd9",
+  "ci": {
+    "actionsRunId": 38725378928,
+    "actionsSucceeded": true,
+    "jenkinsBuildNumber": 31,
+    "jenkinsJUnit": {
+      "tests": 157,
+      "failures": 0,
+      "skipped": 0
+    },
+    "requiredArchivesAndExactSourceVerified": true,
+    "publicationRunId": 38726033912,
+    "gatePublishAndDraftProposalSucceeded": true
+  },
+  "images": {
+    "api": {
+      "indexDigest": "sha256:209770d4a2ea0f9cab57f7a630ca097d45eb158efaae58f98768b1770fe7880f",
+      "amd64ManifestDigest": "sha256:3d1711fd3f50a7b3e0b4d5dd3919750c0e709b034e86b35d9ed6b325d5579039",
+      "configDigest": "sha256:1536f168b0b4a719369b47fce80a6d8b5f6075a230ca353271527d533398da11"
+    },
+    "web": {
+      "indexDigest": "sha256:e7403272cdfaa25bd92930346abd18084a9001ad9d123436be9379b55b8fae52",
+      "amd64ManifestDigest": "sha256:d14f5c5393ff301f122127c7212fc4fb1d9e7fa45b4520b1ee8cc6b865bfeaf6",
+      "configDigest": "sha256:181ea70a7c3e119c1711c3e34af4cd6fb2df37eb26a6579fc36a25a46e1c661c"
+    },
+    "anonymousReadLocalChainCriAndRevisionVerified": true
+  },
+  "prefetch": {
+    "completedAt": "2026-10-15T11:26:17.854796Z",
+    "checksPassed": 4,
+    "checksTotal": 4,
+    "preservationChecksBefore": 19,
+    "preservationChecksAfter": 19,
+    "podStartsOrRestartsPerformed": false
+  },
+  "helmPreflight": {
+    "checksPassed": 16,
+    "checksTotal": 16
+  },
+  "apiweb": {
+    "passed": true,
+    "capturedAt": "2026-10-15T11:29:53.527446Z",
+    "checksPassed": 32,
+    "checksTotal": 32,
+    "gitopsCommit": "36f00136d9851e52502d9edca261c95e1c3c01cc",
+    "schemaVersion": 4,
+    "newPolicySeconds": 30,
+    "policyHasNotBeenCharged": true,
+    "oldBusinessRowsAndV1V2V3HistoryPreserved": true,
+    "existingJobCount": 7,
+    "existingExportMetadataCount": 14,
+    "kafkaCommittedOffset": 7,
+    "kafkaLogEnd": 7,
+    "kafkaLag": 0,
+    "originalPvcCount": 11,
+    "originalPodCount": 6,
+    "originalDockerCount": 38,
+    "exactAdditionalStoppedDockerCount": 5,
+    "freshWholeS3GetsPerformed": false,
+    "jobAdmissionsOrObjectWritesPerformed": false
+  },
+  "worker": {
+    "fullVerificationStatus": "VERIFIED",
+    "gitopsCommit": "05bd61a1fdfaa9be4cee4d7f6d97022b55c4facd",
+    "preservedFirstObserver": {
+      "passed": false,
+      "capturedAt": "2026-10-15T11:36:21.618658Z",
+      "checksPassed": 32,
+      "checksTotal": 35,
+      "scope": "NEW_POD_READY_BEFORE_RUNTIME_INITIALIZATION",
+      "oldRuntimeWasStopped": true
+    },
+    "subsequentReadOnlyLiveObservation": {
+      "capturedAt": "2026-10-15T11:39:17.360333Z",
+      "sameNewSourceRunning": true,
+      "startedAt": "2026-10-15T11:36:31.023476Z",
+      "restartCount": 0,
+      "jobCount": 7
+    },
+    "runtimeStartupReadinessProbeImplemented": false,
+    "oldContainerTerminationStatus": "UNOBSERVED",
+    "verifiedSecondObserver": {
+      "passed": true,
+      "capturedAt": "2026-10-15T11:39:57.213644Z",
+      "attempt": 2,
+      "checksPassed": 35,
+      "checksTotal": 35,
+      "oldJobsAndResourcesPreserved": true,
+      "freshWholeS3GetsPerformed": false,
+      "jobAdmissionsOrObjectWritesPerformed": false
+    },
+    "oldContainerTermination": {
+      "capturedAt": "2026-10-15T11:47:53.619821Z",
+      "normalExitVerified": false,
+      "exitCode": null,
+      "signalDeliveryDirectlyObserved": false
+    }
+  },
+  "limitations": {
+    "publicExecutionEnabled": false,
+    "publicRateLimiterImplemented": false,
+    "fullWorkerVerificationCompleted": true,
+    "v4FixedFixtureAdmissionVerified": false,
+    "newPublicPagesObservationVerified": false,
+    "highAvailabilityOrSlaEstablished": false
+  }
+}
