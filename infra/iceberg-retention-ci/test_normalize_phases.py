@@ -281,4 +281,88 @@ class NormalizationPhases(unittest.TestCase):
         self.assertNotIn(CANARY, json.dumps(summary))
 
 
+    def test_decoder_subphases_preserve_real_guards_and_cannot_forward_provider_phases(self):
+        import copy_loader as loader
+        import test_copy_loader as fixtures
+        tree = ast.parse(Path(normalizer.__file__).read_text(encoding='utf-8'))
+        function = next(node for node in tree.body if isinstance(node, ast.FunctionDef)
+            and node.name == 'checked_decoder')
+        self.assertEqual(len(function.body), 2); self.assertIsInstance(function.body[1], ast.Try)
+        function.body = function.body[1].body
+        class StripDecoderPhase(ast.NodeTransformer):
+            def visit_Assign(self, node):
+                if (len(node.targets) == 1 and isinstance(node.targets[0], ast.Name)
+                        and node.targets[0].id == 'decoder_phase'):
+                    return None
+                return self.generic_visit(node)
+        function = StripDecoderPhase().visit(function)
+        self.assertEqual(hashlib.sha256(ast.dump(function, include_attributes=False).encode()).hexdigest(),
+            'e3d167cb8ac73cff97621ae82fad5fa57d831fa142aa49890a88f064b2845afb')
+        _, authority, loaded, reply, _, _ = fixtures.fixture()
+        raw, decoder_bundle = fixtures.decoder_for(reply, loaded, authority)
+        verified = loader.validate_authority_bundle(authority, fixtures.AUTH)
+        def check(bundle):
+            return normalizer.checked_decoder(raw, loaded, authority, bundle, verified, fixtures.AUTH)
+        def full(bundle):
+            return normalizer.normalize_graph(raw, loaded, authority, bundle, fixtures.PLANNER.read_bytes(),
+                now=fixtures.NOW, policy=fixtures.POLICY, expected_authority_source_sha256=fixtures.AUTH)
+        namespace = dict(normalizer.__dict__)
+        exec(compile(ast.fix_missing_locations(ast.Module(body=[copy.deepcopy(function)], type_ignores=[])),
+            '<original-checked-decoder-operation-body-only>', 'exec'), namespace)
+        self.assertEqual(namespace['checked_decoder'](raw, loaded, authority, decoder_bundle, verified,
+            fixtures.AUTH), check(decoder_bundle))
+        self.assertEqual(full(decoder_bundle)['privateReceipt']['status'], 'DETERMINED')
+        self.assertEqual(len(normalizer.NORMALIZATION_PHASE_CODES), 18)
+        self.assertEqual(len(normalizer.DECODER_LIFECYCLE_PHASE_CODES), 7)
+        self.assertEqual(normalizer.NORMALIZATION_PHASE_CODES, cli.NORMALIZATION_PHASE_CODES)
+        for region in ('BUNDLE', 'SOURCE', 'IDENTITY', 'CLOCK', 'REPLY_BINDING', 'WRITERS_AFTER', 'ORDER'):
+            with self.subTest(region=region):
+                bad = copy.deepcopy(decoder_bundle)
+                record = loader.proof_value({key: bad[key] for key in ('raw', 'sha256')})
+                if region == 'BUNDLE': bad['extraPrivate'] = CANARY
+                elif region == 'SOURCE': record['sourceCommit'] = CANARY
+                elif region == 'IDENTITY': record['cid'] = verified['stopped']['roles'][0]['id']
+                elif region == 'CLOCK': record['decodeCutoff'] = verified['clock']['startedMonotonic'] + 561
+                elif region == 'REPLY_BINDING': record['frameSha256'] = '0' * 64
+                else:
+                    after = loader.proof_value(bad['writersAfter'])
+                    if region == 'WRITERS_AFTER': after['roles'][0]['running'] = True
+                    else: after['monotonic'] = record['finishedMonotonic'] + 0.1
+                    bad['writersAfter'] = fixtures.p(after)
+                    record['writersAfterSha256'] = bad['writersAfter']['sha256']
+                bad.update(fixtures.p(record))
+                expected = 'NORMALIZE_DECODER_' + region + '_UNVERIFIED'
+                for call in (check, full):
+                    with self.assertRaises(normalizer.NormalizationFailure) as caught: call(bad)
+                    self.assertIs(type(caught.exception), normalizer.NormalizationFailure)
+                    self.assertEqual(caught.exception.args, (expected,))
+                    self.assertEqual(caught.exception.phaseCode, expected)
+                    self.assertTrue(caught.exception.__suppress_context__)
+                    self.assertIsNone(caught.exception.__cause__)
+                    self.assertNotIn(CANARY, str(caught.exception))
+        class Subclass(normalizer.NormalizationFailure): pass
+        for error in (RuntimeError(CANARY), KeyboardInterrupt(CANARY),
+                normalizer.NormalizationFailure('NORMALIZE_DECODER_ORDER_UNVERIFIED'),
+                Subclass('NORMALIZE_DECODER_ORDER_UNVERIFIED')):
+            with self.subTest(provider_type=type(error).__name__), \
+                    mock.patch.object(normalizer, 'proof_value', side_effect=error):
+                with self.assertRaises(normalizer.NormalizationFailure) as caught: full(decoder_bundle)
+            self.assertIs(type(caught.exception), normalizer.NormalizationFailure)
+            self.assertEqual(caught.exception.args, ('NORMALIZE_DECODER_BUNDLE_UNVERIFIED',))
+        foreign = normalizer.NormalizationFailure('NORMALIZE_DECODER_ORDER_UNVERIFIED')
+        for hook, expected in (('validate_authority_bundle', 'NORMALIZE_AUTHORITY_UNVERIFIED'),
+                ('graph_projection', 'NORMALIZE_GRAPH_UNVERIFIED')):
+            with mock.patch.object(normalizer, hook, side_effect=foreign):
+                with self.assertRaises(normalizer.NormalizationFailure) as caught: full(decoder_bundle)
+            self.assertEqual(caught.exception.args, (expected,))
+        forged = normalizer.NormalizationFailure('NORMALIZE_DECODER_ORDER_UNVERIFIED'); forged.phaseCode = CANARY
+        missing = normalizer.NormalizationFailure('NORMALIZE_DECODER_ORDER_UNVERIFIED'); del missing.phaseCode
+        for error in (forged, missing, Subclass('NORMALIZE_DECODER_ORDER_UNVERIFIED'),
+                normalizer.NormalizationFailure('NORMALIZE_PLAN_UNVERIFIED')):
+            with mock.patch.object(normalizer, 'checked_decoder', side_effect=error):
+                with self.assertRaises(normalizer.NormalizationFailure) as caught: full(decoder_bundle)
+            self.assertIs(type(caught.exception), normalizer.NormalizationFailure)
+            self.assertEqual(caught.exception.args, ('NORMALIZE_DECODER_LIFECYCLE_UNVERIFIED',))
+
+
 if __name__ == '__main__': unittest.main(verbosity=2)

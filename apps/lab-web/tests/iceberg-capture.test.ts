@@ -5,8 +5,8 @@ import { createHash } from 'node:crypto';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import ts from 'typescript';
-import { captureAssetUrl, icebergCaptureManifest, icebergCaptureManifestV2, icebergCaptureManifestClosedClasspath, icebergCaptureManifestBoundedManifest, icebergCaptureManifestVerifiedAbsence, icebergCaptureManifestNormalizationPhases, observedCount, parseIcebergCapture } from '../src/lib/iceberg-capture.ts';
-import { captureFailureCodes, captureClasspathFailureCodes, captureManifestBoundsFailureCodes, captureClasspathTreeFailureCodes, captureNormalizationPhaseCodes, captureStages, parseCaptureDiagnostic } from '../src/lib/iceberg-capture-diagnostic.ts';
+import { captureAssetUrl, icebergCaptureManifest, icebergCaptureManifestV2, icebergCaptureManifestClosedClasspath, icebergCaptureManifestBoundedManifest, icebergCaptureManifestVerifiedAbsence, icebergCaptureManifestNormalizationPhases, icebergCaptureManifestDecoderLifecyclePhases, observedCount, parseIcebergCapture } from '../src/lib/iceberg-capture.ts';
+import { captureFailureCodes, captureClasspathFailureCodes, captureManifestBoundsFailureCodes, captureClasspathTreeFailureCodes, captureNormalizationPhaseCodes, captureDecoderLifecyclePhaseCodes, captureStages, parseCaptureDiagnostic } from '../src/lib/iceberg-capture-diagnostic.ts';
 
 const actualRaw = readFileSync(new URL('./fixtures/iceberg-capture-attempt2.summary.json', import.meta.url));
 const actual: Record<string, any> = JSON.parse(actualRaw.toString('utf8'));
@@ -382,6 +382,62 @@ test('normalization phases require their exact runtime and a failed NORMALIZE re
   for (const value of [actual, actual3, actual4, actual5]) assert.ok(parseIcebergCapture(value));
   assert.equal(actual5.diagnostic.failureCode, 'UNKNOWN'); assert.equal(actual5.status, 'FAILED');
   assert.equal(actual5.counts.snapshotCount, null); assert.equal(actual5.proofHashes.normalizationReceiptCanonicalSha256, null);
+});
+test('decoder lifecycle subphases require only the new exact runtime and failed NORMALIZE without rewriting real history', () => {
+  // These new-profile objects are synthetic. A final reviewed pin is mandatory before this test can run.
+  assert.equal(typeof icebergCaptureManifestDecoderLifecyclePhases, 'string');
+  assert.match(icebergCaptureManifestDecoderLifecyclePhases!, /^[a-f0-9]{64}$/);
+  const older = [icebergCaptureManifest, icebergCaptureManifestV2, icebergCaptureManifestClosedClasspath,
+    icebergCaptureManifestBoundedManifest, icebergCaptureManifestVerifiedAbsence, icebergCaptureManifestNormalizationPhases];
+  assert.ok(!older.includes(icebergCaptureManifestDecoderLifecyclePhases));
+  const ordinary = [...captureFailureCodes, ...captureClasspathFailureCodes,
+    ...captureManifestBoundsFailureCodes, ...captureClasspathTreeFailureCodes];
+  assert.equal(ordinary.length, 144); assert.equal(captureNormalizationPhaseCodes.length, 11);
+  assert.equal(captureDecoderLifecyclePhaseCodes.length, 7);
+  assert.equal(new Set([...ordinary, ...captureNormalizationPhaseCodes, ...captureDecoderLifecyclePhaseCodes]).size, 162);
+  function synthetic(code: string): Record<string, any> {
+    const value = structuredClone(actual6); value.runtimeManifestSha256 = icebergCaptureManifestDecoderLifecyclePhases;
+    value.diagnostic.failureCode = code; return value;
+  }
+  for (const failureCode of captureDecoderLifecyclePhaseCodes) {
+    const value = synthetic(failureCode); assert.ok(parseIcebergCapture(value));
+    assert.ok(parseCaptureDiagnostic(value.diagnostic, false, 'SCHEMA2_DECODER_LIFECYCLE_PHASES'));
+    for (const runtimeManifestSha256 of older) assert.equal(parseIcebergCapture({ ...value, runtimeManifestSha256 }), null);
+    for (const profile of ['SCHEMA2_INITIAL', 'SCHEMA2_CLOSED_CLASSPATH', 'SCHEMA2_BOUNDED_MANIFEST',
+      'SCHEMA2_VERIFIED_ABSENCE', 'SCHEMA2_NORMALIZATION_PHASES'] as const) {
+      assert.equal(parseCaptureDiagnostic(value.diagnostic, false, profile), null);
+    }
+    for (const stageAttempted of captureStages.filter(stage => stage !== 'NORMALIZE')) {
+      const changed = structuredClone(value); changed.diagnostic.stageAttempted = stageAttempted;
+      assert.equal(parseIcebergCapture(changed), null);
+    }
+    const success = fixture(); success.schemaVersion = 2; success.runtimeManifestSha256 = icebergCaptureManifestDecoderLifecyclePhases;
+    success.diagnostic = structuredClone(value.diagnostic); assert.equal(parseIcebergCapture(success), null);
+    const undetermined = structuredClone(success); undetermined.passed = false; undetermined.status = 'UNDETERMINED';
+    undetermined.failureCategory = 'CAPTURE_UNDETERMINED'; undetermined.checks.inventoryProduced = false;
+    for (const key of ['snapshotCount', 'refCount', 'validationPinCount', 'snapshotCandidateCount']) undetermined.counts[key] = null;
+    assert.equal(parseIcebergCapture(undetermined), null);
+    assert.equal(parseIcebergCapture({ ...value, runtimeManifestSha256: 'f'.repeat(64) }), null);
+    for (const boundary of ['diagnostic', 'lastPrepChild', 'prepCleanup']) {
+      const privateValue = structuredClone(value); const target = boundary === 'diagnostic' ? privateValue.diagnostic : privateValue.diagnostic[boundary];
+      target.privateProviderCause = 'SYNTHETIC_PRIVATE_CANARY'; assert.equal(parseIcebergCapture(privateValue), null);
+    }
+    const inventedExit = structuredClone(value); inventedExit.decoderExitCode = 0;
+    assert.equal(parseIcebergCapture(inventedExit), null);
+  }
+  for (const failureCode of captureNormalizationPhaseCodes) assert.ok(parseIcebergCapture(synthetic(failureCode)));
+  for (const failureCode of ordinary) {
+    const value = synthetic(failureCode); value.diagnostic.stageAttempted = 'PREP'; assert.ok(parseIcebergCapture(value));
+  }
+  for (const failureCode of ['NORMALIZE_DECODER_PRIVATE_PROVIDER_UNVERIFIED', ['NORMALIZE_DECODER_BUNDLE_UNVERIFIED'], null]) {
+    assert.equal(parseIcebergCapture(synthetic(failureCode as string)), null);
+  }
+  for (const value of [actual, actual3, actual4, actual5, actual6]) assert.ok(parseIcebergCapture(value));
+  assert.equal(actual6.runtimeManifestSha256, icebergCaptureManifestNormalizationPhases);
+  assert.equal(actual6.status, 'FAILED'); assert.equal(actual6.passed, false);
+  assert.equal(actual6.diagnostic.failureCode, 'NORMALIZE_DECODER_LIFECYCLE_UNVERIFIED');
+  assert.equal(actual6.counts.capturedObjectCount, null); assert.equal(actual6.checks.inventoryProduced, false);
+  assert.equal(actual6.proofHashes.normalizationReceiptCanonicalSha256, null);
 });
 test('provided-record component path never renders a JSON link for an unsafe URL', async () => {
   // Existing TypeScript/React dependencies only; compile in memory and remove CSS solely for SSR.

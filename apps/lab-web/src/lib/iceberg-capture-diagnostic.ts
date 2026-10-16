@@ -168,7 +168,17 @@ export const captureNormalizationPhaseCodes = [
   'NORMALIZE_PLAN_UNVERIFIED',
   'NORMALIZE_RESULT_UNVERIFIED',
 ] as const;
-export type CaptureDiagnosticProfile = 'SCHEMA2_INITIAL' | 'SCHEMA2_CLOSED_CLASSPATH' | 'SCHEMA2_BOUNDED_MANIFEST' | 'SCHEMA2_VERIFIED_ABSENCE' | 'SCHEMA2_NORMALIZATION_PHASES';
+/** Additional attempted decoder guards belong only to their separately reviewed runtime. */
+export const captureDecoderLifecyclePhaseCodes = [
+  'NORMALIZE_DECODER_BUNDLE_UNVERIFIED',
+  'NORMALIZE_DECODER_SOURCE_UNVERIFIED',
+  'NORMALIZE_DECODER_IDENTITY_UNVERIFIED',
+  'NORMALIZE_DECODER_CLOCK_UNVERIFIED',
+  'NORMALIZE_DECODER_REPLY_BINDING_UNVERIFIED',
+  'NORMALIZE_DECODER_WRITERS_AFTER_UNVERIFIED',
+  'NORMALIZE_DECODER_ORDER_UNVERIFIED',
+] as const;
+export type CaptureDiagnosticProfile = 'SCHEMA2_INITIAL' | 'SCHEMA2_CLOSED_CLASSPATH' | 'SCHEMA2_BOUNDED_MANIFEST' | 'SCHEMA2_VERIFIED_ABSENCE' | 'SCHEMA2_NORMALIZATION_PHASES' | 'SCHEMA2_DECODER_LIFECYCLE_PHASES';
 export const captureStages = ["COMPLETED", "COMPOSITE", "DECODER", "LOAD_CLOSED_COPIES", "NORMALIZE", "ORIGINAL_MAIN", "PREP", "PRODUCER_PROOFS", "SUMMARY", "WRITERS_AFTER", "WRITERS_BEFORE"] as const;
 export const prepChildClasses = {
   "compiler-java-version": "JAVA_VERSION",
@@ -191,7 +201,7 @@ export const prepChildClasses = {
 export const prepChildOutcomes = ["EXITED_NONZERO", "EXITED_ZERO", "OUTPUT_OR_CONTROL_IO_FAILED", "OWN_CHILD_REAP_UNVERIFIED", "PREP_CUTOFF_EXCEEDED", "PRIVATE_OUTPUT_IO_UNVERIFIED", "START_FAILED", "STDERR_LIMIT_EXCEEDED", "STDOUT_LIMIT_EXCEEDED", "TIMED_OUT"] as const;
 
 export type CaptureDiagnostic = {
-  stageAttempted: typeof captureStages[number]; failureCode: typeof captureFailureCodes[number] | typeof captureClasspathFailureCodes[number] | typeof captureManifestBoundsFailureCodes[number] | typeof captureClasspathTreeFailureCodes[number] | typeof captureNormalizationPhaseCodes[number] | 'UNKNOWN' | null;
+  stageAttempted: typeof captureStages[number]; failureCode: typeof captureFailureCodes[number] | typeof captureClasspathFailureCodes[number] | typeof captureManifestBoundsFailureCodes[number] | typeof captureClasspathTreeFailureCodes[number] | typeof captureNormalizationPhaseCodes[number] | typeof captureDecoderLifecyclePhaseCodes[number] | 'UNKNOWN' | null;
   lastPrepChild: { name: keyof typeof prepChildClasses; class: typeof prepChildClasses[keyof typeof prepChildClasses];
     outcome: typeof prepChildOutcomes[number]; returnCode: number | null; stdoutBytes: number; stderrBytes: number;
     timedOut: boolean; childStarted: boolean; childReaped: boolean } | null;
@@ -201,19 +211,21 @@ const object = (value: unknown): value is Record<string, unknown> => value !== n
 const exact = (value: Record<string, unknown>, keys: readonly string[]) => Object.keys(value).length === keys.length && keys.every(key => Object.hasOwn(value, key));
 const integer = (value: unknown, minimum: number, maximum: number): value is number => typeof value === 'number' && Number.isSafeInteger(value) && value >= minimum && value <= maximum;
 export function parseCaptureDiagnostic(value: unknown, passed: boolean, profile: CaptureDiagnosticProfile = 'SCHEMA2_INITIAL'): CaptureDiagnostic | null {
-  if (profile !== 'SCHEMA2_INITIAL' && profile !== 'SCHEMA2_CLOSED_CLASSPATH' && profile !== 'SCHEMA2_BOUNDED_MANIFEST' && profile !== 'SCHEMA2_VERIFIED_ABSENCE' && profile !== 'SCHEMA2_NORMALIZATION_PHASES') return null;
+  if (profile !== 'SCHEMA2_INITIAL' && profile !== 'SCHEMA2_CLOSED_CLASSPATH' && profile !== 'SCHEMA2_BOUNDED_MANIFEST' && profile !== 'SCHEMA2_VERIFIED_ABSENCE' && profile !== 'SCHEMA2_NORMALIZATION_PHASES' && profile !== 'SCHEMA2_DECODER_LIFECYCLE_PHASES') return null;
   if (!object(value) || !exact(value, ['stageAttempted', 'failureCode', 'lastPrepChild', 'prepCleanup'])
     || typeof value.stageAttempted !== 'string' || !(captureStages as readonly string[]).includes(value.stageAttempted)) return null;
   if (passed ? value.failureCode !== null : typeof value.failureCode !== 'string'
     || !(value.failureCode === 'UNKNOWN' || (captureFailureCodes as readonly string[]).includes(value.failureCode)
-      || ((profile === 'SCHEMA2_CLOSED_CLASSPATH' || profile === 'SCHEMA2_BOUNDED_MANIFEST' || profile === 'SCHEMA2_VERIFIED_ABSENCE' || profile === 'SCHEMA2_NORMALIZATION_PHASES')
+      || ((profile === 'SCHEMA2_CLOSED_CLASSPATH' || profile === 'SCHEMA2_BOUNDED_MANIFEST' || profile === 'SCHEMA2_VERIFIED_ABSENCE' || profile === 'SCHEMA2_NORMALIZATION_PHASES' || profile === 'SCHEMA2_DECODER_LIFECYCLE_PHASES')
         && (captureClasspathFailureCodes as readonly string[]).includes(value.failureCode))
-      || ((profile === 'SCHEMA2_BOUNDED_MANIFEST' || profile === 'SCHEMA2_VERIFIED_ABSENCE' || profile === 'SCHEMA2_NORMALIZATION_PHASES')
+      || ((profile === 'SCHEMA2_BOUNDED_MANIFEST' || profile === 'SCHEMA2_VERIFIED_ABSENCE' || profile === 'SCHEMA2_NORMALIZATION_PHASES' || profile === 'SCHEMA2_DECODER_LIFECYCLE_PHASES')
         && (captureManifestBoundsFailureCodes as readonly string[]).includes(value.failureCode))
-      || ((profile === 'SCHEMA2_VERIFIED_ABSENCE' || profile === 'SCHEMA2_NORMALIZATION_PHASES')
+      || ((profile === 'SCHEMA2_VERIFIED_ABSENCE' || profile === 'SCHEMA2_NORMALIZATION_PHASES' || profile === 'SCHEMA2_DECODER_LIFECYCLE_PHASES')
         && (captureClasspathTreeFailureCodes as readonly string[]).includes(value.failureCode))
-      || (profile === 'SCHEMA2_NORMALIZATION_PHASES' && value.stageAttempted === 'NORMALIZE'
-        && (captureNormalizationPhaseCodes as readonly string[]).includes(value.failureCode)))) return null;
+      || ((profile === 'SCHEMA2_NORMALIZATION_PHASES' || profile === 'SCHEMA2_DECODER_LIFECYCLE_PHASES') && value.stageAttempted === 'NORMALIZE'
+        && (captureNormalizationPhaseCodes as readonly string[]).includes(value.failureCode))
+      || (profile === 'SCHEMA2_DECODER_LIFECYCLE_PHASES' && value.stageAttempted === 'NORMALIZE'
+        && (captureDecoderLifecyclePhaseCodes as readonly string[]).includes(value.failureCode)))) return null;
   const child = value.lastPrepChild;
   if (child !== null) {
     if (!object(child) || !exact(child, ['name', 'class', 'outcome', 'returnCode', 'stdoutBytes', 'stderrBytes', 'timedOut', 'childStarted', 'childReaped'])

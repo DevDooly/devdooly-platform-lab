@@ -28,6 +28,24 @@ NORMALIZATION_PHASE_CODES = frozenset((
     'NORMALIZE_INVENTORY_UNVERIFIED',
     'NORMALIZE_PLAN_UNVERIFIED',
     'NORMALIZE_RESULT_UNVERIFIED',
+    'NORMALIZE_DECODER_BUNDLE_UNVERIFIED',
+    'NORMALIZE_DECODER_SOURCE_UNVERIFIED',
+    'NORMALIZE_DECODER_IDENTITY_UNVERIFIED',
+    'NORMALIZE_DECODER_CLOCK_UNVERIFIED',
+    'NORMALIZE_DECODER_REPLY_BINDING_UNVERIFIED',
+    'NORMALIZE_DECODER_WRITERS_AFTER_UNVERIFIED',
+    'NORMALIZE_DECODER_ORDER_UNVERIFIED',
+))
+
+
+DECODER_LIFECYCLE_PHASE_CODES = frozenset((
+    'NORMALIZE_DECODER_BUNDLE_UNVERIFIED',
+    'NORMALIZE_DECODER_SOURCE_UNVERIFIED',
+    'NORMALIZE_DECODER_IDENTITY_UNVERIFIED',
+    'NORMALIZE_DECODER_CLOCK_UNVERIFIED',
+    'NORMALIZE_DECODER_REPLY_BINDING_UNVERIFIED',
+    'NORMALIZE_DECODER_WRITERS_AFTER_UNVERIFIED',
+    'NORMALIZE_DECODER_ORDER_UNVERIFIED',
 ))
 
 
@@ -70,41 +88,51 @@ def checked_descriptor(loaded, authority):
 
 
 def checked_decoder(reply_bytes, loaded, authority, decoder, verified, expected_authority_source_sha256):
-    exact(decoder, 'raw sha256 reply writersAfter')
-    record = proof_value({k:decoder[k] for k in ('raw','sha256')})
-    exact(record, 'schemaVersion scope authoritySourceSha256 sourceCommit producerSha256 runtimeManifestSha256 prepProofSha256 decoderSourceSha256 runtimeImageReference runtimeImageId icebergJarSha256 mainClass clockSha256 originalStartedMonotonic originalAbsoluteCutoff decodeCutoff cleanupReserveSeconds capturedAt finishedMonotonic cid exitCode ownDecoderStopped attachCliReaped watchdogFired replySha256 replyBytes frameSha256 descriptorSha256 writersBeforeSha256 writersAfterSha256 originalRoleStopCallsAdded originalInitializerStopCallsAdded')
-    source_header(record, authority['sourceCommit'], expected_authority_source_sha256)
-    require(type(record['schemaVersion']) is int and record['schemaVersion'] == 1
-        and record['scope'] == 'OWN_DECODER_CONTAINER_BOUNDED_STOPPED_AND_REAPED'
-        and record['runtimeImageReference'] == SPARK and record['icebergJarSha256'] == ICEBERG_SHA
-        and record['mainClass'] == 'org.apache.iceberg.ClosedCopyDecoder'
-        and type(record['runtimeImageId']) is str and re.fullmatch('sha256:[a-f0-9]{64}', record['runtimeImageId'])
-        and all(type(record[k]) is str and HEX.fullmatch(record[k]) for k in ('prepProofSha256','decoderSourceSha256','cid'))
-        and record['cid'] not in {row['id'] for row in verified['stopped']['roles']}
-        and record['cid'] != verified['stopped']['initializer']['id'], 'EXACT_SEPARATE_DECODER_IDENTITY_REQUIRED')
-    clock = verified['clock']; start = clock['startedMonotonic']
-    require(record['clockSha256'] == authority['clock']['sha256'] and record['originalStartedMonotonic'] == start
-        and number(record['originalAbsoluteCutoff']) and record['originalAbsoluteCutoff'] == start+600
-        and type(record['cleanupReserveSeconds']) is int and record['cleanupReserveSeconds'] == 40
-        and number(record['decodeCutoff']) and verified['stopped']['monotonic'] < record['decodeCutoff'] <= start+560
-        and number(record['finishedMonotonic']) and verified['stopped']['monotonic'] <= record['finishedMonotonic'] < start+600
-        and all(type(record[k]) is int and record[k] == 0 for k in ('originalRoleStopCallsAdded','originalInitializerStopCallsAdded'))
-        and record['ownDecoderStopped'] is True and record['attachCliReaped'] is True and record['watchdogFired'] is False
-        and type(record['exitCode']) is int and record['exitCode'] in (0,2,3), 'ORIGINAL_CLOCK_DECODER_STOP_AND_REAP_REQUIRED')
-    proof_value(decoder['reply'], 4*1024**2)
-    require(decoder['reply']['raw'] == reply_bytes and record['replySha256'] == decoder['reply']['sha256']
-        and type(record['replyBytes']) is int and record['replyBytes'] == len(reply_bytes)
-        and record['descriptorSha256'] == digest(loaded['descriptorBytes']) and record['frameSha256'] == digest(loaded['frameBytes'])
-        and record['writersBeforeSha256'] == authority['lifecycle']['sha256']
-        and record['writersAfterSha256'] == decoder['writersAfter']['sha256'], 'DECODER_WHOLE_REPLY_FRAME_AND_ACTOR_PROOF_BINDING')
-    after = validate_stopped(decoder['writersAfter'], authority, clock, expected_authority_source_sha256, after=True)
-    before = verified['stopped']
-    require(after['roles'] == before['roles'] and after['initializer'] == before['initializer']
-        and after['project'] == before['project'] and after['attemptRoot'] == before['attemptRoot']
-        and before['monotonic'] <= after['monotonic'] <= record['finishedMonotonic']
-        and utc_ns(before['capturedAt']) <= utc_ns(after['capturedAt']) <= utc_ns(record['capturedAt']),
-        'SAME_ALL_FIVE_STOPPED_ACTORS_AFTER_DECODER')
-    return record
+    decoder_phase = 'NORMALIZE_DECODER_BUNDLE_UNVERIFIED'
+    try:
+        exact(decoder, 'raw sha256 reply writersAfter')
+        record = proof_value({k:decoder[k] for k in ('raw','sha256')})
+        exact(record, 'schemaVersion scope authoritySourceSha256 sourceCommit producerSha256 runtimeManifestSha256 prepProofSha256 decoderSourceSha256 runtimeImageReference runtimeImageId icebergJarSha256 mainClass clockSha256 originalStartedMonotonic originalAbsoluteCutoff decodeCutoff cleanupReserveSeconds capturedAt finishedMonotonic cid exitCode ownDecoderStopped attachCliReaped watchdogFired replySha256 replyBytes frameSha256 descriptorSha256 writersBeforeSha256 writersAfterSha256 originalRoleStopCallsAdded originalInitializerStopCallsAdded')
+        decoder_phase = 'NORMALIZE_DECODER_SOURCE_UNVERIFIED'
+        source_header(record, authority['sourceCommit'], expected_authority_source_sha256)
+        decoder_phase = 'NORMALIZE_DECODER_IDENTITY_UNVERIFIED'
+        require(type(record['schemaVersion']) is int and record['schemaVersion'] == 1
+            and record['scope'] == 'OWN_DECODER_CONTAINER_BOUNDED_STOPPED_AND_REAPED'
+            and record['runtimeImageReference'] == SPARK and record['icebergJarSha256'] == ICEBERG_SHA
+            and record['mainClass'] == 'org.apache.iceberg.ClosedCopyDecoder'
+            and type(record['runtimeImageId']) is str and re.fullmatch('sha256:[a-f0-9]{64}', record['runtimeImageId'])
+            and all(type(record[k]) is str and HEX.fullmatch(record[k]) for k in ('prepProofSha256','decoderSourceSha256','cid'))
+            and record['cid'] not in {row['id'] for row in verified['stopped']['roles']}
+            and record['cid'] != verified['stopped']['initializer']['id'], 'EXACT_SEPARATE_DECODER_IDENTITY_REQUIRED')
+        decoder_phase = 'NORMALIZE_DECODER_CLOCK_UNVERIFIED'
+        clock = verified['clock']; start = clock['startedMonotonic']
+        require(record['clockSha256'] == authority['clock']['sha256'] and record['originalStartedMonotonic'] == start
+            and number(record['originalAbsoluteCutoff']) and record['originalAbsoluteCutoff'] == start+600
+            and type(record['cleanupReserveSeconds']) is int and record['cleanupReserveSeconds'] == 40
+            and number(record['decodeCutoff']) and verified['stopped']['monotonic'] < record['decodeCutoff'] <= start+560
+            and number(record['finishedMonotonic']) and verified['stopped']['monotonic'] <= record['finishedMonotonic'] < start+600
+            and all(type(record[k]) is int and record[k] == 0 for k in ('originalRoleStopCallsAdded','originalInitializerStopCallsAdded'))
+            and record['ownDecoderStopped'] is True and record['attachCliReaped'] is True and record['watchdogFired'] is False
+            and type(record['exitCode']) is int and record['exitCode'] in (0,2,3), 'ORIGINAL_CLOCK_DECODER_STOP_AND_REAP_REQUIRED')
+        decoder_phase = 'NORMALIZE_DECODER_REPLY_BINDING_UNVERIFIED'
+        proof_value(decoder['reply'], 4*1024**2)
+        require(decoder['reply']['raw'] == reply_bytes and record['replySha256'] == decoder['reply']['sha256']
+            and type(record['replyBytes']) is int and record['replyBytes'] == len(reply_bytes)
+            and record['descriptorSha256'] == digest(loaded['descriptorBytes']) and record['frameSha256'] == digest(loaded['frameBytes'])
+            and record['writersBeforeSha256'] == authority['lifecycle']['sha256']
+            and record['writersAfterSha256'] == decoder['writersAfter']['sha256'], 'DECODER_WHOLE_REPLY_FRAME_AND_ACTOR_PROOF_BINDING')
+        decoder_phase = 'NORMALIZE_DECODER_WRITERS_AFTER_UNVERIFIED'
+        after = validate_stopped(decoder['writersAfter'], authority, clock, expected_authority_source_sha256, after=True)
+        decoder_phase = 'NORMALIZE_DECODER_ORDER_UNVERIFIED'
+        before = verified['stopped']
+        require(after['roles'] == before['roles'] and after['initializer'] == before['initializer']
+            and after['project'] == before['project'] and after['attemptRoot'] == before['attemptRoot']
+            and before['monotonic'] <= after['monotonic'] <= record['finishedMonotonic']
+            and utc_ns(before['capturedAt']) <= utc_ns(after['capturedAt']) <= utc_ns(record['capturedAt']),
+            'SAME_ALL_FIVE_STOPPED_ACTORS_AFTER_DECODER')
+        return record
+    except BaseException:
+        raise NormalizationFailure(decoder_phase) from None
 
 
 def graph_projection(reply, descriptor):
@@ -278,5 +306,9 @@ def normalize_graph(reply_bytes, loaded, authority_bundle, decoder_bundle, plann
             'allCapturedObjects':[{'id':row['alias'],'action':'KEEP'} for row in descriptor['objects']],
             'objectCandidateCount':0,'applyEnabled':False,'independentlyVerifiedLiveTable':False,
             'actualDataContentsVerifiedByDecoder':False,'historicalMetadataRestoreVerified':False}}
-    except BaseException:
+    except BaseException as error:
+        code = getattr(error, 'phaseCode', None) if type(error) is NormalizationFailure else None
+        if (phase == 'NORMALIZE_DECODER_LIFECYCLE_UNVERIFIED'
+                and type(code) is str and code in DECODER_LIFECYCLE_PHASE_CODES):
+            raise
         raise NormalizationFailure(phase) from None
