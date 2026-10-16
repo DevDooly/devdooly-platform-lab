@@ -23,6 +23,8 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 이번 작업의 중단 기준은 **계정 잔여 한도 60%**입니다. 해당 기준에 도달하면 새 무거운 실행을 시작하지 않고, 이미 시작한 자기 자원의 종료·증거 보존을 마친 뒤 진행 상태를 남깁니다. 완료 시각은 실제 검사·CI 결과에 따라 정하며 고정 ETA를 약속하지 않습니다. Snapshot expiration·객체 GC·삭제, 미니 PC의 새 데이터 처리나 전체 6단계 완료는 이번 capture 범위에 포함하지 않습니다.
 
+**중단 기록(2026-10-16):** 계정 잔여 한도 60%에 도달해 자동 진행을 멈췄습니다. 커밋 f24ff21e의 decoder 검증 하위 단계 7개 진단은 Windows 집중 검사 19개 중 18개 통과·POSIX 전용 1개 제외, 웹 86개·타입 검사·Pages 빌드 통과까지 확인했습니다. 새 Linux 85개와 7차 capture는 시작하지 않았습니다. 재개 시 현재 ref의 전체 SHA 확인 → Linux 85개·UID0·skip0 검증 → 새 격리 capture 한 번 → 원문·화면·문서 반영 순서로 진행합니다. [PR #63](https://github.com/DevDooly/devdooly-platform-lab/pull/63)은 초안이며 main 병합·공개 Pages 반영은 미실행입니다. 6차 capture의 실패와 미관측 값은 그대로 보존하며 이 후속 작업에서 미니 PC에 접촉하지 않았습니다.
+
 ## 현재 구현과 검증
 
 최근 배포·보존 확인(2026-10-16 갱신): 소스 `74a8e988`의 [Actions](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38814779596)와 Jenkins 45에서 API 191개 + 독립 Java 예제 20개, 총 211개를 통과했습니다. 이어 PR #52의 API·웹과 PR #53의 worker를 실제 전환했습니다. 애플리케이션 소스는 `74a8e988`, 최종 GitOps revision은 `b63fedfa`입니다. 2026-10-15 23:12:57 UTC의 배포 후 검사에서 작업 8개·export 정보 16개, 기존 객체 24개 + native7 객체 12개의 전체 GET, PV·PVC 각 13개·Docker 60개와 Kafka offset/end 8·lag 0을 확인했습니다. [S3 전송 배포·보존 근거](docs/evidence/s3-runtime-rollout/README.md)는 해당 시점의 기록이며 실시간 가용성을 뜻하지 않습니다.
