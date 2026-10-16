@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "scope": "CURRENT_V4_DATABASE_BACKUP_PROGRESS_ONLY",
+  "status": "BACKUP_CREATED_RESTORE_NOT_RUN",
+  "applicationSourceCommit": "74a8e98844a8fea0653951136ede0e7de0d7ac08",
+  "chosenMainCommit": "5c9b34d3b0a3508ebf6f78254e59a3f9131c71a2",
+  "producerSourceManifestSha256": "99a9dbe19ffee6e5f8fa2602199f6da6912739b537a5816777435732ae9a8afa",
+  "schema": {
+    "approvedSha256": "92e6864def30e65a1cf9d97a3a5c94adc3aa8854b94a9d89ea00580cca5a1acd",
+    "tables": 8,
+    "columns": 64,
+    "checks": 15,
+    "constraints": 28,
+    "indexColumns": 17,
+    "referentialConstraints": 3
+  },
+  "sourceRowCounts": {
+    "demo_run": 9,
+    "demo_outcome": 1096,
+    "lab_job": 8,
+    "lab_outbox": 16,
+    "lab_job_slot": 1,
+    "lab_admission_policy": 1,
+    "lab_runtime": 1,
+    "flyway_schema_history": 4
+  },
+  "backup": {
+    "preflightPassed": true,
+    "preflightProofSha256": "7f77ffe9d2620a5920a89ed7b0515ad770845b0a5f7af9221bb01019b287c512",
+    "dumpCreated": true,
+    "backupPhasePassed": true,
+    "backupProofSha256": "bb4660a4d07a3ed0f36e52fde6ee2725b9feb688e0744944f8c0551639993bc6",
+    "logicalBackupVerified": false,
+    "dumpContentVerifiedByRestore": false,
+    "runtimeRowIsPointInTime": true,
+    "storedDoubleBitIdentityClaimed": false,
+    "idleIsAdmissionFreeze": false
+  },
+  "isolatedRestore": {
+    "started": false,
+    "verified": false,
+    "targetDatabaseStarted": false,
+    "createTargetPassed": false,
+    "failedCreateProofSha256": "e75126ceaf2fa140d4696ee4095db0fdae038b6cfd32c9cb295def780afc875b",
+    "coldObservation": {
+      "pointInTimeOnly": true,
+      "savedResourceIdentityAndSpecMatched": true,
+      "dbReplicas": 0,
+      "pods": 0,
+      "pvcPhase": "Pending",
+      "volumeAllocated": false,
+      "acceptedCreateAnchorProduced": false,
+      "cleanupProvenByThisRecord": false,
+      "diagnosticProofSha256": "a9b0ad2e0e9947bab4a93348109925c75e0375ed3c1e5721909f0f0a5690f733",
+      "diagnosticPassed": false,
+      "diagnosticFailedStage": "COLD_COMPARISON",
+      "actualPodCollectionKind": "List",
+      "requiredPodCollectionKind": "PodList"
+    }
+  },
+  "failureHistory": [
+    {
+      "attempt": "a3",
+      "passed": false,
+      "code": "MIGRATION_CHECK_CLAUSE_CHANGED",
+      "proofSha256": "64f2a074112198c06281a27b5e12ee1c46e81bcbb3b66a7be8fc3345d688e34e",
+      "observedRepresentation": "TWO_NAMED_REDUNDANT_AND_GROUP_PARENTHESES_REMOVED"
+    },
+    {
+      "attempt": "a5",
+      "passed": false,
+      "code": "SAME_VERSION_DUMP_TOOL_REQUIRED",
+      "proofSha256": "8474c0fb382f19213b08a07573217100eabe651a52b7b22062b45e574b309127",
+      "observedRepresentation": "EXACT_MARIADB_11_8_9_MODERN_VERSION_LINE"
+    },
+    {
+      "attempt": "a6",
+      "passed": false,
+      "code": "INVALID_KUBERNETES_RESPONSE",
+      "proofSha256": "e75126ceaf2fa140d4696ee4095db0fdae038b6cfd32c9cb295def780afc875b",
+      "observedRepresentation": "SEVEN_WHITESPACE_SEPARATED_CREATE_JSON_DOCUMENTS"
+    }
+  ],
+  "limits": {
+    "failedReceiptsRelabeled": false,
+    "externalObjectBackupVerified": false,
+    "runtimeLeaseRestored": false,
+    "springStarted": false,
+    "flywayStarted": false,
+    "workerStarted": false,
+    "currentAvailabilityClaimed": false,
+    "fullApplicationRecoveryVerified": false
+  }
+}

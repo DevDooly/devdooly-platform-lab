@@ -1,0 +1,83 @@
+---
+const repo = 'https://github.com/DevDooly/devdooly-platform-lab';
+const evidence = `${repo}/blob/main/docs/evidence/current-db-restore/README.md`;
+const steps = [
+  { title: '현재 DB 확인·논리 백업', result: '통과', note: 'V1–V4 스키마와 8개 테이블을 확인했습니다.', ok: true },
+  { title: '새 볼륨의 빈 DB 확인', result: '통과', note: '운영 DB와 분리한 새 DB에 한 번만 복원했습니다.', ok: true },
+  { title: '전체 복원 내용 비교', result: '통과', note: '전체 스키마·업무 행·BLOB 비교와 재조회를 확인했습니다.', ok: true },
+  { title: '시험 DB 중지 상태 조회', result: '확인', note: '별도 조회에서 replicas 0·Pod 0개와 Retain 볼륨을 확인했습니다.', ok: true },
+  { title: '컨테이너 종료 코드', result: '미관측', note: '마지막 CRI 조회는 NotFound를 반환했습니다. 원래 종료 검증은 실패로 남깁니다.', ok: false },
+];
+---
+<section id="db-restore" class="section db-restore-section" aria-labelledby="db-restore-title">
+  <div class="section-heading db-restore-heading">
+    <div><span class="eyebrow">RECOVERY / RESTORE AND COMPARE</span>
+      <h2 id="db-restore-title">백업 파일에서,<br />다시 읽을 수 있는 데이터로.</h2>
+      <p>새 볼륨에 직접 복원하고 전체 내용을 비교했습니다. 복원 결과와 종료 관측의 한계를 함께 남깁니다.</p>
+    </div>
+    <span class="tag">복원 통과 · 종료 코드 미관측</span>
+  </div>
+  <p class="db-restore-time">2026-10-16 UTC의 격리 검증 기록입니다. 현재 서비스의 가용성을 표시하지 않습니다.</p>
+  <dl class="db-restore-metrics" aria-label="확인한 복원 결과">
+    <div><dt>복원한 스키마</dt><dd>8<small>개 테이블</small></dd></div>
+    <div><dt>전체 업무 데이터·BLOB</dt><dd class="db-restore-pass">일치 확인</dd></div>
+    <div><dt>시험 DB의 별도 중지 관측</dt><dd>0 / 0<small>replicas / Pods</small></dd></div>
+  </dl>
+  <ol class="db-restore-steps" aria-label="검증 단계와 결과">
+    {steps.map((step, index) => <li>
+      <span class="db-restore-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+      <div><h3>{step.title}</h3><p>{step.note}</p></div>
+      <strong class={step.ok ? 'db-restore-status' : 'db-restore-status db-restore-caution'}>{step.result}</strong>
+    </li>)}
+  </ol>
+  <details class="db-restore-details">
+    <summary>데이터 비교 범위와 남은 한계 보기</summary>
+    <p>8개 테이블의 전체 스키마와 runtime 상태 테이블을 제외한 7개 테이블의 전체 행·BLOB을 비교했습니다. runtime 값은 백업 시점의 기록으로 복사했으며, 현재 실행권이나 heartbeat가 유효하다는 뜻은 아닙니다.</p>
+    <p>복원과 재조회는 통과했습니다. 종료 검증은 마지막 CRI 조회 실패로 통과하지 못했고, 이후 독립적인 읽기 조회로 중지 상태와 볼륨 보존을 확인했습니다. 정상 종료 코드·전체 애플리케이션 복구·DB와 객체 저장소의 동시 복구는 입증하지 않았습니다.</p>
+    <p>복원은 한 번만 수행했고 재import하지 않았습니다. 이전 실패 기록과 데이터가 없는 시험 자원의 정리 기록도 근거 문서에 보존합니다.</p>
+    <dl><div><dt>복원 검증 원문 SHA-256</dt><dd><code>5222519715c61929f127129ec817d676dfce947273bfaeb82671f3bfbbc76ec7</code></dd></div>
+      <div><dt>종료 검증 결과</dt><dd>FALSE 유지 · 종료 코드 UNOBSERVED · 별도 중지 상태 확인</dd></div></dl>
+  </details>
+  <div class="db-restore-links"><a href={evidence} target="_blank" rel="noreferrer">실제 검증 근거와 실패 기록 ↗</a>
+    <a href={`${repo}/blob/main/docs/evidence/current-db-restore/summary.json`} target="_blank" rel="noreferrer">공개 결과 JSON ↗</a></div>
+</section>
+<style>
+  .db-restore-section { padding-block:80px; font-size:var(--font-body,1.0625rem); }
+  .db-restore-heading { align-items:flex-start; }
+  .db-restore-heading p { max-width:48em; margin-top:18px; color:var(--muted); }
+  .db-restore-heading .tag { white-space:normal; }
+  .db-restore-time { margin:24px 0; color:var(--muted); }
+  .db-restore-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin:28px 0; }
+  .db-restore-metrics div { min-width:0; padding:24px; border:1px solid var(--line); background:var(--surface); }
+  .db-restore-metrics dt { color:var(--muted); }
+  .db-restore-metrics dd { margin:12px 0 0; font:600 2rem var(--mono); }
+  .db-restore-metrics small { display:block; margin-top:8px; font:1.0625rem var(--sans); }
+  .db-restore-metrics .db-restore-pass { font:600 1.5rem var(--sans); color:var(--green); }
+  .db-restore-steps { margin:0; padding:0; list-style:none; border-top:1px solid var(--line); }
+  .db-restore-steps li { display:grid; grid-template-columns:42px minmax(0,1fr) auto; gap:18px; align-items:start; padding:24px 0; border-bottom:1px solid var(--line); }
+  .db-restore-number { padding-top:3px; color:var(--muted); font-family:var(--mono); }
+  .db-restore-steps h3 { font-size:1.1875rem; }
+  .db-restore-steps p { margin-top:8px; line-height:1.8; color:var(--muted); }
+  .db-restore-status { padding:6px 12px; color:var(--green); border:1px solid var(--line); white-space:nowrap; }
+  .db-restore-caution { color:#79510d; background:#faf1db; }
+  .db-restore-details { margin-top:24px; border:1px solid var(--line); }
+  .db-restore-details summary { padding:18px; cursor:pointer; font-weight:600; }
+  .db-restore-details summary:hover { background:var(--cream); }
+  .db-restore-details p { margin:18px; line-height:1.8; }
+  .db-restore-details dl { margin:18px; }
+  .db-restore-details dl div { padding:16px 0; border-top:1px solid var(--line); }
+  .db-restore-details dt { color:var(--muted); }
+  .db-restore-details dd { margin:8px 0 0; overflow-wrap:anywhere; }
+  .db-restore-details code { font:1.0625rem var(--mono); overflow-wrap:anywhere; }
+  .db-restore-links { display:flex; flex-wrap:wrap; gap:16px 28px; margin-top:24px; font-weight:600; }
+  .db-restore-links a { text-decoration:underline; text-underline-offset:4px; }
+  .db-restore-section :is(a,summary):focus-visible { outline:3px solid var(--green); outline-offset:4px; }
+  @media(max-width:800px) { .db-restore-metrics { grid-template-columns:1fr; gap:12px; } }
+  @media(max-width:620px) {
+    .db-restore-section { padding-block:54px; }
+    .db-restore-heading { flex-direction:column; gap:20px; }
+    .db-restore-metrics div { padding:20px 18px; }
+    .db-restore-steps li { grid-template-columns:32px minmax(0,1fr); gap:12px; }
+    .db-restore-status { grid-column:2; justify-self:start; }
+  }
+</style>

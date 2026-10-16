@@ -13,10 +13,10 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 | 최대 입력·동시 접수 | 검증 완료 | 격리 환경의 최대 1,000건·동시 2/8개 접수와 실제 배포 환경의 1,000건 처리·데이터 보존 |
 | Cloud 시작 경계 보정 | 새 전체 실행에서 통과 | 전체 mount 내용·exact CID·OOM-enabled 표현 검사를 유지하며 이전 실패 7개를 보존 |
 | Spark → Trino·compaction | 새 Cloud 격리 검증 완료 | 6→12→12행·현재 파일 2→1·Trino 10개 조회·자기 컨테이너 종료, [실제 근거](docs/evidence/cloud-lakehouse/FULL_SUCCESS.md) |
-| 현재 DB 백업·격리 복원 | 백업 생성 완료·복원 준비 중 | 현재 V1–V4의 8개 테이블·스키마를 확인하고 논리 dump 생성; 시험 자원 생성 응답 파싱에서 중단돼 복원은 미실행 |
+| 현재 DB 백업·격리 복원 | 논리 복원 검증 완료·종료 코드 미관측 | 새 격리 DB에 import 1회 후 8개 테이블 스키마·7개 비runtime 테이블 행·BLOB과 원본 DB 보존 확인. stop receipt는 실패로 유지하고 별도 DB 0·Pod 0·Bound/Retain 관측을 [근거](docs/evidence/current-db-restore/README.md)에 구분 |
 | Iceberg 보존 계획 | 초안 PR 검증 완료 | 삭제 없는 순수 계획기·전체 maintenance 테스트 59개 통과, [PR #61](https://github.com/DevDooly/devdooly-platform-lab/pull/61); 실제 snapshot 만료·객체 삭제는 미실행 |
 
-**현재 진행:** 2026-10-16 04:06 UTC에 [PR #56](https://github.com/DevDooly/devdooly-platform-lab/pull/56)의 병합과 공개 Cloud 결과 화면을 확인했습니다. DB 시험은 백업 생성 후 멈췄으며, 시험 DB는 replicas 0·Pod 0개, PVC는 Pending·미할당 상태입니다. 다음 순서는 생성 응답 진단 → 데이터 없는 시험 자원의 정리 조건 확인 → 새 격리 복원·전체 내용 비교 → 시험 DB 중지·결과 문서화입니다. 예상 잔여 시간은 진단과 정리 검토가 통과한 뒤 약 1~2시간이며, 새 오류나 CI 대기에 따라 조정합니다. 백업 생성만으로 복원 성공을 표시하지 않습니다. [Cloud 실제 결과](docs/evidence/cloud-lakehouse/FULL_SUCCESS.md)
+**현재 진행:** 2026-10-16의 새 a7에서 현재 V1–V4 DB의 논리 백업·격리 복원과 전체 스키마·내용 대조를 통과했습니다. 종료 단계 receipt는 마지막 CRI 조회 실패로 FALSE이며 정상 exit는 UNOBSERVED입니다. 별도 읽기 진단에서 시험 DB replicas 0·Pod 0·Bound/Retain 보관을 확인했습니다. 현재는 이 범위를 구분하는 공개 결과 UI·문서를 준비하고 있습니다. 확인까지 약 30~60분을 예상하며 검증·CI 대기에 따라 조정합니다. 이후 실제 Iceberg metadata 수집과 보존 계획 연결은 별도 작업으로 기간이 미정이며 전체 완료 시간의 약속이 아닙니다. [현재 DB 실제 결과](docs/evidence/current-db-restore/README.md)는 [기존 Cloud 결과](docs/evidence/cloud-lakehouse/FULL_SUCCESS.md)와 별도이며 전체 애플리케이션·archive 복구의 완료 표시는 아닙니다.
 
 ## 현재 구현과 검증
 
