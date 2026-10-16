@@ -82,7 +82,7 @@ Kafka·Garage의 전용 PVC 3개는 외부 사본에서 새 볼륨으로 복원�
 
 ## 다음 작업
 
-**다음 작업 지점(2026-10-16):** [PR #61](https://github.com/DevDooly/devdooly-platform-lab/pull/61)의 현재 DB 복원 카드·근거와 삭제 없는 순수 Iceberg retention planner가 main에 공개됐습니다. main `4a71ed20`의 Actions·Jenkins 52도 성공했습니다. 소스 `48a7fee2`의 [첫 closed-copy 실행](evidence/iceberg-capture/ATTEMPT_1.md)은 저장소 검증·Linux 56개를 통과했고 준비 단계에서 `PREP_NOT_VERIFIED`로 실패했습니다. 원인과 컨테이너 정리 여부는 미확인이며 원문을 보존합니다. [Schema 2 진단](../infra/iceberg-retention-ci/SCHEMA2.md)을 추가한 소스 `b91a7324`의 [두 번째 실행](evidence/iceberg-capture/ATTEMPT_2.md)은 Linux 62개·skip 0을 통과했고, 준비 단계의 JAR `Class-Path` 거부와 해당 준비용 컨테이너의 제거·부재를 확인했습니다. 원래 작업·decoder·inventory는 여전히 미확인입니다. 다음은 검증한 파일 범위 안의 참조만 다루는 호환성 검토와 새 소스의 prep·capture 검증이며 [capture 절차](runbooks/iceberg-closed-copy-capture.md)를 따릅니다. snapshot 만료·객체 GC·삭제와 미니 PC의 새 데이터 처리는 포함하지 않습니다.
+**다음 작업 지점(2026-10-16):** PR #61의 DB 복원 기록·카드와 삭제 없는 retention planner가 main에 공개됐고, main `4a71ed20`의 Actions·Jenkins 52를 확인했습니다. 후속 소스 `a03f8783`의 [세 번째 capture 실행](evidence/iceberg-capture/ATTEMPT_3.md)은 기본 CI·Linux 67개·skip 0 통과 후 manifest 바이트 검사에서 준비에 실패했습니다. 해당 준비용 컨테이너의 제거·부재를 확인했으며 구체적인 실패 분기·원래 작업·decoder·inventory는 미확인입니다. 다음은 [manifest 처리 보완](../infra/iceberg-retention-ci/MANIFEST_BOUNDS.md)과 새 소스의 prep·capture 검증입니다. [실행 절차](runbooks/iceberg-closed-copy-capture.md)에 따라 앞선 실패를 보존하고 snapshot 만료·객체 삭제·미니 PC의 새 데이터 처리는 포함하지 않습니다.
 
 [다음 개발 계획](NEXT_STEPS.md)에 우선순위와 단계별 결과물·완료 조건을 정리했습니다.
 

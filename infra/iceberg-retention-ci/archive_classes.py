@@ -10,6 +10,7 @@ import zipfile
 MAX_JARS, MAX_JAR, MAX_TOTAL = 512, 128*1024**2, 1024**3
 MAX_ARCHIVE, MAX_HEADERS, MAX_ZIP_ENTRIES = MAX_TOTAL+16*1024**2, 3072, 512000
 MAX_CLASSPATH_REFS = 4096
+MAX_EXPORTED_MANIFEST, MAX_TOTAL_MANIFEST = 8*1024**2, 32*1024**2
 CLASS = re.compile(r'org/apache/iceberg/ClosedCopyDecoder(?:\$[A-Za-z0-9_$]+)?\.class')
 DIRECTORIES = {'org','org/apache','org/apache/iceberg'}
 
@@ -116,7 +117,31 @@ def _consume_tar(stream, on_directory, on_file):
             require(not padding or _read_exact(stream,padding) == bytes(padding), 'TAR_ZERO_PADDING_REQUIRED')
 
 
-def _scan_jar(source, manifest_reader):
+def _read_export_manifest(archive, entry, budget):
+    """Reserve the whole declared size before bounded decompression and EOF/CRC."""
+    size = entry.file_size
+    require(type(size) is int and size >= 0, 'JAR_MANIFEST_DECLARED_SIZE_BOUND')
+    require(size != 0, 'JAR_MANIFEST_DECLARED_EMPTY')
+    require(size <= MAX_EXPORTED_MANIFEST, 'JAR_MANIFEST_DECLARED_SIZE_BOUND')
+    require(type(budget) is list and len(budget) == 1 and type(budget[0]) is int
+        and 0 <= budget[0] <= MAX_TOTAL_MANIFEST - size, 'JAR_MANIFEST_AGGREGATE_BYTES_BOUND')
+    budget[0] += size
+    chunks, remaining = [], size
+    with archive.open(entry, 'r') as stream:
+        while remaining:
+            requested = min(65536, remaining)
+            chunk = stream.read(requested)
+            require(type(chunk) is bytes and 0 < len(chunk) <= requested,
+                'JAR_MANIFEST_READ_MISMATCH')
+            chunks.append(chunk); remaining -= len(chunk)
+        extra = stream.read(1)
+        require(type(extra) is bytes and extra == b'', 'JAR_MANIFEST_READ_MISMATCH')
+    raw = b''.join(chunks)
+    require(len(raw) == size, 'JAR_MANIFEST_READ_MISMATCH')
+    return raw
+
+
+def _scan_jar(source, manifest_reader, *, manifest_budget=None):
     """Scan central entries and a bounded manifest; never follow classpath URLs."""
     try:
         with zipfile.ZipFile(source,'r') as archive:
@@ -135,38 +160,45 @@ def _scan_jar(source, manifest_reader):
             require(len(manifests) <= 1, 'ONE_UNAMBIGUOUS_JAR_MANIFEST_REQUIRED')
             if manifests:
                 entry = manifests[0]
-                require(0 < entry.file_size <= 65536, 'JAR_MANIFEST_BYTES_BOUND')
-                with archive.open(entry,'r') as stream: raw = stream.read(65537)
-                require(len(raw) == entry.file_size and len(raw) <= 65536, 'JAR_MANIFEST_BYTES_BOUND')
+                if manifest_budget is None:
+                    # Public/default locked-JAR policy is deliberately unchanged.
+                    require(0 < entry.file_size <= 65536, 'JAR_MANIFEST_BYTES_BOUND')
+                    with archive.open(entry,'r') as stream: raw = stream.read(65537)
+                    require(len(raw) == entry.file_size and len(raw) <= 65536, 'JAR_MANIFEST_BYTES_BOUND')
+                else:
+                    raw = _read_export_manifest(archive, entry, manifest_budget)
                 references = manifest_reader(raw) or []
         return references
     except (zipfile.BadZipFile,zipfile.LargeZipFile,UnicodeError,EOFError,RuntimeError,NotImplementedError):
         raise ValueError('VALID_BOUNDED_JAR_ZIP_REQUIRED') from None
 
 
-def _manifest(raw, on_classpath):
-    require(type(raw) is bytes and 0 < len(raw) <= 65536 and b'\0' not in raw
+def _manifest(raw, on_classpath, *, maximum=65536):
+    require(type(raw) is bytes and 0 < len(raw) <= maximum and b'\0' not in raw
         and raw[-1:] in (b'\n',b'\r'), 'STRICT_BOUNDED_JAR_MANIFEST_REQUIRED')
     # JAR logical lines use CR/LF bytes and a leading ASCII space continuation;
     # Unicode line separators are values, never additional attribute boundaries.
     lines = raw.replace(b'\r\n',b'\n').replace(b'\r',b'\n').split(b'\n')
     attributes, previous = {}, None
     def finish():
-        for value in attributes.values():
+        classpath = b''
+        for name, chunks in attributes.items():
+            value = b''.join(chunks)
             try: value.decode('utf-8')
             except UnicodeError: raise ValueError('JAR_MANIFEST_UTF8_REQUIRED') from None
-        on_classpath(attributes.get(b'class-path',b''))
+            if name == b'class-path': classpath = value
+        on_classpath(classpath)
     for line in lines:
         if not line:
             finish(); attributes,previous = {},None; continue
         if line.startswith(b' '):
             require(previous is not None, 'JAR_MANIFEST_CONTINUATION_REJECTED')
-            attributes[previous] += line[1:]; continue
+            attributes[previous].append(line[1:]); continue
         name,separator,value = line.partition(b': ')
         require(separator and re.fullmatch(b'[A-Za-z0-9_-]{1,70}',name), 'JAR_MANIFEST_ATTRIBUTE_REQUIRED')
         name = name.lower()
         require(name not in attributes, 'JAR_MANIFEST_DUPLICATE_ATTRIBUTE_REJECTED')
-        attributes[name] = value; previous = name
+        attributes[name] = [value]; previous = name
     finish()
 
 
@@ -199,7 +231,7 @@ def _manifest_closed_references(raw):
             if token:
                 require(len(references) < MAX_CLASSPATH_REFS, 'JAR_MANIFEST_CLASSPATH_REFERENCE_BOUND')
                 references.append(_classpath_token(token))
-    _manifest(raw, collect)
+    _manifest(raw, collect, maximum=MAX_EXPORTED_MANIFEST)
     return references
 
 
@@ -267,7 +299,7 @@ def _directory_fd(stack, path):
 
 def unpack_jars(archive, new_empty_dir):
     """Caller creates a fresh private0700 dir; returns names relative to jars/."""
-    _linux(); result = []; references = {}; reference_count = 0
+    _linux(); result = []; references = {}; reference_count = 0; manifest_budget = [0]
     try:
         with ExitStack() as stack:
             root,root_fd,before = _directory_fd(stack,new_empty_dir)
@@ -308,7 +340,7 @@ def unpack_jars(archive, new_empty_dir):
                         count += len(chunk); require(count <= size, 'NEW_JAR_READBACK_BOUND'); verified.update(chunk)
                     require(count == size and verified.digest() == sha.digest(), 'NEW_JAR_READBACK_WHOLE_SHA_CHANGED')
                     readback.seek(0)
-                    refs = _scan_jar(readback, _manifest_closed_references)
+                    refs = _scan_jar(readback, _manifest_closed_references, manifest_budget=manifest_budget)
                     reference_count += len(refs)
                     require(reference_count <= MAX_CLASSPATH_REFS, 'JAR_MANIFEST_CLASSPATH_REFERENCE_BOUND')
                     references[name.removeprefix('jars/')] = refs

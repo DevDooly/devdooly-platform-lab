@@ -1,3 +1,5 @@
+> 현재 상태: [시도3](../../docs/evidence/iceberg-capture/ATTEMPT_3.md)의 a03 source는 Linux 67개·skip0 통과 후 `JAR_MANIFEST_BYTES_BOUND`로 prep에 실패했습니다. 구체적 분기와 실제 Class-Path closure는 미확인입니다. 다음 [MANIFEST_BOUNDS.md](MANIFEST_BOUNDS.md)는 새 source 후보이며 Linux 73개·prep/capture는 미실행입니다. 아래 전체 원문은 이전 후보의 기록이므로 Linux 67개 pending 문구는 그 시점의 상태입니다.
+
 # 검증된 JAR export 안의 Class-Path 참조만 허용하는 후보
 
 현재는 C-only 소스 후보입니다. root 전체 source/test 검토 후 Windows 합성 검사 한 번을 실행해 13개 중 10개 통과, 실제 POSIX 파일 검사는 3개 건너뜀으로 기록했습니다. Linux·prep·Cloud 실행은 하지 않았습니다. 원래 archive helper와 실패 기록은 보존하며 이 후보의 코드 변경 대상은 `archive_classes.py`와 `test_archive_classes.py`뿐입니다.

@@ -5,11 +5,13 @@ import { createHash } from 'node:crypto';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import ts from 'typescript';
-import { captureAssetUrl, icebergCaptureManifest, icebergCaptureManifestV2, icebergCaptureManifestClosedClasspath, observedCount, parseIcebergCapture } from '../src/lib/iceberg-capture.ts';
-import { captureFailureCodes, captureClasspathFailureCodes, parseCaptureDiagnostic } from '../src/lib/iceberg-capture-diagnostic.ts';
+import { captureAssetUrl, icebergCaptureManifest, icebergCaptureManifestV2, icebergCaptureManifestClosedClasspath, icebergCaptureManifestBoundedManifest, observedCount, parseIcebergCapture } from '../src/lib/iceberg-capture.ts';
+import { captureFailureCodes, captureClasspathFailureCodes, captureManifestBoundsFailureCodes, parseCaptureDiagnostic } from '../src/lib/iceberg-capture-diagnostic.ts';
 
 const actualRaw = readFileSync(new URL('./fixtures/iceberg-capture-attempt2.summary.json', import.meta.url));
 const actual: Record<string, any> = JSON.parse(actualRaw.toString('utf8'));
+const actual3Raw = readFileSync(new URL('./fixtures/iceberg-capture-attempt3.summary.json', import.meta.url));
+const actual3: Record<string, any> = JSON.parse(actual3Raw.toString('utf8'));
 
 /** Synthetic producer-shaped object only; no actual capture or public asset. */
 const fixture = (): Record<string, any> => ({
@@ -48,6 +50,25 @@ test('the exact real schema 2 failure stays nonpassing with null inventory and s
     assert.equal(value.diagnostic.lastPrepChild?.returnCode, 0);
     assert.equal(value.diagnostic.lastPrepChild?.childReaped, true);
     assert.equal(value.diagnostic.prepCleanup?.coldRemovedAndAbsent, true);
+  }
+});
+test('the exact real third record keeps preparation failure and null inventory despite cleanup observations', () => {
+  assert.equal(actual3Raw.length, 1716);
+  assert.equal(createHash('sha256').update(actual3Raw).digest('hex'), '7b5cd2213e8beb6cf988932eb54465828205c81eeb979aef58044f75cd882340');
+  const value = parseIcebergCapture(actual3); assert.ok(value); assert.equal(value.schemaVersion, 2);
+  assert.equal(value.sourceCommit, 'a03f87837af66fd3770063d9c712c4080e15d9fa');
+  assert.equal(value.runtimeManifestSha256, icebergCaptureManifestClosedClasspath);
+  assert.equal(value.status, 'FAILED'); assert.equal(value.passed, false); assert.equal(value.failureCategory, 'PREP_NOT_VERIFIED');
+  assert.ok(Object.entries(value.counts).every(([key, count]) => count === (key === 'objectCandidateCount' ? 0 : null)));
+  assert.ok(Object.entries(value.checks).every(([key, verified]) => verified === (key === 'sourceBytesVerified')));
+  assert.equal(value.proofHashes.prepProofSha256, null); assert.equal(value.proofHashes.normalizationReceiptCanonicalSha256, null);
+  if (value.schemaVersion === 2) {
+    assert.equal(value.diagnostic.stageAttempted, 'PREP'); assert.equal(value.diagnostic.failureCode, 'JAR_MANIFEST_BYTES_BOUND');
+    assert.equal(value.diagnostic.lastPrepChild?.name, 'failed-prep-cold-absence');
+    assert.equal(value.diagnostic.lastPrepChild?.class, 'COLD_ABSENCE');
+    assert.equal(value.diagnostic.lastPrepChild?.outcome, 'EXITED_ZERO');
+    assert.equal(value.diagnostic.lastPrepChild?.returnCode, 0); assert.equal(value.diagnostic.lastPrepChild?.childReaped, true);
+    assert.ok(value.diagnostic.prepCleanup && Object.values(value.diagnostic.prepCleanup).every(item => item === true));
   }
 });
 test('synthetic determined, undetermined and failed producer shapes stay distinct', () => {
@@ -162,6 +183,33 @@ test('new classpath codes require the exact separately reviewed runtime while ol
   }
   const legacy = failed(); legacy.diagnostic = version2().diagnostic;
   assert.equal(parseIcebergCapture(legacy), null);
+});
+test('the bounded-manifest runtime alone accepts four new codes and retains the prior five-code extension', () => {
+  // Synthetic profile boundary cases; no new actual capture outcome is implied by changing a manifest.
+  assert.equal(typeof icebergCaptureManifestBoundedManifest, 'string');
+  assert.match(icebergCaptureManifestBoundedManifest!, /^[a-f0-9]{64}$/);
+  for (const older of [icebergCaptureManifest, icebergCaptureManifestV2, icebergCaptureManifestClosedClasspath]) {
+    assert.notEqual(icebergCaptureManifestBoundedManifest, older);
+  }
+  assert.equal(captureManifestBoundsFailureCodes.length, 4);
+  assert.equal(new Set([...captureFailureCodes, ...captureClasspathFailureCodes, ...captureManifestBoundsFailureCodes]).size, 138);
+  for (const failureCode of captureManifestBoundsFailureCodes) {
+    for (const runtimeManifestSha256 of [icebergCaptureManifestV2, icebergCaptureManifestClosedClasspath]) {
+      const old = version2(); old.runtimeManifestSha256 = runtimeManifestSha256; old.diagnostic.failureCode = failureCode;
+      assert.equal(parseIcebergCapture(old), null);
+    }
+    const old = version2(); old.diagnostic.failureCode = failureCode;
+    assert.equal(parseCaptureDiagnostic(old.diagnostic, false), null);
+    assert.equal(parseCaptureDiagnostic(old.diagnostic, false, 'SCHEMA2_CLOSED_CLASSPATH'), null);
+  }
+  for (const failureCode of [...captureClasspathFailureCodes, ...captureManifestBoundsFailureCodes]) {
+    const next = version2(); next.runtimeManifestSha256 = icebergCaptureManifestBoundedManifest; next.diagnostic.failureCode = failureCode;
+    assert.equal(parseIcebergCapture(next)?.schemaVersion, 2);
+    const foreign = structuredClone(next); foreign.runtimeManifestSha256 = 'f'.repeat(64);
+    assert.equal(parseIcebergCapture(foreign), null);
+    next.diagnostic.failureCode = 'SYNTHETIC_PRIVATE_CANARY'; assert.equal(parseIcebergCapture(next), null);
+  }
+  assert.ok(parseIcebergCapture(actual)); assert.ok(parseIcebergCapture(actual3));
 });
 test('provided-record component path never renders a JSON link for an unsafe URL', async () => {
   // Existing TypeScript/React dependencies only; compile in memory and remove CSS solely for SSR.

@@ -238,4 +238,134 @@ class PosixClosedClasspathContracts(unittest.TestCase):
             self.assertEqual(bad.read_bytes(),bad_raw);self.assertEqual(archive.read_bytes(),raw)
 
 
+def sized_manifest(size, tail=b''):
+    """Synthetic folded values for exact byte-boundary tests, not a signature."""
+    head = b'Manifest-Version: 1.0\nOther: \n'
+    ending = b'\n' + tail
+    available = size - len(head) - len(ending)
+    if available < 0: raise AssertionError('Synthetic size too small')
+    count, rest = divmod(available, 72)
+    padding = b' ' + b'x' * (rest - 2) + b'\n' if rest >= 2 else b'\n' * rest
+    result = head + (b' ' + b'x' * 70 + b'\n') * count + padding + ending
+    if len(result) != size: raise AssertionError('Synthetic size mismatch')
+    return result
+
+
+class LargeExportedManifestContracts(unittest.TestCase):
+    def test_large_signed_style_sections_full_tail_references_and_utf8_are_not_prefix_parsed(self):
+        # Per-entry digest sections resemble signed manifests; no signer/authentication claim.
+        sections = [b'Name: example/Entry' + str(index).encode() + b'.class\r\n'
+            b'SHA-256-Digest: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\r\n\r\n'
+            for index in range(1000)]
+        manifest = b'Manifest-Version: 1.0\r\n\r\n' + b''.join(sections) + b'Class-Path: b.\r\n jar\r\nOther: caf\xc3\r\n \xa9\r\n\r\n'
+        self.assertGreater(len(manifest), 65536)
+        payload = jar(manifest=manifest); original = hashlib.sha256(payload).hexdigest(); budget = [0]
+        refs = a._scan_jar(io.BytesIO(payload), a._manifest_closed_references, manifest_budget=budget)
+        self.assertEqual(refs, ['b.jar']); self.assertEqual(budget, [len(manifest)])
+        target = jar(); rows = [{'name': name, 'bytes': len(value), 'sha256': hashlib.sha256(value).hexdigest()}
+            for name, value in (('a.jar', payload), ('b.jar', target))]
+        self.assertEqual(a._closed_classpath_map(rows, {'a.jar': refs, 'b.jar': []}),
+            {'a.jar': ('b.jar',), 'b.jar': ()})
+        self.assertEqual(hashlib.sha256(payload).hexdigest(), original)
+        with self.assertRaisesRegex(ValueError, '^JAR_MANIFEST_BYTES_BOUND$'):
+            a.scan_jar(io.BytesIO(payload))
+        for suffix, code in ((b'Other: \xff\n', 'JAR_MANIFEST_UTF8_REQUIRED'),
+                (b'Class-Path: ../SYNTHETIC_PRIVATE.jar\n', 'JAR_MANIFEST_CLASSPATH_TOKEN_REJECTED'),
+                (b'Other: value\nother: duplicate\n', 'JAR_MANIFEST_DUPLICATE_ATTRIBUTE_REJECTED')):
+            changed = jar(manifest=b'Manifest-Version: 1.0\r\n\r\n' + b''.join(sections) + suffix)
+            with self.subTest(code=code), self.assertRaisesRegex(ValueError, '^' + code + '$') as caught:
+                a._scan_jar(io.BytesIO(changed), a._manifest_closed_references, manifest_budget=[0])
+            self.assertNotIn('SYNTHETIC_PRIVATE', str(caught.exception))
+
+    def test_export_exact_eight_mib_empty_and_one_byte_over_are_distinct_and_default_stays_64k(self):
+        raw = sized_manifest(a.MAX_EXPORTED_MANIFEST); budget = [0]
+        self.assertEqual(a._scan_jar(io.BytesIO(jar(manifest=raw)), a._manifest_closed_references,
+            manifest_budget=budget), [])
+        self.assertEqual(budget, [8 * 1024**2])
+        for manifest, code in ((b'', 'JAR_MANIFEST_DECLARED_EMPTY'),
+                (raw + b'\n', 'JAR_MANIFEST_DECLARED_SIZE_BOUND')):
+            budget = [0]; payload = jar(manifest=manifest)
+            with self.subTest(code=code), patch.object(zipfile.ZipFile, 'open', side_effect=AssertionError('Must reject before read')):
+                with self.assertRaisesRegex(ValueError, '^' + code + '$'):
+                    a._scan_jar(io.BytesIO(payload), a._manifest_closed_references, manifest_budget=budget)
+            self.assertEqual(budget, [0])
+        for manifest in (b'', sized_manifest(65537)):
+            with self.assertRaisesRegex(ValueError, '^JAR_MANIFEST_BYTES_BOUND$'):
+                a.scan_jar(io.BytesIO(jar(manifest=manifest)))
+        a.scan_jar(io.BytesIO(jar(manifest=sized_manifest(65536))))
+        with self.assertRaisesRegex(ValueError, '^JAR_MANIFEST_CLASSPATH_EXPANSION_REJECTED$'):
+            a.scan_jar(io.BytesIO(jar(manifest=b'Manifest-Version: 1.0\nClass-Path: target.jar\n')))
+
+    def test_crc_and_incomplete_or_extra_reads_fail_before_any_manifest_callback(self):
+        payload = bytearray(jar(manifest=sized_manifest(70000)))
+        with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+            offset = archive.getinfo('META-INF/MANIFEST.MF').header_offset
+        start = offset + 30 + int.from_bytes(payload[offset + 26:offset + 28], 'little') + int.from_bytes(payload[offset + 28:offset + 30], 'little')
+        payload[start] ^= 1
+        with patch.object(a, '_manifest_closed_references', wraps=a._manifest_closed_references) as parsed:
+            with self.assertRaisesRegex(ValueError, '^VALID_BOUNDED_JAR_ZIP_REQUIRED$'):
+                a._scan_jar(io.BytesIO(payload), parsed, manifest_budget=[0])
+            parsed.assert_not_called()
+        class StubArchive:
+            def __init__(self, data): self.data = data; self.opens = 0
+            def open(self, entry, mode): self.opens += 1; return io.BytesIO(self.data)
+        entry = type('SyntheticEntry', (), {'file_size': 5})()
+        for content in (b'1234', b'123456', b''):
+            stub = StubArchive(content); budget = [0]
+            with self.subTest(length=len(content)), self.assertRaisesRegex(ValueError, '^JAR_MANIFEST_READ_MISMATCH$'):
+                a._read_export_manifest(stub, entry, budget)
+            self.assertEqual(stub.opens, 1); self.assertEqual(budget, [5])
+        with self.assertRaisesRegex(ValueError, '^VALID_BOUNDED_JAR_ZIP_REQUIRED$'):
+            a._scan_jar(io.BytesIO(bytes(payload[:-50])), a._manifest_closed_references, manifest_budget=[0])
+
+    def test_aggregate_32_mib_reserves_before_next_read_without_reset_or_absence_inference(self):
+        payload = jar(manifest=sized_manifest(a.MAX_EXPORTED_MANIFEST)); budget = [0]
+        for _ in range(4):
+            self.assertEqual(a._scan_jar(io.BytesIO(payload), a._manifest_closed_references, manifest_budget=budget), [])
+        self.assertEqual(budget, [32 * 1024**2])
+        extra = jar(manifest=b'\n')
+        with patch.object(zipfile.ZipFile, 'open', side_effect=AssertionError('Aggregate rejection must precede decompression')):
+            with self.assertRaisesRegex(ValueError, '^JAR_MANIFEST_AGGREGATE_BYTES_BOUND$'):
+                a._scan_jar(io.BytesIO(extra), a._manifest_closed_references, manifest_budget=budget)
+        self.assertEqual(budget, [32 * 1024**2])
+        self.assertEqual(a._scan_jar(io.BytesIO(jar()), a._manifest_closed_references, manifest_budget=budget), [])
+        self.assertEqual(budget, [32 * 1024**2])
+        for invalid in ([True], [-1], [a.MAX_TOTAL_MANIFEST + 1], [], {'used': 0}):
+            with self.subTest(budget=invalid), self.assertRaisesRegex(ValueError, '^JAR_MANIFEST_AGGREGATE_BYTES_BOUND$'):
+                a._scan_jar(io.BytesIO(extra), a._manifest_closed_references, manifest_budget=invalid)
+
+    def test_chunked_values_preserve_section_duplicates_continuation_and_strict_whole_utf8(self):
+        calls = []
+        a._manifest(b'Other: caf\xc3\r\n \xa9\r\nClass-Path: a.\r\n jar\r\n\r\nClass-Path: b.jar\n', calls.append)
+        self.assertEqual(calls, [b'a.jar', b'b.jar', b''])
+        large = sized_manifest(70000, tail=b'Class-Path: b.jar\n')
+        self.assertEqual(a._manifest_closed_references(large), ['b.jar'])
+        with self.assertRaisesRegex(ValueError, '^STRICT_BOUNDED_JAR_MANIFEST_REQUIRED$'):
+            a._manifest_no_classpath(large)
+        for raw, code in ((b' Other: orphan\n', 'JAR_MANIFEST_CONTINUATION_REJECTED'),
+                (b'Other: value\nother: duplicate\n', 'JAR_MANIFEST_DUPLICATE_ATTRIBUTE_REJECTED'),
+                (b'Other: a\xc3\n b\n', 'JAR_MANIFEST_UTF8_REQUIRED')):
+            with self.subTest(code=code), self.assertRaisesRegex(ValueError, '^' + code + '$'):
+                a._manifest_closed_references(raw)
+
+
+@unittest.skipUnless(os.name=='posix','Actual Linux large-manifest export IO requires POSIX')
+class PosixLargeManifestContracts(unittest.TestCase):
+    def test_large_manifest_whole_unpack_uses_shared_budget_and_preserves_sealed_bytes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary); base.chmod(0o700); output = base/'new'; output.mkdir(mode=0o700)
+            first = jar(manifest=sized_manifest(70000, tail=b'Class-Path: b.jar\n')); second = jar()
+            raw = tar(member('jars/', kind=tarfile.DIRTYPE), member('jars/a.jar', first), member('jars/b.jar', second))
+            archive = base/'export.tar'; archive.write_bytes(raw)
+            with patch.object(a, '_read_export_manifest', wraps=a._read_export_manifest) as reader:
+                rows = a.unpack_jars(archive, output)
+                self.assertEqual(reader.call_count, 1); self.assertEqual(reader.call_args.args[2], [70000])
+            self.assertEqual([row['name'] for row in rows], ['a.jar', 'b.jar'])
+            for row, value in zip(rows, (first, second)):
+                path = output/'jars'/row['name']; self.assertEqual(path.read_bytes(), value)
+                self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o444)
+                self.assertEqual(row['sha256'], hashlib.sha256(value).hexdigest())
+            self.assertEqual(archive.read_bytes(), raw)
+
+
 if __name__=='__main__':unittest.main()

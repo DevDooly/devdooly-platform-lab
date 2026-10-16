@@ -310,8 +310,8 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Verify pinned sources then all 67 Linux offline contracts
-        # Base27 + archive13 + bounded7 + prep6 + CLI14; every literal source pin precedes test imports.
+      - name: Verify pinned sources then all 73 Linux offline contracts
+        # Base27 + archive19 + bounded7 + prep6 + CLI14; every literal source pin precedes test imports.
         # This root process writes only its tests' fresh temporary fixtures.
         run: |
           sudo -n env -i \
@@ -329,11 +329,11 @@ jobs:
           import sys
           import unittest
 
-          CLI_SHA = 'aed428dde12b8f1e6b37ea25f3efdf6986faa9010f794c441ca2ad77b9ea064c'
-          MANIFEST_SHA = 'a9704dce98583b3935e05ac759a3b0e9c8af839fb9b3fa141ad1d96a13708f18'
-          EXPECTED_TESTS = 67
+          CLI_SHA = '9999315e0c4832020e13fa21c26ddb864880ddc44588f35d0be09687ac9de342'
+          MANIFEST_SHA = '6aea1d3987d4a258718f4fd242d05ff1364a73cf4772272260975fce7eb172cd'
+          EXPECTED_TESTS = 73
           TEST_SHAS = {
-              'test_archive_classes.py': '178c6252f9e01b2de423a7d58d5b45872a81d58fecd0ab1696df54f2f3f9f0fa',
+              'test_archive_classes.py': 'c7084996ee6b810dfe02cc1725d19fa06c50106fa534a9efefe410bf8e5a69b9',
               'test_bounded_process.py': '83d160015798e18986c32bf3af6665373c52f3c0b8bcbaf881bd788b19434438',
               'test_composite.py': '2f7080816959573c845281d023e1a7346ced6626593806c1e0a52c5be7e6173c',
               'test_copy_loader.py': 'fb8ad9febef1d307244d57f4944d043985d1a756a4b5559a8e442fe752423196',
@@ -386,7 +386,7 @@ jobs:
         # Prep has a separate 600s bound; the frozen workload clock stays 600s.
         run: >-
           python3 -I -B infra/iceberg-retention-ci/run_capture.py
-          --source-manifest-sha256 a9704dce98583b3935e05ac759a3b0e9c8af839fb9b3fa141ad1d96a13708f18
+          --source-manifest-sha256 6aea1d3987d4a258718f4fd242d05ff1364a73cf4772272260975fce7eb172cd
           --ack-fresh-closed-copy-capture
       - name: Upload only the new safe closed-copy summary
         if: always()
