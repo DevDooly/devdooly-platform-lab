@@ -4,6 +4,19 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 [포트폴리오](https://devdooly.github.io/devdooly-platform-lab/) · [GitHub](https://github.com/DevDooly/devdooly-platform-lab) · [시작 안내](docs/START_HERE.md) · [진행 목록](docs/ROADMAP.md) · [다음 개발 계획](docs/NEXT_STEPS.md)
 
+## 현재 작업 목표와 진행 단계
+
+2026-10-16 기준, 기존 미니 PC 서비스와 자료를 보존하면서 데이터 처리·배포·복구 경험을 실제 검증 기록으로 연결하는 것이 목표입니다.
+
+| 단계 | 상태 | 확인할 결과 |
+| --- | --- | --- |
+| 최대 입력·동시 접수 | 검증 완료 | 격리 환경의 최대 1,000건·동시 2/8개 접수와 실제 배포 환경의 1,000건 처리·데이터 보존 |
+| Cloud 시작 오류 수정 | 코드 검토·회귀 검사 중 | mount 순서 차이와 env 파일 관련 시작 실패를 분리하고, 전체 mount 내용·검증한 컨테이너 ID로 시작·정리 조건 유지 |
+| Spark → Trino·compaction | 다음 전체 검증 | 새 격리 환경에서 600초 예산으로 적재·compaction·같은 warehouse 조회·자기 자원 종료 확인 |
+| 현재 DB 백업·격리 복원 | 코드 준비 중 | V1–V4 전체 8개 테이블·원본 BLOB·스키마를 대조하고, 분리된 DB에 복원 후 기존 자료 보존 확인 |
+
+**작성 시점 예상:** 시작 오류 수정과 전체 Cloud 검증의 첫 결과까지 약 **30~45분**, 이후 DB 백업·격리 복원에 **1~2시간 추가**를 예상합니다. 새 오류·CI 대기·운영 조건에 따라 조정하며, 예상 시간은 완료 기록이 아닙니다. [최근 격리 진단](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38837630164) · [진행 중인 PR #56](https://github.com/DevDooly/devdooly-platform-lab/pull/56)
+
 ## 현재 구현과 검증
 
 최근 배포·보존 확인(2026-10-16 갱신): 소스 `74a8e988`의 [Actions](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38814779596)와 Jenkins 45에서 API 191개 + 독립 Java 예제 20개, 총 211개를 통과했습니다. 이어 PR #52의 API·웹과 PR #53의 worker를 실제 전환했습니다. 애플리케이션 소스는 `74a8e988`, 최종 GitOps revision은 `b63fedfa`입니다. 2026-10-15 23:12:57 UTC의 배포 후 검사에서 작업 8개·export 정보 16개, 기존 객체 24개 + native7 객체 12개의 전체 GET, PV·PVC 각 13개·Docker 60개와 Kafka offset/end 8·lag 0을 확인했습니다. [S3 전송 배포·보존 근거](docs/evidence/s3-runtime-rollout/README.md)는 해당 시점의 기록이며 실시간 가용성을 뜻하지 않습니다.
