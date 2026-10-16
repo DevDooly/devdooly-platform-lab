@@ -82,7 +82,7 @@ Kafka·Garage의 전용 PVC 3개는 외부 사본에서 새 볼륨으로 복원�
 
 ## 다음 작업
 
-**다음 작업 지점(2026-10-16):** PR #61의 DB 복원 기록·카드와 삭제 없는 retention planner가 main에 공개됐고 main `4a71ed20`의 Actions·Jenkins 52를 확인했습니다. 후속 소스 `316853f7`의 [다섯 번째 capture 실행](evidence/iceberg-capture/ATTEMPT_5.md)은 기본 CI·Linux 80개·skip 0, compiler prep와 원래 main 한 번·반환 0, 새 decoder 정지·CLI 회수를 확인했습니다. 전체 결과는 `NORMALIZE`의 `SUMMARY_NOT_VERIFIED`·`UNKNOWN` 실패이며 통합 stopped actors·clock, inventory·전체 KEEP과 decoder exit 0·유효 graph는 미확인입니다. 다섯 관측 count는 null이고 다음 수정 범위·검사 수는 아직 미정입니다. [실행 절차](runbooks/iceberg-closed-copy-capture.md)에 따라 앞선 네 실패를 보존하며 snapshot 만료·객체 삭제·미니 PC의 새 데이터 처리는 포함하지 않습니다.
+**다음 작업 지점(2026-10-16):** PR #61의 DB 복원 기록·카드와 삭제 없는 retention planner가 main에 공개됐고 main `4a71ed20`의 Actions·Jenkins 52를 확인했습니다. 후속 소스 `316853f7`의 [다섯 번째 capture 실행](evidence/iceberg-capture/ATTEMPT_5.md)은 기본 CI·Linux 80개·skip 0, compiler prep와 원래 main 한 번·반환 0, 새 decoder 정지·CLI 회수를 확인했습니다. 전체 결과는 `NORMALIZE`의 `SUMMARY_NOT_VERIFIED`·`UNKNOWN` 실패이며 통합 stopped actors·clock, inventory·전체 KEEP과 decoder exit 0·유효 graph는 미확인입니다. 다섯 관측 count는 null입니다. 다음은 정규화 검증 구간의 고정 진단 코드 11개를 추가하는 작업입니다. Windows 집중 검사 18개 중 17개 통과·POSIX 전용 1개 제외이며 Linux 84개·새 capture는 아직 미실행입니다. [실행 절차](runbooks/iceberg-closed-copy-capture.md)에 따라 앞선 네 실패를 보존하며 snapshot 만료·객체 삭제·미니 PC의 새 데이터 처리는 포함하지 않습니다.
 
 [다음 개발 계획](NEXT_STEPS.md)에 우선순위와 단계별 결과물·완료 조건을 정리했습니다.
 

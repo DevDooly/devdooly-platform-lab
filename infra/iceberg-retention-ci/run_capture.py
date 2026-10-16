@@ -300,6 +300,21 @@ REVIEWED_FAILURE_CODES = frozenset((
     'ZIP_SAFE_ENTRY_NAME_REQUIRED',
 ))
 
+NORMALIZATION_PHASE_CODES = frozenset((
+    'NORMALIZE_AUTHORITY_UNVERIFIED',
+    'NORMALIZE_DESCRIPTOR_UNVERIFIED',
+    'NORMALIZE_DECODER_LIFECYCLE_UNVERIFIED',
+    'NORMALIZE_PLANNER_SOURCE_UNVERIFIED',
+    'NORMALIZE_REPLY_UNVERIFIED',
+    'NORMALIZE_GRAPH_UNVERIFIED',
+    'NORMALIZE_EXIT_BINDING_UNVERIFIED',
+    'NORMALIZE_CLOCK_UNVERIFIED',
+    'NORMALIZE_INVENTORY_UNVERIFIED',
+    'NORMALIZE_PLAN_UNVERIFIED',
+    'NORMALIZE_RESULT_UNVERIFIED',
+))
+
+
 PREP_CHILD_CLASSES = {
     'compiler-java-version': 'JAVA_VERSION',
     'compiler-javac-version': 'JAVAC_VERSION',
@@ -335,7 +350,7 @@ PREP_CHILD_KEYS = frozenset(('schemaVersion scope name argvSha256 argumentCount 
     'stdoutSha256 stderrSha256 stdoutEofObserved stderrEofObserved stdoutOverflow stderrOverflow '
     'hashesDescribeAcceptedReadPrefixes outputPersistenceVerified dockerStopOrRemovalPerformed').split())
 COMPOSITE_RESULT_KEYS = frozenset(('scope sourceCommit authoritySourceSha256 mainCallsStarted '
-    'mainReturnedZero lastStage inventoryProduced failureCode pipelineFinishedWithoutException '
+    'mainReturnedZero lastStage inventoryProduced failureCode safeNormalizationFailureCode pipelineFinishedWithoutException '
     'decoderCreatedKnownCid decoderStoppedVerified decoderAttachCliReaped originalRoleStopCallsAdded '
     'originalInitializerStopCallsAdded automaticRetry snapshotExpirationOrGcPerformed publicCompletenessClaimed').split())
 
@@ -496,8 +511,9 @@ def _project_prep_records(records, source, prep_sha, decoder_sha):
 def capture_diagnostic(stage, passed, error, outcome, root, local, source, pins):
     value = empty_diagnostic(stage, not passed)
     if error is not None: value['failureCode'] = literal_failure(error)
-    # A returned private failure code can originate from a provider message.
-    # Only its source-bound, exact-shape fixed lastStage may be used here.
+    # Ignore the old private failureCode, which can originate from a provider.
+    # Exact shape/source validation admits only the fixed stage and the new
+    # source-owned finite normalization phase, never an original error message.
     try:
         receipt = outcome['receipt']
         diagnostic_require(type(receipt) is dict and set(receipt) == COMPOSITE_RESULT_KEYS
@@ -515,8 +531,16 @@ def capture_diagnostic(stage, passed, error, outcome, root, local, source, pins)
             and all(receipt[k] is False for k in ('automaticRetry', 'snapshotExpirationOrGcPerformed',
                 'publicCompletenessClaimed'))
             and (receipt['failureCode'] is None or type(receipt['failureCode']) is str
-                and len(receipt['failureCode']) <= 128))
+                and len(receipt['failureCode']) <= 128)
+            and type(receipt['safeNormalizationFailureCode']) is str
+            and (receipt['safeNormalizationFailureCode'] == 'UNKNOWN'
+                or (not passed and receipt['lastStage'] == 'NORMALIZE'
+                    and receipt['pipelineFinishedWithoutException'] is False
+                    and receipt['safeNormalizationFailureCode'] in NORMALIZATION_PHASE_CODES)))
         value['stageAttempted'] = receipt['lastStage']
+        if (error is None and not passed and receipt['lastStage'] == 'NORMALIZE'
+                and receipt['safeNormalizationFailureCode'] in NORMALIZATION_PHASE_CODES):
+            value['failureCode'] = receipt['safeNormalizationFailureCode']
     except BaseException: pass
     try:
         records = _read_prep_records(root, local)

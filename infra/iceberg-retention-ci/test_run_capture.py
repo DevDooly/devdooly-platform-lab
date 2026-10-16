@@ -297,6 +297,7 @@ def composite_receipt(stage='DECODER'):
     return {'scope':'COMPOSITE_SOURCE_BOUND_PIPELINE_NOT_PUBLIC_COMPLETENESS','sourceCommit':SOURCE,
         'authoritySourceSha256':PINS['composite_entry.py'],'mainCallsStarted':1,'mainReturnedZero':True,
         'lastStage':stage,'inventoryProduced':False,'failureCode':CANARY,
+        'safeNormalizationFailureCode':'UNKNOWN',
         'pipelineFinishedWithoutException':False,'decoderCreatedKnownCid':True,
         'decoderStoppedVerified':False,'decoderAttachCliReaped':False,'originalRoleStopCallsAdded':0,
         'originalInitializerStopCallsAdded':0,'automaticRetry':False,

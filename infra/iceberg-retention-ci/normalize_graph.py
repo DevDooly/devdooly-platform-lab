@@ -16,6 +16,30 @@ KINDS = {'DATA','DELETE','MANIFEST','MANIFEST_LIST','METADATA','UNKNOWN'}
 EDGE_KINDS = {'SNAPSHOT_MANIFEST_LIST','LIST_MANIFEST','MANIFEST_DATA','MANIFEST_DELETE','DELETE_REFERENCED_DATA','METADATA_LOG'}
 
 
+NORMALIZATION_PHASE_CODES = frozenset((
+    'NORMALIZE_AUTHORITY_UNVERIFIED',
+    'NORMALIZE_DESCRIPTOR_UNVERIFIED',
+    'NORMALIZE_DECODER_LIFECYCLE_UNVERIFIED',
+    'NORMALIZE_PLANNER_SOURCE_UNVERIFIED',
+    'NORMALIZE_REPLY_UNVERIFIED',
+    'NORMALIZE_GRAPH_UNVERIFIED',
+    'NORMALIZE_EXIT_BINDING_UNVERIFIED',
+    'NORMALIZE_CLOCK_UNVERIFIED',
+    'NORMALIZE_INVENTORY_UNVERIFIED',
+    'NORMALIZE_PLAN_UNVERIFIED',
+    'NORMALIZE_RESULT_UNVERIFIED',
+))
+
+
+class NormalizationFailure(ValueError):
+    """Only an attempted source-owned phase, never an original error message."""
+    def __init__(self, phase_code):
+        require(type(phase_code) is str and phase_code in NORMALIZATION_PHASE_CODES,
+            'EXACT_NORMALIZATION_PHASE_REQUIRED')
+        self.phaseCode = phase_code
+        super().__init__(phase_code)
+
+
 def sid(value):
     require(type(value) is str and re.fullmatch('[1-9][0-9]{0,18}', value)
         and int(value) < 2**63, 'GRAPH_POSITIVE_BIGINT_STRING_REQUIRED')
@@ -203,42 +227,56 @@ def graph_projection(reply, descriptor):
 
 
 def normalize_graph(reply_bytes, loaded, authority_bundle, decoder_bundle, planner_source, *, now, policy, expected_authority_source_sha256):
-    verified = validate_authority_bundle(authority_bundle, expected_authority_source_sha256)
-    descriptor = checked_descriptor(loaded, authority_bundle)
-    decoder = checked_decoder(reply_bytes, loaded, authority_bundle, decoder_bundle, verified, expected_authority_source_sha256)
-    require(type(planner_source) is bytes and digest(planner_source) == PLANNER_SHA, 'EXACT_FROZEN_PURE_PLANNER_BYTES_REQUIRED')
-    planner = {}; exec(compile(planner_source, '<pinned-pure-retention-planner>', 'exec'), planner)
-    reply = strict_json(reply_bytes, 4*1024**2)
-    require(reply['descriptorSha256'] == digest(loaded['descriptorBytes']), 'ACTUAL_DECODED_DESCRIPTOR_SHA_REQUIRED')
-    projection = graph_projection(reply, descriptor)
-    require(decoder['exitCode'] == {'DECODED':0,'UNDETERMINED':2,'REJECTED':3}[reply['status']], 'DECODER_EXIT_AND_REPLY_STATUS_REQUIRED')
-    utc_ns(now)
-    inventory = plan = None
-    if projection is not None:
-        validated = verified['validation']['snapshotIds']; snapshots = {r['id']:r for r in projection['snapshots']}
-        require(all(s in snapshots for s in validated), 'VALIDATED_SNAPSHOT_SELECTION_NOT_IN_GRAPH')
-        pinned_files = sorted({fid for s in validated for fid in snapshots[s]['fileIds']})
-        current = reply['graph']['currentMetadataId']
-        metadata = next(row for row in descriptor['objects'] if row['alias'] == current)
-        inventory = {'schemaVersion':1,'kind':'iceberg-retention-inventory','scope':'CAPTURED_TABLE_METADATA',
-            'tableId':projection['tableId'],'capturedAt':verified['validation']['capturedAt'],
-            'observations':{'complete':True,'refsComplete':True,'pinsComplete':True,'snapshotFileClosureComplete':True,
-                'writersQuiescent':True,'metadataBeforeId':current,'metadataAfterId':current,
-                'metadataBeforeSha256':metadata['sha256'],'metadataAfterSha256':metadata['sha256']},
-            'currentSnapshotId':projection['currentSnapshotId'],'snapshots':projection['snapshots'],'refs':projection['refs'],
-            'pins':[{'id':'v-'+authority_bundle['validation']['sha256'],'kind':'VALIDATION','snapshotIds':list(validated),'fileIds':pinned_files}],
-            'files':projection['files']}
-        plan = planner['build_plan'](inventory, policy, now=now)
-    return {'inventory':inventory,'plan':plan,'privateReceipt':{'schemaVersion':1,
-        'scope':'SOURCE_BOUND_CAPTURED_GRAPH_NORMALIZATION_NOT_LIVE_TABLE_VERIFICATION',
-        'status':'UNDETERMINED' if plan is None else plan['status'],
-        'decoderStatus':reply['status'],'decoderReasonCodes':reply['reasonCodes'],
-        'authoritySourceSha256':expected_authority_source_sha256,'decoderLifecycleSha256':decoder_bundle['sha256'],
-        'validationSha256':authority_bundle['validation']['sha256'],'writersBeforeSha256':authority_bundle['lifecycle']['sha256'],
-        'writersAfterSha256':decoder_bundle['writersAfter']['sha256'],'descriptorSha256':digest(loaded['descriptorBytes']),
-        'replySha256':digest(reply_bytes),'graphSha256':None if reply['graph'] is None else digest(canonical(reply['graph'])),
-        'inventorySha256':None if inventory is None else digest(canonical(inventory)),
-        'capturedAt':verified['validation']['capturedAt'],'evaluatedAt':now,
-        'allCapturedObjects':[{'id':row['alias'],'action':'KEEP'} for row in descriptor['objects']],
-        'objectCandidateCount':0,'applyEnabled':False,'independentlyVerifiedLiveTable':False,
-        'actualDataContentsVerifiedByDecoder':False,'historicalMetadataRestoreVerified':False}}
+    phase = 'NORMALIZE_AUTHORITY_UNVERIFIED'
+    try:
+        verified = validate_authority_bundle(authority_bundle, expected_authority_source_sha256)
+        phase = 'NORMALIZE_DESCRIPTOR_UNVERIFIED'
+        descriptor = checked_descriptor(loaded, authority_bundle)
+        phase = 'NORMALIZE_DECODER_LIFECYCLE_UNVERIFIED'
+        decoder = checked_decoder(reply_bytes, loaded, authority_bundle, decoder_bundle, verified, expected_authority_source_sha256)
+        phase = 'NORMALIZE_PLANNER_SOURCE_UNVERIFIED'
+        require(type(planner_source) is bytes and digest(planner_source) == PLANNER_SHA, 'EXACT_FROZEN_PURE_PLANNER_BYTES_REQUIRED')
+        planner = {}; exec(compile(planner_source, '<pinned-pure-retention-planner>', 'exec'), planner)
+        phase = 'NORMALIZE_REPLY_UNVERIFIED'
+        reply = strict_json(reply_bytes, 4*1024**2)
+        require(reply['descriptorSha256'] == digest(loaded['descriptorBytes']), 'ACTUAL_DECODED_DESCRIPTOR_SHA_REQUIRED')
+        phase = 'NORMALIZE_GRAPH_UNVERIFIED'
+        projection = graph_projection(reply, descriptor)
+        phase = 'NORMALIZE_EXIT_BINDING_UNVERIFIED'
+        require(decoder['exitCode'] == {'DECODED':0,'UNDETERMINED':2,'REJECTED':3}[reply['status']], 'DECODER_EXIT_AND_REPLY_STATUS_REQUIRED')
+        phase = 'NORMALIZE_CLOCK_UNVERIFIED'
+        utc_ns(now)
+        phase = 'NORMALIZE_INVENTORY_UNVERIFIED'
+        inventory = plan = None
+        if projection is not None:
+            validated = verified['validation']['snapshotIds']; snapshots = {r['id']:r for r in projection['snapshots']}
+            require(all(s in snapshots for s in validated), 'VALIDATED_SNAPSHOT_SELECTION_NOT_IN_GRAPH')
+            pinned_files = sorted({fid for s in validated for fid in snapshots[s]['fileIds']})
+            current = reply['graph']['currentMetadataId']
+            metadata = next(row for row in descriptor['objects'] if row['alias'] == current)
+            inventory = {'schemaVersion':1,'kind':'iceberg-retention-inventory','scope':'CAPTURED_TABLE_METADATA',
+                'tableId':projection['tableId'],'capturedAt':verified['validation']['capturedAt'],
+                'observations':{'complete':True,'refsComplete':True,'pinsComplete':True,'snapshotFileClosureComplete':True,
+                    'writersQuiescent':True,'metadataBeforeId':current,'metadataAfterId':current,
+                    'metadataBeforeSha256':metadata['sha256'],'metadataAfterSha256':metadata['sha256']},
+                'currentSnapshotId':projection['currentSnapshotId'],'snapshots':projection['snapshots'],'refs':projection['refs'],
+                'pins':[{'id':'v-'+authority_bundle['validation']['sha256'],'kind':'VALIDATION','snapshotIds':list(validated),'fileIds':pinned_files}],
+                'files':projection['files']}
+            phase = 'NORMALIZE_PLAN_UNVERIFIED'
+            plan = planner['build_plan'](inventory, policy, now=now)
+        phase = 'NORMALIZE_RESULT_UNVERIFIED'
+        return {'inventory':inventory,'plan':plan,'privateReceipt':{'schemaVersion':1,
+            'scope':'SOURCE_BOUND_CAPTURED_GRAPH_NORMALIZATION_NOT_LIVE_TABLE_VERIFICATION',
+            'status':'UNDETERMINED' if plan is None else plan['status'],
+            'decoderStatus':reply['status'],'decoderReasonCodes':reply['reasonCodes'],
+            'authoritySourceSha256':expected_authority_source_sha256,'decoderLifecycleSha256':decoder_bundle['sha256'],
+            'validationSha256':authority_bundle['validation']['sha256'],'writersBeforeSha256':authority_bundle['lifecycle']['sha256'],
+            'writersAfterSha256':decoder_bundle['writersAfter']['sha256'],'descriptorSha256':digest(loaded['descriptorBytes']),
+            'replySha256':digest(reply_bytes),'graphSha256':None if reply['graph'] is None else digest(canonical(reply['graph'])),
+            'inventorySha256':None if inventory is None else digest(canonical(inventory)),
+            'capturedAt':verified['validation']['capturedAt'],'evaluatedAt':now,
+            'allCapturedObjects':[{'id':row['alias'],'action':'KEEP'} for row in descriptor['objects']],
+            'objectCandidateCount':0,'applyEnabled':False,'independentlyVerifiedLiveTable':False,
+            'actualDataContentsVerifiedByDecoder':False,'historicalMetadataRestoreVerified':False}}
+    except BaseException:
+        raise NormalizationFailure(phase) from None

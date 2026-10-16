@@ -22,6 +22,18 @@ def utc():
     return datetime.now(timezone.utc).isoformat()
 
 
+def safe_normalization_failure(error, normalizer, stage):
+    """Recognize only the exact source-pinned wrapper and its finite phase."""
+    try:
+        if stage != 'NORMALIZE': return 'UNKNOWN'
+        if type(error) is normalizer.NormalizationFailure:
+            code = getattr(error, 'phaseCode', None)
+            if type(code) is str and code in normalizer.NORMALIZATION_PHASE_CODES: return code
+    except BaseException:
+        pass
+    return 'UNKNOWN'
+
+
 def run(producer, observer, loader, normalizer, *, source_commit, output,
         authority_source_sha256, component_source_pins, prep_proof, prep_sha256,
         decoder_source_sha256, classes, iceberg, policy):
@@ -55,6 +67,7 @@ def run(producer, observer, loader, normalizer, *, source_commit, output,
         'observerManifestSha256': life.OBSERVER, 'automaticRetry': False}))
     seen = owned_decoder = None
     main_calls = 0; main_return = None; failure = None; result = None; stage = 'PREP'
+    normalization_failure_code = 'UNKNOWN'
     try:
         # Only consumes actual prior prep; never builds inside original main/hooks.
         prepared = decoder.prep(prep_proof, prep_sha256, classes, iceberg, source_commit, decoder_source_sha256)
@@ -110,6 +123,7 @@ def run(producer, observer, loader, normalizer, *, source_commit, output,
         persist(output, 'normalization.private.json', life.encoded(result))
         stage = 'COMPLETED'
     except BaseException as error:
+        normalization_failure_code = safe_normalization_failure(error, normalizer, stage)
         text = str(error)
         failure = text if re.fullmatch('[A-Z0-9_]{1,128}', text) else 'COMPOSITE_FAILED_OR_UNKNOWN_NO_RETRY'
     finally:
@@ -118,7 +132,8 @@ def run(producer, observer, loader, normalizer, *, source_commit, output,
             'sourceCommit': source_commit, 'authoritySourceSha256': authority_source_sha256,
             'mainCallsStarted': main_calls, 'mainReturnedZero': type(main_return) is int and main_return == 0,
             'lastStage': stage, 'inventoryProduced': result is not None and result.get('inventory') is not None,
-            'failureCode': failure, 'pipelineFinishedWithoutException': failure is None,
+            'failureCode': failure, 'safeNormalizationFailureCode': normalization_failure_code,
+            'pipelineFinishedWithoutException': failure is None,
             'decoderCreatedKnownCid': owned_decoder is not None and owned_decoder.cid is not None,
             'decoderStoppedVerified': owned_decoder is not None and owned_decoder.stopped,
             'decoderAttachCliReaped': owned_decoder is not None and owned_decoder.cli_reaped,
