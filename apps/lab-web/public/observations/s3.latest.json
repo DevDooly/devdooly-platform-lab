@@ -1,0 +1,45 @@
+{
+  "deployment": {
+    "capturedAt": "2026-10-15T23:10:15.488175Z",
+    "healthyObserved": true,
+    "sourceCommit": "74a8e98844a8fea0653951136ede0e7de0d7ac08"
+  },
+  "history": {
+    "oldWorkerExit": "UNOBSERVED",
+    "originalApiwebFailureCause": "UNPROVEN",
+    "originalApiwebWatchPassed": false
+  },
+  "limits": {
+    "latencyOrSlaClaimed": false,
+    "pointInTimeOnly": true,
+    "productionApiJvmSdkVerified": false,
+    "writeCompatibilityVerified": false
+  },
+  "observedAt": "2026-10-16T00:02:58.167234Z",
+  "preservation": {
+    "afterSdkVerified": true,
+    "capturedAt": "2026-10-16T00:02:58.167234Z",
+    "nativeKnownWholeGets": 12,
+    "originalWholeGets": 24
+  },
+  "schemaVersion": 1,
+  "sdk": {
+    "apiCalls": 3,
+    "capturedAt": "2026-10-15T23:45:37.148212Z",
+    "cleanupRevoked": true,
+    "clientClosed": true,
+    "configuredMaxAttempts": 3,
+    "httpAttempts": 3,
+    "httpClient": "Apache5",
+    "proofSha256": {
+      "cleanup": "ff3b6409e3210ee33a26f1cd0c280b1190b5717bbcaf7b7f28fe506ffb3c45ae",
+      "revoke": "b25d4ffecbf95bb96454b05cd7b606a9b078a7b7adc70012311c21e80ca2c247",
+      "run": "7c861fdfd98f8da1541c2ca62db94813b2f2bb15aba1ed53cab2d716bed9e63c"
+    },
+    "retries": 0,
+    "status": "VERIFIED",
+    "wholeGets": 3
+  },
+  "sourceCommit": "74a8e98844a8fea0653951136ede0e7de0d7ac08",
+  "status": "DEPLOYED_SDK_VERIFIED"
+}

@@ -1,8 +1,12 @@
 # Platform Lab 다음 개발 계획
 
-마지막 운영 검증(2026-10-15 14:54 UTC)에서 readiness 배포·idle worker 교체·같은 ID 읽기 전용 재시도와 8작업·16파일·24객체를 확인했습니다. [전체 근거와 한계](evidence/worker-readiness/CORRECTED_IMAGE.md)를 기준으로 읽습니다. 다음 우선순위는 격리 Iceberg·Trino 실증과 실제 결과의 화면 연결이며, Spark·compaction은 그 뒤에 진행합니다.
+이전 readiness 운영 검증(2026-10-15 14:54 UTC)에서 readiness 배포·idle worker 교체·같은 ID 읽기 전용 재시도와 8작업·16파일·24객체를 확인했습니다. [전체 근거와 한계](evidence/worker-readiness/CORRECTED_IMAGE.md)를 기준으로 읽습니다. 이후 [native7의 Trino 조회·재시작](evidence/iceberg-jdbc/README.md)과 별도 [Cloud Spark 시험 8의 적재·순차 replay](evidence/spark-silver/README.md)를 검증하고 정적 기록 화면에 연결했습니다. compaction과 새 격리 환경에서 Spark 결과를 같은 warehouse의 Trino로 조회하는 연결은 남아 있습니다. 미니 PC native7의 중지된 시험 환경과 보관 자료는 유지합니다.
 
 초기 계획: 2026년 10월 12일 · 최근 V4 운영 전환·독립 AI Java 예제 검증: 2026년 10월 15일
+
+최근 배포·보존 확인(2026-10-16 갱신): 소스 `74a8e988`의 [Actions](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38814779596)와 Jenkins 45에서 API 191개 + 독립 Java 예제 20개, 총 211개를 통과했습니다. 이어 PR #52의 API·웹과 PR #53의 worker를 실제 전환했습니다. 애플리케이션 소스는 `74a8e988`, 최종 GitOps revision은 `b63fedfa`입니다. 2026-10-15 23:12:57 UTC의 배포 후 검사에서 작업 8개·export 정보 16개, 기존 객체 24개 + native7 객체 12개의 전체 GET, PV·PVC 각 13개·Docker 60개와 Kafka offset/end 8·lag 0을 확인했습니다. [S3 전송 배포·보존 근거](evidence/s3-runtime-rollout/README.md)는 해당 시점의 기록이며 실시간 가용성을 뜻하지 않습니다.
+
+후속 별도 JVM SDK 검증에서는 실제 배포 JAR의 factory와 Apache5로 알려진 객체 3개를 전체 GET했습니다. 3회 호출·3회 시도·추가 retry 0회, client 종료·정상 exit 0과 자기 Job·ConfigMap·Secret·읽기 전용 key의 정리·폐기를 확인했습니다. factory의 maxAttempts 3은 유지했습니다. 운영 API JVM 내부의 호출·장애 주입·PUT·SLA 검증과 구분합니다. 2026-10-16 00:02:58 UTC의 별도 읽기 검사에서 전체 객체 36개와 업무 SQL·기존 리소스 보존, 임시 SDK 자원·키 부재를 확인했습니다.
 
 Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접 확인할 수 있는 포트폴리오로 발전시킵니다. 외부 백업·격리 DB 복원·재부팅과 CI/CD의 정상 배포·실패 차단·이전 image digest 복구를 확인했습니다. **기존 플랫폼 관측의 2026-10-12 수집·실패 보존·Pages 게시·공개 화면과 자동 운영·반복 게시 11회를 검증**했습니다. 게시 순서 회귀 교정, API·웹 중단 후 같은 정상 B 복원에 이어 전용 Pages 자격증명으로 수동 host cycle·실제 systemd service·timer 자동 실행을 확인했습니다. 실제 완료 간격은 약 30~31분이었고 자격증명 만료·회전과 장기간 운영은 별도 후속입니다. Kafka·Garage·상시 worker의 최초 배포와 정상 재시작 당시 총 3작업·파일 6개·슬롯 해제를 확인했습니다. 새 job timer의 자동 게시 2회·완료 간격 1개와 전용 PVC 외부 사본의 격리 복원·clone 물리 블록 복원을 검증했습니다. 이후 보존 계획·새 합성 PVC 정리·작은 자원 관측과 최대 1,000개 입력·동시 접수 경계를 격리 검증했습니다. V2 지원 API·worker를 운영에 함께 배포하고 내부 V2 작업 한 건을 추가해 당시 총 7개 EXPORTED 작업·파일 14개를 확인했습니다. 별도 격리 worker의 export 경계 강제 종료 복구도 확인했습니다. 전체 객체 참조 보호와 별도 Garage 자연 GC, 독립 AI Java 예제도 근거와 함께 기록했습니다. 다음은 다른 장애 경계/호스트 중단·과부하 정책·장기간 운영, AI 예제의 사람 검토와 데이터 플랫폼 사례입니다.
 
@@ -12,9 +16,9 @@ Java 백엔드, 데이터 처리, 배포와 운영 경험을 방문자가 직접
 
 | 영역 | 확인한 내용 | 다음에 채울 부분 |
 | --- | --- | --- |
-| Java API·worker | 최신 Linux API 180개 + 독립 예제 20개, 운영 readiness·idle 교체·같은 ID 재시도·8작업/16파일/24객체 확인; 이전 최대 입력·export 경계 근거 별도 보존 | 다른 장애 경계·호스트 중단·과부하 정책·장기간 관측 |
+| Java API·worker | source `74a8e988`·GitOps `b63fedfa` 실제 배포; CI 211개(API 191 + 예제 20), 8작업·16export 정보·기존24+native12객체 보존; 별도 JVM SDK GET 3회·자기 자원 정리 | 다른 장애 경계·호스트 중단·과부하 정책·장기간 관측 |
 | Kafka·Garage 복구 | 외부 사본의 전용 3PVC 복원·clone 물리 블록, 보존 정책·합성 정리 검증 | 장기간 보존 운영·객체 GC·복구 절차 유지 |
-| 포트폴리오 | 웹 48개·AI 예제 선택·readiness 검증 요약·데이터 흐름 준비 화면; 기존 플랫폼 11회와 job timer 2회 근거 별도 보존 | 장기간 반복 운영·자격증명 회전 |
+| 포트폴리오 | AI 예제 선택·readiness 요약·native Trino 및 Cloud Spark의 실제 정적 기록 화면; 기존 플랫폼 11회와 job timer 2회 근거 별도 보존 | 장기간 반복 운영·자격증명 회전 |
 | Jenkins·Actions | 같은 SHA의 두 CI 성공·게시·draft GitOps PR·정상 B 배포·실제 실패 차단, main의 공개 status 수집 | credential 만료·회전과 게시 이력 보존 운영 |
 | Argo CD와 Helm | 정상 A → B → A GitOps 복구, Synced·Healthy·데이터 보존과 제한된 실제 상태 수집 | 주기 관측의 반복 운영과 실패 대응 |
 | 운영 | 외부 암호화 백업·격리 DB 복원·호스트 재부팅, 사용자 kubectl 복구 | 초기 비밀번호 교체, 추가 장치 사본·전체 archive 복원 |
@@ -96,7 +100,7 @@ GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins 
 
 [최초 계획](plans/phase4-messaging-storage.md)의 DB·원본·Kafka·export 경계를 격리 검증한 뒤, 2026-10-15 미니 PC K3s에 Kafka·Garage·상시 worker를 GitOps로 처음 배포했습니다. 최초 배포 당시 내부 고정 fixture 두 작업이 각 12/7/3/2/0으로 완료됐고 결과·실패 파일 총 4개를 전체 Get·크기·SHA-256으로 확인했습니다. 실행 슬롯은 비었으며 Kafka offset 2·log end 2·lag 0을 확인했습니다. 기존 seed·V1 처리 시각·PVC와 Docker 전체 38개·실행 26개를 보존했습니다. [최초 배포·게시 근거](evidence/runtime-deployment/README.md)를 연결합니다.
 
-이전 V2 운영 배포 당시 API·worker는 같은 source `6c5aff948770982dd44c8d44547131b3ccf6ddd9`의 지원 이미지였습니다. 별도 GitOps PR로 API·웹을 먼저 교체하고 worker를 뒤이어 교체한 뒤 내부 V2 fixture를 한 번 접수했습니다. 기존 여섯 작업을 보존한 채 V2의 입력 1,000 = 성공 500 + 실패 300 + 업무상 중복 200 + 대기 0, EXPORTED·슬롯 해제·Kafka offset 7/log end 7/lag 0을 확인했습니다. 당시 총 7작업·파일 14개이며, 실제 GET 21개는 기존 18개 객체와 새 원본·결과·실패 객체 3개를 합친 수입니다. [V2 운영 배포·공개 게시 근거](evidence/input-v2-deployment/README.md)는 당시 기록으로 보존하고, 마지막 검증의 8작업·16파일·24객체는 [readiness 후속 근거](evidence/worker-readiness/CORRECTED_IMAGE.md)로 확인합니다.
+이전 V2 운영 배포 당시 API·worker는 같은 source `6c5aff948770982dd44c8d44547131b3ccf6ddd9`의 지원 이미지였습니다. 별도 GitOps PR로 API·웹을 먼저 교체하고 worker를 뒤이어 교체한 뒤 내부 V2 fixture를 한 번 접수했습니다. 기존 여섯 작업을 보존한 채 V2의 입력 1,000 = 성공 500 + 실패 300 + 업무상 중복 200 + 대기 0, EXPORTED·슬롯 해제·Kafka offset 7/log end 7/lag 0을 확인했습니다. 당시 총 7작업·파일 14개이며, 실제 GET 21개는 기존 18개 객체와 새 원본·결과·실패 객체 3개를 합친 수입니다. [V2 운영 배포·공개 게시 근거](evidence/input-v2-deployment/README.md)는 당시 기록으로 보존하고, 이전 readiness 검증의 8작업·16파일·24객체는 [readiness 후속 근거](evidence/worker-readiness/CORRECTED_IMAGE.md)로 확인합니다.
 
 이전 단계의 [DB](evidence/db-job-foundation/README.md), [원본 S3](evidence/s3-source-storage/README.md), [실제 결합](evidence/mariadb-s3/README.md), [Kafka 중단·재전달](evidence/kafka-redelivery/README.md), [export](evidence/result-export/README.md), [상시 실행기](evidence/continuous-runtime/README.md) 검증은 각각 당시 조건과 한계를 유지합니다. 최초 운영 배포 당시 기본 API 128개·웹 34개와 별도로 확인했으며, 새 수집·게시 코드는 실제 Ubuntu 검사 135개를 통과했습니다. 후속 V2 소스의 기본 API 검증은 140개이며 아래 격리 기능·자원 검증과 구분합니다.
 
@@ -135,7 +139,7 @@ GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins 
 
 격리 Linux의 V2 export 경계 검증은 12개 검사를 통과했습니다. 첫 결과 파일의 PUT·전체 GET을 확인하고 두 번째 실패 파일 PUT을 upstream에 전달하기 전에 해당 worker만 한 번 SIGKILL했습니다. exit 137·비 OOM을 확인한 뒤 같은 source/jar의 새 worker가 PENDING export를 완료했고, 처리 SQL·시각과 첫 결과 파일 전체 바이트, 기존 네 작업/12개 객체와 이전 Kafka offset을 보존했습니다. 새 작업의 offset 1/log end 1/lag 0·슬롯 해제와 소유 컨테이너의 종료를 확인했습니다. 이 검증은 독립 Docker 환경의 한 export 경계이며 운영 K3s 중단·호스트 재시작·고가용성을 입증하지 않습니다. [전체 근거](evidence/maximum-export-crash/README.md)를 연결합니다.
 
-최신 V2 배포 후 수동 수집·Pages 게시에서도 실제 job·플랫폼 공개 JSON 전체가 수집 원본과 일치했습니다: [최신 게시 근거](evidence/input-v2-deployment/README.md). 그보다 앞선 재시작 검증에서는 새 job의 원래 timer 자동 수집·게시 2회와 완료 간격 1개(1809.371239초)를 확인했습니다. [후속 검증 근거](evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다. 공개 화면은 약 30분 주기의 마지막 기록이며 실시간 조회가 아닙니다. 5분 heartbeat 경고는 마지막 실행 신호의 나이이고 프로세스 중단 판정이 아닙니다. 공개 POST는 없고 내부 `--lab-runtime=stage`가 고정 fixture만 접수합니다.
+이전 V2 배포 후 수동 수집·Pages 게시에서도 실제 job·플랫폼 공개 JSON 전체가 수집 원본과 일치했습니다: [당시 게시 근거](evidence/input-v2-deployment/README.md). 그보다 앞선 재시작 검증에서는 새 job의 원래 timer 자동 수집·게시 2회와 완료 간격 1개(1809.371239초)를 확인했습니다. [후속 검증 근거](evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다. 공개 화면은 약 30분 주기의 마지막 기록이며 실시간 조회가 아닙니다. 5분 heartbeat 경고는 마지막 실행 신호의 나이이고 프로세스 중단 판정이 아닙니다. 공개 POST는 없고 내부 `--lab-runtime=stage`가 고정 fixture만 접수합니다.
 
 **완료 조건:** producer ACK·DB 멱등 처리·offset·export 확인을 각각 설명하고 실제 운영 한계를 기록합니다. 단일 노드·partition 1/RF1을 고가용성이나 전체 exactly-once로 표현하지 않습니다. [Kafka producer 설정](https://kafka.apache.org/42/configuration/producer-configs/)
 
@@ -158,14 +162,15 @@ GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins 
 
 ## 6 Iceberg와 Trino
 
-Kafka·객체 저장소의 흐름이 안정된 뒤 데이터 플랫폼을 확장합니다. 처음에는 한 적재 작업과 한 SQL 조회로 범위를 제한합니다. 배치 작업은 필요할 때 실행하고, Spark·Trino를 모두 상시 운영하는 방식은 실제 자원 측정 후 결정합니다.
+서로 분리한 두 작은 합성 시험을 완료했습니다. [미니 PC native7](evidence/iceberg-jdbc/README.md)은 PostgreSQL JDBC catalog·Garage와 Trino의 조회·재시작을 검증했고, [독립 Cloud Spark 시험 8](evidence/spark-silver/README.md)은 Spark 적재·Silver 변환·같은 application의 순차 replay를 검증했습니다. Spark·Trino의 상시 운영과 두 시험의 warehouse 연결은 검증하지 않았습니다.
 
-- [ ] 영속 catalog와 객체 저장소를 선택하고 table·snapshot 정보를 재시작 후에도 유지합니다.
-- [ ] 합성 데이터를 Iceberg에 적재하고 Trino에서 조회해 원본 건수와 비교합니다.
+- [x] native7에서 영속 JDBC catalog·객체 저장소를 연결하고 0→6→12행과 초기 빈 snapshot 1개 + 데이터 append 2개를 확인했습니다.
+- [x] Trino만 정상 재시작한 뒤 같은 행·metadata pointer·warehouse bytes를 비교했습니다. PostgreSQL은 같은 프로세스를 유지했습니다.
+- [x] Cloud Spark에서 Bronze 6+6행·snapshot 2개, Silver 성공 7·실패 3·중복 2와 동일 입력의 순차 replay write 0회를 확인했습니다. 재시작·동시성 검증과 구분합니다.
+- [ ] 새 격리 환경에서 Spark 결과를 같은 warehouse의 Trino로 조회하는 연결을 검증합니다.
 - [ ] 작은 파일 증가, compaction 전후와 snapshot 보존 정책을 확인합니다.
-- [ ] 반복 실행의 멱등성과 재시작 후 조회 결과를 검증합니다.
 
-**완료 조건:** 원본·적재 작업·table snapshot·SQL 결과가 연결되고 재실행 방법이 문서화돼야 합니다. catalog와 저장소는 실제 선택한 조합의 요구사항에 맞춥니다. [Trino Iceberg connector](https://trino.io/docs/current/connector/iceberg.html)
+**완료 조건:** 같은 warehouse의 적재·조회·재시작·compaction과 재실행 방법을 연결해야 합니다. 현재는 native Trino와 독립 Cloud Spark의 작은 합성 시험을 각각 부분 완료했으며, 새 격리 환경의 Spark→Trino 연결·compaction·전체 6단계 완료는 남아 있습니다. [Trino Iceberg connector](https://trino.io/docs/current/connector/iceberg.html)
 
 **공개 결과:** 수집부터 저장·조회까지 한 데이터의 흐름을 따라가는 설명입니다. Airflow는 실제 스케줄링과 재시도 관리가 필요해질 때 추가합니다.
 
@@ -177,7 +182,7 @@ CKA 학습은 Lab과 연결합니다. context·RBAC·Service와 DNS·probe·requ
 
 ## 내부 접수 간격 후보 검증
 
-DB의 기본 30초 승인 간격을 실제 V4 API→worker 순서로 배포했습니다. 기본 157개·격리 MariaDB/Garage 19개·복원본 이전 binary 호환 8개는 [기존 근거](evidence/admission-cooldown/README.md)에 보존합니다. source `202ab6806130cfb37e8829ce7d52c89990d8a54a`의 [실제 전환](evidence/admission-v4-deployment/README.md)은 API·웹 32/32와 worker 35/35, 기존 7작업·파일 정보 14개 보존을 확인했습니다. Kubernetes Ready와 runtime 준비는 구분하며 첫 32/35 관측·이전 exit UNOBSERVED를 남깁니다. 11:40:08.792Z의 정기 V4 수집은 [Pages 실행](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38728965840) 성공 후 공개 JSON 전체 일치를 확인했습니다: [정기 게시 후속](evidence/admission-v4-deployment/PUBLICATION.md). 후속 고정 V1 fixture 접수·charged30·슬롯 해제·자료 보존과 idle worker 교체·같은 ID 읽기 전용 재시도를 [최신 근거](evidence/worker-readiness/CORRECTED_IMAGE.md)에서 확인했습니다. 서로 다른 ID의 실제 cooldown 거부는 별도 미검증입니다. [전환·원복 절차](runbooks/admission-cooldown.md)를 따르고 구형 stage와 혼용하지 않습니다. 지속 부하·HTTP QPS 제한·처리 중 호스트 장애 복구는 별도 미검증입니다. charged cooldown 상태의 idle worker 교체는 최신 근거에서 확인했으며 이전 worker exit는 UNOBSERVED입니다.
+DB의 기본 30초 승인 간격을 실제 V4 API→worker 순서로 배포했습니다. 기본 157개·격리 MariaDB/Garage 19개·복원본 이전 binary 호환 8개는 [기존 근거](evidence/admission-cooldown/README.md)에 보존합니다. source `202ab6806130cfb37e8829ce7d52c89990d8a54a`의 [실제 전환](evidence/admission-v4-deployment/README.md)은 API·웹 32/32와 worker 35/35, 기존 7작업·파일 정보 14개 보존을 확인했습니다. Kubernetes Ready와 runtime 준비는 구분하며 첫 32/35 관측·이전 exit UNOBSERVED를 남깁니다. 11:40:08.792Z의 정기 V4 수집은 [Pages 실행](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38728965840) 성공 후 공개 JSON 전체 일치를 확인했습니다: [정기 게시 후속](evidence/admission-v4-deployment/PUBLICATION.md). 후속 고정 V1 fixture 접수·charged30·슬롯 해제·자료 보존과 idle worker 교체·같은 ID 읽기 전용 재시도를 [최신 근거](evidence/worker-readiness/CORRECTED_IMAGE.md)에서 확인했습니다. 서로 다른 ID의 실제 cooldown 거부는 별도 미검증입니다. [전환·원복 절차](runbooks/admission-cooldown.md)를 따르고 구형 stage와 혼용하지 않습니다. 지속 부하·HTTP QPS 제한·처리 중 호스트 장애 복구는 별도 미검증입니다. charged cooldown 상태의 idle worker 교체는 readiness 후속 근거에서 확인했으며 이전 worker exit는 UNOBSERVED입니다.
 
 ## 바로 다음 작업
 

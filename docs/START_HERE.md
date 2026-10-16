@@ -1,6 +1,10 @@
 # 현재 상태에서 이어서 구축하기
 
-마지막 운영 검증(2026-10-15 14:54 UTC)은 source `3e0d85be`의 readiness 배포·idle worker 교체·같은 ID 읽기 전용 재시도입니다. API 180개 + 독립 예제 20개, 8개 EXPORTED 작업·export 정보 16개·객체 24개와 Kafka lag 0을 확인했습니다. [전체 근거와 한계](evidence/worker-readiness/CORRECTED_IMAGE.md)를 먼저 읽습니다. [데이터 흐름 화면](evidence/iceberg-jdbc/README.md)은 실증 준비 상태이며, 공개 관측 카드의 숫자는 각 카드의 실제 수집 시각을 따릅니다.
+최근 배포·보존 확인(2026-10-16 갱신): 소스 `74a8e988`의 [Actions](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38814779596)와 Jenkins 45에서 API 191개 + 독립 Java 예제 20개, 총 211개를 통과했습니다. 이어 PR #52의 API·웹과 PR #53의 worker를 실제 전환했습니다. 애플리케이션 소스는 `74a8e988`, 최종 GitOps revision은 `b63fedfa`입니다. 2026-10-15 23:12:57 UTC의 배포 후 검사에서 작업 8개·export 정보 16개, 기존 객체 24개 + native7 객체 12개의 전체 GET, PV·PVC 각 13개·Docker 60개와 Kafka offset/end 8·lag 0을 확인했습니다. [S3 전송 배포·보존 근거](evidence/s3-runtime-rollout/README.md)는 해당 시점의 기록이며 실시간 가용성을 뜻하지 않습니다.
+
+후속 별도 JVM SDK 검증에서는 실제 배포 JAR의 factory와 Apache5로 알려진 객체 3개를 전체 GET했습니다. 3회 호출·3회 시도·추가 retry 0회, client 종료·정상 exit 0과 자기 Job·ConfigMap·Secret·읽기 전용 key의 정리·폐기를 확인했습니다. factory의 maxAttempts 3은 유지했습니다. 운영 API JVM 내부의 호출·장애 주입·PUT·SLA 검증과 구분합니다. 2026-10-16 00:02:58 UTC의 별도 읽기 검사에서 전체 객체 36개와 업무 SQL·기존 리소스 보존, 임시 SDK 자원·키 부재를 확인했습니다.
+
+이전 readiness 운영 검증(2026-10-15 14:54 UTC)은 source `3e0d85be`의 readiness 배포·idle worker 교체·같은 ID 읽기 전용 재시도입니다. API 180개 + 독립 예제 20개, 8개 EXPORTED 작업·export 정보 16개·객체 24개와 Kafka lag 0을 확인했습니다. [전체 근거와 한계](evidence/worker-readiness/CORRECTED_IMAGE.md)를 먼저 읽습니다. [native7 데이터 흐름](evidence/iceberg-jdbc/README.md)과 별도 [Cloud Spark 시험 8](evidence/spark-silver/README.md)은 실제 검증한 정적 기록을 공개했습니다. native7의 빈 snapshot 포함 총 3개와 Cloud Bronze의 데이터 append snapshot 2개는 서로 다른 실험입니다. 공개 관측 카드의 숫자는 각 카드의 실제 수집 시각을 따릅니다.
 
 이전 V4 배포 검증(2026-10-15): API·worker를 source `202ab6806130cfb37e8829ce7d52c89990d8a54a`·schema V4로 전환해 API·웹 32/32, worker 35/35를 확인했습니다. [V4 실제 전환](evidence/admission-v4-deployment/README.md)을 먼저 확인하세요. 해당 시점에는 신규 V4 stage 검증 전이었으며, 아래 V2 처리 결과는 이전 검증입니다. API·worker의 V2 지원 이미지 확인 후 고정 1,000건 작업을 처리했습니다. 총 7개 EXPORTED 작업·파일 정보 14개·Kafka lag 0과 기존 18개 객체 보존을 확인했고, 공개 JSON 전체가 실제 수집 원본과 일치했습니다. [이전 V2 배포·게시 근거](evidence/input-v2-deployment/README.md)에 당시 조건을 남겼습니다. 아래 단계별 기록은 각각 당시의 검증 조건을 보존합니다.
 
@@ -8,7 +12,7 @@ Java API·포트폴리오와 K3s·Jenkins·Argo CD를 Ubuntu 미니 PC에서 운
 
 실제 V2 배포 전 후보판의 최대 1,000개 입력·단일 슬롯 동시 2/8개 접수·초과 입력 거부는 격리 통합 검사 5개로 확인했습니다. 별도 Linux Docker worker에서도 1 CPU·768MiB 제한으로 1,000개 작업 3회와 원본·export 파일 9개의 전체 GET을 검증했습니다. [입력·동시 접수 검증](evidence/input-concurrency-load/README.md)은 현재 운영판과 구분합니다. 그 시험 당시 운영 source `ed5815e7`·기존 6개 작업과 서비스는 보존했으며, 운영 처리 용량이나 SLA를 검증한 결과는 아닙니다.
 
-내부 승인 간격의 기본 API 157개·격리 backend 19개·복원본 호환 8개는 [기존 검증](evidence/admission-cooldown/README.md)에 보존합니다. 실제 운영 V4의 API·웹/worker 전환은 [별도 근거](evidence/admission-v4-deployment/README.md)로 확인했으며 기존 7개 작업·파일 정보 14개·Kafka lag 0을 유지했습니다. 첫 runtime 초기화 전 관측 실패와 이전 container exit UNOBSERVED를 함께 남깁니다. 기존 timer의 11:40:08.792Z V4 기록은 [Pages 실행](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38728965840) 성공 후 12:01:58 UTC에 두 공개 JSON 전체가 서버 원본과 같음을 확인했습니다. [정기 게시 후속 근거](evidence/admission-v4-deployment/PUBLICATION.md)에 실제 hash를 보존합니다. 해당 문서의 신규 V4 fixture·charged cooldown 검증은 위 최신 readiness 근거에서 후속 확인했으며, 단일 슬롯·승인 간격·구형 stage 우회 위험을 구분합니다.
+내부 승인 간격의 기본 API 157개·격리 backend 19개·복원본 호환 8개는 [기존 검증](evidence/admission-cooldown/README.md)에 보존합니다. 실제 운영 V4의 API·웹/worker 전환은 [별도 근거](evidence/admission-v4-deployment/README.md)로 확인했으며 기존 7개 작업·파일 정보 14개·Kafka lag 0을 유지했습니다. 첫 runtime 초기화 전 관측 실패와 이전 container exit UNOBSERVED를 함께 남깁니다. 기존 timer의 11:40:08.792Z V4 기록은 [Pages 실행](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38728965840) 성공 후 12:01:58 UTC에 두 공개 JSON 전체가 서버 원본과 같음을 확인했습니다. [정기 게시 후속 근거](evidence/admission-v4-deployment/PUBLICATION.md)에 실제 hash를 보존합니다. 해당 문서의 신규 V4 fixture·charged cooldown 검증은 위 readiness 후속 근거에서 후속 확인했으며, 단일 슬롯·승인 간격·구형 stage 우회 위험을 구분합니다.
 
 별도 [AI 개선 예제](../examples/java-window-analysis/README.md)는 시간대 오류 회귀와 같은 답을 내는 두 알고리즘의 비교입니다. Java 테스트 20개·runner 검사 3개, 실제 Windows Java 21 JMH 16조합·48 fork·240 interval을 [근거](evidence/ai-window-analysis/README.md)에 보존했고 [포트폴리오](https://devdooly.github.io/devdooly-platform-lab/#ai-window)에서 코드와 측정 기록을 선택해 볼 수 있습니다. 선택은 정적 기록 조회이며 Java를 실행하지 않습니다. 일부 큰 오차·미커밋 source manifest·사람 검토 대기 상태를 표시하고 운영 ETL 개선율로 일반화하지 않습니다. [CI 검증](evidence/ai-window-analysis/ci-validation.md)과 수동 JMH 측정도 구분합니다.
 
@@ -17,7 +21,7 @@ Java API·포트폴리오와 K3s·Jenkins·Argo CD를 Ubuntu 미니 PC에서 운
 - 서버 지문 대조와 전용 키 SSH 인증, Ubuntu·포트·기존 서비스 읽기 전용 점검
 - 초기 설치 당시 Docker 컨테이너 23개와 방화벽 설정 보존, 새 Lab 전용 설치·저장 경로
 - K3s Node Ready와 클러스터 API·DNS·외부 HTTPS 통신 확인
-- 초기 API 테스트 15개·웹 테스트 13개; readiness 소스의 Linux API 180개·독립 예제 20개, 이번 화면 후보 웹 48개 통과
+- 초기 API 테스트 15개·웹 테스트 13개; readiness 당시 Linux API 180개·독립 예제 20개와 이후 소스 `74a8e988`의 CI 211개(API 191 + 예제 20)를 각각 확인
 - Linux runner의 이미지 빌드·MariaDB·API 교체·데이터 보존 검증
 - GHCR 이미지 게시와 미니 PC에서 익명 다운로드
 - Jenkins Kubernetes agent의 테스트·패키징·필수 산출물과 같은 SHA의 commit status 전달 확인
@@ -82,7 +86,7 @@ Kafka·Garage의 전용 PVC 3개는 외부 사본에서 새 볼륨으로 복원�
 3. 전용 status credential의 만료·회전과 게시 산출물 보존 운영 정리
 4. Pages 자격증명의 실제 만료·회전과 장기간 반복 운영 검증
 5. 필요한 경우 기존 프록시·DDNS·TLS 조건을 확인한 뒤 공개 읽기 API와 외부망 검증
-6. [보존·자원 기준](runbooks/retention-resource-budget.md)을 유지하며 객체 GC·요청 빈도 제한·과부하 용량·진행 중 장애를 검증하고, 공개한 AI 합성 예제의 사람 검토와 데이터 플랫폼 설계를 이어가기
+6. [보존·자원 기준](runbooks/retention-resource-budget.md)을 유지하며 객체 GC·요청 빈도 제한·과부하 용량·진행 중 장애를 검증하고, AI 합성 예제의 사람 검토·compaction·새 격리 환경에서 Spark 결과를 같은 warehouse의 Trino로 조회하는 검증을 이어가기. 미니 PC native7의 중지된 시험 환경과 보관 자료는 유지하기
 
 CI/CD의 정상 배포·실패 차단·이전 digest 복구를 확인했으며, 3단계는 제한된 실제 수집·인증 실패·회복과 수동 공개 게시·브라우저를 확인했습니다. 게시 순서 회귀 교정 후 실제 재검증도 완료했고 API·웹 중단·같은 정상 B 복원도 확인했고 정기 운영 검증을 이어가며 새로운 inbound 경로는 열지 않았습니다. 기존 서비스가 있으므로 재부팅·방화벽 변경·프록시 교체를 일괄 실행하지 않습니다. Windows 외부 사본의 무결성, 격리 DB 복원과 호스트 재부팅을 검증했습니다. K3s·Jenkins archive 전체 복원은 아직 별도 작업입니다. PV의 Delete 정책 때문에 PVC·namespace를 수동 삭제하면 데이터가 지워질 수 있습니다.
 
@@ -93,7 +97,7 @@ CI/CD의 정상 배포·실패 차단·이전 digest 복구를 확인했으며, 
 - [화면 검증](../apps/lab-web/VALIDATION.md), [관측 기록 계약](../apps/lab-web/OBSERVATION.md)
 - [플랫폼 관측 계약](../apps/lab-web/PLATFORM_OBSERVATION.md), [실제 수집 검증](evidence/platform-observation/README.md)
 - [플랫폼 관측 수집·게시 운영](runbooks/platform-observation.md)
-- [상시 worker 실행](runbooks/continuous-runtime.md), [최신 V2 배포·job 공개 관측](evidence/input-v2-deployment/README.md)
+- [상시 worker 실행](runbooks/continuous-runtime.md), [이전 V2 배포·job 공개 관측](evidence/input-v2-deployment/README.md)
 - [보존 정책과 자원 예산](runbooks/retention-resource-budget.md), [실제 정리·측정 근거](evidence/retention-resource-budget/README.md)
 - [최대 입력·동시 접수와 별도 Linux 자원/지연 검증](evidence/input-concurrency-load/README.md)
 - [Kafka/Garage PVC 격리 복원](runbooks/runtime-pvc-recovery.md), [외부 사본·블록 복원 근거](evidence/runtime-pvc-restore/README.md)
