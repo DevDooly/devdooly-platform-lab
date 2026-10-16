@@ -172,7 +172,8 @@
 - [x] Schema 2의 실제 Linux 62개·skip 0 통과와 새 prep 실패의 `JAR_MANIFEST_CLASSPATH_EXPANSION_REJECTED`·준비용 컨테이너 제거·부재 확인: [시도 2 근거](evidence/iceberg-capture/ATTEMPT_2.md). 첫 실패 원인으로 소급하지 않음
 - [x] 세 번째 새 소스의 Linux 67개·skip 0 통과와 `JAR_MANIFEST_BYTES_BOUND` 실패·준비용 컨테이너 제거·부재 확인: [시도 3 근거](evidence/iceberg-capture/ATTEMPT_3.md). 구체적 manifest 실패 분기와 실제 Class-Path closure는 미확인
 - [x] 네 번째 새 소스의 Linux 73개·skip 0 통과와 `JAR_MANIFEST_CLASSPATH_TARGET_MISSING` 실패·준비용 컨테이너 제거·부재 확인: [시도 4 근거](evidence/iceberg-capture/ATTEMPT_4.md). 정확한 JAR·token·경로와 전체 Class-Path closure·compile 성공은 미확인
-- [ ] 전체 파일 트리·실제 부재·javac 전후 재검증을 묶는 참조 호환성 source 후보 → 새 prep → closed-copy metadata capture → 독립 graph closure 확인 → 순수 planner 입력 연결. Windows 합성 검사 32개 중 24개 통과·POSIX 전용 8개 제외를 확인했으며 Linux 80개·새 prep/capture와 원래 작업·decoder·inventory 성공은 미확인: [진단 계약](../infra/iceberg-retention-ci/SCHEMA2.md), [다음 절차](runbooks/iceberg-closed-copy-capture.md)
+- [x] 다섯 번째 새 소스의 Linux 80개·skip 0, compiler prep와 원래 main 한 번·반환 0, 새 decoder 컨테이너 정지·CLI 회수 확인: [시도 5 근거](evidence/iceberg-capture/ATTEMPT_5.md). 전체 결과는 `NORMALIZE`의 `SUMMARY_NOT_VERIFIED`·`UNKNOWN` 실패이며 정확한 원인·decoder exit 0·유효 graph는 미확인
+- [ ] 같은 실행의 stopped actors·clock 통합 검증 → 독립 graph closure·normalization → 완전 inventory → 순수 planner 입력 연결. 시도5의 해당 검증과 전체 KEEP은 미확인이고 관측 count는 null. 다음 수정 범위·검사 수는 아직 미정: [진단 계약](../infra/iceberg-retention-ci/SCHEMA2.md), [다음 절차](runbooks/iceberg-closed-copy-capture.md)
 - [ ] snapshot 보존·만료 정책과 운영 규모 compaction 검증
 - [x] Trino만 정상 재시작한 뒤 같은 행·metadata pointer·warehouse 전체 bytes 조회 검증. PostgreSQL은 같은 프로세스를 유지했으며 재시작은 검증하지 않음: [범위](evidence/iceberg-jdbc/README.md)
 - [x] 시험 PostgreSQL·Trino workload 0·Retain PVC 2개·warehouse 보관과 원래 8개 작업·객체 24개 보존: [종료·보존](evidence/iceberg-jdbc/README.md)

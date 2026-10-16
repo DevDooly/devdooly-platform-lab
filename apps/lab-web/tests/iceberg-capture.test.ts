@@ -14,6 +14,8 @@ const actual3Raw = readFileSync(new URL('./fixtures/iceberg-capture-attempt3.sum
 const actual3: Record<string, any> = JSON.parse(actual3Raw.toString('utf8'));
 const actual4Raw = readFileSync(new URL('./fixtures/iceberg-capture-attempt4.summary.json', import.meta.url));
 const actual4: Record<string, any> = JSON.parse(actual4Raw.toString('utf8'));
+const actual5Raw = readFileSync(new URL('./fixtures/iceberg-capture-attempt5.summary.json', import.meta.url));
+const actual5: Record<string, any> = JSON.parse(actual5Raw.toString('utf8'));
 
 /** Synthetic producer-shaped object only; no actual capture or public asset. */
 const fixture = (): Record<string, any> => ({
@@ -93,6 +95,30 @@ test('the exact real fourth record keeps target-missing failure separate from su
     assert.equal(value.diagnostic.lastPrepChild?.childStarted, true); assert.equal(value.diagnostic.lastPrepChild?.childReaped, true);
     assert.ok(value.diagnostic.prepCleanup && Object.values(value.diagnostic.prepCleanup).every(item => item === true));
   }
+});
+test('the exact real fifth record preserves verified milestones without inventing inventory or aggregate pass', () => {
+  assert.equal(actual5Raw.length, 1759);
+  assert.equal(createHash('sha256').update(actual5Raw).digest('hex'), 'a7976a9cb3d81c349be87be4e3959d982f0b4adadef758d1615228f9cbe48fa5');
+  const value = parseIcebergCapture(actual5); assert.ok(value); assert.equal(value.schemaVersion, 2);
+  assert.equal(value.sourceCommit, '316853f72108638607819120f808edb773c21bf4');
+  assert.equal(value.runtimeManifestSha256, icebergCaptureManifestVerifiedAbsence);
+  assert.equal(value.status, 'FAILED'); assert.equal(value.passed, false); assert.equal(value.failureCategory, 'SUMMARY_NOT_VERIFIED');
+  assert.deepEqual(value.checks, { sourceBytesVerified: true, compilerPrepVerified: true,
+    originalMainCalledOnce: true, originalMainReturnedZero: true, decoderStoppedVerified: true, decoderAttachCliReaped: true,
+    sameRunStoppedActorsAndClockVerified: false, inventoryProduced: false, allObjectsKept: false });
+  assert.ok(Object.entries(value.counts).every(([key, count]) => count === (key === 'objectCandidateCount' ? 0 : null)));
+  assert.equal(value.proofHashes.prepProofSha256, 'd13714659d4756f61b80f41a3e01e37b55758e3de409fcfd251901cda9835e22');
+  assert.equal(value.proofHashes.normalizationReceiptCanonicalSha256, null); assert.deepEqual(value.decoderReasonCodes, []);
+  if (value.schemaVersion === 2) {
+    assert.equal(value.diagnostic.stageAttempted, 'NORMALIZE'); assert.equal(value.diagnostic.failureCode, 'UNKNOWN');
+    assert.equal(value.diagnostic.lastPrepChild?.name, 'cold-export-absence');
+    assert.equal(value.diagnostic.lastPrepChild?.class, 'COLD_ABSENCE');
+    assert.equal(value.diagnostic.lastPrepChild?.outcome, 'EXITED_ZERO');
+    assert.equal(value.diagnostic.lastPrepChild?.returnCode, 0); assert.equal(value.diagnostic.lastPrepChild?.childReaped, true);
+    assert.ok(value.diagnostic.prepCleanup && Object.values(value.diagnostic.prepCleanup).every(item => item === true));
+  }
+  const promoted = structuredClone(actual5); promoted.passed = true; promoted.status = 'DETERMINED'; promoted.failureCategory = null;
+  assert.equal(parseIcebergCapture(promoted), null);
 });
 test('synthetic determined, undetermined and failed producer shapes stay distinct', () => {
   assert.equal(parseIcebergCapture(fixture())?.status, 'DETERMINED');
