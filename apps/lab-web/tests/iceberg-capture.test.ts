@@ -5,7 +5,8 @@ import { createHash } from 'node:crypto';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import ts from 'typescript';
-import { captureAssetUrl, icebergCaptureManifest, icebergCaptureManifestV2, observedCount, parseIcebergCapture } from '../src/lib/iceberg-capture.ts';
+import { captureAssetUrl, icebergCaptureManifest, icebergCaptureManifestV2, icebergCaptureManifestClosedClasspath, observedCount, parseIcebergCapture } from '../src/lib/iceberg-capture.ts';
+import { captureFailureCodes, captureClasspathFailureCodes, parseCaptureDiagnostic } from '../src/lib/iceberg-capture-diagnostic.ts';
 
 const actualRaw = readFileSync(new URL('./fixtures/iceberg-capture-attempt2.summary.json', import.meta.url));
 const actual: Record<string, any> = JSON.parse(actualRaw.toString('utf8'));
@@ -139,6 +140,28 @@ test('diagnostic fields cannot expose provider text, IDs, argv, hashes or malfor
     const value = version2(); (boundary === 'diagnostic' ? value.diagnostic : value.diagnostic[boundary])[key] = replacement;
     assert.equal(parseIcebergCapture(value), null);
   }
+});
+test('new classpath codes require the exact separately reviewed runtime while old records keep 129 codes', () => {
+  // Runtime profiles are source contracts; the existing real record still belongs to old 534.
+  assert.equal(typeof icebergCaptureManifestClosedClasspath, 'string');
+  assert.match(icebergCaptureManifestClosedClasspath!, /^[a-f0-9]{64}$/);
+  assert.notEqual(icebergCaptureManifestClosedClasspath, icebergCaptureManifestV2);
+  assert.notEqual(icebergCaptureManifestClosedClasspath, icebergCaptureManifest);
+  assert.equal(captureFailureCodes.length, 129); assert.equal(captureClasspathFailureCodes.length, 5);
+  assert.equal(new Set([...captureFailureCodes, ...captureClasspathFailureCodes]).size, 134);
+  assert.ok(parseIcebergCapture(actual));
+  for (const failureCode of captureClasspathFailureCodes) {
+    const old = version2(); old.diagnostic.failureCode = failureCode;
+    assert.equal(parseCaptureDiagnostic(old.diagnostic, false), null);
+    assert.equal(parseIcebergCapture(old), null);
+    const next = structuredClone(old); next.runtimeManifestSha256 = icebergCaptureManifestClosedClasspath;
+    assert.equal(parseIcebergCapture(next)?.schemaVersion, 2);
+    const foreign = structuredClone(next); foreign.runtimeManifestSha256 = 'f'.repeat(64);
+    assert.equal(parseIcebergCapture(foreign), null);
+    next.diagnostic.failureCode = 'SYNTHETIC_PRIVATE_CANARY'; assert.equal(parseIcebergCapture(next), null);
+  }
+  const legacy = failed(); legacy.diagnostic = version2().diagnostic;
+  assert.equal(parseIcebergCapture(legacy), null);
 });
 test('provided-record component path never renders a JSON link for an unsafe URL', async () => {
   // Existing TypeScript/React dependencies only; compile in memory and remove CSS solely for SSR.

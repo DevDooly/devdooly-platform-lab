@@ -144,4 +144,98 @@ class PosixArtifactContracts(unittest.TestCase):
             with self.assertRaises(ValueError):a.seal_new_classes(classes)
 
 
+def closed_graph(payloads):
+    rows=[{'name':name,'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()}
+        for name,raw in payloads.items()]
+    references={name:a._scan_jar(io.BytesIO(raw),a._manifest_closed_references)
+        for name,raw in payloads.items()}
+    return a._closed_classpath_map(rows,references)
+
+
+class ClosedClasspathContracts(unittest.TestCase):
+    def test_forward_nested_folded_duplicate_and_cycle_references_are_closed_without_rewriting(self):
+        payloads={'a.jar':jar(manifest=b'Manifest-Version: 1.0\nClass-Path: b.jar b.jar \n lib/c.jar\n\n'),
+            'b.jar':jar(manifest=b'Class-Path: a.jar\n'),
+            'lib/c.jar':jar(manifest=b'Class-Path: d.jar\n'),
+            'lib/d.jar':jar(),'orphan.jar':jar()}
+        original=dict(payloads);graph=closed_graph(payloads)
+        self.assertEqual(graph,{'a.jar':('b.jar','b.jar','lib/c.jar'),'b.jar':('a.jar',),
+            'lib/c.jar':('lib/d.jar',),'lib/d.jar':(),'orphan.jar':()})
+        self.assertEqual(payloads,original)
+        # A future archive member is not guessed into a partial inventory.
+        with self.assertRaisesRegex(ValueError,'JAR_MANIFEST_CLASSPATH_TARGET_MISSING'):
+            closed_graph({'a.jar':payloads['a.jar']})
+
+    def test_unsafe_url_alias_directory_nonascii_and_missing_references_never_escape(self):
+        marker=b'SYNTHETIC_PRIVATE_REFERENCE_DO_NOT_ECHO'
+        for token in (b'../'+marker+b'.jar',b'/outside.jar',b'file:/outside.jar',b'https://example.invalid/x.jar',
+                b'//outside/x.jar',b'x%2ejar',b'x.jar?private='+marker,b'x.jar#'+marker,b'./x.jar',
+                b'lib//x.jar',b'lib/../x.jar',b'lib/',b'lib\\x.jar',b'x.JAR',b'x.jar\tb.jar',b'\t',
+                b'\x0b',b'\xc3\xa9.jar'):
+            with self.subTest(token=token),self.assertRaises(ValueError) as caught:
+                closed_graph({'a.jar':jar(manifest=b'Class-Path: '+token+b'\n'),'x.jar':jar()})
+            self.assertNotIn(marker.decode(),str(caught.exception))
+        for token in (b'missing.jar',b'X.jar',b'lib/x.jar'):
+            with self.subTest(token=token),self.assertRaisesRegex(ValueError,'JAR_MANIFEST_CLASSPATH_TARGET_MISSING'):
+                closed_graph({'a.jar':jar(manifest=b'Class-Path: '+token+b'\n'),'x.jar':jar()})
+
+    def test_export_map_exactness_and_reference_bounds_are_not_caller_booleans(self):
+        payload=jar();rows=[{'name':'a.jar','bytes':len(payload),'sha256':hashlib.sha256(payload).hexdigest()}]
+        valid={'a.jar':[]}
+        variants=[([],valid), (rows+rows,valid), (rows,{}), (rows,{'a.jar':[],'foreign.jar':[]}),
+            ([dict(rows[0],bytes=True)],valid),([dict(rows[0],sha256='unknown')],valid),
+            ([dict(rows[0],extra='SYNTHETIC_PRIVATE')],valid),(rows,{'a.jar':()}),
+            (rows,{'a.jar':['../a.jar']}),(rows,{'a.jar':['a.jar?query']})]
+        for altered,refs in variants:
+            with self.subTest(altered=altered,refs=refs),self.assertRaises(ValueError):
+                a._closed_classpath_map(altered,refs)
+        with patch.object(a,'MAX_CLASSPATH_REFS',1):
+            with self.assertRaisesRegex(ValueError,'JAR_MANIFEST_CLASSPATH_REFERENCE_BOUND'):
+                closed_graph({'a.jar':jar(manifest=b'Class-Path: a.jar a.jar\n')})
+            with self.assertRaisesRegex(ValueError,'JAR_MANIFEST_CLASSPATH_REFERENCE_BOUND'):
+                a._closed_classpath_map(rows,{'a.jar':['a.jar','a.jar']})
+
+    def test_default_locked_jar_policy_and_all_target_shadow_checks_remain_strict(self):
+        payload=jar(manifest=b'Manifest-Version: 1.0\nClass-Path: b.jar\n')
+        before=hashlib.sha256(payload).hexdigest()
+        self.assertEqual(a._scan_jar(io.BytesIO(payload),a._manifest_closed_references),['b.jar'])
+        with self.assertRaisesRegex(ValueError,'JAR_MANIFEST_CLASSPATH_EXPANSION_REJECTED'):
+            a.scan_jar(io.BytesIO(payload))
+        self.assertEqual(before,hashlib.sha256(payload).hexdigest())
+        for name in ('org/apache/iceberg/ClosedCopyDecoder.class',
+                'org/apache/iceberg/ClosedCopyDecoder$Nested.class',
+                'META-INF/versions/21/org/apache/iceberg/ClosedCopyDecoder.class'):
+            with self.subTest(name=name),patch.object(a,'_closed_classpath_map',wraps=a._closed_classpath_map) as closure:
+                with self.assertRaisesRegex(ValueError,'DECODER_CLASS_SHADOW_IN_SPARK_JAR'):
+                    closed_graph({'a.jar':payload,'b.jar':jar(name)})
+                closure.assert_not_called()
+
+
+@unittest.skipUnless(os.name=='posix','Actual Linux closed export IO/modes require POSIX')
+class PosixClosedClasspathContracts(unittest.TestCase):
+    def test_whole_unpack_defers_forward_refs_and_preserves_bytes_modes_and_failed_staging(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            base=Path(temporary);base.chmod(0o700)
+            first=jar(manifest=b'Class-Path: b.jar\n');second=jar(manifest=b'Class-Path: a.jar\n')
+            archive=base/'closed.tar';raw=tar(member('jars/',kind=tarfile.DIRTYPE),
+                member('jars/a.jar',first),member('jars/b.jar',second));archive.write_bytes(raw)
+            output=base/'new';output.mkdir(mode=0o700)
+            rows=a.unpack_jars(archive,output)
+            self.assertEqual([row['name'] for row in rows],['a.jar','b.jar'])
+            for row,payload in zip(rows,(first,second)):
+                path=output/'jars'/row['name']
+                self.assertEqual(path.read_bytes(),payload);self.assertEqual(row['sha256'],hashlib.sha256(payload).hexdigest())
+                self.assertEqual(stat.S_IMODE(path.stat().st_mode),0o444)
+            self.assertEqual(archive.read_bytes(),raw)
+            with self.assertRaisesRegex(ValueError,'JAR_MANIFEST_CLASSPATH_EXPANSION_REJECTED'):
+                a.scan_jar(output/'jars/a.jar')
+            bad=base/'missing.tar';bad_raw=tar(member('jars/',kind=tarfile.DIRTYPE),member('jars/a.jar',first));bad.write_bytes(bad_raw)
+            partial=base/'partial';partial.mkdir(mode=0o700)
+            with self.assertRaisesRegex(ValueError,'JAR_MANIFEST_CLASSPATH_TARGET_MISSING'):
+                a.unpack_jars(bad,partial)
+            self.assertEqual((partial/'jars/a.jar').read_bytes(),first)
+            self.assertEqual(stat.S_IMODE((partial/'jars/a.jar').stat().st_mode),0o444)
+            self.assertEqual(bad.read_bytes(),bad_raw);self.assertEqual(archive.read_bytes(),raw)
+
+
 if __name__=='__main__':unittest.main()

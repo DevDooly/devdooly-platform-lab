@@ -9,6 +9,7 @@ import zipfile
 
 MAX_JARS, MAX_JAR, MAX_TOTAL = 512, 128*1024**2, 1024**3
 MAX_ARCHIVE, MAX_HEADERS, MAX_ZIP_ENTRIES = MAX_TOTAL+16*1024**2, 3072, 512000
+MAX_CLASSPATH_REFS = 4096
 CLASS = re.compile(r'org/apache/iceberg/ClosedCopyDecoder(?:\$[A-Za-z0-9_$]+)?\.class')
 DIRECTORIES = {'org','org/apache','org/apache/iceberg'}
 
@@ -115,13 +116,13 @@ def _consume_tar(stream, on_directory, on_file):
             require(not padding or _read_exact(stream,padding) == bytes(padding), 'TAR_ZERO_PADDING_REQUIRED')
 
 
-def scan_jar(source):
+def _scan_jar(source, manifest_reader):
     """Scan central entries and a bounded manifest; never follow classpath URLs."""
     try:
         with zipfile.ZipFile(source,'r') as archive:
             entries = archive.infolist()
             require(0 < len(entries) <= MAX_ZIP_ENTRIES, 'ZIP_ENTRY_COUNT_BOUND')
-            manifests = []
+            manifests, references = [], []
             for entry in entries:
                 name = entry.orig_filename
                 require(name == entry.filename and 0 < len(name) <= 4096 and '\0' not in name
@@ -137,12 +138,13 @@ def scan_jar(source):
                 require(0 < entry.file_size <= 65536, 'JAR_MANIFEST_BYTES_BOUND')
                 with archive.open(entry,'r') as stream: raw = stream.read(65537)
                 require(len(raw) == entry.file_size and len(raw) <= 65536, 'JAR_MANIFEST_BYTES_BOUND')
-                _manifest_no_classpath(raw)
+                references = manifest_reader(raw) or []
+        return references
     except (zipfile.BadZipFile,zipfile.LargeZipFile,UnicodeError,EOFError,RuntimeError,NotImplementedError):
         raise ValueError('VALID_BOUNDED_JAR_ZIP_REQUIRED') from None
 
 
-def _manifest_no_classpath(raw):
+def _manifest(raw, on_classpath):
     require(type(raw) is bytes and 0 < len(raw) <= 65536 and b'\0' not in raw
         and raw[-1:] in (b'\n',b'\r'), 'STRICT_BOUNDED_JAR_MANIFEST_REQUIRED')
     # JAR logical lines use CR/LF bytes and a leading ASCII space continuation;
@@ -153,7 +155,7 @@ def _manifest_no_classpath(raw):
         for value in attributes.values():
             try: value.decode('utf-8')
             except UnicodeError: raise ValueError('JAR_MANIFEST_UTF8_REQUIRED') from None
-        require(not attributes.get(b'class-path',b'').strip(), 'JAR_MANIFEST_CLASSPATH_EXPANSION_REJECTED')
+        on_classpath(attributes.get(b'class-path',b''))
     for line in lines:
         if not line:
             finish(); attributes,previous = {},None; continue
@@ -166,6 +168,86 @@ def _manifest_no_classpath(raw):
         require(name not in attributes, 'JAR_MANIFEST_DUPLICATE_ATTRIBUTE_REJECTED')
         attributes[name] = value; previous = name
     finish()
+
+
+def scan_jar(source):
+    """Public/default scan still rejects every nonempty manifest Class-Path."""
+    _scan_jar(source, _manifest_no_classpath)
+
+
+def _manifest_no_classpath(raw):
+    def reject(value):
+        require(not value.strip(), 'JAR_MANIFEST_CLASSPATH_EXPANSION_REJECTED')
+    _manifest(raw, reject)
+
+
+def _classpath_token(raw):
+    require(type(raw) is bytes and 1 <= len(raw) <= 255 and raw.endswith(b'.jar'),
+        'JAR_MANIFEST_CLASSPATH_TOKEN_REJECTED')
+    parts = raw.split(b'/')
+    require(1 <= len(parts) <= 8 and all(re.fullmatch(rb'[A-Za-z0-9][A-Za-z0-9._+-]{0,199}', p)
+        and p not in (b'.', b'..') for p in parts), 'JAR_MANIFEST_CLASSPATH_TOKEN_REJECTED')
+    return raw.decode('ascii')
+
+
+def _manifest_closed_references(raw):
+    references = []
+    def collect(value):
+        # Only ASCII spaces separate tokens. Other whitespace is conservatively
+        # rejected, rather than reinterpreted by a URL or filesystem parser.
+        for token in value.split(b' '):
+            if token:
+                require(len(references) < MAX_CLASSPATH_REFS, 'JAR_MANIFEST_CLASSPATH_REFERENCE_BOUND')
+                references.append(_classpath_token(token))
+    _manifest(raw, collect)
+    return references
+
+
+def _closed_classpath_map(rows, references):
+    """Validate every reference against the complete whole-verified export map."""
+    require(type(rows) is list and 1 <= len(rows) <= MAX_JARS,
+        'JAR_MANIFEST_CLASSPATH_EXPORT_MAP_REQUIRED')
+    names, total = set(), 0
+    for row in rows:
+        require(type(row) is dict and set(row) == {'name', 'bytes', 'sha256'}
+            and type(row['name']) is str and row['name'].endswith('.jar')
+            and type(row['bytes']) is int and 0 < row['bytes'] <= MAX_JAR
+            and type(row['sha256']) is str and re.fullmatch('[a-f0-9]{64}', row['sha256']),
+            'JAR_MANIFEST_CLASSPATH_EXPORT_MAP_REQUIRED')
+        _path('jars/' + row['name'])
+        require(row['name'] not in names, 'JAR_MANIFEST_CLASSPATH_EXPORT_MAP_REQUIRED')
+        names.add(row['name']); total += row['bytes']
+    require(total <= MAX_TOTAL and type(references) is dict and set(references) == names,
+        'JAR_MANIFEST_CLASSPATH_EXPORT_MAP_REQUIRED')
+    graph, reference_count = {}, 0
+    for name in sorted(names):
+        tokens = references[name]
+        require(type(tokens) is list, 'JAR_MANIFEST_CLASSPATH_EXPORT_MAP_REQUIRED')
+        targets = []
+        prefix = name.rsplit('/', 1)[0] + '/' if '/' in name else ''
+        for token in tokens:
+            reference_count += 1
+            require(reference_count <= MAX_CLASSPATH_REFS, 'JAR_MANIFEST_CLASSPATH_REFERENCE_BOUND')
+            require(type(token) is str and token.isascii(), 'JAR_MANIFEST_CLASSPATH_TOKEN_REJECTED')
+            canonical = _classpath_token(token.encode('ascii'))
+            target = prefix + canonical
+            require(target in names, 'JAR_MANIFEST_CLASSPATH_TARGET_MISSING')
+            targets.append(target)
+        # Keep duplicate edges and source order. The traversal below visits each
+        # vertex once, so duplicates and closed cycles cannot expand the scope.
+        graph[name] = tuple(targets)
+    visited, steps = set(), 0
+    for root in sorted(names):
+        if root in visited: continue
+        pending = [root]
+        while pending:
+            name = pending.pop(); steps += 1
+            require(steps <= MAX_JARS + MAX_CLASSPATH_REFS, 'JAR_MANIFEST_CLASSPATH_CLOSURE_BOUND')
+            if name in visited: continue
+            require(name in names, 'JAR_MANIFEST_CLASSPATH_TARGET_MISSING')
+            visited.add(name); pending.extend(graph[name])
+    require(visited == names, 'JAR_MANIFEST_CLASSPATH_CLOSURE_BOUND')
+    return graph
 
 
 def _linux():
@@ -185,7 +267,7 @@ def _directory_fd(stack, path):
 
 def unpack_jars(archive, new_empty_dir):
     """Caller creates a fresh private0700 dir; returns names relative to jars/."""
-    _linux(); result = []
+    _linux(); result = []; references = {}; reference_count = 0
     try:
         with ExitStack() as stack:
             root,root_fd,before = _directory_fd(stack,new_empty_dir)
@@ -204,6 +286,7 @@ def unpack_jars(archive, new_empty_dir):
                 fd = os.open(base,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC,dir_fd=directories[parent]); stack.callback(os.close,fd)
                 os.fchmod(fd,0o755); directories[name] = fd
             def jar(name,size,stream):
+                nonlocal reference_count
                 parent,base = name.rsplit('/',1)
                 fd = os.open(base,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW|os.O_CLOEXEC,0o444,dir_fd=directories[parent])
                 sha = hashlib.sha256(); remaining = size
@@ -224,12 +307,17 @@ def unpack_jars(archive, new_empty_dir):
                         if not chunk: break
                         count += len(chunk); require(count <= size, 'NEW_JAR_READBACK_BOUND'); verified.update(chunk)
                     require(count == size and verified.digest() == sha.digest(), 'NEW_JAR_READBACK_WHOLE_SHA_CHANGED')
-                    readback.seek(0); scan_jar(readback)
+                    readback.seek(0)
+                    refs = _scan_jar(readback, _manifest_closed_references)
+                    reference_count += len(refs)
+                    require(reference_count <= MAX_CLASSPATH_REFS, 'JAR_MANIFEST_CLASSPATH_REFERENCE_BOUND')
+                    references[name.removeprefix('jars/')] = refs
                     require(identity(actual) == identity(os.fstat(readback.fileno()))
                         == identity(os.stat(base,dir_fd=directories[parent],follow_symlinks=False)), 'NEW_JAR_CHANGED_DURING_ZIP_SCAN')
                 result.append({'name':name.removeprefix('jars/'),'bytes':size,'sha256':sha.hexdigest()})
             with os.fdopen(os.dup(archive_fd),'rb') as stream: _consume_tar(stream,directory,jar)
             require(identity(first) == identity(os.fstat(archive_fd)) == identity(archive.lstat()), 'ARCHIVE_CHANGED_DURING_UNPACK')
+            _closed_classpath_map(result, references)
             root_key = lambda info:(info.st_dev,info.st_ino,info.st_uid,info.st_gid,info.st_mode)
             require(root_key(os.fstat(root_fd)) == root_key(root.lstat()) == root_key(before),
                 'JAR_OUTPUT_ROOT_IDENTITY_CHANGED')

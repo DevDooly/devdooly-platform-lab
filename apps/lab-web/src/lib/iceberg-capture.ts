@@ -1,7 +1,9 @@
 /** Stored CLI summary only. This parser cannot run a capture or apply retention. */
-import { parseCaptureDiagnostic, type CaptureDiagnostic } from './iceberg-capture-diagnostic.ts';
+import { parseCaptureDiagnostic, type CaptureDiagnostic, type CaptureDiagnosticProfile } from './iceberg-capture-diagnostic.ts';
 export const icebergCaptureManifest = 'c8cecad8fc09ab20a78382c4a96daf5c9e761065cb774abd6cd9b65d0ee8be28';
 export const icebergCaptureManifestV2 = '53493f2dfeedee530ad152b5dc08f2c08b3d560ac39fac887820129913c8db3d';
+/** Exact reviewed closed-classpath runtime; this pin does not claim an actual capture outcome. */
+export const icebergCaptureManifestClosedClasspath: string | null = 'a9704dce98583b3935e05ac759a3b0e9c8af839fb9b3fa141ad1d96a13708f18';
 export const captureReasons = {
   FRAME_MAGIC: '입력 형식 확인 실패', FRAME_BOUND: '입력 크기 제한', FRAME_EOF: '입력 전체 바이트 미확인',
   DESCRIPTOR_INVALID: '입력 계약 확인 실패', OBJECT_MAP_INVALID: '객체 목록 확인 실패',
@@ -41,13 +43,19 @@ const exact = (value: Record<string, unknown>, keys: readonly string[]) => Objec
 const hash = (value: unknown): value is string => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 const nullableHash = (value: unknown) => value === null || hash(value);
 const number = (value: unknown, maximum: number, minimum = 0): value is number => typeof value === 'number' && Number.isSafeInteger(value) && value >= minimum && value <= maximum;
+function diagnosticProfile(manifest: unknown): CaptureDiagnosticProfile | null {
+  if (manifest === icebergCaptureManifestV2) return 'SCHEMA2_INITIAL';
+  if (icebergCaptureManifestClosedClasspath !== null && manifest === icebergCaptureManifestClosedClasspath) return 'SCHEMA2_CLOSED_CLASSPATH';
+  return null;
+}
 
 export function parseIcebergCapture(value: unknown): IcebergCapture | null {
   if (!object(value) || (value.schemaVersion !== 1 && value.schemaVersion !== 2)
     || !exact(value, value.schemaVersion === 1 ? topKeys : [...topKeys, 'diagnostic'])
     || value.scope !== 'FRESH_CLOUD_ICEBERG_CLOSED_COPY_CAPTURE'
     || typeof value.sourceCommit !== 'string' || !/^[a-f0-9]{40}$/.test(value.sourceCommit)
-    || value.runtimeManifestSha256 !== (value.schemaVersion === 1 ? icebergCaptureManifest : icebergCaptureManifestV2) || typeof value.passed !== 'boolean'
+    || !(value.schemaVersion === 1 ? value.runtimeManifestSha256 === icebergCaptureManifest : diagnosticProfile(value.runtimeManifestSha256) !== null)
+    || typeof value.passed !== 'boolean'
     || typeof value.status !== 'string' || !['DETERMINED', 'UNDETERMINED', 'FAILED'].includes(value.status)
     || value.originalWorkloadBudgetSeconds !== 600 || value.separatePrepBudgetSeconds !== 600 || value.cleanupReserveSeconds !== 40
     || !falseKeys.every(key => value[key] === false)) return null;
@@ -75,7 +83,7 @@ export function parseIcebergCapture(value: unknown): IcebergCapture | null {
     if (value.passed !== false || value.failureCategory !== 'CAPTURE_UNDETERMINED' || checks.allObjectsKept !== true) return null;
   } else if (value.passed !== false || typeof value.failureCategory !== 'string'
     || !['PREP_NOT_VERIFIED', 'COMPOSITE_NOT_VERIFIED', 'SUMMARY_NOT_VERIFIED'].includes(value.failureCategory)) return null;
-  if (value.schemaVersion === 2 && parseCaptureDiagnostic(value.diagnostic, value.passed) === null) return null;
+  if (value.schemaVersion === 2 && parseCaptureDiagnostic(value.diagnostic, value.passed, diagnosticProfile(value.runtimeManifestSha256)!) === null) return null;
   return value as unknown as IcebergCapture;
 }
 

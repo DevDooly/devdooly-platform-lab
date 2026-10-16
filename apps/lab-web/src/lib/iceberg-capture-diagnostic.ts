@@ -130,6 +130,15 @@ export const captureFailureCodes = [
   "ZIP_ENTRY_COUNT_BOUND",
   "ZIP_SAFE_ENTRY_NAME_REQUIRED"
 ] as const;
+/** Additional literals belong only to the separately reviewed closed-classpath runtime. */
+export const captureClasspathFailureCodes = [
+  'JAR_MANIFEST_CLASSPATH_CLOSURE_BOUND',
+  'JAR_MANIFEST_CLASSPATH_EXPORT_MAP_REQUIRED',
+  'JAR_MANIFEST_CLASSPATH_REFERENCE_BOUND',
+  'JAR_MANIFEST_CLASSPATH_TARGET_MISSING',
+  'JAR_MANIFEST_CLASSPATH_TOKEN_REJECTED',
+] as const;
+export type CaptureDiagnosticProfile = 'SCHEMA2_INITIAL' | 'SCHEMA2_CLOSED_CLASSPATH';
 export const captureStages = ["COMPLETED", "COMPOSITE", "DECODER", "LOAD_CLOSED_COPIES", "NORMALIZE", "ORIGINAL_MAIN", "PREP", "PRODUCER_PROOFS", "SUMMARY", "WRITERS_AFTER", "WRITERS_BEFORE"] as const;
 export const prepChildClasses = {
   "compiler-java-version": "JAVA_VERSION",
@@ -152,7 +161,7 @@ export const prepChildClasses = {
 export const prepChildOutcomes = ["EXITED_NONZERO", "EXITED_ZERO", "OUTPUT_OR_CONTROL_IO_FAILED", "OWN_CHILD_REAP_UNVERIFIED", "PREP_CUTOFF_EXCEEDED", "PRIVATE_OUTPUT_IO_UNVERIFIED", "START_FAILED", "STDERR_LIMIT_EXCEEDED", "STDOUT_LIMIT_EXCEEDED", "TIMED_OUT"] as const;
 
 export type CaptureDiagnostic = {
-  stageAttempted: typeof captureStages[number]; failureCode: typeof captureFailureCodes[number] | 'UNKNOWN' | null;
+  stageAttempted: typeof captureStages[number]; failureCode: typeof captureFailureCodes[number] | typeof captureClasspathFailureCodes[number] | 'UNKNOWN' | null;
   lastPrepChild: { name: keyof typeof prepChildClasses; class: typeof prepChildClasses[keyof typeof prepChildClasses];
     outcome: typeof prepChildOutcomes[number]; returnCode: number | null; stdoutBytes: number; stderrBytes: number;
     timedOut: boolean; childStarted: boolean; childReaped: boolean } | null;
@@ -161,11 +170,13 @@ export type CaptureDiagnostic = {
 const object = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
 const exact = (value: Record<string, unknown>, keys: readonly string[]) => Object.keys(value).length === keys.length && keys.every(key => Object.hasOwn(value, key));
 const integer = (value: unknown, minimum: number, maximum: number): value is number => typeof value === 'number' && Number.isSafeInteger(value) && value >= minimum && value <= maximum;
-export function parseCaptureDiagnostic(value: unknown, passed: boolean): CaptureDiagnostic | null {
+export function parseCaptureDiagnostic(value: unknown, passed: boolean, profile: CaptureDiagnosticProfile = 'SCHEMA2_INITIAL'): CaptureDiagnostic | null {
+  if (profile !== 'SCHEMA2_INITIAL' && profile !== 'SCHEMA2_CLOSED_CLASSPATH') return null;
   if (!object(value) || !exact(value, ['stageAttempted', 'failureCode', 'lastPrepChild', 'prepCleanup'])
     || typeof value.stageAttempted !== 'string' || !(captureStages as readonly string[]).includes(value.stageAttempted)) return null;
   if (passed ? value.failureCode !== null : typeof value.failureCode !== 'string'
-    || !(value.failureCode === 'UNKNOWN' || (captureFailureCodes as readonly string[]).includes(value.failureCode))) return null;
+    || !(value.failureCode === 'UNKNOWN' || (captureFailureCodes as readonly string[]).includes(value.failureCode)
+      || (profile === 'SCHEMA2_CLOSED_CLASSPATH' && (captureClasspathFailureCodes as readonly string[]).includes(value.failureCode)))) return null;
   const child = value.lastPrepChild;
   if (child !== null) {
     if (!object(child) || !exact(child, ['name', 'class', 'outcome', 'returnCode', 'stdoutBytes', 'stderrBytes', 'timedOut', 'childStarted', 'childReaped'])
