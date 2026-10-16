@@ -1,0 +1,73 @@
+{
+  "automaticRetryPerformed": false,
+  "bootstrapDiagnostic": null,
+  "bootstrapProgress": null,
+  "buildAndPullExcludedFromWorkloadClock": true,
+  "capturedAt": "2026-10-16T01:16:10.781930+00:00",
+  "checks": {
+    "actualMemAvailable7Gi": true,
+    "freshPhysicalVolumes": true,
+    "frozenInputs": true,
+    "internalNetwork": true,
+    "jdbcAndWholeObjectsUnchanged": false,
+    "normalSparkExit": false,
+    "normalTrinoExit": false,
+    "pinnedImages": true,
+    "pythonReaderExit": false,
+    "singleClock": true,
+    "vendor": true
+  },
+  "cleanupDiagnostics": {
+    "containers": "FAILED_OR_UNOBSERVED",
+    "initializer": "STOPPED_VERIFIED"
+  },
+  "commandDiagnostics": {
+    "failures": [
+      {
+        "category": "COMPOSE_START_POSTGRES",
+        "checkRequested": true,
+        "outcome": "RETURNED_NONZERO",
+        "returnCode": 1,
+        "sequence": 28,
+        "stage": "START_POSTGRES",
+        "timedOut": false
+      }
+    ],
+    "failuresTruncated": false,
+    "lastCommand": {
+      "category": "CONTAINER_INSPECT",
+      "checkRequested": true,
+      "outcome": "RETURNED_ZERO",
+      "returnCode": 0,
+      "sequence": 35,
+      "stage": "CLEANUP_CONTAINERS",
+      "timedOut": false
+    }
+  },
+  "concurrentHeavyJvmAbsenceVerified": null,
+  "failure": {
+    "code": "OWN_FRESH_COMMAND_FAILED_NO_RETRY",
+    "type": "ValueError"
+  },
+  "kubernetesVerified": false,
+  "miniPcContacted": false,
+  "onlyFreshCloudResources": true,
+  "ownedContainersStopped": false,
+  "ownedInitializerStopped": true,
+  "passed": false,
+  "plannedSequentialPeakMemoryBytes": 5368709120,
+  "priorCloud8OrNative7EvidenceModified": false,
+  "rawLogsOrCredentialsUploaded": false,
+  "readerJavaInvocationPlanned": false,
+  "requiredActualMemAvailableBytes": 7516192768,
+  "result": {},
+  "runnerStorageIsEphemeral": true,
+  "runtimeAvailabilityOrPerformanceClaimed": false,
+  "schemaVersion": 2,
+  "scope": "FRESH_CLOUD_SPARK_TRINO_BRONZE_TWO_FILE_COMPACTION",
+  "snapshotExpirationOrObjectGcPerformed": false,
+  "sourceCommit": "d4bd48aaa5bb68154970600a5c50ac0e3fc5ee54",
+  "volumesDeleted": false,
+  "workloadBudgetSeconds": 600,
+  "workloadElapsedMillis": 211
+}

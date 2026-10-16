@@ -1,5 +1,7 @@
 # 격리 Cloud Spark→Trino·compaction 첫 실행 기록
 
+[명령 관측을 추가한 두 번째 실행](ATTEMPT2.md)에서 PostgreSQL Compose 시작 명령의 종료 코드 1을 확인했습니다. 원인과 전체 정리 완료는 미확정이며, 아래 첫 실패 원문은 그대로 보존합니다.
+
 첫 실제 실행은 **실패했다**. [GitHub Actions 실행 38831221233](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38831221233)의 소스는 `8f3f4f9143096362c9dcd8c4fbcb1c135c3d7175`이며, [원문 공개 요약](summary.json)은 2026-10-16 00:48:25 UTC에 기록됐다. 요약의 전체 SHA256은 `a42f34aba82140189f08f530574b10c6911a5ae229ff13ebca63b2b82b3ffe21`, 크기는 1,492바이트다. 최초 실행과 실패 원문을 보존했으며 재실행하지 않았다.
 
 | 실제 관측 | 기록의 의미 |
