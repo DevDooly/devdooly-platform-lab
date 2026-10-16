@@ -154,6 +154,7 @@
 - [ ] 저장소 소유자의 사람 검토 완료와 실제 채택 판단 기록
 - [x] 고정 합성 분포·크기·Java 21·JMH 1.37·3 fork 조건의 실제 Windows 측정: [16조합·48 fork 근거와 큰 오차](evidence/ai-window-analysis/README.md)
 - [x] 별도 테스트 볼륨으로 DB 복원 검증: [실제 검증](evidence/recovery/README.md)
+- [x] 역사적 외부 백업 네 구성요소의 파일 복원·빈 WAL SQLite 읽기 무결성·별도256바이트 키 조립을 후속 검증(첫 restore 실패 보존): [파일 전용 근거](evidence/historical-file-restore/README.md)
 - [ ] 파일·K3s·Jenkins archive 전체 복원 검증
 - [x] 전후 코드·기대 결과·측정 조건과 한계를 [포트폴리오 UI](https://devdooly.github.io/devdooly-platform-lab/#ai-window) 소스에 연결: 웹 41개·check/build, 정적 fixture 선택
 - [x] AI 사례를 [TIL의 UTC 구간 계산 글](https://devdooly.github.io/TIL/LLM_Development/UTC_Window_Analysis_Case/)에 연결: 문서 검사 42개·strict build 후 게시

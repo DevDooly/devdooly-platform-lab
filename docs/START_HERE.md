@@ -40,6 +40,7 @@ Java API·포트폴리오와 K3s·Jenkins·Argo CD를 Ubuntu 미니 PC에서 운
 - 최초 자동 실행을 포함한 11회의 Pages build·deploy success와 실제 약 30~31분 간격 확인
 - API·웹 replicas 0에서 공개 홈·마지막 기록과 DB·기존 서비스 보존, 같은 PR #5 정상 B 재가동·runtime 재검증 완료
 - 외부 암호화 백업·격리 DB 복원·호스트 재부팅: [근거와 한계](evidence/recovery/README.md)
+- 역사적 외부 백업의 파일 bytes·metadata, 빈 WAL SQLite 무결성과 별도256바이트 키 조립 후속 검증: [파일 전용 근거](evidence/historical-file-restore/README.md). 첫 restore 실패는 유지하며 K3s·Jenkins application 기동·전체 복원은 미검증
 - Kafka·Garage·상시 worker의 실제 K3s 배포와 6개 workload Ready, 새 PVC 3개와 기존 PVC 보존
 - 내부 고정 fixture 두 작업의 각 12/7/3/2/0 처리·파일 4개 전체 검증·빈 실행 슬롯·Kafka lag 0
 - 실제 배포 job 관측과 플랫폼 관측의 Pages 게시·공개 JSON 전체 일치, Ubuntu 수집·게시 검사 135개 통과

@@ -10,6 +10,8 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 후속 별도 JVM SDK 검증에서는 실제 배포 JAR의 factory와 Apache5로 알려진 객체 3개를 전체 GET했습니다. 3회 호출·3회 시도·추가 retry 0회, client 종료·정상 exit 0과 자기 Job·ConfigMap·Secret·읽기 전용 key의 정리·폐기를 확인했습니다. factory의 maxAttempts 3은 유지했습니다. 운영 API JVM 내부의 호출·장애 주입·PUT·SLA 검증과 구분합니다. 2026-10-16 00:02:58 UTC의 별도 읽기 검사에서 전체 객체 36개와 업무 SQL·기존 리소스 보존, 임시 SDK 자원·키 부재를 확인했습니다. [격리 Garage 검증](docs/evidence/s3-read-deadline/README.md)은 별도 환경의 5개 통합 검사입니다.
 
+역사적 외부 백업의 파일 전용 후속 검증에서 네 구성요소 인증, tar member 2,688개·파일 1,907개의 전체 bytes·metadata, 빈 WAL 조건의 SQLite 무결성과 별도256바이트 키의 새 파일 조립을 확인했습니다. 첫 restore는 동반 파일 가정으로 실패한 기록을 유지합니다. [파일 전용 근거와 한계](docs/evidence/historical-file-restore/README.md)에 결과를 분리했으며, K3s·Jenkins application 기동·자격증명 복호화·전체 archive 복원은 미완료입니다.
+
 [미니 PC native7](docs/evidence/iceberg-jdbc/README.md)은 Trino의 0→6→12행·총 snapshot 3개와 Trino 정상 재시작 뒤 보존을 확인했습니다. PostgreSQL은 같은 프로세스를 유지했습니다. 별도 [Cloud Spark 시험 8](docs/evidence/spark-silver/README.md)은 Bronze 6+6행·snapshot 2개, Silver 성공 7·실패 3·중복 2와 같은 Spark application의 순차 replay를 검증했습니다. 두 정적 기록과 화면은 공개했으며, compaction·새 격리 환경에서 Spark 결과를 같은 warehouse의 Trino로 조회하는 연결·전체 6단계 완료를 뜻하지 않습니다. 미니 PC native7의 중지된 시험 환경과 보관 자료는 유지합니다.
 
 | 영역 | 확인한 결과 | 근거 |
