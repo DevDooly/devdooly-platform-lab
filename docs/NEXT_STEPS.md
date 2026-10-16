@@ -1,6 +1,6 @@
 # Platform Lab 다음 개발 계획
 
-이전 readiness 운영 검증(2026-10-15 14:54 UTC)에서 readiness 배포·idle worker 교체·같은 ID 읽기 전용 재시도와 8작업·16파일·24객체를 확인했습니다. [전체 근거와 한계](evidence/worker-readiness/CORRECTED_IMAGE.md)를 기준으로 읽습니다. 이후 [native7의 Trino 조회·재시작](evidence/iceberg-jdbc/README.md)과 별도 [Cloud Spark 시험 8의 적재·순차 replay](evidence/spark-silver/README.md)를 검증하고 정적 기록 화면에 연결했습니다. compaction과 새 격리 환경에서 Spark 결과를 같은 warehouse의 Trino로 조회하는 연결은 남아 있습니다. 미니 PC native7의 중지된 시험 환경과 보관 자료는 유지합니다.
+이전 readiness 운영 검증(2026-10-15 14:54 UTC)에서 readiness 배포·idle worker 교체·같은 ID 읽기 전용 재시도와 8작업·16파일·24객체를 확인했습니다. [전체 근거와 한계](evidence/worker-readiness/CORRECTED_IMAGE.md)를 기준으로 읽습니다. 이후 [native7의 Trino 조회·재시작](evidence/iceberg-jdbc/README.md)과 별도 [Cloud Spark 시험 8의 적재·순차 replay](evidence/spark-silver/README.md)를 검증하고 정적 기록 화면에 연결했습니다. 이후 [새 Cloud 전체 시험](evidence/cloud-lakehouse/FULL_SUCCESS.md)에서 별도 fresh warehouse의 Spark→Trino 연결·현재 파일 2→1 compaction·자기 자원 종료를 확인했습니다. 다음은 현재 DB 백업·격리 복원의 읽기 전용 사전 확인과 snapshot 보존 정책입니다. 미니 PC native7의 중지된 시험 환경과 보관 자료는 유지합니다.
 
 초기 계획: 2026년 10월 12일 · 최근 V4 운영 전환·독립 AI Java 예제 검증: 2026년 10월 15일
 
@@ -166,13 +166,16 @@ GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins 
 
 서로 분리한 두 작은 합성 시험을 완료했습니다. [미니 PC native7](evidence/iceberg-jdbc/README.md)은 PostgreSQL JDBC catalog·Garage와 Trino의 조회·재시작을 검증했고, [독립 Cloud Spark 시험 8](evidence/spark-silver/README.md)은 Spark 적재·Silver 변환·같은 application의 순차 replay를 검증했습니다. Spark·Trino의 상시 운영과 두 시험의 warehouse 연결은 검증하지 않았습니다.
 
+이후 2026-10-16 03:12:33 UTC의 [새 Cloud 시험](evidence/cloud-lakehouse/FULL_SUCCESS.md)은 fresh JDBC catalog·Garage·warehouse에서 Spark→Trino와 작은 compaction을 검증했습니다. 기존 두 시험의 warehouse를 연결하거나 미니 PC를 변경한 것이 아닙니다.
+
 - [x] native7에서 영속 JDBC catalog·객체 저장소를 연결하고 0→6→12행과 초기 빈 snapshot 1개 + 데이터 append 2개를 확인했습니다.
 - [x] Trino만 정상 재시작한 뒤 같은 행·metadata pointer·warehouse bytes를 비교했습니다. PostgreSQL은 같은 프로세스를 유지했습니다.
 - [x] Cloud Spark에서 Bronze 6+6행·snapshot 2개, Silver 성공 7·실패 3·중복 2와 동일 입력의 순차 replay write 0회를 확인했습니다. 재시작·동시성 검증과 구분합니다.
-- [ ] 새 격리 환경에서 Spark 결과를 같은 warehouse의 Trino로 조회하는 연결을 검증합니다.
-- [ ] 작은 파일 증가, compaction 전후와 snapshot 보존 정책을 확인합니다.
+- [x] 새 Cloud warehouse의 Spark 결과를 Trino 10개 조회로 대조하고 6→12→12행·동일 최종 row hash를 확인했습니다: [근거](evidence/cloud-lakehouse/FULL_SUCCESS.md)
+- [x] 현재 Bronze 파일 2개→1개의 rewrite procedure 1회와 기존 객체 14개 보존·Trino 뒤 객체 20개 전체 대조를 확인했습니다.
+- [ ] snapshot 보존·만료 정책과 운영 규모 compaction 검증을 이어갑니다.
 
-**완료 조건:** 같은 warehouse의 적재·조회·재시작·compaction과 재실행 방법을 연결해야 합니다. 현재는 native Trino와 독립 Cloud Spark의 작은 합성 시험을 각각 부분 완료했으며, 새 격리 환경의 Spark→Trino 연결·compaction·전체 6단계 완료는 남아 있습니다. [Trino Iceberg connector](https://trino.io/docs/current/connector/iceberg.html)
+**완료 조건:** 같은 warehouse의 적재·조회·재시작·compaction과 재실행 방법을 연결해야 합니다. 새 Cloud의 연결·작은 compaction은 완료했지만 같은 Cloud 환경의 재시작·snapshot 보존 정책·전체 6단계는 완료하지 않았습니다. 현재 DB 백업·격리 복원은 읽기 전용 사전 확인부터 진행합니다. 기존 native7 재시작 기록과 구분합니다. [실제 Cloud 범위](evidence/cloud-lakehouse/FULL_SUCCESS.md)
 
 **공개 결과:** 수집부터 저장·조회까지 한 데이터의 흐름을 따라가는 설명입니다. Airflow는 실제 스케줄링과 재시도 관리가 필요해질 때 추가합니다.
 

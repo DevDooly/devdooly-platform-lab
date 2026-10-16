@@ -1,0 +1,108 @@
+{
+  "automaticRetryPerformed": false,
+  "bootstrapDiagnostic": {
+    "elapsedMillis": 22764,
+    "exceptionClassesOnly": null,
+    "passed": true,
+    "phase": "COMPLETED",
+    "sessionStopFailed": false
+  },
+  "bootstrapProgress": {
+    "completionNotProven": true,
+    "elapsedMillis": 22763,
+    "phase": "COMPLETED",
+    "sequence": 9
+  },
+  "buildAndPullExcludedFromWorkloadClock": true,
+  "capturedAt": "2026-10-16T03:12:33.839802+00:00",
+  "checks": {
+    "actualMemAvailable7Gi": true,
+    "freshPhysicalVolumes": true,
+    "frozenInputs": true,
+    "internalNetwork": true,
+    "jdbcAndWholeObjectsUnchanged": true,
+    "normalSparkExit": true,
+    "normalTrinoExit": true,
+    "pinnedImages": true,
+    "pythonReaderExit": true,
+    "singleClock": true,
+    "vendor": true
+  },
+  "cleanupDiagnostics": {
+    "containers": "STOPPED_VERIFIED",
+    "initializer": "STOPPED_VERIFIED"
+  },
+  "commandDiagnostics": {
+    "failures": [],
+    "failuresTruncated": false,
+    "lastCommand": {
+      "category": "NETWORK_INSPECT",
+      "checkRequested": true,
+      "outcome": "RETURNED_ZERO",
+      "returnCode": 0,
+      "sequence": 359,
+      "stage": "CLEANUP_CONTAINERS",
+      "timedOut": false
+    }
+  },
+  "concurrentHeavyJvmAbsenceVerified": true,
+  "enabledOomKillerRepresentationsVerified": true,
+  "failure": null,
+  "kubernetesVerified": false,
+  "miniPcContacted": false,
+  "onlyFreshCloudResources": true,
+  "ownedContainersStopped": true,
+  "ownedInitializerStopped": true,
+  "passed": true,
+  "plannedSequentialPeakMemoryBytes": 5368709120,
+  "priorCloud8OrNative7EvidenceModified": false,
+  "rawLogsOrCredentialsUploaded": false,
+  "readerJavaInvocationPlanned": false,
+  "requiredActualMemAvailableBytes": 7516192768,
+  "result": {
+    "addedDataFiles": 1,
+    "currentFiles": 1,
+    "oldWarehouseObjects": 14,
+    "postTrinoWholeObjects": 20,
+    "procedureInvocations": 1,
+    "queryCount": 10,
+    "rewrittenDataFiles": 2,
+    "rowCounts": [
+      6,
+      12,
+      12
+    ],
+    "rowFingerprints": [
+      "0c1bb2970cc6ce2e1dc2ed54693c2ac1d01387eb421f999a545f4ad422e16c9e",
+      "9ad14362736e0ada4f44de4ca32296a2e9082e2f78227884326608952116d016",
+      "9ad14362736e0ada4f44de4ca32296a2e9082e2f78227884326608952116d016"
+    ],
+    "silverDuplicate": 2,
+    "silverFailure": 3,
+    "silverPending": 0,
+    "silverRows": 12,
+    "silverSuccess": 7,
+    "snapshotIds": [
+      "8225039569250402625",
+      "2782914730281457112",
+      "3908786707027856228"
+    ],
+    "trinoStop": {
+      "actualExitCode": 143,
+      "nonOom": true,
+      "requestReturnedZero": true,
+      "requestedSeconds": 30,
+      "signalDeliveryDirectlyObserved": false,
+      "signalScope": "CONFIGURED_OR_DEFAULT_SIGTERM"
+    }
+  },
+  "runnerStorageIsEphemeral": true,
+  "runtimeAvailabilityOrPerformanceClaimed": false,
+  "schemaVersion": 2,
+  "scope": "FRESH_CLOUD_SPARK_TRINO_BRONZE_TWO_FILE_COMPACTION",
+  "snapshotExpirationOrObjectGcPerformed": false,
+  "sourceCommit": "223faf71c4fe9cadfd33b5ac5a95969cf3e2b04e",
+  "volumesDeleted": false,
+  "workloadBudgetSeconds": 600,
+  "workloadElapsedMillis": 78955
+}

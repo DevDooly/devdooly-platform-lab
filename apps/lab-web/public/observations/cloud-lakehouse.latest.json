@@ -1,0 +1,79 @@
+{
+  "artifact": {
+    "bytes": 3114,
+    "producerSourceSha256": "73e2293210aba3d9522013d923f8d97bd292baa4623736239d55cc21d9321fe2",
+    "runtimeManifestSha256": "c63aded0a891bb66cb1fb2de591d67e237467681eb4a4e5a337b9d1d1b02d5e8",
+    "sha256": "1271685e34712c96b7dacaf7e84e5f32ac52fb925875e262843002ee6ef3b78f"
+  },
+  "exclusions": {
+    "automaticRetryPerformed": false,
+    "currentAvailabilityClaimed": false,
+    "kubernetesVerified": false,
+    "miniPcContacted": false,
+    "productionSlaClaimed": false,
+    "snapshotExpirationOrObjectGcPerformed": false
+  },
+  "limits": {
+    "buildAndPullExcluded": true,
+    "plannedSequentialPeakMemoryBytes": 5368709120,
+    "requiredActualMemAvailableBytes": 7516192768,
+    "resourceLimitsAreConfiguration": true,
+    "sparkCpu": 1,
+    "sparkMemoryBytes": 3221225472,
+    "sparkPids": 512,
+    "trinoMemoryBytes": 4294967296,
+    "workloadBudgetSeconds": 600,
+    "workloadElapsedMillis": 78955
+  },
+  "recordedAt": "2026-10-16T03:12:33.839802Z",
+  "result": {
+    "bronzeDataFilesAfter": 1,
+    "bronzeDataFilesBefore": 2,
+    "compactionProcedureCalls": 1,
+    "postTrinoWarehouseObjects": 20,
+    "preservedOldWarehouseObjects": 14,
+    "rowSha256": "9ad14362736e0ada4f44de4ca32296a2e9082e2f78227884326608952116d016",
+    "rows": [
+      6,
+      12,
+      12
+    ],
+    "silverCounts": {
+      "duplicate": 2,
+      "failure": 3,
+      "pending": 0,
+      "rows": 12,
+      "success": 7
+    },
+    "snapshotIds": [
+      "8225039569250402625",
+      "2782914730281457112",
+      "3908786707027856228"
+    ],
+    "snapshotOperations": [
+      "append",
+      "append",
+      "replace"
+    ],
+    "trinoQueryCount": 10
+  },
+  "run": {
+    "id": "38843953097",
+    "jobId": "116790713619",
+    "sourceCommit": "223faf71c4fe9cadfd33b5ac5a95969cf3e2b04e"
+  },
+  "schemaVersion": 1,
+  "scope": "RECORDED_ISOLATED_CLOUD_LAKEHOUSE_TRIAL",
+  "status": "PASSED",
+  "stop": {
+    "allOwnedContainersStopped": true,
+    "enabledOomKillerRepresentationsVerified": true,
+    "initializerStopped": true,
+    "sparkNormalExitVerified": true,
+    "trinoExitCode": 143,
+    "trinoOomKilled": false,
+    "trinoSignalDeliveryDirectlyObserved": false,
+    "trinoStopRequestReturnedZero": true,
+    "trinoStopRequestedSeconds": 30
+  }
+}
