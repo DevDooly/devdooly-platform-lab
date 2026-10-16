@@ -1,0 +1,112 @@
+{
+  "automaticRetryPerformed": false,
+  "bucketOrKeyCreated": false,
+  "businessDataSubmitted": false,
+  "capturedAt": "2026-10-16T01:45:04.056395+00:00",
+  "checks": {
+    "actualMemAvailable7Gi": true,
+    "freshPhysicalVolumes": true,
+    "fullFiveServiceComposeModel": true,
+    "initializerExitZero": true,
+    "internalNetwork": true,
+    "onlyTwoCreatedBaseRoles": true,
+    "pinnedBaseImages": true,
+    "trinoEnvFileAbsent": true
+  },
+  "commandDiagnostics": {
+    "failures": [],
+    "failuresTruncated": false,
+    "lastCommand": {
+      "category": "CONTAINER_INSPECT",
+      "checkRequested": true,
+      "outcome": "RETURNED_ZERO",
+      "returnCode": 0,
+      "sequence": 31,
+      "stage": "CLEANUP_CONTAINERS",
+      "timedOut": false
+    }
+  },
+  "composeRoleStartsLimitedToPostgresGarage": true,
+  "diagnosticObservationFailures": [],
+  "failure": {
+    "stage": "START_POSTGRES",
+    "validationFailureCode": "SAME_OWN_CONTAINER_FULL_CONFIGURATION"
+  },
+  "failureSoleCauseProven": false,
+  "firstFailedSummarySha256": "a42f34aba82140189f08f530574b10c6911a5ae229ff13ebca63b2b82b3ffe21",
+  "fullFiveServiceComposeModelPreserved": true,
+  "imagePullsExcludedFromStartupClock": true,
+  "latestBaseContainerDiagnostics": {
+    "garage": {
+      "exitCode": 0,
+      "identityBound": false,
+      "oomKilled": false,
+      "role": "garage",
+      "running": false,
+      "signatureDifferences": {
+        "configChanged": null,
+        "createdChanged": null,
+        "hostChanged": null,
+        "idChanged": null,
+        "imageIdChanged": null,
+        "mountsChanged": null
+      },
+      "stateErrorPresent": false,
+      "stateErrorSignatures": [],
+      "status": "created"
+    },
+    "postgres": {
+      "exitCode": 0,
+      "identityBound": true,
+      "oomKilled": false,
+      "role": "postgres",
+      "running": false,
+      "signatureDifferences": {
+        "configChanged": false,
+        "createdChanged": false,
+        "hostChanged": false,
+        "idChanged": false,
+        "imageIdChanged": false,
+        "mountsChanged": true
+      },
+      "stateErrorPresent": false,
+      "stateErrorSignatures": [],
+      "status": "created"
+    }
+  },
+  "miniPcContacted": false,
+  "ownedContainersStopped": false,
+  "ownedInitializerStopped": true,
+  "passed": false,
+  "priorFailedSourceCommit": "d4bd48aaa5bb68154970600a5c50ac0e3fc5ee54",
+  "priorFailedSummarySha256": "570805bc765ac6437f07f546b3b77a153c9cb91ea097c265ba91ec22d3323aac",
+  "priorRuntimeOrEvidenceModified": false,
+  "rawLogsOrCredentialsUploaded": false,
+  "schemaVersion": 1,
+  "scope": "ISOLATED_CLOUD_PG_GARAGE_STARTUP_DIAGNOSTIC",
+  "sourceCommit": "98833225a62ca21660a94935ee0f1ab077f93be2",
+  "sparkTrinoReaderStartRequested": false,
+  "startupBudgetSeconds": 180,
+  "startupElapsedMillis": 147,
+  "startupReadyObserved": false,
+  "stderrReasonObservations": [],
+  "trinoEnvFileIntentionallyAbsent": true,
+  "unusedSparkImageNotBuiltOrPulled": true,
+  "validationFailures": [
+    {
+      "stage": "START_POSTGRES",
+      "validationFailureCode": "SAME_OWN_CONTAINER_FULL_CONFIGURATION"
+    },
+    {
+      "stage": "CLEANUP_CONTAINERS",
+      "validationFailureCode": "SAME_OWN_CONTAINER_FULL_CONFIGURATION"
+    }
+  ],
+  "vendorOrApplicationJarRead": false,
+  "versions": {
+    "compose": "2.38.2",
+    "dockerClient": "28.0.4",
+    "dockerServer": "28.0.4"
+  },
+  "volumesDeleted": false
+}

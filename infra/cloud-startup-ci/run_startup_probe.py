@@ -27,6 +27,8 @@ PINS = {
 PRIOR_SOURCE = "d4bd48aaa5bb68154970600a5c50ac0e3fc5ee54"
 PRIOR_SUMMARY = "570805bc765ac6437f07f546b3b77a153c9cb91ea097c265ba91ec22d3323aac"
 FIRST_SUMMARY = "a42f34aba82140189f08f530574b10c6911a5ae229ff13ebca63b2b82b3ffe21"
+PRIOR_STARTUP_SOURCE = "98833225a62ca21660a94935ee0f1ab077f93be2"
+PRIOR_STARTUP_SUMMARY = "a3b24f385c812f5a404c012d81113a88e3b851fec53ffa51eb73a7f67a4d45da"
 SIGNATURE_KEYS = ("id", "imageId", "config", "host", "mounts", "created")
 STAGES = {"PREPARE", "CREATE_BASE_SERVICES", "INITIALIZER", "START_POSTGRES", "START_GARAGE",
           "BASE_SERVICE_READINESS", "CLEANUP_INITIALIZER", "CLEANUP_CONTAINERS"}
@@ -108,6 +110,20 @@ def signature(raw):
             "mounts": raw["Mounts"], "created": raw["Created"]}
 
 
+def mount_differences(previous, current):
+    require(type(current) is list and all(type(member) is dict for member in current), "PROBE_SOURCE_BYTES")
+    if previous is None:
+        return {"mountOrderOnlyChanged": None, "mountContentChanged": None}
+    require(type(previous) is list and all(type(member) is dict for member in previous), "PROBE_SOURCE_BYTES")
+    def canonical_members(value):
+        # Comparison only, never used to normalize the original guard's input.
+        # Include every member field and preserve duplicates as a sorted list.
+        return sorted(json.dumps(member, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False)
+                      for member in value)
+    content_same = canonical_members(previous) == canonical_members(current)
+    return {"mountOrderOnlyChanged": previous != current and content_same, "mountContentChanged": not content_same}
+
+
 def inspect_projection(raw, bound, project, images, identities):
     labels = raw.get("Config", {}).get("Labels") or {}
     role = labels.get("com.docker.compose.service")
@@ -127,7 +143,8 @@ def inspect_projection(raw, bound, project, images, identities):
     return {"role": role, "identityBound": previous is not None and previous["id"] == raw["Id"],
             "status": status, "running": state["Running"], "exitCode": state["ExitCode"], "oomKilled": state["OOMKilled"],
             "stateErrorPresent": bool(error), "stateErrorSignatures": reason_signatures(error.encode()) if error else [],
-            "signatureDifferences": changes}
+            "signatureDifferences": changes,
+            **mount_differences(None if previous is None else previous["mounts"], current["mounts"])}
 
 
 def version(raw):
@@ -342,8 +359,9 @@ def main():
     elapsed = None if started is None else int((time.monotonic() - started) * 1000)
     diagnostic_complete = not diagnostics.observation_failures and set(diagnostics.states) == {"postgres", "garage"}
     passed = primary is None and ready and stopped and init_stopped and all(checks.values()) and diagnostic_complete and elapsed is not None and elapsed <= 180000
-    summary = {"schemaVersion": 1, "scope": SCOPE, "passed": passed, "capturedAt": base.utc(), "sourceCommit": source,
+    summary = {"schemaVersion": 2, "scope": SCOPE, "passed": passed, "capturedAt": base.utc(), "sourceCommit": source,
         "priorFailedSourceCommit": PRIOR_SOURCE, "priorFailedSummarySha256": PRIOR_SUMMARY, "firstFailedSummarySha256": FIRST_SUMMARY,
+        "priorStartupSourceCommit": PRIOR_STARTUP_SOURCE, "priorStartupSummarySha256": PRIOR_STARTUP_SUMMARY,
         "failure": primary, "versions": versions, "startupReadyObserved": ready, "startupBudgetSeconds": 180,
         "startupElapsedMillis": elapsed, "imagePullsExcludedFromStartupClock": True,
         "checks": checks,

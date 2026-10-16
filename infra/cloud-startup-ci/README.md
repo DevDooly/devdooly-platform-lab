@@ -2,6 +2,14 @@
 
 **SOURCE_ONLY_NOT_RUN**. 이 새 후보는 아직 게시·dispatch·Docker 실행하지 않았습니다. 기존 Cloud9 runtime과 첫 두 실패 artifact를 바꾸거나 재실행하지 않습니다. 미니 PC·운영 namespace·운영 DB·원본 객체에 접근하지 않습니다.
 
+## 별도 mount 진단 v2: 아직 실행하지 않은 후보
+
+첫 좁은 startup 시험은 Actions `38836760710`, job `116767520877`, source `98833225a62ca21660a94935ee0f1ab077f93be2`, 실제 요약 SHA `a3b24f385c812f5a404c012d81113a88e3b851fec53ffa51eb73a7f67a4d45da`입니다. Docker client/server 28.0.4·Compose 2.38.2에서 8개 준비 check는 모두 true였지만, PG의 실제 Compose start 요청 **이전** full-configuration guard가 실패했습니다. PG는 같은 ID/image/config/host/created와 created 상태를 유지했고 `mountsChanged:true`만 관측됐습니다. 명령 실패·State.Error는 없었고 initializer 정리는 확인, 전체 container 정리는 미확인이었습니다. 당시 요약에는 mount의 순서/내용 구분이 없어 **순서만 바뀌었다고 단정하지 않습니다**. Garage의 최신 진단은 아직 bound되지 않은 상태였습니다. 첫 두 Cloud9 rc1 실패의 원인으로도 확대하지 않습니다.
+
+새 schemaVersion 2는 각 base-container 진단에 두 필드만 더합니다. `mountOrderOnlyChanged`는 원래 mount list가 달라졌으나 전체 member의 canonical JSON을 정렬한 **중복 보존 목록**이 같을 때 true입니다. `mountContentChanged`는 그 목록의 내용이 다를 때 true입니다. baseline이 아직 없으면 둘 다 null입니다. member의 모든 알려지지 않은 field·중첩 값·JSON 타입도 비교하고, raw mount·path·값·member SHA는 공개하지 않습니다. Dictionary key 순서는 canonical JSON에서 정리하되 전체 필드 내용은 버리지 않습니다.
+
+이 비교는 **진단 전용**입니다. 원래 guard로 전달하는 raw mount, 전체 signature, 시작·정리 명령은 바꾸지 않습니다. order-only여도 원래 guard는 계속 실패합니다. mount를 정규화하거나 자동 복구하지 않고 Docker start로 바꾸지도 않습니다. 현재 원인을 좁히기 위한 별도 **새 1회 후보**이며, 이미 실행한 시험을 재시도하거나 같은 UUID를 재사용하는 코드가 아닙니다. 기존 startup/Cloud9 실패·원본 source는 그대로 유지하며 새 요약은 첫 좁은 startup의 source/SHA를 별도 lineage로 연결합니다.
+
 실제 두 번째 실패는 source `d4bd48aaa5bb68154970600a5c50ac0e3fc5ee54`, Actions run `38833863253`, 요약 SHA `570805bc765ac6437f07f546b3b77a153c9cb91ea097c265ba91ec22d3323aac`입니다. sequence 28의 `COMPOSE_START_POSTGRES`가 timeout 없이 exit 1이었고, cleanup의 마지막 sequence 35 container inspect는 exit 0 뒤 validation이 실패했습니다. 당시 원문 stderr/State.Error와 정확한 cleanup guard는 공개되지 않아 **원인은 미확정**입니다. 첫 요약 SHA `a42f34aba82140189f08f530574b10c6911a5ae229ff13ebca63b2b82b3ffe21`도 그대로 유지합니다.
 
 ## 달라지는 범위
@@ -35,7 +43,7 @@ cleanup은 clock 부족과 관계없이 원래 safety-stop 경계의 read 5초/�
 
 동봉 `lab-ci.yml`은 현재 feature의 전체 workflow bytes를 기반으로 한 **미적용 제안**입니다. `run_cloud_startup_probe`만 true로 선택합니다. 기존 `run_s3_trial`, `run_spark_trial`, `run_cloud_lakehouse_trial`은 모두 false여야 합니다.
 
-startup=true이면 일반 verify와 기존 세 heavy trial을 제외합니다. 새 job의 첫 step에서 조합을 검증하며 다른 true가 있으면 checkout·서비스 생성 전에 고정 코드로 실패합니다. startup=false 또는 입력이 없는 push/default dispatch/기존 trial 경로는 기존 job 본문과 조건을 그대로 유지합니다. 새 job은 8개 순수 검사 후 hash 고정된 driver 한 번만 호출하고, **새 공개 summary.json 한 파일만** upload합니다. private 폴더·dump·config·raw log는 upload하지 않습니다.
+startup=true이면 일반 verify와 기존 세 heavy trial을 제외합니다. 새 job의 첫 step에서 조합을 검증하며 다른 true가 있으면 checkout·서비스 생성 전에 고정 코드로 실패합니다. startup=false 또는 입력이 없는 push/default dispatch/기존 trial 경로는 기존 job 본문과 조건을 그대로 유지합니다. 새 job은 11개 순수 검사 후 hash 고정된 driver 한 번만 호출하고, **새 공개 summary.json 한 파일만** upload합니다. private 폴더·dump·config·raw log는 upload하지 않습니다. 이번 workflow 변경은 기존 수동 input/job·조건을 모두 유지하고 새 driver self SHA 한 곳만 갱신합니다.
 
 실행 후보 명령은 workflow 안에 실제 self SHA와 함께 고정됩니다. source commit은 실제 `GITHUB_SHA`와 checkout HEAD를 대조하며, 기존 runtime/helper 6개 파일의 전체 SHA를 검사합니다. 원본 helper의 `main`, vendor, heavy workload는 호출하지 않습니다.
 
@@ -47,4 +55,4 @@ startup=true이면 일반 verify와 기존 세 heavy trial을 제외합니다. �
 python3 -B -m unittest discover -s infra/cloud-startup-ci -p 'test_*.py' -v
 ```
 
-8개 검사는 실제 frozen full signature/foreign owner/PID limits 거부, whole 5-service 모델·early flags, `ValueError`/secret exception 구분, private args·stderr·TimeoutExpired.cmd 차단, expected nonzero와 checked failure 구분, heavy 요청의 사전 거부, optional 진단 실패의 guard 비변경, 고정 clock 만료를 포함합니다. 현재 C-only 후보에서 Windows의 실제 순수 8개가 실패·오류·skip 0으로 통과했습니다. 이것은 Linux Docker 시작 결과가 아닙니다.
+기존 8개 검사는 실제 frozen full signature/foreign owner/PID limits 거부, whole 5-service 모델·early flags, `ValueError`/secret exception 구분, private args·stderr·TimeoutExpired.cmd 차단, expected nonzero와 checked failure 구분, heavy 요청의 사전 거부, optional 진단 실패의 guard 비변경, 고정 clock 만료를 포함합니다. 새 3개는 order-only여도 frozen start가 Compose 호출 전에 거부하는 실제 경계, 모든 member field·중복·JSON 타입 보존과 real content change, 미관측 baseline의 null과 secret 비공개를 확인합니다. 현재 C-only 후보에서 Windows의 실제 순수 11개가 실패·오류·skip 0으로 통과했습니다. 이것은 Linux Docker 시작 결과가 아닙니다.

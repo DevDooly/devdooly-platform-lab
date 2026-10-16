@@ -323,7 +323,7 @@ jobs:
           SOURCE_COMMIT: ${{ github.sha }}
         run: >-
           python3 -B infra/cloud-startup-ci/run_startup_probe.py
-          --self-sha256 0cce83b551d5119d51edfe99651d96fe4a49e1d833fe98070886a35a5d4898d7
+          --self-sha256 e603717ee969338e3473fa9a0a036e4d3ab7e5707394a2c1da5aa1f0b235215f
           --ack-fresh-base-startup-probe
       - name: Upload only the safe startup summary
         if: ${{ always() && steps.flags.outcome == 'success' }}

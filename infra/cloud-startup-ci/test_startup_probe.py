@@ -200,5 +200,61 @@ class StartupProbeTests(unittest.TestCase):
                 deadline.remaining(1)
 
 
+    def test_order_only_observed_but_original_start_still_rejects_before_compose_start(self):
+        attempt = self.attempt(Path("synthetic-private-root"))
+        fixtures = {role: self.raw(attempt, role) for role in ("postgres", "garage")}
+        calls = self.fake_inventory(attempt, fixtures)
+        diagnostics = probe.Diagnostics(self.codes); diagnostics.install(attempt)
+        attempt.containers()
+        fixtures["postgres"]["Mounts"].reverse()
+        attempt.deadline = probe.ProbeDeadline(probe.time.monotonic())
+        with self.assertRaisesRegex(ValueError, "^SAME_OWN_CONTAINER_FULL_CONFIGURATION$"):
+            attempt.start("postgres")
+        observed = diagnostics.states["postgres"]
+        self.assertTrue(observed["signatureDifferences"]["mountsChanged"])
+        self.assertTrue(observed["mountOrderOnlyChanged"])
+        self.assertFalse(observed["mountContentChanged"])
+        self.assertEqual(attempt.started_roles, set())
+        self.assertFalse(any(command[:2] == ["docker", "compose"] and len(command) > 6 and command[6] == "start" for command in calls))
+        encoded = json.dumps(observed)
+        self.assertNotIn(PRIVATE, encoded)
+        self.assertNotIn(str(attempt.root), encoded)
+
+    def test_mount_comparison_keeps_unknown_fields_duplicate_members_and_json_types(self):
+        previous = [{"Source": "/private/" + PRIVATE, "Destination": "/data", "RW": True,
+                     "FutureField": {"unknown": [1, {"token": PRIVATE}]}},
+                    {"Destination": "/other", "RW": False, "Source": "/private/second"}]
+        same = [{key: member[key] for key in reversed(member)} for member in previous]
+        self.assertEqual(probe.mount_differences(previous, same), {"mountOrderOnlyChanged": False, "mountContentChanged": False})
+        self.assertEqual(probe.mount_differences(previous, list(reversed(same))), {"mountOrderOnlyChanged": True, "mountContentChanged": False})
+        changed = []
+        missing = copy.deepcopy(previous); del missing[0]["FutureField"]; changed.append(missing)
+        added = copy.deepcopy(previous); added[0]["UnknownExtra"] = PRIVATE; changed.append(added)
+        nested = copy.deepcopy(previous); nested[0]["FutureField"]["unknown"][1]["token"] += "x"; changed.append(nested)
+        typed = copy.deepcopy(previous); typed[0]["RW"] = 1; changed.append(typed)
+        changed.extend([previous[:1], previous + [copy.deepcopy(previous[0])]])
+        for value in changed:
+            result = probe.mount_differences(previous, value)
+            self.assertEqual(result, {"mountOrderOnlyChanged": False, "mountContentChanged": True})
+            self.assertNotIn(PRIVATE, json.dumps(result))
+            self.assertNotIn("FutureField", json.dumps(result))
+
+    def test_mount_diagnostics_unbound_are_null_and_existing_content_change_is_distinct(self):
+        self.assertEqual(probe.mount_differences(None, []), {"mountOrderOnlyChanged": None, "mountContentChanged": None})
+        attempt = self.attempt(Path("synthetic-private-root"))
+        fixtures = {role: self.raw(attempt, role) for role in ("postgres", "garage")}
+        self.fake_inventory(attempt, fixtures)
+        diagnostics = probe.Diagnostics(self.codes); diagnostics.install(attempt)
+        attempt.containers()
+        self.assertIsNone(diagnostics.states["garage"]["mountOrderOnlyChanged"])
+        self.assertIsNone(diagnostics.states["garage"]["mountContentChanged"])
+        fixtures["postgres"]["Mounts"][0]["RW"] = not fixtures["postgres"]["Mounts"][0]["RW"]
+        with self.assertRaisesRegex(ValueError, "ACTUAL_MOUNT_TYPE_AND_RO_RW"):
+            attempt.containers()
+        observed = diagnostics.states["postgres"]
+        self.assertFalse(observed["mountOrderOnlyChanged"])
+        self.assertTrue(observed["mountContentChanged"])
+
+
 if __name__ == "__main__":
     unittest.main()
