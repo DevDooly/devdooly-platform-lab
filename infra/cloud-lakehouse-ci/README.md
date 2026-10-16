@@ -1,6 +1,6 @@
 # 새 Cloud Spark → Trino 연결과 작은 파일 compaction 후보
 
-**SOURCE_ONLY_NOT_RUN.** 이 후보는 Docker·Spark·Trino·JAR·SQL을 아직 실행하지 않았다. 기존 Cloud Spark 시험8의 성공이나 Mini PC native7의 warehouse/PVC를 재사용한 결과가 아니다. Git·CI dispatch·SSH·Kubernetes·배포 작업도 이 작성 과정에서 수행하지 않았다. workflow는 포함하지 않으며 root가 소스·실행 범위를 검토한 뒤 별도 수동 시험 여부를 정한다.
+**첫 실제 실행 실패.** 새 GitHub 격리 실행은 준비 검사를 통과한 뒤 서비스 시작 단계에서 실패했습니다. 실패한 명령과 전체 컨테이너 종료 상태는 확인하지 못했고 Spark·Trino·compaction 결과도 입증하지 못했습니다. [첫 실행의 원문과 한계](../../docs/evidence/cloud-lakehouse/README.md)를 보존합니다. 기존 Cloud Spark8·Mini PC native7은 별도 기록이며 다시 실행하지 않았습니다. 아래 runtime manifest의 SOURCE_ONLY 상태는 검토한 소스 패킷의 작성 상태이고, 실행 결과는 별도 근거로 확인합니다.
 
 새 GitHub-hosted Linux runner에서만 실행할 수 있다. 새 UUID Compose project·local volume·Garage bucket의 물리 identity를 확인하고, 기존 고정 Silver 코드·합성 fixture·실제 lock의 세 JAR를 그대로 사용한다. 이미지 build와 pull은 준비 단계로 별도 표시한다. 첫 PostgreSQL/Garage start 직전 단 한 번 만든 **600초 monotonic clock**을 모든 workload 단계가 공유한다. 초기화 실패나 deadline에는 같은 mutation·SQL을 재접수하지 않는다.
 
