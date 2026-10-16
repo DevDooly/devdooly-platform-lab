@@ -16,6 +16,8 @@ const actual4Raw = readFileSync(new URL('./fixtures/iceberg-capture-attempt4.sum
 const actual4: Record<string, any> = JSON.parse(actual4Raw.toString('utf8'));
 const actual5Raw = readFileSync(new URL('./fixtures/iceberg-capture-attempt5.summary.json', import.meta.url));
 const actual5: Record<string, any> = JSON.parse(actual5Raw.toString('utf8'));
+const actual6Raw = readFileSync(new URL('./fixtures/iceberg-capture-attempt6.summary.json', import.meta.url));
+const actual6: Record<string, any> = JSON.parse(actual6Raw.toString('utf8'));
 
 /** Synthetic producer-shaped object only; no actual capture or public asset. */
 const fixture = (): Record<string, any> => ({
@@ -119,6 +121,42 @@ test('the exact real fifth record preserves verified milestones without inventin
   }
   const promoted = structuredClone(actual5); promoted.passed = true; promoted.status = 'DETERMINED'; promoted.failureCategory = null;
   assert.equal(parseIcebergCapture(promoted), null);
+});
+test('the exact real sixth record reports an attempted lifecycle guard without inventing a cause or capture pass', () => {
+  assert.equal(actual6Raw.length, 1790);
+  assert.equal(createHash('sha256').update(actual6Raw).digest('hex'), '60156381856483932e9cdcd39659a8e9b404fabb544c13f3a0608f9f936c188b');
+  const value = parseIcebergCapture(actual6); assert.ok(value); assert.equal(value.schemaVersion, 2);
+  assert.equal(value.sourceCommit, '61306712d542c8efe49bc686da8e7b3a031d72aa');
+  assert.equal(value.runtimeManifestSha256, icebergCaptureManifestNormalizationPhases);
+  assert.equal(value.status, 'FAILED'); assert.equal(value.passed, false); assert.equal(value.failureCategory, 'SUMMARY_NOT_VERIFIED');
+  assert.deepEqual(value.checks, { sourceBytesVerified: true, compilerPrepVerified: true,
+    originalMainCalledOnce: true, originalMainReturnedZero: true, decoderStoppedVerified: true, decoderAttachCliReaped: true,
+    sameRunStoppedActorsAndClockVerified: false, inventoryProduced: false, allObjectsKept: false });
+  assert.ok(Object.entries(value.counts).every(([key, count]) => count === (key === 'objectCandidateCount' ? 0 : null)));
+  assert.equal(value.proofHashes.prepProofSha256, 'cb5cdaa73411ae9f6342615bcee9ba649f9ff6fbb40d1903b8232062e0bbdf19');
+  assert.equal(value.proofHashes.normalizationReceiptCanonicalSha256, null); assert.deepEqual(value.decoderReasonCodes, []);
+  if (value.schemaVersion === 2) {
+    assert.equal(value.diagnostic.stageAttempted, 'NORMALIZE');
+    assert.equal(value.diagnostic.failureCode, 'NORMALIZE_DECODER_LIFECYCLE_UNVERIFIED');
+    assert.ok(parseCaptureDiagnostic(value.diagnostic, false, 'SCHEMA2_NORMALIZATION_PHASES'));
+    assert.equal(value.diagnostic.lastPrepChild?.name, 'cold-export-absence');
+    assert.equal(value.diagnostic.lastPrepChild?.class, 'COLD_ABSENCE');
+    assert.equal(value.diagnostic.lastPrepChild?.outcome, 'EXITED_ZERO');
+    assert.equal(value.diagnostic.lastPrepChild?.returnCode, 0); assert.equal(value.diagnostic.lastPrepChild?.childReaped, true);
+    assert.ok(value.diagnostic.prepCleanup && Object.values(value.diagnostic.prepCleanup).every(item => item === true));
+  }
+  // The phase is an attempted guard, and the last prep CLI's zero is not a decoder exit or graph result.
+  for (const key of ['decoderExitCode', 'graph', 'underlyingCause', 'rawError']) {
+    assert.equal(Object.hasOwn(value, key), false);
+    const invented = structuredClone(actual6); invented[key] = 'SYNTHETIC_PRIVATE_CANARY';
+    assert.equal(parseIcebergCapture(invented), null);
+  }
+  const promoted = structuredClone(actual6); promoted.passed = true; promoted.status = 'DETERMINED'; promoted.failureCategory = null;
+  assert.equal(parseIcebergCapture(promoted), null);
+  const wrongStage = structuredClone(actual6); wrongStage.diagnostic.stageAttempted = 'DECODER';
+  assert.equal(parseIcebergCapture(wrongStage), null);
+  const oldProfile = structuredClone(actual6); oldProfile.runtimeManifestSha256 = icebergCaptureManifestVerifiedAbsence;
+  assert.equal(parseIcebergCapture(oldProfile), null);
 });
 test('synthetic determined, undetermined and failed producer shapes stay distinct', () => {
   assert.equal(parseIcebergCapture(fixture())?.status, 'DETERMINED');
