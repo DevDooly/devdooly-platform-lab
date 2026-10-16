@@ -1,0 +1,219 @@
+{
+  "ci": {
+    "actionsConclusion": "SUCCESS",
+    "actionsRunId": 38814779596,
+    "apiJUnit": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 191
+    },
+    "exampleJUnit": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 20
+    },
+    "jenkinsBuildNumber": 45,
+    "publicationRunId": 38815274591,
+    "totalJUnit": 211
+  },
+  "deployment": {
+    "apiwebGitopsRevision": "8cc84c101d4fff62484d23ef44d517fd680b6dbc",
+    "apiwebPullRequest": 52,
+    "images": {
+      "api": {
+        "amd64ManifestDigest": "sha256:ebf3c0c782636b3fd968a3f406729cd23516d7a2d69b45a1e887179a4f7e9b8b",
+        "configDigest": "sha256:fe25ce5c51500d04bc03b50bf8b239f8468f0578ba56d549954ae0e11c5ba08c",
+        "platform": "linux/amd64",
+        "sourceCommitLabel": "74a8e98844a8fea0653951136ede0e7de0d7ac08",
+        "targetDigest": "sha256:e128652b6a28704bc2cb0a1e8bec318948df8dd467ed660b12d22c921d720399"
+      },
+      "web": {
+        "amd64ManifestDigest": "sha256:b5eaa3f9dad2b7e7c9cff8fa6a7ed1c9381e7131966afbaefda50e3aaf0879f5",
+        "configDigest": "sha256:141a805ee4b16137b80626df4f1f831f95d83eaf6d8702ecf6a01ea4df122b06",
+        "platform": "linux/amd64",
+        "sourceCommitLabel": "74a8e98844a8fea0653951136ede0e7de0d7ac08",
+        "targetDigest": "sha256:12b2220ffce0b5ec765f8a98a042579f3546338878f140e249580c6488db847f"
+      }
+    },
+    "workerGitopsRevision": "b63fedfa62a81d03d35d3ef515e24bc8e43f414c",
+    "workerPullRequest": 53
+  },
+  "history": {
+    "originalApiwebWatchFailureCause": "UNPROVEN",
+    "originalApiwebWatchFailureCode": "APPLICATION_UID_SPEC_UNCHANGED",
+    "originalApiwebWatchPassed": false,
+    "originalCollectorHistoricalGarageEvidenceLinked": false,
+    "originalPostSdkPreservationFailureCode": "FIXED_SAFE_GARAGE_KEY_INVENTORY",
+    "originalPostSdkPreservationFailureScope": "COLLECTOR_LIST_KEYS_FIELD_CONTRACT_MISMATCH_BEFORE_WHOLE_GET",
+    "originalPostSdkPreservationPassed": false,
+    "originalWorkerCollectionPassed": false
+  },
+  "limits": {
+    "latencyOrSlaClaimed": false,
+    "originalEvidenceRewritten": false,
+    "pointInTimeOnly": true,
+    "productionApiJvmSdkGetVerified": false,
+    "productionFaultInjectionPerformed": false,
+    "writeCompatibilityVerifiedByThisEvidence": false
+  },
+  "proofSha256": {
+    "actualJar": "fce809419e4e7398ca3041fd26ff6c1cd7e458fe88246e5a4dfc930f7480b4e7",
+    "apiwebReconciliation": "22b458fc7d0b184f28338e7e8a8287382e1b7a9b68887c9ccbc5228d50e30132",
+    "collectionReconciliation": "a8b0b4997a614b0b4ded7affff7a6df5084517e226a40f2bf037ed0c1a59d022",
+    "jarByteComparison": "385f6933b701d736162d7571f3ea4754562c3630128d33bfa5fb3a7f7bcb4bc6",
+    "loaderGate": "ac620d63b90a8849ea3a7aa317453ff8393760c797c8024a452973a7138c1765",
+    "oci": "aaab53ff4c923ec697f83a8e89b43c3dbe6aaf194118ecbf15f81a262e1a310c",
+    "offlineCompiler": "3e0167b4c81eea72a81813081e4a66c6f38be3cdf69ac0ffdebfd542a7fce40f",
+    "originalApiwebWatchFailure": "ff343072201d581b76b4ec53d6f2ea99ca97a1cd463271a0ea882592d024237c",
+    "originalPostSdkPreservationFailure": "65c59a7a4a1194b23faf48ac86615f5e8c660eb6d6534c42139ccaeaf3f32337",
+    "originalWorkerCollectionFailure": "e0e1e0b9bca056412499b8a8f16b4dd9629f94cde97de492ac4c37206bf70dbc",
+    "payloadBundle": "fbafd5329292e891328e2aea11ddb18daa3cf0cfb21a6320d484cfbf6f9c1b23",
+    "postSdkPreservation": "e0aae7887b20c70f4e7a05a5b3b65c02dd309ef7ae7de94025ce4fb51daa5ae9",
+    "preservationAfter": "28e03306cd92dc8c60842bdbdd85dec54fbc3360c4685f4e089d8f53200d094b",
+    "sdkCleanup": "ff3b6409e3210ee33a26f1cd0c280b1190b5717bbcaf7b7f28fe506ffb3c45ae",
+    "sdkCreate": "4dbe9811888c937de32107541b455d8c5e26b967a882207c652fd8f3665c82a0",
+    "sdkInstall": "166f05bcb5f2f51da027899c5675a74519379c668de4e27ddcdb7dcb283d37da",
+    "sdkRevoke": "b25d4ffecbf95bb96454b05cd7b606a9b078a7b7adc70012311c21e80ca2c247",
+    "sdkRun": "7c861fdfd98f8da1541c2ca62db94813b2f2bb15aba1ed53cab2d716bed9e63c",
+    "sdkVerify": "5f41fcad2a07606f2905addcc1b29f56243184cc21f62ad4c557d12259a0923e",
+    "workerWatch": "af752645dff6bbca95b34f227935781d9f47f833245781169d918170e126592d"
+  },
+  "schemaVersion": 1,
+  "sdkGet": {
+    "actualGetExecuted": true,
+    "apiCalls": 3,
+    "attempts": 3,
+    "capturedAt": "2026-10-15T23:45:37.148212Z",
+    "clientClosed": true,
+    "configuredMaxAttempts": 3,
+    "httpClient": "Apache5",
+    "normalExitCode": 0,
+    "objects": [
+      {
+        "bytes": 1100,
+        "kind": "RAW",
+        "sha256": "39ba10d8c47dce790f3ccc9c9134fea593d6de31f1f3a7992ca61d9f554da3b5"
+      },
+      {
+        "bytes": 2379,
+        "kind": "RESULT",
+        "sha256": "96ee5db1ee8c389cf38ecebeba4d60df00e07dafbd19f54be016248516384900"
+      },
+      {
+        "bytes": 1438,
+        "kind": "FAILURES",
+        "sha256": "df32fa0bc735fd941ca1d96e39079270f8624367726b0253863076e567991a5b"
+      }
+    ],
+    "ownReadOnlyCredentialRevoked": true,
+    "ownResourcesCleaned": true,
+    "retries": 0,
+    "scope": "ACTUAL_IMAGE_FACTORY_SEPARATE_PROCESS_THREE_ORIGINAL_GET_ONLY",
+    "sdkMetricsVerified": true,
+    "springStarted": false,
+    "status": "PASSED",
+    "verifiedWholeGetCount": 3
+  },
+  "sourceCommit": "74a8e98844a8fea0653951136ede0e7de0d7ac08",
+  "status": "DEPLOYED_SDK_GET_VERIFIED_AND_POST_PRESERVED",
+  "verification": {
+    "actualJar": {
+      "bytes": 92724910,
+      "capturedAt": "2026-10-15T23:25:02.723586Z",
+      "jarExecutedByCollector": false,
+      "passed": true,
+      "sdkVersion": "2.55.16",
+      "sha256": "bae57d6556f93d52699ba687dc573e99986beffa012f902534a4c594e4e5dbad",
+      "uniquePackagedClassCount": 6
+    },
+    "apiweb": {
+      "capturedAt": "2026-10-15T23:06:36.057634Z",
+      "oldExitObserved": false,
+      "passed": true,
+      "preMergeTransitionObserved": false,
+      "readyObserved": true,
+      "scope": "POST_DEPLOY_READ_ONLY_APIWEB_RECONCILIATION"
+    },
+    "collection": {
+      "actualWatchPassed": true,
+      "observedPostExitControlGroup": "EMPTY",
+      "originalCollectionPassed": false,
+      "ownExitedUnitStopCount": 1,
+      "passed": true,
+      "scope": "POST_EXIT_SUCCESS_WATCH_COLLECTION_RECONCILIATION"
+    },
+    "jarByteComparison": {
+      "originalEvidenceRewritten": false,
+      "passed": true,
+      "sameEnvironmentClaimed": false,
+      "sameSourceCommitClaimed": false,
+      "scope": "READ_ONLY_CROSS_RECORD_WHOLE_JAR_BYTES_EQUALITY_ONLY",
+      "wholeShaAndSizeEqual": true
+    },
+    "loaderGate": {
+      "loaderOverridesAbsent": true,
+      "passed": true,
+      "verifiedAt": "2026-10-15T22:55:50.768842Z"
+    },
+    "offlineCompiler": {
+      "bodyAndParserCases": 15,
+      "compilerReportedDeployedImageVerified": false,
+      "compilerReportedSourceCommit": null,
+      "networkRequests": 0,
+      "passed": true,
+      "payloadClassCount": 4,
+      "payloadFileCount": 7,
+      "s3ClientsConstructed": 0
+    },
+    "postSdkPreservation": {
+      "capturedAt": "2026-10-16T00:02:58.167234Z",
+      "dockerContainerCount": 60,
+      "exportMetadataCount": 16,
+      "fullBusinessSqlAndPolicyUnchanged": true,
+      "jobCount": 8,
+      "kafkaCommittedOffset": 8,
+      "kafkaLag": 0,
+      "kafkaLogEnd": 8,
+      "nativeKnownWholeGetCount": 12,
+      "nativeWarehouseListed": false,
+      "newRolloutPerformed": false,
+      "originalWholeGetCount": 24,
+      "passed": true,
+      "pvCount": 13,
+      "pvcCount": 13,
+      "s3Writes": 0,
+      "scope": "POST_SDK_READ_ONLY_PRESERVATION",
+      "sdkResourcesAndRevokedKeyAbsent": true,
+      "sqlWrites": 0
+    },
+    "preservation": {
+      "capturedAt": "2026-10-15T23:12:57.466419Z",
+      "dockerContainerCount": 60,
+      "exportMetadataCount": 16,
+      "jobCount": 8,
+      "kafkaCommittedOffset": 8,
+      "kafkaLag": 0,
+      "kafkaLogEnd": 8,
+      "nativeKnownWholeGetCount": 12,
+      "nativeWarehouseListed": false,
+      "originalWholeGetCount": 24,
+      "passed": true,
+      "pvCount": 13,
+      "pvcCount": 13,
+      "s3Writes": 0,
+      "sqlWrites": 0,
+      "unknownExtraWarehouseKeysAssessed": false
+    },
+    "worker": {
+      "capturedAt": "2026-10-15T23:10:15.488175Z",
+      "notReadyThenReadyObserved": true,
+      "oldExitCode": null,
+      "oldExitObservation": "UNOBSERVED",
+      "passed": true,
+      "readyObserved": true,
+      "scope": "READ_ONLY_STAGED_ROLLOUT_READY_OBSERVATION"
+    }
+  }
+}

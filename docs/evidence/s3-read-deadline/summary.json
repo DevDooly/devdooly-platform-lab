@@ -1,0 +1,149 @@
+{
+  "apiArtifact": {
+    "apache5Sdk": "2.55.16",
+    "bytes": 92724910,
+    "sha256": "bae57d6556f93d52699ba687dc573e99986beffa012f902534a4c594e4e5dbad",
+    "testedAdapterClassesMatchJar": true
+  },
+  "automaticAttemptRetryPerformed": false,
+  "capturedAt": "2026-10-15T21:39:06.044005Z",
+  "connectivityProfile": "OWNED_INTERNAL_BRIDGE_HOST_LOOPBACK_TCP_RELAYS",
+  "createdContainerCount": 3,
+  "dockerPortsPublished": false,
+  "failure": null,
+  "forcedKillPerformed": false,
+  "historicalPortGuardFailureCauseObserved": false,
+  "itDiagnostics": {
+    "aggregateCounts": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 5
+    },
+    "collection": "OBSERVED_EXPECTED_REPORTS",
+    "diagnosticGrantsSuccess": false,
+    "freshReportsGatePassed": true,
+    "mavenExitCode": 0,
+    "rawTextOrValuesPublished": false,
+    "schemaVersion": 1,
+    "scope": "BOUNDED_FRESH_EXPECTED_SUREFIRE_DIAGNOSTICS_ONLY",
+    "suites": [
+      {
+        "collection": "OBSERVED_COMPLETE_XML",
+        "counts": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 4
+        },
+        "knownMethods": {
+          "realCoordinatorStagesAndRepeatPreservesQueuedAndCompletedMetadata": {
+            "outcome": "PASS",
+            "present": true
+          },
+          "realExistingCorruptionIsRetainedAndDbRemainsStagingWithoutDispatch": {
+            "outcome": "PASS",
+            "present": true
+          },
+          "realObjectSurvivesFailedDbMarkAndIsReverifiedOnRetry": {
+            "outcome": "PASS",
+            "present": true
+          },
+          "realSdkPutGetHeadListDeleteAndStoreRetryVerifyActualBytes": {
+            "outcome": "PASS",
+            "present": true
+          }
+        },
+        "omittedProblemCount": 0,
+        "problems": [],
+        "suite": "io.github.devdooly.platformlab.jobs.GarageRawSourceIT",
+        "unrecognisedCaseCount": 0
+      },
+      {
+        "collection": "OBSERVED_COMPLETE_XML",
+        "counts": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 1
+        },
+        "knownMethods": {
+          "actualResultAndFailuresAreVerifiedBeforeReleaseAndRepeatsCannotReleaseNextJobsSlot": {
+            "outcome": "PASS",
+            "present": true
+          }
+        },
+        "omittedProblemCount": 0,
+        "problems": [],
+        "suite": "io.github.devdooly.platformlab.jobs.exporting.VerifiedResultExportIT",
+        "unrecognisedCaseCount": 0
+      }
+    ]
+  },
+  "miniPcContacted": false,
+  "ownVolumesRetainedUntilRunnerDisposal": true,
+  "ownedContainersStopped": true,
+  "ownedRelaysStoppedAndJoined": true,
+  "passed": true,
+  "plannedCases": 5,
+  "rawLogsCredentialsOrConnectionValuesPublished": false,
+  "relays": [
+    {
+      "acceptedConnections": 3,
+      "closedConnections": 3,
+      "connectionTimeoutSeconds": 180,
+      "failureCode": null,
+      "idleTimeoutSeconds": 60,
+      "loopbackListenerVerified": true,
+      "maxActiveConnections": 16,
+      "maxConnectionBytes": 16777216,
+      "maxConnections": 512,
+      "maxLifetimeSeconds": 359.86785232299997,
+      "maxTotalBytes": 67108864,
+      "observedBidirectionalBytesRead": 228650,
+      "observedPeakActiveConnections": 1,
+      "payloadInspectedOrLogged": false,
+      "schemaVersion": 1,
+      "scope": "OWNED_INTERNAL_BRIDGE_HOST_LOOPBACK_TCP_RELAY",
+      "started": true,
+      "stoppedAndJoined": true,
+      "targetConnections": 3,
+      "tcpPositiveControlPassed": true
+    },
+    {
+      "acceptedConnections": 6,
+      "closedConnections": 6,
+      "connectionTimeoutSeconds": 180,
+      "failureCode": null,
+      "idleTimeoutSeconds": 60,
+      "loopbackListenerVerified": true,
+      "maxActiveConnections": 16,
+      "maxConnectionBytes": 16777216,
+      "maxConnections": 512,
+      "maxLifetimeSeconds": 359.965521399,
+      "maxTotalBytes": 67108864,
+      "observedBidirectionalBytesRead": 262419,
+      "observedPeakActiveConnections": 5,
+      "payloadInspectedOrLogged": false,
+      "schemaVersion": 1,
+      "scope": "OWNED_INTERNAL_BRIDGE_HOST_LOOPBACK_TCP_RELAY",
+      "started": true,
+      "stoppedAndJoined": true,
+      "targetConnections": 6,
+      "tcpPositiveControlPassed": true
+    }
+  ],
+  "schemaVersion": 1,
+  "scope": "ISOLATED_GITHUB_RUNNER_APACHE5_MARIADB_GARAGE",
+  "sdk": "2.55.16",
+  "sourceCommit": "918f0e791591abdc10d0b166f4d5c8181114686b",
+  "tests": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "tests": 5
+  },
+  "transport": "APACHE5",
+  "unknownContainerCreateOutcome": false,
+  "unknownOwnedCommandProcessGroup": false
+}
