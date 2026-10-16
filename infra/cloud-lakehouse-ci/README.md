@@ -31,3 +31,11 @@ SOURCE_COMMIT=<actual-checkout-40hex> python -B infra/cloud-lakehouse-ci/run_tri
 공개 artifact 후보는 `.local/cloud-trial9-public/summary.json` 하나뿐이다. Raw 로그·SQL 결과·JDBC/S3 경로·container identity·자격증명은 새 private 폴더에만 남으며 artifact 업로드 대상으로 삼지 않는다. Reader는 읽기 전용 코드지만 Spark가 사용한 새 단일 bucket read/write key를 RAM에서 재사용하므로 ACL 자체가 write를 금지한다고 주장하지 않는다. 이 새 시험의 결과를 Kubernetes·Mini PC 보존·재시작/장애 복구·동시성·현재 가용성·전체 Phase6 완료로 확대하지 않는다.
 
 Offline 검사는 snapshot/파일·procedure 계약, 원래 Cloud hash의 정렬 roundtrip과 DOUBLE 투영, 고정10 SELECT/JSON 경계, 단일clock·heavy 순서·unknown 재시작 차단, Compose Mounts API의 실제 owned mount 검증을 대상으로 한다. 첫 실행의 test source locator1오류와 Windows의 Linux path fixture1오류는 각각 수정 이력에 남겼다. 이는 runtime 실패나 성공 기록이 아니다.
+
+## 명령 진단을 추가한 별도 실행
+
+첫 실행의 255ms 실패와 정리 미관측은 원문 그대로 보존합니다. 검토한 새 runner와 runtime manifest로 별도 GitHub 격리 실행을 한 번 수행해 실패 명령을 관측합니다. 첫 GitHub 실행을 다시 시작하거나 결과를 바꾸지 않습니다. 각 실행은 자기 workload의 단일 600초 예산을 사용하며, 새 실행 결과는 첫 실패와 별도 근거로 기록합니다.
+
+새 summary schemaVersion2에 `commandDiagnostics`와 `cleanupDiagnostics`만 추가한다. 각 command event는 sequence·고정 stage/category·checkRequested·returnCode·timedOut·고정 outcome으로 제한한다. Compose start의 PostgreSQL/Garage/Spark/Trino/reader 분류도 고정 enum이며, 알려지지 않은 인자 값은 출력하지 않는다. `check=False`의 예상 가능한 nonzero는 lastCommand에 기록하되 fatal failure로 바꾸지 않는다. timeout은 check 여부와 무관하게 예외로 전파되고 고정 timeout 사실을 남긴다. Failure16개까지 첫 실패부터 보존하며, 후속 cleanup 실패가 최초 command 실패를 덮지 않는다. 초과분은 truncated로 표시한다.
+
+인자·경로·CID·object key·stdout/stderr·exception message·TimeoutExpired.cmd는 공개 event에 넣지 않는다. 원래 non-sensitive raw 출력은 private 파일에만 남기고 credential-sensitive 출력 생략 정책은 유지한다. cleanup의 initializer/container 결과는 STOPPED_VERIFIED 또는 FAILED_OR_UNOBSERVED로만 구분하며 미관측을 성공으로 바꾸지 않는다. 실행 명령·기존 timeout/check 동작·single600s clock·SQL·자원·권한·정리 절차는 변경하지 않는다. 한 실행 안에서 추가 명령·자동 재시도·clock 초기화나 추정 원인에 따른 동작 변경은 하지 않습니다.

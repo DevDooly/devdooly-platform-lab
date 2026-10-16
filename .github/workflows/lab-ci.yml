@@ -276,7 +276,7 @@ jobs:
         # The 45-minute job bound includes preparation; workload stays 600s.
         run: >-
           python3 -B infra/cloud-lakehouse-ci/run_trial9.py
-          --source-manifest-sha256 d20d1bd4726b4c94c208234a1350beb00e0589772f2ca904a5e38ba0a7f1e676
+          --source-manifest-sha256 d649623c17bbb1b86f030b825e14c69620bd8b17748632056dc76aa76ee4f9c3
           --ack-fresh-cloud-trial9
       - name: Upload only the safe Cloud lakehouse summary
         if: always()

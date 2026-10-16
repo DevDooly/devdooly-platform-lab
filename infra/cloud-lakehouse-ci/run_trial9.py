@@ -30,6 +30,31 @@ ROLES = {"postgres": (500000000, 512*1024**2, 256), "garage": (500000000, 512*10
          "spark": (1000000000, 3*1024**3, 512), "trino": (1000000000, 4*1024**3, 512), "reader": (100000000, 128*1024**2, 16)}
 PHASES = {"SESSION", "GZIP_DEFAULT", "FROZEN_WRITE_AND_SILVER", "BEFORE_COMPACTION_WHOLE_CAPTURE",
           "COMPACTION_ONCE", "THREE_SNAPSHOTS_AND_SILVER_VERIFY", "AFTER_COMPACTION_WHOLE_CAPTURE", "STOP_SESSION", "COMPLETED"}
+COMMAND_STAGES = {"PREPARE", "CREATE_BASE_SERVICES", "INITIALIZER", "START_POSTGRES", "START_GARAGE",
+                  "BASE_SERVICE_READINESS", "GARAGE_SETUP", "SPARK", "TRINO", "READER", "FINAL_VERIFY",
+                  "FAILURE_LOG_CAPTURE", "CLEANUP_INITIALIZER", "CLEANUP_CONTAINERS", "UNCLASSIFIED_STAGE"}
+
+
+def command_category(args):
+    # Return fixed labels only. Never return an argument, path, role or message.
+    if type(args) not in (list, tuple) or len(args) < 2 or args[0] != "docker": return "UNCLASSIFIED_COMMAND"
+    if args[1] == "compose":
+        action = args[6] if len(args) > 6 else None
+        if action == "start":
+            return {"postgres": "COMPOSE_START_POSTGRES", "garage": "COMPOSE_START_GARAGE", "spark": "COMPOSE_START_SPARK",
+                    "trino": "COMPOSE_START_TRINO", "reader": "COMPOSE_START_READER"}.get(args[7] if len(args) == 8 else None, "COMPOSE_START_OTHER")
+        return {"create": "COMPOSE_CREATE", "exec": "COMPOSE_EXEC"}.get(action, "COMPOSE_OTHER")
+    pair = tuple(args[1:3])
+    if pair in (("image", "inspect"), ("network", "inspect"), ("volume", "inspect"), ("volume", "ls")):
+        return {("image", "inspect"): "IMAGE_INSPECT", ("network", "inspect"): "NETWORK_INSPECT",
+                ("volume", "inspect"): "VOLUME_INSPECT", ("volume", "ls"): "VOLUME_INVENTORY"}[pair]
+    return {"ps": "CONTAINER_INVENTORY", "inspect": "CONTAINER_INSPECT", "pull": "IMAGE_PULL", "build": "IMAGE_BUILD",
+            "create": "CONTAINER_CREATE", "start": "CONTAINER_START", "stop": "CONTAINER_STOP"}.get(args[1], "UNCLASSIFIED_COMMAND")
+
+
+def command_observation(sequence, stage, args, check):
+    return {"sequence": sequence, "stage": stage if stage in COMMAND_STAGES else "UNCLASSIFIED_STAGE",
+            "category": command_category(args), "checkRequested": bool(check), "returnCode": None, "timedOut": False, "outcome": "STARTED"}
 
 
 def load(path, name):
@@ -121,6 +146,19 @@ def make_attempt(base, root, project, images):
             self.image_volumes = {}
             self.prior_volumes = set()
             self.trino_stop = None
+            self.command_stage = "PREPARE"
+            self.last_command = None
+            self.command_failures = []
+            self.command_failures_truncated = False
+
+        def command_diagnostics(self):
+            return {"lastCommand": dict(self.last_command) if self.last_command else None,
+                    "failures": [dict(value) for value in self.command_failures],
+                    "failuresTruncated": self.command_failures_truncated}
+
+        def remember_command_failure(self, observation):
+            if len(self.command_failures) < 16: self.command_failures.append(dict(observation))
+            else: self.command_failures_truncated = True
 
         def command(self, args, timeout=60, sensitive=False, check=True):
             if self.deadline and not self.safety_stop:
@@ -128,15 +166,30 @@ def make_attempt(base, root, project, images):
             elif self.safety_stop:
                 timeout = min(timeout, 15 if args[:2] == ["docker", "stop"] else 5)
             self.sequence += 1
+            observation = command_observation(self.sequence, self.command_stage, args, check)
+            self.last_command = observation
             base.save(root / ("command-%03d-intent.json" % self.sequence), {"sequence": self.sequence,
                       "timeoutSeconds": timeout, "outputPrivateOnly": True, "sensitiveOutputSkipped": sensitive, "automaticRetry": False})
-            result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
-            require(len(result.stdout) <= 8*1024**2 and len(result.stderr) <= 8*1024**2, "COMMAND_OUTPUT_BOUND")
-            if not sensitive:
-                base.save(root / ("command-%03d.stdout" % self.sequence), result.stdout)
-                base.save(root / ("command-%03d.stderr" % self.sequence), result.stderr)
-            require(not check or result.returncode == 0, "OWN_FRESH_COMMAND_FAILED_NO_RETRY")
-            return result
+            try:
+                result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
+                observation["returnCode"] = result.returncode
+                observation["outcome"] = "RETURNED_ZERO" if result.returncode == 0 else "RETURNED_NONZERO"
+                if len(result.stdout) > 8*1024**2 or len(result.stderr) > 8*1024**2: observation["outcome"] = "OUTPUT_BOUND_EXCEEDED"
+                require(len(result.stdout) <= 8*1024**2 and len(result.stderr) <= 8*1024**2, "COMMAND_OUTPUT_BOUND")
+                if not sensitive:
+                    base.save(root / ("command-%03d.stdout" % self.sequence), result.stdout)
+                    base.save(root / ("command-%03d.stderr" % self.sequence), result.stderr)
+                require(not check or result.returncode == 0, "OWN_FRESH_COMMAND_FAILED_NO_RETRY")
+                return result
+            except subprocess.TimeoutExpired:
+                observation.update(outcome="TIMED_OUT", timedOut=True)
+                self.remember_command_failure(observation)
+                raise
+            except Exception:
+                if observation["outcome"] == "STARTED": observation["outcome"] = "START_FAILED"
+                elif observation["outcome"] == "RETURNED_ZERO": observation["outcome"] = "COMMAND_PROCESSING_FAILED"
+                self.remember_command_failure(observation)
+                raise
 
         def containers(self):
             ids = self.command(["docker", "ps", "-aq", "--no-trunc", "--filter", "label=com.docker.compose.project=" + project]).stdout.decode().split()
@@ -186,6 +239,7 @@ def make_attempt(base, root, project, images):
 
         def start(self, role):
             require(role in ROLES and role not in self.started_roles, "ONE_EXPLICIT_START_EACH_FRESH_ROLE")
+            self.command_stage = {"postgres": "START_POSTGRES", "garage": "START_GARAGE", "spark": "SPARK", "trino": "TRINO", "reader": "READER"}[role]
             self.deadline.remaining(180, 90)
             existing = {value["role"]: value for value in self.containers()}
             if role == "trino":
@@ -353,6 +407,7 @@ def main():
     passed, stopped, initializer_stopped, failure, result = False, False, False, None, {}
     captures, started = {}, None
     public_diagnostic, progress = None, None
+    cleanup_diagnostics = {"initializer": "NOT_OBSERVED", "containers": "NOT_OBSERVED"}
     checks = {name: False for name in ("frozenInputs", "vendor", "pinnedImages", "freshPhysicalVolumes", "actualMemAvailable7Gi", "internalNetwork", "singleClock", "normalSparkExit", "normalTrinoExit", "pythonReaderExit", "jdbcAndWholeObjectsUnchanged")}
     try:
         checks["frozenInputs"] = True
@@ -403,6 +458,7 @@ def main():
         found = attempt.command(["docker", "volume", "ls", "-q"], sensitive=True).stdout.decode().split()
         require(len(found) <= 512 and all(name not in found for name in names), "EXACT_NEW_NAMED_VOLUMES_ABSENT")
         attempt.prior_volumes = set(found)
+        attempt.command_stage = "CREATE_BASE_SERVICES"
         attempt.cli("create", "--no-build", "postgres", "garage")
         network = json.loads(attempt.command(["docker", "network", "inspect", project + "_trial"]).stdout)[0]
         require(network["Internal"] is True and network["Labels"]["com.docker.compose.project"] == project, "ACTUAL_FRESH_INTERNAL_NETWORK")
@@ -412,6 +468,7 @@ def main():
             require(volume["Name"] == name and volume["Driver"] == "local" and not volume["Options"]
                     and volume["Labels"]["com.docker.compose.project"] == project, "FRESH_OWN_LOCAL_VOLUME_NO_EXTERNAL_SOURCE")
         checks["freshPhysicalVolumes"] = True
+        attempt.command_stage = "INITIALIZER"
         base.save(root / "initializer-intent.json", {"name": attempt.initializer_name, "automaticRetry": False})
         attempt.initializer_intended = True
         attempt.command(["docker", "create", "--name", attempt.initializer_name, "--label", "devdooly.io.spark-ci-project=" + project,
@@ -425,6 +482,7 @@ def main():
         base.save(root / "proof/clock.json", {"startedMonotonic": started, "hostBootId": Path("/proc/sys/kernel/random/boot_id").read_text().strip(), "budgetSeconds": 600}, 0o444)
         checks["singleClock"] = True
         attempt.start("postgres"); attempt.start("garage")
+        attempt.command_stage = "BASE_SERVICE_READINESS"
         until = time.monotonic() + attempt.deadline.remaining(60, 90)
         while True:
             require(time.monotonic() < until, "PG_AND_GARAGE_READY_DEADLINE")
@@ -432,6 +490,7 @@ def main():
             node_result = attempt.cli("exec", "-T", "garage", "/garage", "-c", "/etc/garage.toml", "node", "id", "--quiet", check=False)
             if pg.returncode == node_result.returncode == 0: break
             time.sleep(1)
+        attempt.command_stage = "GARAGE_SETUP"
         node = node_result.stdout.decode().strip().split("@")[0]
         require(re.fullmatch(r"[a-f0-9]{64}", node), "FRESH_GARAGE_NODE_ID")
         require(re.match(r"^17\.11(?:\s|$)", attempt.cli("exec", "-T", "postgres", "psql", "-X", "-A", "-t", "-U", "lab_bootstrap", "-d", "iceberg_lab", "-c", "SHOW server_version").stdout.decode().strip()), "POSTGRES_17_11")
@@ -453,6 +512,7 @@ def main():
         env = {"CATALOG_PASSWORD": password, "S3_ENDPOINT": endpoint, "S3_BUCKET": "platform-lab-iceberg-20261015", "S3_ACCESS_KEY": key["accessKeyId"], "S3_SECRET_KEY": key["secretAccessKey"]}
         base.save(root / "trino.env", ("\n".join(name + "=" + value for name, value in env.items()) + "\n").encode(), 0o444)
         del key, password, env
+        attempt.command_stage = "SPARK"
         attempt.cli("create", "--no-build", "spark")
         attempt.containers(); attempt.start("spark")
         captures["spark"] = attempt.wait_clean("spark", 180); checks["normalSparkExit"] = True
@@ -462,6 +522,7 @@ def main():
                 and diagnostic["phase"] == "COMPLETED", "ACTUAL_SPARK_RESULT_AND_CLOSE_PROOF")
         snapshot_chain(spark["snapshots"], 3); files(spark["beforeFiles"], 2); files(spark["afterFiles"], 1)
         before_jdbc = jdbc(attempt); base.save(root / "jdbc-before-trino.private", before_jdbc)
+        attempt.command_stage = "TRINO"
         attempt.cli("create", "--no-build", "trino"); attempt.containers(); attempt.start("trino")
         until = time.monotonic() + attempt.deadline.remaining(90, 90)
         while True:
@@ -474,11 +535,13 @@ def main():
         result = verify_trino(attempt, spark, oracle, base, root)
         require(jdbc(attempt) == before_jdbc, "JDBC_POINTERS_UNCHANGED_BY_TRINO_SELECTS")
         captures["trino"] = stop_normal_trino(attempt, base, root); checks["normalTrinoExit"] = True
+        attempt.command_stage = "READER"
         attempt.cli("create", "--no-build", "reader"); attempt.containers(); attempt.start("reader")
         captures["reader"] = attempt.wait_clean("reader", 60); checks["pythonReaderExit"] = True
         reader = read_proof(root, "reader-result.json")
         require(reader["passed"] is True and reader["allPreTrinoBytesEqual"] is True and reader["onlyGetAndList"] is True
                 and reader["oldObjects"] == spark["oldWarehouseObjects"] and reader["wholeObjects"] == spark["afterWarehouseObjects"], "ACTUAL_WHOLE_OBJECT_COMPARISON_AFTER_TRINO")
+        attempt.command_stage = "FINAL_VERIFY"
         require(jdbc(attempt) == before_jdbc, "FINAL_JDBC_POINTERS_UNCHANGED")
         checks["jdbcAndWholeObjectsUnchanged"] = True
         result.update({"oldWarehouseObjects": reader["oldObjects"], "postTrinoWholeObjects": reader["wholeObjects"],
@@ -504,25 +567,32 @@ def main():
         try:
             # Private bounded diagnostics precede any owned stop. No message is public.
             if not passed:
+                attempt.command_stage = "FAILURE_LOG_CAPTURE"
                 for value in attempt.containers():
                     if value["role"] in ("spark", "trino", "reader"):
                         capture_private_tail(base, root, attempt, value)
         except Exception:
             pass
         try:
+            attempt.command_stage = "CLEANUP_INITIALIZER"
             init = attempt.initializer()
             if init and init["running"]: attempt.command(["docker", "stop", "--time=10", init["id"]], timeout=15)
             require(attempt.initializer() is None or not attempt.initializer()["running"], "OWN_INITIALIZER_STOPPED")
             initializer_stopped = True
+            cleanup_diagnostics["initializer"] = "STOPPED_VERIFIED"
         except Exception:
             passed = False
+            cleanup_diagnostics["initializer"] = "FAILED_OR_UNOBSERVED"
         try:
+            attempt.command_stage = "CLEANUP_CONTAINERS"
             for value in attempt.containers():
                 if value["running"]: attempt.command(["docker", "stop", "--time=10", value["id"]], timeout=15)
             require(all(not value["running"] for value in attempt.containers()), "ALL_EXACT_OWN_PROJECT_CONTAINERS_STOPPED")
             stopped = True
+            cleanup_diagnostics["containers"] = "STOPPED_VERIFIED"
         except Exception:
             passed = False
+            cleanup_diagnostics["containers"] = "FAILED_OR_UNOBSERVED"
     elapsed = None if started is None else int((time.monotonic() - started)*1000)
     if passed and elapsed is not None and elapsed > 600000:
         failure = {"type": "Deadline", "code": "WHOLE_WORKLOAD_600_SECONDS_EXCEEDED"}
@@ -530,8 +600,9 @@ def main():
         failure = {"type": "Observation", "code": "OWN_STOP_OUTCOME_UNOBSERVED_NO_RETRY"}
     passed = passed and stopped and initializer_stopped and all(checks.values()) and elapsed is not None and elapsed <= 600000
     passed = passed and public_diagnostic is not None and public_diagnostic["passed"] is True
-    summary = {"schemaVersion": 1, "scope": SCOPE, "passed": passed, "capturedAt": base.utc(), "sourceCommit": source,
+    summary = {"schemaVersion": 2, "scope": SCOPE, "passed": passed, "capturedAt": base.utc(), "sourceCommit": source,
                "failure": failure, "result": result if passed else {}, "checks": checks, "workloadElapsedMillis": elapsed,
+               "commandDiagnostics": attempt.command_diagnostics(), "cleanupDiagnostics": cleanup_diagnostics,
                "bootstrapDiagnostic": public_diagnostic, "bootstrapProgress": progress,
                "workloadBudgetSeconds": 600, "buildAndPullExcludedFromWorkloadClock": True,
                "plannedSequentialPeakMemoryBytes": 5*1024**3, "requiredActualMemAvailableBytes": 7*1024**3,
