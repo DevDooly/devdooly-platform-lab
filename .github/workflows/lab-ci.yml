@@ -15,6 +15,7 @@ on:
       - infra/iceberg-lab/**
       - infra/spark-ci/**
       - infra/cloud-lakehouse-ci/**
+      - infra/iceberg-retention-ci/**
       - infra/image-lock.json
       - infra/scripts/prepare-local-env.py
       - infra/scripts/backup-lab.py
@@ -43,6 +44,11 @@ on:
         type: boolean
       run_cloud_lakehouse_trial:
         description: Run one fresh Cloud Spark to Trino compaction trial
+        required: false
+        default: false
+        type: boolean
+      run_iceberg_capture_trial:
+        description: Run one fresh Cloud closed-copy capture without retention apply
         required: false
         default: false
         type: boolean
@@ -285,4 +291,109 @@ jobs:
           name: isolated-cloud-lakehouse-summary-${{ github.run_id }}-${{ github.run_attempt }}
           path: .local/cloud-trial9-public/summary.json
           if-no-files-found: error
+          retention-days: 7
+
+  isolated-iceberg-capture:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_iceberg_capture_trial == true && inputs.run_spark_trial != true && inputs.run_s3_trial != true && inputs.run_cloud_lakehouse_trial != true }}
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout fresh closed-copy capture
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up same-job Temurin Java 21 compiler
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Verify pinned sources then all 85 Linux offline contracts
+        # Base27 + archive24 + bounded7 + prep8 + CLI14 + normalization5; every literal source pin precedes test imports.
+        # This root process writes only its tests' fresh temporary fixtures.
+        run: |
+          sudo -n env -i \
+            PATH=/usr/bin:/bin LANG=C.UTF-8 \
+            PLATFORM_LAB_SOURCE_ROOT="$GITHUB_WORKSPACE" \
+            /usr/bin/python3 -I -B - <<'PY'
+          """Inline source-pinned Linux offline workflow gate."""
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import platform
+          import re
+          import stat
+          import sys
+          import unittest
+
+          CLI_SHA = 'b283da01f5bba010e0cd1945963d4ce3860a0ca57f81597470a23bb5adf548cb'
+          MANIFEST_SHA = '6b362710597d77ee7a37a59a39aef5e3d6ff59d1f509ca0103192b104a0340fc'
+          EXPECTED_TESTS = 85
+          TEST_SHAS = {
+              'test_archive_classes.py': 'c627b15ff2275cee17114bc16ebaba5af80ede1d4995c20eafac135eda5a862d',
+              'test_bounded_process.py': '83d160015798e18986c32bf3af6665373c52f3c0b8bcbaf881bd788b19434438',
+              'test_composite.py': '2f7080816959573c845281d023e1a7346ced6626593806c1e0a52c5be7e6173c',
+              'test_copy_loader.py': 'fb8ad9febef1d307244d57f4944d043985d1a756a4b5559a8e442fe752423196',
+              'test_named_observer.py': '85ff4307d821dcb0c4ba8a8eb9ec4e4927ac158d887f3899df62ac9cdca8a477',
+              'test_normalize_phases.py': '8efc3105cdcadee687ce7e9881394ef3e778135ccd7abc900c89f526ec3e5cd8',
+              'test_prep_decoder.py': '9cedbc3d9192773847a6b554be1db227632405d1b931623af324e83635c40a8b',
+              'test_run_capture.py': '03b30a4f84ebbb78f5559eeb4b3cea24b5bc9d889baca6810d33393113a74ba5',
+          }
+          assert sys.platform == 'linux' and os.geteuid() == 0, 'ACTUAL_LINUX_ROOT_FIXTURES_REQUIRED'
+          assert all(re.fullmatch('[a-f0-9]{64}', value) for value in (CLI_SHA, MANIFEST_SHA, *TEST_SHAS.values())), 'FINAL_LITERAL_SOURCE_PINS_REQUIRED'
+          repo = Path(os.environ['PLATFORM_LAB_SOURCE_ROOT']).resolve(strict=True)
+          folder = repo / 'infra/iceberg-retention-ci'
+          cli_path = folder / 'run_capture.py'
+          first = cli_path.lstat()
+          assert stat.S_ISREG(first.st_mode) and first.st_nlink == 1 and 0 < first.st_size <= 262144, 'BOUNDED_REGULAR_CLI_SOURCE_REQUIRED'
+          with os.fdopen(os.open(cli_path, os.O_RDONLY | os.O_NOFOLLOW), 'rb') as stream:
+              opened = os.fstat(stream.fileno())
+              raw = stream.read(262145)
+              last = os.fstat(stream.fileno())
+          after = cli_path.lstat()
+          identity = lambda value: (value.st_dev, value.st_ino, value.st_mode, value.st_nlink, value.st_size, value.st_mtime_ns, value.st_ctime_ns)
+          assert identity(first) == identity(opened) == identity(last) == identity(after) and len(raw) == first.st_size, 'STABLE_CLI_SOURCE_REQUIRED'
+          assert hashlib.sha256(raw).hexdigest() == CLI_SHA, 'LITERAL_CLI_SOURCE_SHA_REQUIRED'
+          # The pinned CLI has only stdlib imports and no import-time IO. Its definitions
+          # verify all eleven runtime files, frozen seven/base eight, and five externals.
+          gate = {'__name__': 'capture_source_gate_only', '__file__': str(cli_path)}
+          exec(compile(raw, str(cli_path), 'exec'), gate)
+          sources, originals = gate['reviewed_sources'](repo, MANIFEST_SHA)
+          assert sources['run_capture.py'] == raw, 'SAME_VERIFIED_CLI_REQUIRED'
+          assert {path.name for path in folder.glob('test_*.py')} == set(TEST_SHAS), 'EXACT_EIGHT_TEST_FILES_REQUIRED'
+          for name, expected in TEST_SHAS.items():
+              assert hashlib.sha256(gate['read'](folder / name)).hexdigest() == expected, 'LITERAL_TEST_SOURCE_SHA_REQUIRED'
+          sys.path.insert(0, str(folder))
+          suite = unittest.defaultTestLoader.discover(str(folder), pattern='test_*.py')
+          assert suite.countTestCases() == EXPECTED_TESTS, 'EXACT_OFFLINE_TEST_DISCOVERY_COUNT_REQUIRED'
+          result = unittest.TextTestRunner(verbosity=2).run(suite)
+          assert result.testsRun == EXPECTED_TESTS and result.wasSuccessful() and not result.skipped, 'ALL_LINUX_CONTRACTS_WITH_ZERO_SKIPS_REQUIRED'
+          assert gate['reviewed_sources'](repo, MANIFEST_SHA) == (sources, originals), 'RUNTIME_SOURCE_BYTES_UNCHANGED_AFTER_TESTS'
+          for name, expected in TEST_SHAS.items():
+              assert hashlib.sha256(gate['read'](folder / name)).hexdigest() == expected, 'TEST_SOURCE_BYTES_UNCHANGED_AFTER_TESTS'
+          print(json.dumps({'scope': 'SOURCE_PINNED_LINUX_OFFLINE_CONTRACTS_ONLY',
+              'testsRun': result.testsRun, 'failures': len(result.failures), 'errors': len(result.errors),
+              'skips': len(result.skipped), 'effectiveUid': os.geteuid(), 'pythonVersion': platform.python_version(),
+              'cliSourceSha256': CLI_SHA, 'runtimeManifestSha256': MANIFEST_SHA, 'testSourceSha256': TEST_SHAS,
+              'sourceBytesUnchanged': True, 'actualRuntimeCalled': False}, sort_keys=True))
+          PY
+      - name: Prepare decoder then run one new fresh capture
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        # The explicit CLI prepares the compiler/classpath before original main.
+        # Prep has a separate 600s bound; the frozen workload clock stays 600s.
+        run: >-
+          python3 -I -B infra/iceberg-retention-ci/run_capture.py
+          --source-manifest-sha256 6b362710597d77ee7a37a59a39aef5e3d6ff59d1f509ca0103192b104a0340fc
+          --ack-fresh-closed-copy-capture
+      - name: Upload only the new safe closed-copy summary
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: iceberg-closed-copy-summary-${{ github.sha }}
+          path: .local/iceberg-closed-copy-public/summary.json
+          if-no-files-found: ignore
           retention-days: 7

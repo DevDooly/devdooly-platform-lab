@@ -1,0 +1,58 @@
+{
+  "automaticRetryPerformed": false,
+  "conclusion": "failure",
+  "createdAt": "2026-10-16T08:48:30Z",
+  "linuxContracts": {
+    "actualRuntimeCalled": false,
+    "cliSourceSha256": "9338364fc5563f6d7bec63f39519b0b03364e82e2f74de22f2caa83cc76ba216",
+    "effectiveUid": 0,
+    "errors": 0,
+    "failures": 0,
+    "pythonVersion": "3.12.3",
+    "runtimeManifestSha256": "c8cecad8fc09ab20a78382c4a96daf5c9e761065cb774abd6cd9b65d0ee8be28",
+    "scope": "SOURCE_PINNED_LINUX_OFFLINE_CONTRACTS_ONLY",
+    "skips": 0,
+    "sourceBytesUnchanged": true,
+    "testSourceSha256": {
+      "test_archive_classes.py": "b967f4e1a6526eea8483625e142611444cc197fb3a2785524d8b35af497bed49",
+      "test_bounded_process.py": "83d160015798e18986c32bf3af6665373c52f3c0b8bcbaf881bd788b19434438",
+      "test_composite.py": "2f7080816959573c845281d023e1a7346ced6626593806c1e0a52c5be7e6173c",
+      "test_copy_loader.py": "fb8ad9febef1d307244d57f4944d043985d1a756a4b5559a8e442fe752423196",
+      "test_named_observer.py": "85ff4307d821dcb0c4ba8a8eb9ec4e4927ac158d887f3899df62ac9cdca8a477",
+      "test_prep_decoder.py": "95d1bc8f5c83915adc38d3b8eb93b9b1abb0057f389da19014123ee02b7ba8b3",
+      "test_run_capture.py": "7f94f565bbd195c3b603270487c1e0dc0f589030d2613c3179233aaf4e24c41d"
+    },
+    "testsRun": 56
+  },
+  "privateProofsRetrieved": false,
+  "runAttempt": 1,
+  "runId": 38876152951,
+  "safeFailureCategory": "PREP_NOT_VERIFIED",
+  "safeSummaryBytes": 1317,
+  "safeSummarySha256": "2c6b7c0220da6feee86739740cbda70f8fb255e900e30c039fd941dbfb43df3e",
+  "safeSummaryStatus": "FAILED",
+  "scope": "ACTUAL_FIRST_CLOUD_CAPTURE_RUN",
+  "sourceCommit": "48a7fee222c8a25a70c446ac55b9b458be2ccab2",
+  "steps": [
+    {
+      "completedAt": "2026-10-16T08:51:04Z",
+      "conclusion": "success",
+      "name": "Verify pinned sources then all 56 Linux offline contracts",
+      "startedAt": "2026-10-16T08:51:04Z"
+    },
+    {
+      "completedAt": "2026-10-16T08:51:35Z",
+      "conclusion": "failure",
+      "name": "Prepare decoder then run one new fresh capture",
+      "startedAt": "2026-10-16T08:51:04Z"
+    },
+    {
+      "completedAt": "2026-10-16T08:51:36Z",
+      "conclusion": "success",
+      "name": "Upload only the new safe closed-copy summary",
+      "startedAt": "2026-10-16T08:51:35Z"
+    }
+  ],
+  "updatedAt": "2026-10-16T08:51:39Z",
+  "workflowUrl": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38876152951"
+}

@@ -1,0 +1,58 @@
+{
+  "captureConclusion": "failure",
+  "conclusion": "failure",
+  "createdAt": "2026-10-16T10:56:46Z",
+  "offlineLinux": {
+    "actualRuntimeCalled": false,
+    "cliSourceSha256": "9999315e0c4832020e13fa21c26ddb864880ddc44588f35d0be09687ac9de342",
+    "effectiveUid": 0,
+    "errors": 0,
+    "failures": 0,
+    "pythonVersion": "3.12.3",
+    "runtimeManifestSha256": "6aea1d3987d4a258718f4fd242d05ff1364a73cf4772272260975fce7eb172cd",
+    "scope": "SOURCE_PINNED_LINUX_OFFLINE_CONTRACTS_ONLY",
+    "skips": 0,
+    "sourceBytesUnchanged": true,
+    "testSourceSha256": {
+      "test_archive_classes.py": "c7084996ee6b810dfe02cc1725d19fa06c50106fa534a9efefe410bf8e5a69b9",
+      "test_bounded_process.py": "83d160015798e18986c32bf3af6665373c52f3c0b8bcbaf881bd788b19434438",
+      "test_composite.py": "2f7080816959573c845281d023e1a7346ced6626593806c1e0a52c5be7e6173c",
+      "test_copy_loader.py": "fb8ad9febef1d307244d57f4944d043985d1a756a4b5559a8e442fe752423196",
+      "test_named_observer.py": "85ff4307d821dcb0c4ba8a8eb9ec4e4927ac158d887f3899df62ac9cdca8a477",
+      "test_prep_decoder.py": "95d1bc8f5c83915adc38d3b8eb93b9b1abb0057f389da19014123ee02b7ba8b3",
+      "test_run_capture.py": "0c0fc8599611fd582ed68c94fa9c5573f2af3bb11b87b2e234a55275ebf774a8"
+    },
+    "testsRun": 73
+  },
+  "privateArtifactsRead": false,
+  "publicSummaryBytes": 1729,
+  "publicSummarySha256": "78e07be0b1116224507481de08f15a8792b26277d7734e79b2b6e8883d4dd1af",
+  "rawPublicLogsPersisted": false,
+  "runAttempt": 1,
+  "runId": "38890545126",
+  "sourceCommit": "a00ddbccf859c249637f65303654dee659130bdc",
+  "steps": [
+    {
+      "completedAt": "2026-10-16T10:59:18Z",
+      "conclusion": "success",
+      "name": "Verify pinned sources then all 73 Linux offline contracts",
+      "startedAt": "2026-10-16T10:59:16Z"
+    },
+    {
+      "completedAt": "2026-10-16T10:59:50Z",
+      "conclusion": "failure",
+      "name": "Prepare decoder then run one new fresh capture",
+      "startedAt": "2026-10-16T10:59:18Z"
+    },
+    {
+      "completedAt": "2026-10-16T10:59:52Z",
+      "conclusion": "success",
+      "name": "Upload only the new safe closed-copy summary",
+      "startedAt": "2026-10-16T10:59:50Z"
+    }
+  ],
+  "updatedAt": "2026-10-16T10:59:55Z",
+  "url": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38890545126",
+  "verifyConclusion": "success",
+  "workflowRerun": false
+}
