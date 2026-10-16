@@ -1,0 +1,52 @@
+{
+  "basePins": {
+    "infra/spark-ci/bootstrap_spark.py": "e10ef3cca6a71b7ce362ab769fdb1436e2b84bf3705e584d6d14c9173b0ab816",
+    "infra/spark-ci/compose_plan.py": "fcaa911c8dcb9c6b56821ed3ff40d71c282658c8f5beb88200bff07c25336ee5",
+    "infra/spark-ci/run_ci.py": "d190d5f39ca9232f6417319033c1d4f645966e318468d601eaba32a9b3a3d144",
+    "infra/spark-silver/Dockerfile.candidate": "334b4865c926062d40f25801e6c05a6390b9c957c87c4c7b3416aed62001bf24",
+    "infra/spark-silver/artifact-lock.downloaded.json": "6ca247b283025189ecf36c67ae03fe9101b25a53fe7b62593725e076276e33e3",
+    "infra/spark-silver/silver_contract.py": "889fdb91ec4613d19f62a622e4cc889a27e38012905019f05d4743130f8268df",
+    "infra/spark-silver/spark_silver.py": "71bd63230704c6d880eb1208abc63ef5080448cfd46bf3295f1bc77f38ddd9f7",
+    "infra/spark-silver/synthetic-v1.ndjson": "39ba10d8c47dce790f3ccc9c9134fea593d6de31f1f3a7992ca61d9f554da3b5"
+  },
+  "files": [
+    {
+      "bytes": 7195,
+      "path": "bootstrap_trial9.py",
+      "sha256": "cb2504cc9bb192c6e97eb4acf0d6d441c51c030db1e9abde197607245b4cbd6b"
+    },
+    {
+      "bytes": 1630,
+      "path": "compose_trial9.py",
+      "sha256": "cd2e98131046913d7dafbdfe2716af8ac350a56235406a9c5b5bb06613b58f76"
+    },
+    {
+      "bytes": 8582,
+      "path": "contract.py",
+      "sha256": "e88d2bedfeb95b71b22e2b5b04701119e8203431d3c8e8cc521958f2dcfad98a"
+    },
+    {
+      "bytes": 2033,
+      "path": "frozen_s3_primitives.py",
+      "sha256": "1225b659b67ce8f1e3d0b7268c4a6c087b97d0154d70400de4420f1a6b340a13"
+    },
+    {
+      "bytes": 2269,
+      "path": "pinned_trino_configuration.py",
+      "sha256": "1cabbc33a9a1fddbb28562514ad24d240eb09dc7219fcc5f1483429c6b4de17b"
+    },
+    {
+      "bytes": 46112,
+      "path": "run_trial9.py",
+      "sha256": "73e2293210aba3d9522013d923f8d97bd292baa4623736239d55cc21d9321fe2"
+    },
+    {
+      "bytes": 6762,
+      "path": "s3_readonly.py",
+      "sha256": "4fe35a61a61f4880edb8171d7bfd68a285e9179f07a8d3460a9a3b99a179821f"
+    }
+  ],
+  "schemaVersion": 1,
+  "scope": "FRESH_CLOUD_SPARK_TRINO_BRONZE_TWO_FILE_COMPACTION",
+  "status": "SOURCE_ONLY_NOT_RUN"
+}

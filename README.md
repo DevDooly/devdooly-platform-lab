@@ -11,11 +11,11 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 | 단계 | 상태 | 확인할 결과 |
 | --- | --- | --- |
 | 최대 입력·동시 접수 | 검증 완료 | 격리 환경의 최대 1,000건·동시 2/8개 접수와 실제 배포 환경의 1,000건 처리·데이터 보존 |
-| Cloud 시작 오류 수정 | 코드 검토·회귀 검사 중 | mount 순서 차이와 env 파일 관련 시작 실패를 분리하고, 전체 mount 내용·검증한 컨테이너 ID로 시작·정리 조건 유지 |
-| Spark → Trino·compaction | 다음 전체 검증 | 새 격리 환경에서 600초 예산으로 적재·compaction·같은 warehouse 조회·자기 자원 종료 확인 |
-| 현재 DB 백업·격리 복원 | 코드 준비 중 | V1–V4 전체 8개 테이블·원본 BLOB·스키마를 대조하고, 분리된 DB에 복원 후 기존 자료 보존 확인 |
+| Cloud 시작 경계 보정 | 새 전체 실행에서 통과 | 전체 mount 내용·exact CID·OOM-enabled 표현 검사를 유지하며 이전 실패 7개를 보존 |
+| Spark → Trino·compaction | 새 Cloud 격리 검증 완료 | 6→12→12행·현재 파일 2→1·Trino 10개 조회·자기 컨테이너 종료, [실제 근거](docs/evidence/cloud-lakehouse/FULL_SUCCESS.md) |
+| 현재 DB 백업·격리 복원 | 읽기 전용 사전 확인 진행 | 현재 V1–V4 전체 8개 테이블·BLOB·스키마의 실제 호환 확인 후 별도 dump·새 DB 복원 검증; 아직 완료 아님 |
 
-**작성 시점 예상:** 시작 오류 수정과 전체 Cloud 검증의 첫 결과까지 약 **30~45분**, 이후 DB 백업·격리 복원에 **1~2시간 추가**를 예상합니다. 새 오류·CI 대기·운영 조건에 따라 조정하며, 예상 시간은 완료 기록이 아닙니다. [최근 격리 진단](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38837630164) · [진행 중인 PR #56](https://github.com/DevDooly/devdooly-platform-lab/pull/56)
+**현재 진행:** 2026-10-16 03:12 UTC에 새 Cloud 전체 시험을 완료했습니다. 남은 DB 백업·격리 복원은 읽기 전용 사전 확인과 실제 스키마 검토가 통과하는 경우 추가 1~2시간을 예상합니다. 새 호환 오류·검토·CI 대기에 따라 조정하며 완료 시각을 약속하지 않습니다. [Cloud 실제 결과](docs/evidence/cloud-lakehouse/FULL_SUCCESS.md) · [진행 중인 PR #56](https://github.com/DevDooly/devdooly-platform-lab/pull/56)
 
 ## 현재 구현과 검증
 
@@ -25,7 +25,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 역사적 외부 백업의 파일 전용 후속 검증에서 네 구성요소 인증, tar member 2,688개·파일 1,907개의 전체 bytes·metadata, 빈 WAL 조건의 SQLite 무결성과 별도256바이트 키의 새 파일 조립을 확인했습니다. 첫 restore는 동반 파일 가정으로 실패한 기록을 유지합니다. [파일 전용 근거와 한계](docs/evidence/historical-file-restore/README.md)에 결과를 분리했으며, K3s·Jenkins application 기동·자격증명 복호화·전체 archive 복원은 미완료입니다.
 
-[미니 PC native7](docs/evidence/iceberg-jdbc/README.md)은 Trino의 0→6→12행·총 snapshot 3개와 Trino 정상 재시작 뒤 보존을 확인했습니다. PostgreSQL은 같은 프로세스를 유지했습니다. 별도 [Cloud Spark 시험 8](docs/evidence/spark-silver/README.md)은 Bronze 6+6행·snapshot 2개, Silver 성공 7·실패 3·중복 2와 같은 Spark application의 순차 replay를 검증했습니다. 두 정적 기록과 화면은 공개했으며, compaction·새 격리 환경에서 Spark 결과를 같은 warehouse의 Trino로 조회하는 연결·전체 6단계 완료를 뜻하지 않습니다. 미니 PC native7의 중지된 시험 환경과 보관 자료는 유지합니다.
+[미니 PC native7](docs/evidence/iceberg-jdbc/README.md)은 Trino의 0→6→12행·총 snapshot 3개와 Trino 정상 재시작 뒤 보존을 확인했습니다. PostgreSQL은 같은 프로세스를 유지했습니다. 별도 [Cloud Spark 시험 8](docs/evidence/spark-silver/README.md)은 Bronze 6+6행·snapshot 2개, Silver 성공 7·실패 3·중복 2와 같은 Spark application의 순차 replay를 검증했습니다. 두 정적 기록과 화면을 보존하고, 2026-10-16 03:12:33 UTC의 [새 Cloud 시험](docs/evidence/cloud-lakehouse/FULL_SUCCESS.md)에서 Spark→같은 새 warehouse의 Trino 조회·현재 파일 2→1 compaction·자기 자원 종료를 추가 확인했습니다. 미니 PC native7의 중지된 환경과 보관 자료는 유지하며 snapshot 보존 정책·상시 운영·전체 6단계 완료는 별도입니다.
 
 | 영역 | 확인한 결과 | 근거 |
 | --- | --- | --- |

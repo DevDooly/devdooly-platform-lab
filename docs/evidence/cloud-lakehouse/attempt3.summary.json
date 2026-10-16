@@ -1,0 +1,63 @@
+{
+  "automaticRetryPerformed": false,
+  "bootstrapDiagnostic": null,
+  "bootstrapProgress": null,
+  "buildAndPullExcludedFromWorkloadClock": true,
+  "capturedAt": "2026-10-16T02:21:05.009277+00:00",
+  "checks": {
+    "actualMemAvailable7Gi": true,
+    "freshPhysicalVolumes": true,
+    "frozenInputs": true,
+    "internalNetwork": true,
+    "jdbcAndWholeObjectsUnchanged": false,
+    "normalSparkExit": false,
+    "normalTrinoExit": false,
+    "pinnedImages": true,
+    "pythonReaderExit": false,
+    "singleClock": true,
+    "vendor": true
+  },
+  "cleanupDiagnostics": {
+    "containers": "FAILED_OR_UNOBSERVED",
+    "initializer": "STOPPED_VERIFIED"
+  },
+  "commandDiagnostics": {
+    "failures": [],
+    "failuresTruncated": false,
+    "lastCommand": {
+      "category": "CONTAINER_INSPECT",
+      "checkRequested": true,
+      "outcome": "RETURNED_ZERO",
+      "returnCode": 0,
+      "sequence": 37,
+      "stage": "CLEANUP_CONTAINERS",
+      "timedOut": false
+    }
+  },
+  "concurrentHeavyJvmAbsenceVerified": null,
+  "failure": {
+    "code": "SAME_OWN_CONTAINER_FULL_CONFIGURATION",
+    "type": "ValueError"
+  },
+  "kubernetesVerified": false,
+  "miniPcContacted": false,
+  "onlyFreshCloudResources": true,
+  "ownedContainersStopped": false,
+  "ownedInitializerStopped": true,
+  "passed": false,
+  "plannedSequentialPeakMemoryBytes": 5368709120,
+  "priorCloud8OrNative7EvidenceModified": false,
+  "rawLogsOrCredentialsUploaded": false,
+  "readerJavaInvocationPlanned": false,
+  "requiredActualMemAvailableBytes": 7516192768,
+  "result": {},
+  "runnerStorageIsEphemeral": true,
+  "runtimeAvailabilityOrPerformanceClaimed": false,
+  "schemaVersion": 2,
+  "scope": "FRESH_CLOUD_SPARK_TRINO_BRONZE_TWO_FILE_COMPACTION",
+  "snapshotExpirationOrObjectGcPerformed": false,
+  "sourceCommit": "8e55f467faee38cee124690af1e80e65f69fc18c",
+  "volumesDeleted": false,
+  "workloadBudgetSeconds": 600,
+  "workloadElapsedMillis": 263
+}

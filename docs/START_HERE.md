@@ -6,6 +6,8 @@
 
 이전 readiness 운영 검증(2026-10-15 14:54 UTC)은 source `3e0d85be`의 readiness 배포·idle worker 교체·같은 ID 읽기 전용 재시도입니다. API 180개 + 독립 예제 20개, 8개 EXPORTED 작업·export 정보 16개·객체 24개와 Kafka lag 0을 확인했습니다. [전체 근거와 한계](evidence/worker-readiness/CORRECTED_IMAGE.md)를 먼저 읽습니다. [native7 데이터 흐름](evidence/iceberg-jdbc/README.md)과 별도 [Cloud Spark 시험 8](evidence/spark-silver/README.md)은 실제 검증한 정적 기록을 공개했습니다. native7의 빈 snapshot 포함 총 3개와 Cloud Bronze의 데이터 append snapshot 2개는 서로 다른 실험입니다. 공개 관측 카드의 숫자는 각 카드의 실제 수집 시각을 따릅니다.
 
+2026-10-16 03:12:33 UTC의 [새 Cloud 전체 시험](evidence/cloud-lakehouse/FULL_SUCCESS.md)은 별도 fresh warehouse에서 Spark→Trino 10개 조회, 6→12→12행·현재 파일 2→1 compaction과 자기 컨테이너 종료를 확인했습니다. 기존 native7 자료는 유지하며 현재 DB 백업·격리 복원의 읽기 전용 사전 확인은 진행 중입니다. 전체 Phase6·운영 용량·현재 가용성의 완료 표시가 아닙니다.
+
 이전 V4 배포 검증(2026-10-15): API·worker를 source `202ab6806130cfb37e8829ce7d52c89990d8a54a`·schema V4로 전환해 API·웹 32/32, worker 35/35를 확인했습니다. [V4 실제 전환](evidence/admission-v4-deployment/README.md)을 먼저 확인하세요. 해당 시점에는 신규 V4 stage 검증 전이었으며, 아래 V2 처리 결과는 이전 검증입니다. API·worker의 V2 지원 이미지 확인 후 고정 1,000건 작업을 처리했습니다. 총 7개 EXPORTED 작업·파일 정보 14개·Kafka lag 0과 기존 18개 객체 보존을 확인했고, 공개 JSON 전체가 실제 수집 원본과 일치했습니다. [이전 V2 배포·게시 근거](evidence/input-v2-deployment/README.md)에 당시 조건을 남겼습니다. 아래 단계별 기록은 각각 당시의 검증 조건을 보존합니다.
 
 Java API·포트폴리오와 K3s·Jenkins·Argo CD를 Ubuntu 미니 PC에서 운영합니다. 2026-10-15 최초 Kafka·Garage·상시 worker 배포에서는 두 합성 작업의 자동 처리·파일 확인·슬롯 해제와 공개 Pages의 실제 job 관측을 확인했습니다. [최초 배포·게시 근거](evidence/runtime-deployment/README.md)를 보존합니다. 초기 설치는 [미니 PC 근거](evidence/mini-pc/README.md), CI/CD는 [Jenkins 근거](evidence/jenkins-ci/README.md), 이전 플랫폼 collector의 실패 보존·반복 게시 11회는 [플랫폼 수집 근거](evidence/platform-observation/README.md)에 구분해 기록했습니다. 전체 단계는 [진행 목록](ROADMAP.md)을 따릅니다.
@@ -87,7 +89,7 @@ Kafka·Garage의 전용 PVC 3개는 외부 사본에서 새 볼륨으로 복원�
 3. 전용 status credential의 만료·회전과 게시 산출물 보존 운영 정리
 4. Pages 자격증명의 실제 만료·회전과 장기간 반복 운영 검증
 5. 필요한 경우 기존 프록시·DDNS·TLS 조건을 확인한 뒤 공개 읽기 API와 외부망 검증
-6. [보존·자원 기준](runbooks/retention-resource-budget.md)을 유지하며 객체 GC·요청 빈도 제한·과부하 용량·진행 중 장애를 검증하고, AI 합성 예제의 사람 검토·compaction·새 격리 환경에서 Spark 결과를 같은 warehouse의 Trino로 조회하는 검증을 이어가기. 미니 PC native7의 중지된 시험 환경과 보관 자료는 유지하기
+6. [보존·자원 기준](runbooks/retention-resource-budget.md)을 유지하며 객체 GC·요청 빈도 제한·과부하 용량·진행 중 장애와 AI 합성 예제의 사람 검토를 이어가기. [새 Cloud 연결·작은 compaction](evidence/cloud-lakehouse/FULL_SUCCESS.md)은 완료했으며 다음은 현재 DB 백업·격리 복원의 사전 확인과 snapshot 보존 정책. 미니 PC native7의 중지된 시험 환경과 보관 자료는 유지하기
 
 CI/CD의 정상 배포·실패 차단·이전 digest 복구를 확인했으며, 3단계는 제한된 실제 수집·인증 실패·회복과 수동 공개 게시·브라우저를 확인했습니다. 게시 순서 회귀 교정 후 실제 재검증도 완료했고 API·웹 중단·같은 정상 B 복원도 확인했고 정기 운영 검증을 이어가며 새로운 inbound 경로는 열지 않았습니다. 기존 서비스가 있으므로 재부팅·방화벽 변경·프록시 교체를 일괄 실행하지 않습니다. Windows 외부 사본의 무결성, 격리 DB 복원과 호스트 재부팅을 검증했습니다. K3s·Jenkins archive 전체 복원은 아직 별도 작업입니다. PV의 Delete 정책 때문에 PVC·namespace를 수동 삭제하면 데이터가 지워질 수 있습니다.
 

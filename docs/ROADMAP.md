@@ -166,14 +166,15 @@
 - [x] 별도 합성 실증의 PostgreSQL JDBC V1 영속 catalog·Garage backing store 선정과 실제 연결: [native7 근거](evidence/iceberg-jdbc/README.md)
 - [x] Trino에서 원본 0→6→12행·초기 빈 snapshot 1개와 데이터 append 2개·세 시점 조회 검증: [실제 기록](evidence/iceberg-jdbc/summary.json)
 - [x] 독립 Cloud Spark 시험 8의 Bronze 6+6행·snapshot 2개, Silver 성공 7·실패 3·중복 2와 같은 application의 순차 replay write 0회 검증: [근거](evidence/spark-silver/README.md)
-- [ ] compaction과 새 격리 환경에서 Spark 결과를 같은 warehouse의 Trino로 조회하는 연결
+- [x] 새 Cloud warehouse의 Spark→Trino 연결·6→12→12행·현재 파일 2→1 compaction·자기 컨테이너 종료: [실제 근거](evidence/cloud-lakehouse/FULL_SUCCESS.md)
+- [ ] snapshot 보존·만료 정책과 운영 규모 compaction 검증
 - [x] Trino만 정상 재시작한 뒤 같은 행·metadata pointer·warehouse 전체 bytes 조회 검증. PostgreSQL은 같은 프로세스를 유지했으며 재시작은 검증하지 않음: [범위](evidence/iceberg-jdbc/README.md)
 - [x] 시험 PostgreSQL·Trino workload 0·Retain PVC 2개·warehouse 보관과 원래 8개 작업·객체 24개 보존: [종료·보존](evidence/iceberg-jdbc/README.md)
 - [ ] 필요한 경우 Airflow DAG 추가
 - [x] 이번 실증의 명시적 새 20분 예산·heavy 단계 전 CI 유휴 시점 관측·단발 detached 실행·소유 workload 종료와 실패 기록 보존 절차 작성: [runbook](runbooks/iceberg-jdbc-native.md)
 
-완료 조건: 동일 warehouse에서 쓰기·조회·재시작·compaction이 검증되고 실행 시 자원 사용량이 남습니다. 현재는 **Trino·JDBC catalog와 독립 Cloud Spark의 작은 합성 시험을 각각 부분 완료**했습니다. 2026-10-15 19:05:20 UTC의 일곱 번째 실행에서 시점 조회·Trino 정상 재시작·종료·원본 보존을 확인했습니다. 이전 실패와 완료된 DDL의 채택 관계는 [근거](evidence/iceberg-jdbc/README.md)에 보존했습니다.
+완료 조건: 동일 warehouse에서 쓰기·조회·재시작·compaction이 검증되고 실행 시 자원 사용량이 남습니다. 기존 native Trino·Cloud Spark8의 별도 시험에 이어 새 Cloud의 Spark→Trino 연결·작은 compaction을 추가 완료했습니다. 2026-10-15 19:05:20 UTC의 일곱 번째 실행에서 시점 조회·Trino 정상 재시작·종료·원본 보존을 확인했습니다. 이전 실패와 완료된 DDL의 채택 관계는 [근거](evidence/iceberg-jdbc/README.md)에 보존했습니다. 새 Cloud의 2026-10-16 03:12:33 UTC 기록은 같은 Cloud 환경의 재시작·지속 부하 검증을 포함하지 않습니다.
 
-별도 Cloud Spark의 적재·Silver 변환·순차 replay는 완료했지만, compaction·새 격리 환경의 Spark→Trino 같은 warehouse 연결·필요한 경우의 Airflow는 남아 있습니다. 미니 PC native7의 중지된 시험 환경과 보관 자료는 유지합니다. 전체 6단계를 완료로 표시하지 않습니다. PostgreSQL 재시작·호스트 장애·HA·처리량 SLA·현재 가용성은 이번 검증 범위가 아닙니다. CI 유휴 관측은 각 확인 시점의 근거이며, 전체 실행 동안의 비활성을 보장하는 잠금이 아닙니다.
+새 Cloud의 연결·작은 compaction은 완료했으며 snapshot 보존 정책·필요한 경우의 Airflow·현재 DB 백업과 격리 복원은 남아 있습니다. 미니 PC native7의 중지된 시험 환경과 보관 자료는 유지합니다. 전체 6단계를 완료로 표시하지 않습니다. PostgreSQL 재시작·호스트 장애·HA·처리량 SLA·현재 가용성은 이번 검증 범위가 아닙니다. CI 유휴 관측은 각 확인 시점의 근거이며 전체 실행 동안의 비활성을 보장하는 잠금이 아닙니다.
 
 단계는 의존 순서이며 기간 약속이 아닙니다. 각 단계 완료 후 다음 확장의 필요성과 자원을 다시 판단합니다.
