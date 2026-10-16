@@ -15,11 +15,11 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 | Spark → Trino·compaction | Cloud 격리 검증 완료 | 6→12→12행·현재 파일 2→1·Trino 10개 조회·자기 컨테이너 종료, [실제 근거](docs/evidence/cloud-lakehouse/FULL_SUCCESS.md) |
 | 현재 DB 백업·격리 복원 | 논리 복원·공개 기록 완료 | 8개 테이블 스키마·7개 비runtime 테이블 행·BLOB과 원본 DB 보존 확인. 원래 stop 실패와 정상 exit 미관측, 별도 DB 0·Pod 0·Bound/Retain 관측을 [근거](docs/evidence/current-db-restore/README.md)와 [화면](https://devdooly.github.io/devdooly-platform-lab/#db-restore)에 구분 |
 | Iceberg 보존 계획 | 순수 계획기 공개 완료 | 삭제 없는 dry-run·maintenance 테스트 59개 통과, [실행 범위](docs/runbooks/iceberg-retention-dry-run.md); 실제 snapshot 만료·객체 삭제는 미실행 |
-| Iceberg 실제 metadata capture | 소스 준비·Linux/Cloud 실행 대기 | Linux 56개 검사와 실제 image classpath prep을 먼저 확인한 뒤, 새 격리 실행의 닫힌 copy graph를 순수 계획기에 연결. [운영·증거 절차](docs/runbooks/iceberg-closed-copy-capture.md) |
+| Iceberg 실제 metadata capture | Linux 56개 통과·첫 준비 단계 실패 | 첫 실행의 `PREP_NOT_VERIFIED`를 [원문 근거](docs/evidence/iceberg-capture/ATTEMPT_1.md)로 보존. 고정 코드만 공개하는 진단을 추가했으며 새 Linux 62개·Cloud 실행은 대기 중. [절차](docs/runbooks/iceberg-closed-copy-capture.md) |
 
 **현재 진행:** [PR #61](https://github.com/DevDooly/devdooly-platform-lab/pull/61)의 DB 복원 카드·문서와 retention planner가 main에 공개됐습니다. main `4a71ed20`의 Actions와 Jenkins 52도 성공했습니다. 이는 저장소 검증·공개 상태이며 실제 배포 애플리케이션의 source나 서버 가용성이 새로 확인됐다는 뜻은 아닙니다.
 
-**다음 확인:** source-only capture의 Linux 검사 → pinned Spark image의 실제 JAR/classpath prep → 새 격리 Cloud capture 1회 → 원본 실패·성공과 구분한 공개 증거 순서로 진행합니다. 현재 Linux 56개와 실제 prep·Cloud capture는 미실행입니다. 실제 snapshot ID·ref·validation pin·manifest 전이 참조와 writer 정지·동일 포인터·수집 시각을 확인하기 전에는 완전 inventory로 표시하지 않습니다. 기존 [DB 복원](docs/evidence/current-db-restore/README.md)과 [Cloud 성공](docs/evidence/cloud-lakehouse/FULL_SUCCESS.md)은 그대로 보존합니다.
+**다음 확인:** 소스 `48a7fee2`의 [첫 실행](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38876152951)에서 저장소 검증과 Linux 56개는 통과했고 실제 prep은 `PREP_NOT_VERIFIED`로 실패했습니다. 이 요약만으로 원인이나 컨테이너 정리 성공을 단정하지 않습니다. 최초 실패를 보존한 채 [제한된 진단](infra/iceberg-retention-ci/SCHEMA2.md)을 추가했으며, 새 소스의 Linux 62개 → 실제 prep·capture → 공개 근거 확인 순으로 진행합니다. 새 검사는 아직 미실행입니다. 실제 snapshot ID·ref·validation pin·manifest 전이 참조와 writer 정지·동일 포인터·수집 시각을 확인하기 전에는 완전 inventory로 표시하지 않습니다. 기존 [DB 복원](docs/evidence/current-db-restore/README.md)과 [Cloud 성공](docs/evidence/cloud-lakehouse/FULL_SUCCESS.md)은 그대로 보존합니다.
 
 이번 작업의 중단 기준은 **계정 잔여 한도 60%**입니다. 해당 기준에 도달하면 새 무거운 실행을 시작하지 않고, 이미 시작한 자기 자원의 종료·증거 보존을 마친 뒤 진행 상태를 남깁니다. 완료 시각은 실제 검사·CI 결과에 따라 정하며 고정 ETA를 약속하지 않습니다. Snapshot expiration·객체 GC·삭제, 미니 PC의 새 데이터 처리나 전체 6단계 완료는 이번 capture 범위에 포함하지 않습니다.
 

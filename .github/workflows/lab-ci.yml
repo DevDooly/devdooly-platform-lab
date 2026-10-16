@@ -310,8 +310,8 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Verify pinned sources then all 56 Linux offline contracts
-        # Base27 + prep21 + CLI8; every literal source pin precedes test imports.
+      - name: Verify pinned sources then all 62 Linux offline contracts
+        # Base27 + prep21 + CLI14; every literal source pin precedes test imports.
         # This root process writes only its tests' fresh temporary fixtures.
         run: |
           sudo -n env -i \
@@ -329,9 +329,9 @@ jobs:
           import sys
           import unittest
 
-          CLI_SHA = '9338364fc5563f6d7bec63f39519b0b03364e82e2f74de22f2caa83cc76ba216'
-          MANIFEST_SHA = 'c8cecad8fc09ab20a78382c4a96daf5c9e761065cb774abd6cd9b65d0ee8be28'
-          EXPECTED_TESTS = 56
+          CLI_SHA = '2408512f8373713ba6766364177472cfddb2d35c3210e0868cbfa2f2a77b1917'
+          MANIFEST_SHA = '53493f2dfeedee530ad152b5dc08f2c08b3d560ac39fac887820129913c8db3d'
+          EXPECTED_TESTS = 62
           TEST_SHAS = {
               'test_archive_classes.py': 'b967f4e1a6526eea8483625e142611444cc197fb3a2785524d8b35af497bed49',
               'test_bounded_process.py': '83d160015798e18986c32bf3af6665373c52f3c0b8bcbaf881bd788b19434438',
@@ -339,7 +339,7 @@ jobs:
               'test_copy_loader.py': 'fb8ad9febef1d307244d57f4944d043985d1a756a4b5559a8e442fe752423196',
               'test_named_observer.py': '85ff4307d821dcb0c4ba8a8eb9ec4e4927ac158d887f3899df62ac9cdca8a477',
               'test_prep_decoder.py': '95d1bc8f5c83915adc38d3b8eb93b9b1abb0057f389da19014123ee02b7ba8b3',
-              'test_run_capture.py': '7f94f565bbd195c3b603270487c1e0dc0f589030d2613c3179233aaf4e24c41d',
+              'test_run_capture.py': '0c0fc8599611fd582ed68c94fa9c5573f2af3bb11b87b2e234a55275ebf774a8',
           }
           assert sys.platform == 'linux' and os.geteuid() == 0, 'ACTUAL_LINUX_ROOT_FIXTURES_REQUIRED'
           assert all(re.fullmatch('[a-f0-9]{64}', value) for value in (CLI_SHA, MANIFEST_SHA, *TEST_SHAS.values())), 'FINAL_LITERAL_SOURCE_PINS_REQUIRED'
@@ -386,7 +386,7 @@ jobs:
         # Prep has a separate 600s bound; the frozen workload clock stays 600s.
         run: >-
           python3 -I -B infra/iceberg-retention-ci/run_capture.py
-          --source-manifest-sha256 c8cecad8fc09ab20a78382c4a96daf5c9e761065cb774abd6cd9b65d0ee8be28
+          --source-manifest-sha256 53493f2dfeedee530ad152b5dc08f2c08b3d560ac39fac887820129913c8db3d
           --ack-fresh-closed-copy-capture
       - name: Upload only the new safe closed-copy summary
         if: always()

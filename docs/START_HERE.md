@@ -82,7 +82,7 @@ Kafka·Garage의 전용 PVC 3개는 외부 사본에서 새 볼륨으로 복원�
 
 ## 다음 작업
 
-**다음 작업 지점(2026-10-16):** [PR #61](https://github.com/DevDooly/devdooly-platform-lab/pull/61)의 현재 DB 복원 카드·근거와 삭제 없는 순수 Iceberg retention planner가 main에 공개됐습니다. main `4a71ed20`의 Actions·Jenkins 52도 성공했습니다. 다음은 [closed-copy capture 절차](runbooks/iceberg-closed-copy-capture.md)에 따라 Linux 56개 검사 → 실제 Spark image classpath prep → 새 격리 Cloud metadata capture를 확인하는 단계입니다. capture 소스는 준비 중이며 Linux·실제 prep·Cloud 실행은 아직 미실행입니다. snapshot 만료·객체 GC·삭제와 미니 PC의 새 데이터 처리는 포함하지 않습니다.
+**다음 작업 지점(2026-10-16):** [PR #61](https://github.com/DevDooly/devdooly-platform-lab/pull/61)의 현재 DB 복원 카드·근거와 삭제 없는 순수 Iceberg retention planner가 main에 공개됐습니다. main `4a71ed20`의 Actions·Jenkins 52도 성공했습니다. 소스 `48a7fee2`의 [첫 closed-copy 실행](evidence/iceberg-capture/ATTEMPT_1.md)은 저장소 검증·Linux 56개를 통과했고 준비 단계에서 `PREP_NOT_VERIFIED`로 실패했습니다. 원인과 컨테이너 정리 여부는 미확인이며 원문을 보존합니다. 고정 코드와 제한된 상태만 공개하는 [schema 2 진단](../infra/iceberg-retention-ci/SCHEMA2.md)을 추가해 Linux 62개 → 실제 prep·capture를 새 소스로 확인할 예정입니다. 새 검사는 아직 미실행이며 [capture 절차](runbooks/iceberg-closed-copy-capture.md)를 따릅니다. snapshot 만료·객체 GC·삭제와 미니 PC의 새 데이터 처리는 포함하지 않습니다.
 
 [다음 개발 계획](NEXT_STEPS.md)에 우선순위와 단계별 결과물·완료 조건을 정리했습니다.
 

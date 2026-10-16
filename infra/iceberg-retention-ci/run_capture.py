@@ -152,6 +152,366 @@ def modules(repo, sources, originals):
     return loaded
 
 
+# Reviewed literal ValueError codes from the unchanged prep/archive/bounded sources.
+REVIEWED_FAILURE_CODES = frozenset((
+    'ACTUAL_DECODER_COMPILE_STDERR_ZERO_REQUIRED',
+    'ACTUAL_HOST_COMPILER_JAVA21_REQUIRED',
+    'ACTUAL_LOCKED_ICEBERG_SHA256_SHA512_REQUIRED',
+    'ALL_COMPILER_SOURCE_CLASSPATH_INPUTS_UNCHANGED',
+    'ARCHIVE_CHANGED_DURING_UNPACK',
+    'ARCHIVE_OPEN_IDENTITY_CHANGED',
+    'BOUNDED_CALL_NAME_AND_ARGV_REQUIRED',
+    'BOUNDED_OWN_REGULAR_ARCHIVE_REQUIRED',
+    'CANONICAL_EXISTING_PRIVATE_FOLDER_REQUIRED',
+    'CANONICAL_EXPORTED_CLASSPATH_ORDER',
+    'CANONICAL_PRIVATE_DIRECTORY_REQUIRED',
+    'CLASSES_ROOT_CHANGED',
+    'CLASS_DIRECTORY_CHANGED_DURING_TREE_READ',
+    'CLASS_DIRECTORY_OPEN_CHANGED',
+    'CLASS_FILE_OPEN_CHANGED',
+    'CLASS_IDENTITY_CHANGED_AFTER_TREE_READ',
+    'COLD_PREP_CONFIGURATION_CHANGED',
+    'COMPILED_CLASS_CHANGED_DURING_READ',
+    'COMPILED_CLASS_COUNT_BOUND',
+    'COMPILED_CLASS_IO_FAILED',
+    'COMPLETE_COMPILED_CLASS_BYTES_REQUIRED',
+    'DECODER_CLASS_SHADOW_IN_SPARK_JAR',
+    'DIRECT_FRESH_ARCHIVE_FILENAME_REQUIRED',
+    'DUPLICATE_TAR_MEMBER_REJECTED',
+    'EXACT_BOUND_NEVER_STARTED_PREP_CONTAINER',
+    'EXACT_DECODER_MAIN_CLASS_REQUIRED',
+    'EXACT_EXISTING_DOWNLOADED_ARTIFACT_LOCK',
+    'EXACT_FAILED_PREP_COLD_REMOVE',
+    'EXACT_NEW_READONLY_JAR_REQUIRED',
+    'EXACT_PREP_EXECUTOR_SOURCE_REQUIRED',
+    'EXACT_PREP_HELPER_SOURCE_REQUIRED',
+    'EXACT_SINGLE_DECODER_JAVA_SOURCE',
+    'EXPLICIT_BOUNDED_STREAM_LIMITS_REQUIRED',
+    'EXPORTED_CLASSPATH_BYTES_CHANGED',
+    'FAILED_PREP_COLD_ABSENCE_REQUIRED',
+    'FINITE_PREP_CUTOFF_AND_TIMEOUT_REQUIRED',
+    'FIXED_ARGV_LIST_REQUIRED',
+    'FRESH_CANONICAL_PRIVATE_PREP_ROOT',
+    'FRESH_EMPTY_PRIVATE_JAR_OUTPUT_REQUIRED',
+    'JAR_COUNT_AND_TOTAL_BOUND',
+    'JAR_MANIFEST_ATTRIBUTE_REQUIRED',
+    'JAR_MANIFEST_BYTES_BOUND',
+    'JAR_MANIFEST_CLASSPATH_EXPANSION_REJECTED',
+    'JAR_MANIFEST_CONTINUATION_REJECTED',
+    'JAR_MANIFEST_DUPLICATE_ATTRIBUTE_REJECTED',
+    'JAR_MANIFEST_UTF8_REQUIRED',
+    'JAR_OUTPUT_ROOT_IDENTITY_CHANGED',
+    'JAVA21_CLASS_HEADER_REQUIRED',
+    'LARGE_STDOUT_MUST_STREAM_TO_ARCHIVE_FILE',
+    'LINUX_PRIVATE_ARTIFACT_IO_REQUIRED',
+    'LINUX_SELECTORS_PIPE_EXECUTION_REQUIRED',
+    'NEW_CLASS_SEAL_FAILED',
+    'NEW_JAR_CHANGED_DURING_ZIP_SCAN',
+    'NEW_JAR_READBACK_BOUND',
+    'NEW_JAR_READBACK_IDENTITY_CHANGED',
+    'NEW_JAR_READBACK_WHOLE_SHA_CHANGED',
+    'NONEMPTY_JARS_ROOT_REQUIRED',
+    'NO_RUNNER_JAVA_OPTION_INJECTION',
+    'ONE_EXACT_LOCKED_OFFICIAL_ICEBERG_ARTIFACT',
+    'ONE_OWN_COLD_EXPORT_CONTAINER',
+    'ONE_PINNED_PREP_IMAGE_REQUIRED',
+    'ONE_UNAMBIGUOUS_JAR_MANIFEST_REQUIRED',
+    'ONLY_BOUNDED_REGULAR_JAR_REQUIRED',
+    'ONLY_EXACT_JARS_ROOT_REQUIRED',
+    'ONLY_FRESH_PRIVATE_CLASSES_TARGET',
+    'ONLY_LOCKED_RUNTIME_MAY_SUPPLY_ICEBERG_CLASSES',
+    'ONLY_OWN_CLASS_PACKAGE_DIRECTORIES',
+    'ONLY_OWN_SINGLE_LINK_JAVA21_CLASSES',
+    'ONLY_UNIQUE_PAX_TIME_METADATA',
+    'ONLY_USTAR_HEADER_REQUIRED',
+    'OWNED_PRIVATE_DIRECTORY_REQUIRED',
+    'OWN_COLD_EXPORT_ABSENCE_REQUIRED',
+    'OWN_COLD_EXPORT_CLEANUP_UNVERIFIED_NO_RETRY',
+    'OWN_COLD_EXPORT_REMOVE_RETURNED_EXACT_ID',
+    'OWN_PREP_CHILD_REAP_UNVERIFIED',
+    'OWN_PRIVATE_FOLDER_MODE700_REQUIRED',
+    'PAX_EXACT_RECORD_LENGTH_REQUIRED',
+    'PAX_TIME_METADATA_BOUND',
+    'PREP_ABSOLUTE_CUTOFF_EXCEEDED',
+    'PREP_ACTUAL_IMAGE_ENV_SHAPE',
+    'PREP_ACTUAL_PINNED_IMAGE_WITHOUT_IMPLICIT_ACTORS',
+    'PREP_BOUNDED_REGULAR_SINGLE_LINK_INPUT_REQUIRED',
+    'PREP_BUDGET_AND_ORIGINAL_DISK_RESERVE',
+    'PREP_CHILD_DEADLINE_ALREADY_EXPIRED',
+    'PREP_CHILD_IO_FAILED_NO_RETRY',
+    'PREP_CHILD_START_FAILED_NO_RETRY',
+    'PREP_CHILD_TIMEOUT_NO_RETRY',
+    'PREP_CREATED_FULL_CID_REQUIRED',
+    'PREP_ENABLED_OOM_KILLER_REQUIRED',
+    'PREP_FAILED_OR_UNKNOWN_NO_RETRY',
+    'PREP_IMAGE_OPTION_INJECTION_REJECTED',
+    'PREP_INPUT_IDENTITY_CHANGED',
+    'PREP_KNOWN_CHILD_NONZERO_NO_RETRY',
+    'PREP_ONLY_SAME_SOURCE_GITHUB_HOSTED_LINUX',
+    'PREP_PRESERVE_EXISTING_EIGHT_GIB_RESERVE',
+    'PREP_PRIVATE_RECORD_ALREADY_EXISTS_NO_RETRY',
+    'PREP_STDERR_LIMIT_EXCEEDED_NO_RETRY',
+    'PREP_STDOUT_LIMIT_EXCEEDED_NO_RETRY',
+    'PREP_SUCCESS_NOT_OBSERVED',
+    'PREP_WHOLE_INPUT_BOUND',
+    'PRIVATE_DIRECTORY_IDENTITY_CHANGED',
+    'PRIVATE_FOLDER_IDENTITY_CHANGED',
+    'PRIVATE_JAR_IO_FAILED',
+    'PRIVATE_PREP_FAILURE_RECEIPT_UNWRITABLE',
+    'PRIVATE_PREP_ROOT_MODE',
+    'SAME_EXISTING_SPARK_BASE_REFERENCE',
+    'SEALED_CLASS_DIRECTORY_MODE_REQUIRED',
+    'SEALED_CLASS_INVENTORY_READBACK',
+    'SEALED_CLASS_WHOLE_BYTES_CHANGED',
+    'STRICT_BOUNDED_JAR_MANIFEST_REQUIRED',
+    'TAR_ASCII_NAME_REQUIRED',
+    'TAR_BOUNDED_NAME_REQUIRED',
+    'TAR_COMPLETE_BYTES_REQUIRED',
+    'TAR_DIRECTORY_BOUND_REQUIRED',
+    'TAR_HEADER_CHECKSUM_REQUIRED',
+    'TAR_HEADER_COUNT_BOUND',
+    'TAR_HIDDEN_TEXT_REJECTED',
+    'TAR_LINK_TARGET_REJECTED',
+    'TAR_OCTAL_FIELD_REQUIRED',
+    'TAR_ONLY_DIRECTORY_OR_REGULAR_JAR',
+    'TAR_PARENT_DIRECTORY_MUST_PRECEDE_CHILD',
+    'TAR_SAFE_COMPONENTS_REQUIRED',
+    'TAR_SAFE_RELATIVE_NAME_REQUIRED',
+    'TAR_TRAILING_DATA_REJECTED',
+    'TAR_TWO_ZERO_END_BLOCKS_REQUIRED',
+    'TAR_ZERO_PADDING_REQUIRED',
+    'VALID_BOUNDED_JAR_ZIP_REQUIRED',
+    'ZIP_ENTRY_COUNT_BOUND',
+    'ZIP_SAFE_ENTRY_NAME_REQUIRED',
+))
+
+PREP_CHILD_CLASSES = {
+    'compiler-java-version': 'JAVA_VERSION',
+    'compiler-javac-version': 'JAVAC_VERSION',
+    'pinned-image-pull': 'IMAGE_PULL',
+    'pinned-image-inspect': 'IMAGE_INSPECT',
+    'cold-export-create': 'COLD_CREATE',
+    'cold-export-before': 'COLD_INSPECT',
+    'export-classpath': 'CLASSPATH_EXPORT',
+    'cold-export-after': 'COLD_INSPECT',
+    'locked-iceberg-download': 'ICEBERG_DOWNLOAD',
+    'compile-main-only': 'MAIN_COMPILE',
+    'cold-export-before-remove': 'COLD_INSPECT',
+    'cold-export-remove': 'COLD_REMOVE',
+    'cold-export-absence': 'COLD_ABSENCE',
+    'failed-prep-cold-before-remove': 'COLD_INSPECT',
+    'failed-prep-cold-remove': 'COLD_REMOVE',
+    'failed-prep-cold-absence': 'COLD_ABSENCE',
+}
+PREP_OUTCOMES = frozenset(('START_FAILED EXITED_ZERO EXITED_NONZERO TIMED_OUT '
+    'STDOUT_LIMIT_EXCEEDED STDERR_LIMIT_EXCEEDED OWN_CHILD_REAP_UNVERIFIED '
+    'OUTPUT_OR_CONTROL_IO_FAILED PRIVATE_OUTPUT_IO_UNVERIFIED PREP_CUTOFF_EXCEEDED').split())
+COMPOSITE_STAGES = frozenset(('PREP ORIGINAL_MAIN PRODUCER_PROOFS WRITERS_BEFORE '
+    'LOAD_CLOSED_COPIES DECODER WRITERS_AFTER NORMALIZE COMPLETED').split())
+PREP_INTENT_KEYS = frozenset(('scope sourceCommit prepExecutorSha256 decoderSourceSha256 '
+    'artifactLockSha256 budgetSeconds cleanupReserveSeconds originalWorkloadStarted automaticRetry').split())
+PREP_RESULT_KEYS = frozenset(('scope sourceCommit passed failureCode knownColdCid coldIdentityBound '
+    'coldRemovalAttempted coldRemovedAndAbsent originalWorkloadStarted automaticRetry').split())
+PREP_CHILD_KEYS = frozenset(('schemaVersion scope name argvSha256 argumentCount startedMonotonic '
+    'prepCutoffMonotonic executionDeadlineMonotonic timeoutSeconds maximumStdoutBytes maximumStderrBytes '
+    'stdoutPersisted stdoutArchiveStreamedWithoutRam environmentSerialized rawArgvSerialized automaticRetry '
+    'osMemoryLimitClaimed reapGraceSeconds outcome returnCode finishedMonotonic prepCutoffExceeded childStarted '
+    'childPid childKilled childReaped timedOut stdoutBytes stderrBytes stdoutObservedBytes stderrObservedBytes '
+    'stdoutSha256 stderrSha256 stdoutEofObserved stderrEofObserved stdoutOverflow stderrOverflow '
+    'hashesDescribeAcceptedReadPrefixes outputPersistenceVerified dockerStopOrRemovalPerformed').split())
+COMPOSITE_RESULT_KEYS = frozenset(('scope sourceCommit authoritySourceSha256 mainCallsStarted '
+    'mainReturnedZero lastStage inventoryProduced failureCode pipelineFinishedWithoutException '
+    'decoderCreatedKnownCid decoderStoppedVerified decoderAttachCliReaped originalRoleStopCallsAdded '
+    'originalInitializerStopCallsAdded automaticRetry snapshotExpirationOrGcPerformed publicCompletenessClaimed').split())
+
+
+def diagnostic_require(value):
+    if not value: raise ValueError('INVALID_PRIVATE_DIAGNOSTIC_RECORD')
+
+
+def literal_failure(error):
+    # Do not stringify provider exceptions, even if their message looks uppercase.
+    if type(error) is ValueError and len(error.args) == 1 and type(error.args[0]) is str:
+        if error.args[0] in REVIEWED_FAILURE_CODES: return error.args[0]
+    return 'UNKNOWN'
+
+
+def empty_diagnostic(stage, failed):
+    return {'stageAttempted': stage, 'failureCode': 'UNKNOWN' if failed else None,
+        'lastPrepChild': None, 'prepCleanup': None}
+
+
+def _diagnostic_identity(value):
+    return (value.st_dev, value.st_ino, value.st_mode, value.st_uid, value.st_nlink,
+        value.st_size, value.st_mtime_ns, value.st_ctime_ns)
+
+
+def _read_prep_records(root, local):
+    """Read only this caller's new private directory and fixed metadata filenames."""
+    diagnostic_require(os.name == 'posix')
+    root, local = Path(root), Path(local)
+    diagnostic_require(root.is_absolute() and local.is_absolute() and root.parent == local
+        and local.name == '.local' and re.fullmatch('closed-copy-prep-[a-f0-9]{32}', root.name)
+        and root.resolve(strict=True) == root and local.resolve(strict=True) == local)
+    parent_before, before = local.lstat(), root.lstat()
+    for value in (parent_before, before):
+        diagnostic_require(stat.S_ISDIR(value.st_mode) and value.st_uid == os.geteuid()
+            and stat.S_IMODE(value.st_mode) == 0o700)
+    parent_fd = directory_fd = None
+    try:
+        parent_fd = os.open(local, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        diagnostic_require(_diagnostic_identity(os.fstat(parent_fd)) == _diagnostic_identity(parent_before))
+        directory_fd = os.open(root.name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=parent_fd)
+        diagnostic_require(_diagnostic_identity(os.fstat(directory_fd)) == _diagnostic_identity(before))
+        def read_record(name):
+            try: first = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+            except FileNotFoundError: return None
+            diagnostic_require(stat.S_ISREG(first.st_mode) and first.st_uid == os.geteuid()
+                and first.st_nlink == 1 and stat.S_IMODE(first.st_mode) == 0o600
+                and 0 < first.st_size <= 16384)
+            with os.fdopen(os.open(name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=directory_fd), 'rb') as stream:
+                opened = os.fstat(stream.fileno()); raw = stream.read(16385); held = os.fstat(stream.fileno())
+            after = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+            diagnostic_require(_diagnostic_identity(first) == _diagnostic_identity(opened)
+                == _diagnostic_identity(held) == _diagnostic_identity(after) and len(raw) == first.st_size)
+            return strict(raw)
+        records = {name: read_record(name) for name in ('intent.json', 'prep-result.private.json')}
+        records.update({name+'.result.json': read_record(name+'.result.json') for name in PREP_CHILD_CLASSES})
+        diagnostic_require(_diagnostic_identity(before) == _diagnostic_identity(os.fstat(directory_fd))
+            == _diagnostic_identity(root.lstat())
+            and _diagnostic_identity(parent_before) == _diagnostic_identity(os.fstat(parent_fd))
+            == _diagnostic_identity(local.lstat()))
+        return records
+    finally:
+        if directory_fd is not None: os.close(directory_fd)
+        if parent_fd is not None: os.close(parent_fd)
+
+
+def _prep_child(value, name):
+    diagnostic_require(type(value) is dict and set(value) == PREP_CHILD_KEYS
+        and type(value['schemaVersion']) is int and value['schemaVersion'] == 1
+        and value['scope'] == 'ONE_BOUNDED_PREP_CHILD_ONLY' and value['name'] == name
+        and name in PREP_CHILD_CLASSES and value['outcome'] in PREP_OUTCOMES)
+    for field in ('argvSha256', 'stdoutSha256', 'stderrSha256'):
+        diagnostic_require(type(value[field]) is str and re.fullmatch('[a-f0-9]{64}', value[field]))
+    diagnostic_require(type(value['argumentCount']) is int and 1 <= value['argumentCount'] <= 256)
+    for field in ('startedMonotonic', 'prepCutoffMonotonic', 'executionDeadlineMonotonic',
+            'timeoutSeconds', 'finishedMonotonic'):
+        diagnostic_require(type(value[field]) in (int, float) and math.isfinite(value[field])
+            and value[field] >= 0)
+    diagnostic_require(value['startedMonotonic'] <= value['finishedMonotonic']
+        and value['startedMonotonic'] < value['executionDeadlineMonotonic'] <= value['prepCutoffMonotonic']
+        and 0 < value['timeoutSeconds'] <= 600)
+    for stream, maximum in (('stdout', 1040*1024**2), ('stderr', 65536)):
+        limit = value['maximum'+stream.title()+'Bytes']
+        diagnostic_require(type(limit) is int and 0 < limit <= maximum
+            and type(value[stream+'Bytes']) is int and 0 <= value[stream+'Bytes'] <= limit
+            and type(value[stream+'ObservedBytes']) is int
+            and value[stream+'Bytes'] <= value[stream+'ObservedBytes'] <= limit+1)
+    bools = ('stdoutPersisted stdoutArchiveStreamedWithoutRam environmentSerialized rawArgvSerialized '
+        'automaticRetry osMemoryLimitClaimed prepCutoffExceeded childStarted childKilled childReaped timedOut '
+        'stdoutEofObserved stderrEofObserved stdoutOverflow stderrOverflow hashesDescribeAcceptedReadPrefixes '
+        'outputPersistenceVerified dockerStopOrRemovalPerformed').split()
+    diagnostic_require(all(type(value[field]) is bool for field in bools)
+        and all(value[field] is False for field in ('environmentSerialized', 'rawArgvSerialized',
+            'automaticRetry', 'osMemoryLimitClaimed', 'dockerStopOrRemovalPerformed'))
+        and value['hashesDescribeAcceptedReadPrefixes'] is True
+        and type(value['reapGraceSeconds']) is int and value['reapGraceSeconds'] == 2)
+    diagnostic_require(value['returnCode'] is None or type(value['returnCode']) is int
+        and -128 <= value['returnCode'] <= 255)
+    diagnostic_require(value['childPid'] is None or type(value['childPid']) is int and value['childPid'] > 0)
+    diagnostic_require(value['childStarted'] == (value['childPid'] is not None)
+        and (not value['childReaped'] or value['childStarted'] and value['returnCode'] is not None)
+        and (not value['childKilled'] or value['childStarted'])
+        and (value['outcome'] != 'TIMED_OUT' or value['timedOut'])
+        and (value['outcome'] not in ('EXITED_ZERO', 'EXITED_NONZERO') or value['childStarted']
+            and value['childReaped'] and not value['timedOut'] and value['returnCode'] is not None)
+        and (value['outcome'] != 'EXITED_ZERO' or value['returnCode'] == 0)
+        and (value['outcome'] != 'EXITED_NONZERO' or value['returnCode'] != 0))
+    return {'name': name, 'class': PREP_CHILD_CLASSES[name], 'outcome': value['outcome'],
+        'returnCode': value['returnCode'], 'stdoutBytes': value['stdoutBytes'],
+        'stderrBytes': value['stderrBytes'], 'timedOut': value['timedOut'],
+        'childStarted': value['childStarted'], 'childReaped': value['childReaped']}
+
+
+def _project_prep_records(records, source, prep_sha, decoder_sha):
+    """Only typed aggregate projections escape; private hashes are validation inputs."""
+    try:
+        intent = records['intent.json']
+        diagnostic_require(type(intent) is dict and set(intent) == PREP_INTENT_KEYS
+            and intent == {'scope': 'SEPARATE_BOUNDED_COMPILER_PREPARATION_ONLY',
+                'sourceCommit': source, 'prepExecutorSha256': prep_sha, 'decoderSourceSha256': decoder_sha,
+                'artifactLockSha256': EXTERNALS['infra/spark-silver/artifact-lock.downloaded.json'],
+                'budgetSeconds': 600, 'cleanupReserveSeconds': 40,
+                'originalWorkloadStarted': False, 'automaticRetry': False}
+            and type(intent['budgetSeconds']) is int and type(intent['cleanupReserveSeconds']) is int
+            and type(intent['originalWorkloadStarted']) is bool and type(intent['automaticRetry']) is bool)
+    except BaseException: return None, None
+    cleanup = None
+    try:
+        value = records['prep-result.private.json']
+        diagnostic_require(type(value) is dict and set(value) == PREP_RESULT_KEYS
+            and value['scope'] == 'SEPARATE_PREP_ACTUAL_OUTCOME_NOT_RUNTIME_CLOSURE'
+            and value['sourceCommit'] == source
+            and all(type(value[k]) is bool for k in ('passed', 'knownColdCid', 'coldIdentityBound',
+                'coldRemovalAttempted', 'coldRemovedAndAbsent', 'originalWorkloadStarted', 'automaticRetry'))
+            and value['originalWorkloadStarted'] is False and value['automaticRetry'] is False
+            and (value['failureCode'] is None or type(value['failureCode']) is str
+                and len(value['failureCode']) <= 128)
+            and (not value['coldIdentityBound'] or value['knownColdCid'])
+            and (not value['coldRemovalAttempted'] or value['coldIdentityBound'])
+            and (not value['coldRemovedAndAbsent'] or value['coldRemovalAttempted'])
+            and (not value['passed'] or value['failureCode'] is None and value['coldRemovedAndAbsent']))
+        cleanup = {field: value[field] for field in ('knownColdCid', 'coldIdentityBound',
+            'coldRemovalAttempted', 'coldRemovedAndAbsent')}
+    except BaseException: pass
+    try:
+        children = []
+        for name in PREP_CHILD_CLASSES:
+            value = records.get(name+'.result.json')
+            if value is not None: children.append((value['startedMonotonic'], _prep_child(value, name)))
+        if not children: return None, cleanup
+        latest = max(row[0] for row in children)
+        selected = [row[1] for row in children if row[0] == latest]
+        diagnostic_require(len(selected) == 1)
+        return selected[0], cleanup
+    except BaseException: return None, cleanup
+
+
+def capture_diagnostic(stage, passed, error, outcome, root, local, source, pins):
+    value = empty_diagnostic(stage, not passed)
+    if error is not None: value['failureCode'] = literal_failure(error)
+    # A returned private failure code can originate from a provider message.
+    # Only its source-bound, exact-shape fixed lastStage may be used here.
+    try:
+        receipt = outcome['receipt']
+        diagnostic_require(type(receipt) is dict and set(receipt) == COMPOSITE_RESULT_KEYS
+            and receipt['scope'] == 'COMPOSITE_SOURCE_BOUND_PIPELINE_NOT_PUBLIC_COMPLETENESS'
+            and receipt['sourceCommit'] == source
+            and receipt['authoritySourceSha256'] == pins['composite_entry.py']
+            and receipt['lastStage'] in COMPOSITE_STAGES
+            and type(receipt['mainCallsStarted']) is int and receipt['mainCallsStarted'] in (0, 1)
+            and all(type(receipt[k]) is bool for k in ('mainReturnedZero', 'inventoryProduced',
+                'pipelineFinishedWithoutException', 'decoderCreatedKnownCid', 'decoderStoppedVerified',
+                'decoderAttachCliReaped', 'automaticRetry', 'snapshotExpirationOrGcPerformed',
+                'publicCompletenessClaimed'))
+            and all(type(receipt[k]) is int and receipt[k] == 0
+                for k in ('originalRoleStopCallsAdded', 'originalInitializerStopCallsAdded'))
+            and all(receipt[k] is False for k in ('automaticRetry', 'snapshotExpirationOrGcPerformed',
+                'publicCompletenessClaimed'))
+            and (receipt['failureCode'] is None or type(receipt['failureCode']) is str
+                and len(receipt['failureCode']) <= 128))
+        value['stageAttempted'] = receipt['lastStage']
+    except BaseException: pass
+    try:
+        records = _read_prep_records(root, local)
+        child, cleanup = _project_prep_records(records, source, pins['prep_decoder.py'],
+            pins['src/org/apache/iceberg/ClosedCopyDecoder.java'])
+        value['lastPrepChild'], value['prepCleanup'] = child, cleanup
+    except BaseException: pass
+    return value
+
+
 def safe_summary(source, manifest_sha, *, prepared=None, outcome=None, stage='PREP'):
     """Construct allowlisted aggregate fields; never echo arbitrary proof values."""
     require(re.fullmatch('[a-f0-9]{40}', source) and re.fullmatch('[a-f0-9]{64}', manifest_sha),
@@ -221,9 +581,10 @@ def safe_summary(source, manifest_sha, *, prepared=None, outcome=None, stage='PR
     if not passed and status == 'DETERMINED': status = 'FAILED'
     failure = None if passed else ('CAPTURE_UNDETERMINED' if status == 'UNDETERMINED'
         else {'PREP': 'PREP_NOT_VERIFIED', 'COMPOSITE': 'COMPOSITE_NOT_VERIFIED', 'SUMMARY': 'SUMMARY_NOT_VERIFIED'}[stage])
-    return {'schemaVersion': 1, 'scope': SCOPE, 'sourceCommit': source,
+    return {'schemaVersion': 2, 'scope': SCOPE, 'sourceCommit': source,
         'runtimeManifestSha256': manifest_sha, 'passed': bool(passed), 'status': status,
-        'failureCategory': failure, 'checks': checks, 'counts': counts, 'proofHashes': hashes,
+        'failureCategory': failure, 'diagnostic': empty_diagnostic(stage, not passed),
+        'checks': checks, 'counts': counts, 'proofHashes': hashes,
         'decoderReasonCodes': reasons, 'policy': dict(POLICY),
         'originalWorkloadBudgetSeconds': 600, 'separatePrepBudgetSeconds': 600,
         'cleanupReserveSeconds': 40, 'snapshotExpirationPerformed': False,
@@ -270,10 +631,12 @@ def main():
     nonce = uuid.uuid4().hex
     prepared = outcome = None
     stage = 'PREP'
+    first_error = None
+    prep_root = local / ('closed-copy-prep-' + nonce)
     pins = {name: digest(raw) for name, raw in sources.items()}
     java_sha = pins['src/org/apache/iceberg/ClosedCopyDecoder.java']
     try:
-        prepared = loaded['prep_decoder'].prepare(repo, local / ('closed-copy-prep-' + nonce), source,
+        prepared = loaded['prep_decoder'].prepare(repo, prep_root, source,
             java_sha, pins['prep_decoder.py'], {name: pins[name] for name in ('archive_classes.py', 'bounded_process.py')})
         stage = 'COMPOSITE'
         previous = sys.argv
@@ -288,9 +651,12 @@ def main():
         finally: sys.argv = previous
         stage = 'SUMMARY'
         summary = safe_summary(source, args.source_manifest_sha256, prepared=prepared, outcome=outcome, stage=stage)
-    except BaseException:
+    except BaseException as error:
+        first_error = error
         # Raw exceptions, args, paths, graph IDs and private provider streams never leave the runner.
         summary = safe_summary(source, args.source_manifest_sha256, stage=stage)
+    summary['diagnostic'] = capture_diagnostic(stage, summary['passed'], first_error, outcome,
+        prep_root, local, source, pins)
     write_summary(public, summary)
     print(json.dumps({'scope': SCOPE, 'passed': summary['passed'], 'status': summary['status']}))
     return 0 if summary['passed'] else 1

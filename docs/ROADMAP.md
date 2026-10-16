@@ -168,7 +168,8 @@
 - [x] 독립 Cloud Spark 시험 8의 Bronze 6+6행·snapshot 2개, Silver 성공 7·실패 3·중복 2와 같은 application의 순차 replay write 0회 검증: [근거](evidence/spark-silver/README.md)
 - [x] 새 Cloud warehouse의 Spark→Trino 연결·6→12→12행·현재 파일 2→1 compaction·자기 컨테이너 종료: [실제 근거](evidence/cloud-lakehouse/FULL_SUCCESS.md)
 - [x] 삭제 없는 순수 Iceberg retention planner 공개와 maintenance 검사 59개 통과. current/ref/pin의 모든 ancestor와 모든 객체 KEEP, apply 비활성: [범위](runbooks/iceberg-retention-dry-run.md)
-- [ ] 실제 closed-copy metadata capture → 독립 graph closure 확인 → 순수 planner 입력 연결. 소스 준비 중이며 Linux 56개 검사·실제 image classpath prep·새 Cloud 실행은 미실행: [다음 절차](runbooks/iceberg-closed-copy-capture.md)
+- [x] 첫 closed-copy 실행의 저장소 검증·Linux 56개 통과와 `PREP_NOT_VERIFIED` 실패 원문 보존: [시도 1 근거](evidence/iceberg-capture/ATTEMPT_1.md). 준비 실패 원인·컨테이너 정리 성공은 미확인
+- [ ] 제한된 schema 2 진단의 새 Linux 62개 검사·실제 prep → closed-copy metadata capture → 독립 graph closure 확인 → 순수 planner 입력 연결. 진단 소스 검토와 Windows 13개 통과·POSIX 전용 1개 skip까지 확인했으며 새 Linux·Cloud 검사는 미실행: [진단 계약](../infra/iceberg-retention-ci/SCHEMA2.md), [다음 절차](runbooks/iceberg-closed-copy-capture.md)
 - [ ] snapshot 보존·만료 정책과 운영 규모 compaction 검증
 - [x] Trino만 정상 재시작한 뒤 같은 행·metadata pointer·warehouse 전체 bytes 조회 검증. PostgreSQL은 같은 프로세스를 유지했으며 재시작은 검증하지 않음: [범위](evidence/iceberg-jdbc/README.md)
 - [x] 시험 PostgreSQL·Trino workload 0·Retain PVC 2개·warehouse 보관과 원래 8개 작업·객체 24개 보존: [종료·보존](evidence/iceberg-jdbc/README.md)
