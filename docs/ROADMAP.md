@@ -175,6 +175,6 @@
 
 완료 조건: 동일 warehouse에서 쓰기·조회·재시작·compaction이 검증되고 실행 시 자원 사용량이 남습니다. 기존 native Trino·Cloud Spark8의 별도 시험에 이어 새 Cloud의 Spark→Trino 연결·작은 compaction을 추가 완료했습니다. 2026-10-15 19:05:20 UTC의 일곱 번째 실행에서 시점 조회·Trino 정상 재시작·종료·원본 보존을 확인했습니다. 이전 실패와 완료된 DDL의 채택 관계는 [근거](evidence/iceberg-jdbc/README.md)에 보존했습니다. 새 Cloud의 2026-10-16 03:12:33 UTC 기록은 같은 Cloud 환경의 재시작·지속 부하 검증을 포함하지 않습니다.
 
-새 Cloud의 연결·작은 compaction은 완료했으며 snapshot 보존 정책·필요한 경우의 Airflow·현재 DB 백업과 격리 복원은 남아 있습니다. 미니 PC native7의 중지된 시험 환경과 보관 자료는 유지합니다. 전체 6단계를 완료로 표시하지 않습니다. PostgreSQL 재시작·호스트 장애·HA·처리량 SLA·현재 가용성은 이번 검증 범위가 아닙니다. CI 유휴 관측은 각 확인 시점의 근거이며 전체 실행 동안의 비활성을 보장하는 잠금이 아닙니다.
+새 Cloud의 연결·작은 compaction은 완료했고, 새 a7의 [현재 V1–V4 DB 논리 백업·격리 복원](evidence/current-db-restore/README.md)에서 8개 테이블 스키마·7개 비runtime 테이블 행·BLOB 대조와 원본 DB 보존을 확인했습니다. 원래 stop receipt는 실패로 유지하며 별도 읽기 진단의 DB 0·Pod 0·Bound/Retain 관측과 정상 exit UNOBSERVED를 구분합니다. snapshot 보존 정책·필요한 경우의 Airflow·전체 애플리케이션 복구는 남아 있습니다. 미니 PC native7의 중지된 시험 환경과 보관 자료는 유지합니다. 전체 6단계를 완료로 표시하지 않습니다. PostgreSQL 재시작·호스트 장애·HA·처리량 SLA·현재 가용성은 이번 검증 범위가 아닙니다. CI 유휴 관측은 각 확인 시점의 근거이며 전체 실행 동안의 비활성을 보장하는 잠금이 아닙니다.
 
 단계는 의존 순서이며 기간 약속이 아닙니다. 각 단계 완료 후 다음 확장의 필요성과 자원을 다시 판단합니다.

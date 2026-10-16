@@ -6,7 +6,7 @@
 
 이전 readiness 운영 검증(2026-10-15 14:54 UTC)은 source `3e0d85be`의 readiness 배포·idle worker 교체·같은 ID 읽기 전용 재시도입니다. API 180개 + 독립 예제 20개, 8개 EXPORTED 작업·export 정보 16개·객체 24개와 Kafka lag 0을 확인했습니다. [전체 근거와 한계](evidence/worker-readiness/CORRECTED_IMAGE.md)를 먼저 읽습니다. [native7 데이터 흐름](evidence/iceberg-jdbc/README.md)과 별도 [Cloud Spark 시험 8](evidence/spark-silver/README.md)은 실제 검증한 정적 기록을 공개했습니다. native7의 빈 snapshot 포함 총 3개와 Cloud Bronze의 데이터 append snapshot 2개는 서로 다른 실험입니다. 공개 관측 카드의 숫자는 각 카드의 실제 수집 시각을 따릅니다.
 
-2026-10-16 03:12:33 UTC의 [새 Cloud 전체 시험](evidence/cloud-lakehouse/FULL_SUCCESS.md)은 별도 fresh warehouse에서 Spark→Trino 10개 조회, 6→12→12행·현재 파일 2→1 compaction과 자기 컨테이너 종료를 확인했습니다. 기존 native7 자료는 유지하며 현재 DB 백업·격리 복원의 읽기 전용 사전 확인은 진행 중입니다. 전체 Phase6·운영 용량·현재 가용성의 완료 표시가 아닙니다.
+2026-10-16 03:12:33 UTC의 [새 Cloud 전체 시험](evidence/cloud-lakehouse/FULL_SUCCESS.md)은 별도 fresh warehouse에서 Spark→Trino 10개 조회, 6→12→12행·현재 파일 2→1 compaction과 자기 컨테이너 종료를 확인했습니다. 기존 native7 자료는 유지하며, 새 a7의 [현재 DB 논리 백업·격리 복원](evidence/current-db-restore/README.md)은 8개 테이블 스키마·7개 비runtime 테이블 행·BLOB 대조와 원본 DB 보존을 확인했습니다. 원래 stop receipt는 실패로 유지하고 별도 DB 0·Pod 0·Bound/Retain 관측을 구분하며 정상 exit는 UNOBSERVED입니다. 전체 애플리케이션 복구·Phase6·운영 용량·현재 가용성의 완료 표시가 아닙니다.
 
 이전 V4 배포 검증(2026-10-15): API·worker를 source `202ab6806130cfb37e8829ce7d52c89990d8a54a`·schema V4로 전환해 API·웹 32/32, worker 35/35를 확인했습니다. [V4 실제 전환](evidence/admission-v4-deployment/README.md)을 먼저 확인하세요. 해당 시점에는 신규 V4 stage 검증 전이었으며, 아래 V2 처리 결과는 이전 검증입니다. API·worker의 V2 지원 이미지 확인 후 고정 1,000건 작업을 처리했습니다. 총 7개 EXPORTED 작업·파일 정보 14개·Kafka lag 0과 기존 18개 객체 보존을 확인했고, 공개 JSON 전체가 실제 수집 원본과 일치했습니다. [이전 V2 배포·게시 근거](evidence/input-v2-deployment/README.md)에 당시 조건을 남겼습니다. 아래 단계별 기록은 각각 당시의 검증 조건을 보존합니다.
 

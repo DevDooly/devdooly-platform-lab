@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "scope": "CURRENT_V4_LOGICAL_DATABASE_RESTORE_AND_SEPARATE_STOP_OBSERVATION",
+  "status": "RESTORE_VERIFIED_STOPPED_OBSERVED_EXIT_UNOBSERVED",
+  "observedDateUtc": "2026-10-16",
+  "applicationSourceCommit": "74a8e98844a8fea0653951136ede0e7de0d7ac08",
+  "chosenMainCommit": "5c9b34d3b0a3508ebf6f78254e59a3f9131c71a2",
+  "producerSourceManifestSha256": "9b67ce1625b6bbb92478ca35ddf6b05cc3d0aaf8e962e219a57c116c40d8a7b5",
+  "schema": {
+    "approvedSha256": "92e6864def30e65a1cf9d97a3a5c94adc3aa8854b94a9d89ea00580cca5a1acd",
+    "tables": 8,
+    "columns": 64,
+    "checks": 15,
+    "constraints": 28,
+    "indexColumns": 17,
+    "referentialConstraints": 3
+  },
+  "sourceRowCounts": {
+    "demo_run": 9,
+    "demo_outcome": 1096,
+    "lab_job": 8,
+    "lab_outbox": 16,
+    "lab_job_slot": 1,
+    "lab_admission_policy": 1,
+    "lab_runtime": 1,
+    "flyway_schema_history": 4
+  },
+  "phases": {
+    "preflight": {"passed": true, "proofSha256": "d0d144678f3b810b522ce6969afaec6377ee896c8518a94ee823b56a26996e98"},
+    "backup": {"passed": true, "proofSha256": "d20d7d2ac718477fa6351bb1cff2d3c4f31aba9f4c70b9845e1799a362c6e569"},
+    "createTarget": {"passed": true, "proofSha256": "d3d72852c7d57e5e4a61d403952199beacc4e5c1b52d84160cd00d1ee81c4688"},
+    "targetPreflight": {"passed": true, "proofSha256": "4ac330b04ad64463bd9966210777bd40fc2296d617738d342ae3bdc9019d9002"},
+    "restore": {"passed": true, "proofSha256": "5222519715c61929f127129ec817d676dfce947273bfaeb82671f3bfbbc76ec7"},
+    "stop": {"passed": false, "proofSha256": "6f1af6492212a19d2ca1b7ef69df85a66fc1bde2f4f3d6cef1e26a03f79756fa"}
+  },
+  "restore": {
+    "logicalBackupVerified": true,
+    "wholeSchemaTablesCompared": 8,
+    "nonRuntimeTableRowsCompared": 7,
+    "wholeSourceBlobsEqual": true,
+    "targetRequeryEqual": true,
+    "sourcePreserved": true,
+    "importAttemptCount": 1,
+    "reimportPerformed": false,
+    "runtimeJournalCopiedAsHistorical": true,
+    "runtimeLeaseRestored": false,
+    "storedDoubleBitIdentityClaimed": false,
+    "externalObjectBackupVerified": false
+  },
+  "stop": {
+    "originalPhasePassed": false,
+    "actualPublicFailureCode": "COMMAND_FAILED_OR_UNKNOWN_NO_RETRY",
+    "preStopDataRecheckPassed": true,
+    "databaseRestoreVerifiedBeforeStop": true,
+    "controllerZeroRequestReturned": true,
+    "ownPodCountObserved": 0,
+    "normalExitObserved": false,
+    "actualExitCode": null,
+    "actualExitStatus": "UNOBSERVED",
+    "retentionConfirmedByOriginalStopReceipt": false,
+    "namespacePvcAndSecretDeleted": false,
+    "independentStateObservation": {
+      "passed": true,
+      "scope": "FAILED_A7_STOP_FIXED_RECEIPT_AND_OWN_STATE_READ_ONLY",
+      "proofSha256": "e9700a678933bdcae092065576ff8c8131550fb76f4d4ceac720607317923063",
+      "databaseStoppedObserved": true,
+      "dbReplicas": 0,
+      "pods": 0,
+      "pvcPhase": "Bound",
+      "savedResourceIdentityAndSpecMatched": true,
+      "pvIdentitySpecAndRetainMatched": true,
+      "mutationsPerformed": false
+    },
+    "savedStderrDiagnostic": {
+      "passed": true,
+      "scope": "FIXED_SAVED_FAILED_A7_STOP_STDERR_SIGNATURES_ONLY",
+      "proofSha256": "2f970224bf1328d24308afede5ffec15f37dbd703b94494f6cc81ae59aefca3b",
+      "codeNotFound": true,
+      "knownNotFound": false,
+      "templateEvaluation": false,
+      "permissionDenied": false,
+      "causeProven": false,
+      "normalExitObserved": false,
+      "newCriOrKubernetesCommandExecuted": false,
+      "rawTextReturned": false
+    }
+  },
+  "history": {
+    "attempt6StatusAtThatRecord": "BACKUP_CREATED_RESTORE_NOT_RUN",
+    "attempt6SummarySha256": "3853253ed8d14bf1dcc55c10edfed7e8d889f136e7dbf437370f11c061e4e1de",
+    "attempt6SourceManifestSha256": "b75a24f1faf8b7838d4a74c4f0792b4143709aa08f47d95d7312871a15e4b95a",
+    "oldFailuresRelabeled": false
+  },
+  "limits": {
+    "allPhasesPassed": false,
+    "idleIsAdmissionFreeze": false,
+    "workerStarted": false,
+    "springStarted": false,
+    "flywayStarted": false,
+    "normalTermOrGarbageCollectionCauseProven": false,
+    "fullApplicationRecoveryVerified": false,
+    "currentAvailabilityOrSlaClaimed": false,
+    "sourceDumpRowsBlobsCredentialsOrResourceIdentitiesPublished": false
+  }
+}
