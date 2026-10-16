@@ -141,6 +141,17 @@ def canonical_mounts(mounts):
                   for member in mounts)
 
 
+def canonical_host(host):
+    require(type(host) is dict and "OomKillDisable" in host
+            and (host["OomKillDisable"] is None or host["OomKillDisable"] is False),
+            "PRESENT_ENABLED_OOM_KILLER_REPRESENTATION_REQUIRED")
+    # Only present null/false mean no OOM-killer disabling. Keep every other
+    # field, nested value, JSON type, duplicate array member and array order.
+    # A new dict leaves the actual inspect object untouched.
+    return json.dumps({**host, "OomKillDisable": False}, sort_keys=True, separators=(",", ":"),
+                      ensure_ascii=True, allow_nan=False)
+
+
 def make_attempt(base, root, project, images):
     class Attempt(base.Attempt):
         def __init__(self):
@@ -226,7 +237,7 @@ def make_attempt(base, root, project, images):
                             and actual_entrypoint is None, "EXACT_ROLE_ENTRYPOINT")
                 require("user" not in desired or raw["Config"]["User"] == desired["user"], "ACTUAL_ROLE_UID_GID")
                 mounts_verified(raw, desired, root, project, self.image_volumes[role], self.prior_volumes)
-                signature = {"id": cid, "imageId": raw["Image"], "config": raw["Config"], "host": host,
+                signature = {"id": cid, "imageId": raw["Image"], "config": raw["Config"], "host": canonical_host(host),
                              "mounts": canonical_mounts(raw["Mounts"]), "created": raw["Created"]}
                 if role in self.bound:
                     require(self.bound[role] == signature, "SAME_OWN_CONTAINER_FULL_CONFIGURATION")
@@ -621,6 +632,7 @@ def main():
                "workloadBudgetSeconds": 600, "buildAndPullExcludedFromWorkloadClock": True,
                "plannedSequentialPeakMemoryBytes": 5*1024**3, "requiredActualMemAvailableBytes": 7*1024**3,
                "ownedContainersStopped": stopped, "ownedInitializerStopped": initializer_stopped,
+               "enabledOomKillerRepresentationsVerified": True if passed else None,
                "concurrentHeavyJvmAbsenceVerified": True if passed else None,
                "readerJavaInvocationPlanned": False, "onlyFreshCloudResources": True,
                "priorCloud8OrNative7EvidenceModified": False, "miniPcContacted": False, "kubernetesVerified": False,

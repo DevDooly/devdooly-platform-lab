@@ -57,7 +57,7 @@ class StartupFixTests(unittest.TestCase):
                 "Config": {"Image": images[role], "Labels": {"com.docker.compose.project": project, "com.docker.compose.service": role},
                            "Cmd": desired.get("command", []), "Entrypoint": desired.get("entrypoint"), "User": desired.get("user", ""), "Env": [PRIVATE]},
                 "HostConfig": {"ReadonlyRootfs": True, "Privileged": False, "PortBindings": {}, "NetworkMode": project+"_trial",
-                    "NanoCpus": cpu, "Memory": memory, "PidsLimit": pids, "RestartCount": 0, "RestartPolicy": {"Name": "no"},
+                    "NanoCpus": cpu, "Memory": memory, "PidsLimit": pids, "OomKillDisable": False, "RestartCount": 0, "RestartPolicy": {"Name": "no"},
                     "Tmpfs": {value.split(":")[0]: "" for value in desired["tmpfs"]}},
                 "Mounts": mounts, "RestartCount": 0, "NetworkSettings": {"Networks": {project+"_trial": {}}},
                 "State": {"Running": False, "ExitCode": 0, "OOMKilled": False, "Pid": 0, "StartedAt": "0001-01-01T00:00:00Z"}}

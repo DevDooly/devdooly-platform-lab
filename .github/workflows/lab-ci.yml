@@ -46,11 +46,6 @@ on:
         required: false
         default: false
         type: boolean
-      run_base_config_readback:
-        description: Run one isolated PG Garage configuration readback diagnostic
-        required: false
-        default: false
-        type: boolean
 
 permissions:
   contents: read
@@ -61,7 +56,6 @@ concurrency:
 
 jobs:
   verify:
-    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.run_base_config_readback == true) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     env:
@@ -201,7 +195,7 @@ jobs:
           retention-days: 7
 
   isolated-spark:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_spark_trial == true && inputs.run_base_config_readback != true }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_spark_trial == true }}
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     permissions:
@@ -227,7 +221,7 @@ jobs:
           retention-days: 7
 
   isolated-s3:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_s3_trial == true && inputs.run_base_config_readback != true }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_s3_trial == true }}
     needs: verify
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -261,7 +255,7 @@ jobs:
           retention-days: 7
 
   isolated-cloud-lakehouse:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_cloud_lakehouse_trial == true && inputs.run_base_config_readback != true }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_cloud_lakehouse_trial == true }}
     needs: verify
     runs-on: ubuntu-24.04
     timeout-minutes: 45
@@ -282,7 +276,7 @@ jobs:
         # The 45-minute job bound includes preparation; workload stays 600s.
         run: >-
           python3 -B infra/cloud-lakehouse-ci/run_trial9.py
-          --source-manifest-sha256 eb15f2681632198a29fc76c5b12f3383e56e7caeb8cbeaa8958e25e8ae703d6e
+          --source-manifest-sha256 c63aded0a891bb66cb1fb2de591d67e237467681eb4a4e5a337b9d1d1b02d5e8
           --ack-fresh-cloud-trial9
       - name: Upload only the safe Cloud lakehouse summary
         if: always()
@@ -290,45 +284,5 @@ jobs:
         with:
           name: isolated-cloud-lakehouse-summary-${{ github.run_id }}-${{ github.run_attempt }}
           path: .local/cloud-trial9-public/summary.json
-          if-no-files-found: error
-          retention-days: 7
-
-  base-config-readback:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_base_config_readback == true }}
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    permissions:
-      contents: read
-    steps:
-      - name: Reject combined trials before checkout or services
-        env:
-          S3_TRIAL: ${{ toJSON(inputs.run_s3_trial) }}
-          SPARK_TRIAL: ${{ toJSON(inputs.run_spark_trial) }}
-          CLOUD_TRIAL: ${{ toJSON(inputs.run_cloud_lakehouse_trial) }}
-        run: |
-          python3 -B - <<'PY'
-          import os
-          if any(os.environ.get(name) != 'false' for name in ('S3_TRIAL', 'SPARK_TRIAL', 'CLOUD_TRIAL')):
-              raise SystemExit('MUTUALLY_EXCLUSIVE_BASE_CONFIG_DIAGNOSTIC')
-          PY
-      - name: Checkout isolated base configuration readback
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Validate fixed readback privacy and unchanged startup guards without services
-        run: python3 -B -m unittest discover -s infra/cloud-base-config-ci -p 'test_*.py' -v
-      - name: Run one fresh bounded PG Garage readback
-        env:
-          SOURCE_COMMIT: ${{ github.sha }}
-        run: >-
-          python3 -B infra/cloud-base-config-ci/run_config_readback.py
-          --self-sha256 32afd59db5dd9c862f91a96e6a9418caaf09494b3d37e1d32bfd6c9ef5b7772a
-          --ack-fresh-base-config-readback
-      - name: Upload only the safe configuration readback summary
-        if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: base-config-readback-${{ github.run_id }}-${{ github.run_attempt }}
-          path: .local/cloud-base-config-public/summary.json
           if-no-files-found: error
           retention-days: 7

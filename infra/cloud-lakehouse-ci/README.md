@@ -1,5 +1,19 @@
 # 새 Cloud Spark → Trino 연결과 작은 파일 compaction 후보
 
+## OOM killer가 활성인 표현만 비교하는 새 후보
+
+상태: `SOURCE_ONLY_NOT_RUN`. 이 새 runtime 소스는 아직 full trial을 실행하지 않았습니다. 앞선 실제 실패는 그대로 남기며 재시도하지 않습니다. 아래 기존 시작 경계 설명과 SOURCE_ONLY 표시는 당시 작성한 소스 준비 상태도 포함하며, 이번 후보의 변경은 이 절에 따릅니다.
+
+별도 HostConfig 진단 [38842699117](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38842699117)의 source `17d8efe52a905a97245d42b60e84b0859f61a293`, summary SHA `462615cfbf99ceba0349a4100941f8fc1704561cbdcf39224248e0f3abdf3e4d`는 2026-10-16 02:53:22 UTC에 실패했습니다. PG는 Running으로 관측됐고 전체 signature 중 HostConfig만, 알려진 71개 필드 중 **OomKillDisable만 변경**됐습니다. 다른 70개와 unknown fields·Config·Mounts 내용·ID·image·created는 변경 false였습니다. Garage는 created였고 Mounts 순서만 달랐습니다. command·진단 관측 실패는 없었고 initializer 종료는 확인했지만 모든 자기 컨테이너 종료는 미확인입니다. 공개 boolean은 **값이나 변경 방향을 기록하지 않았으므로 false→null을 실제 관측했다고 주장하지 않습니다.** 앞선 `bf8c9057`·`eebb19a8` 및 더 이전 실패도 성공으로 바꾸지 않습니다.
+
+[Docker 28.0.4 create 경로](https://github.com/moby/moby/blob/v28.0.4/daemon/create.go#L67-L99)는 검증 뒤 기본 설정을 적용하고, [adaptContainerSettings](https://github.com/moby/moby/blob/v28.0.4/daemon/daemon_unix.go#L349-L352)는 nil을 false pointer로 채웁니다. [start 재검증](https://github.com/moby/moby/blob/v28.0.4/daemon/start.go#L56-L62)과 [미지원 OomKillDisable 처리](https://github.com/moby/moby/blob/v28.0.4/daemon/daemon_unix.go#L439-L445)는 pointer를 nil로 되돌릴 수 있습니다. 이것은 이번 좁은 호환 규칙의 코드 근거이며, 위 실제 실행에서 그 경로·방향이 발생했다는 직접 증거는 아닙니다.
+
+새 `canonical_host`는 `OomKillDisable` key가 **존재**하고 값이 null 또는 정확한 boolean false일 때만 받습니다. 둘 다 OOM killer를 끄지 않는 표현으로 비교하며 true·0·1·문자열·다른 타입·key 누락은 거부합니다. 원본 inspect dict를 수정하지 않고 복사본의 이 값 하나만 false로 맞춘 전체 canonical JSON 문자열을 signature에 넣습니다. 다른 모든 필드·중첩 값·JSON 타입·배열 순서·중복은 그대로 비교합니다. 실제 raw HostConfig의 CPU·memory·PID·network·권한 검사와 전체 image/config/mount/CID/owner 검사는 그대로입니다. 정상·cleanup 경로 모두 이 같은 검사를 거쳐야 하며 true나 알 수 없는 표현의 대상을 stop하는 권한을 넓히지 않습니다.
+
+다음 새 실행이 허용 표현을 **실제 검사**해야 합니다. 최종 full PASS일 때만 public `enabledOomKillerRepresentationsVerified=true`를 기록하고, 실패 시 null로 남깁니다. 개별 값·변경 방향·HostConfig 원문은 공개하지 않습니다. 기존 23개 검사의 fixture에 이 필드의 명시 false만 추가하고, 새 4개 검사로 present null/false·원본 비변경·전체 나머지 내용/타입 보존, 5개 role의 create/start/정상 Trino stop, missing/true/nonbool/unknown/다른 자원 변화의 mutation 전 거부를 확인합니다. 실행된 순수 검사 결과는 별도 source manifest에 기록합니다.
+
+임시 `run_base_config_readback` input/job와 verify·기존 세 trial의 전용 skip 조건을 제거하여 이전 full framework로 되돌리고 full runtime manifest SHA만 새 후보로 바꿉니다. `infra/cloud-base-config-ci` probe/test는 역사 bytes 그대로 남기며 현재 full source와 pin이 달라 현재 ref에서 지원하지 않습니다. 새 full 시도는 root가 별도로 선택하며 자동 재시도·추가 좁은 진단·clock reset은 없습니다. 600초·SQL/fixture/JAR·resources·권한·Trino PID/startTicks/cgroup·normal stop 및 failure cleanup의 명령과 순서는 바꾸지 않습니다.
+
 **첫 실제 실행 실패.** 새 GitHub 격리 실행은 준비 검사를 통과한 뒤 서비스 시작 단계에서 실패했습니다. 실패한 명령과 전체 컨테이너 종료 상태는 확인하지 못했고 Spark·Trino·compaction 결과도 입증하지 못했습니다. [첫 실행의 원문과 한계](../../docs/evidence/cloud-lakehouse/README.md)를 보존합니다. 기존 Cloud Spark8·Mini PC native7은 별도 기록이며 다시 실행하지 않았습니다. 아래 runtime manifest의 SOURCE_ONLY 상태는 검토한 소스 패킷의 작성 상태이고, 실행 결과는 별도 근거로 확인합니다.
 
 ## 시작 경계 수정 후보: SOURCE_ONLY_NOT_RUN

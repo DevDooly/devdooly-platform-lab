@@ -1,4 +1,8 @@
-# PG·Garage 시작 후 설정 읽기 진단 후보
+# PG·Garage 시작 후 설정 읽기 역사 진단
+
+**현재 ref에서 지원 종료.** 임시 `run_base_config_readback` input/job를 제거했습니다. probe와 test bytes는 그대로 보존하지만 고정 bc5 full-runner pin과 새 현재 runtime은 다르므로 현재 ref에서 실행하지 않습니다. 아래 SOURCE_ONLY 후보 표시는 문서 작성 당시 상태를 보존합니다.
+
+역사적으로 검토한 전체 71개 필드 진단 소스는 `17d8efe52a905a97245d42b60e84b0859f61a293`에 있습니다. 그 source의 실제 [38842699117](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38842699117), summary SHA `462615cfbf99ceba0349a4100941f8fc1704561cbdcf39224248e0f3abdf3e4d`는 PG HostConfig의 OomKillDisable 변경 boolean만 관측한 실패 기록입니다. 값·방향·전체 cleanup 성공은 확인하지 못했습니다. 역사 재현이 별도로 필요하면 해당 ref를 명시적으로 checkout하여 당시 소스·workflow·제약을 검토해야 하며, 이 안내는 재실행 승인이나 자동 replay가 아닙니다. 새 full-trial 규칙은 [현재 후보](../cloud-lakehouse-ci/README.md)의 별도 source/runtime manifest를 따릅니다.
 
 상태: `SOURCE_ONLY_CANDIDATE_NOT_RUN`. 이 새 후보는 아직 컨테이너·CI에서 실행하지 않았습니다. 기존 전체 시험과 좁은 진단의 실패 기록, 소스, runtime manifest는 그대로 보존합니다. 설정이나 guard를 고쳐 통과시키는 실행이 아닙니다.
 
