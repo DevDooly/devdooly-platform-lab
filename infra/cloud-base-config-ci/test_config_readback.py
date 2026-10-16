@@ -311,6 +311,35 @@ class ConfigReadbackTests(unittest.TestCase):
             self.assertNotIn(PRIVATE, json.dumps(observed))
             self.assertFalse(any(args[:2] == ["docker", "start"] or args[:2] == ["docker", "stop"] for args in calls))
 
+    def test_full_docker_28_host_fields_include_embedded_resources_but_do_not_relax_guard(self):
+        # Public API field names from Docker v28.0.4 hostconfig.go: direct HostConfig
+        # plus its embedded Resources, with explicit JSON aliases (Cpu*, NanoCpus, Dns*).
+        direct = "Binds ContainerIDFile LogConfig NetworkMode PortBindings RestartPolicy AutoRemove VolumeDriver VolumesFrom ConsoleSize Annotations CapAdd CapDrop CgroupnsMode Dns DnsOptions DnsSearch ExtraHosts GroupAdd IpcMode Cgroup Links OomScoreAdj PidMode Privileged PublishAllPorts ReadonlyRootfs SecurityOpt StorageOpt Tmpfs UTSMode UsernsMode ShmSize Sysctls Runtime Isolation Mounts MaskedPaths ReadonlyPaths Init".split()
+        resources = "CpuShares Memory NanoCpus CgroupParent BlkioWeight BlkioWeightDevice BlkioDeviceReadBps BlkioDeviceWriteBps BlkioDeviceReadIOps BlkioDeviceWriteIOps CpuPeriod CpuQuota CpuRealtimePeriod CpuRealtimeRuntime CpusetCpus CpusetMems Devices DeviceCgroupRules DeviceRequests KernelMemory KernelMemoryTCP MemoryReservation MemorySwap MemorySwappiness OomKillDisable PidsLimit Ulimits CpuCount CpuPercent IOMaximumIOps IOMaximumBandwidth".split()
+        self.assertEqual(len(direct), 40); self.assertEqual(len(resources), 31)
+        self.assertEqual(probe.HOST_KEYS, tuple(direct + resources))
+        self.assertEqual(len(set(probe.HOST_KEYS)), 71)
+        for key in probe.HOST_KEYS:
+            changes, unknown = probe.known_key_differences({}, {key: {PRIVATE: [PRIVATE, None, 1, True]}}, probe.HOST_KEYS)
+            self.assertEqual([name for name, changed in changes.items() if changed], [key])
+            self.assertFalse(unknown); self.assertNotIn(PRIVATE, json.dumps(changes))
+        for key, value in (("Ulimits", [{"Name": PRIVATE, "Soft": 1, "Hard": 1}]),
+                           ("CgroupParent", PRIVATE), ("OomKillDisable", True), ("Sysctls", {PRIVATE: PRIVATE})):
+            attempt = self.attempt(Path("synthetic-private-root"))
+            fixtures = {role: self.raw(attempt, role) for role in ("postgres", "garage")}
+            calls = self.fake_inventory(attempt, fixtures)
+            diagnostics = probe.Diagnostics(self.codes); diagnostics.install(attempt)
+            attempt.containers()
+            fixtures["postgres"]["HostConfig"][key] = value
+            with self.assertRaisesRegex(ValueError, "^SAME_OWN_CONTAINER_FULL_CONFIGURATION$"):
+                attempt.containers()
+            observed = diagnostics.states["postgres"]
+            self.assertTrue(observed["hostConfigKnownKeyChanged"][key])
+            self.assertFalse(observed["hostConfigUnknownKeysChanged"])
+            self.assertTrue(observed["signatureDifferences"]["hostChanged"])
+            self.assertNotIn(PRIVATE, json.dumps(observed))
+            self.assertFalse(any(args[:2] in (["docker", "start"], ["docker", "stop"]) for args in calls))
+
     def test_direct_start_unknown_or_heavy_cid_is_rejected_before_command(self):
         attempt = self.attempt(Path("synthetic-private-root")); calls = []
         attempt.command = lambda args, **kwargs: calls.append(args)

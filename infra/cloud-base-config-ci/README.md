@@ -2,6 +2,14 @@
 
 상태: `SOURCE_ONLY_CANDIDATE_NOT_RUN`. 이 새 후보는 아직 컨테이너·CI에서 실행하지 않았습니다. 기존 전체 시험과 좁은 진단의 실패 기록, 소스, runtime manifest는 그대로 보존합니다. 설정이나 guard를 고쳐 통과시키는 실행이 아닙니다.
 
+## 이번 후보의 변경과 직전 실제 readback
+
+앞선 고정 후보의 실제 [readback 38841830231](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38841830231), source `3990eb9eb66017ca3747cbf4cedf52ec33c37995`, summary SHA `bf8c9057968497bb113314dfba9bfa1ec9d4079714af16595f3d98939941299a`는 2026-10-16 02:43:07 UTC에 실패했습니다. PG는 Running·exitCode 0·State.Error 없음으로 관측됐고, signature에서는 **HostConfig만 변경**됐습니다. 기존 고정 HostConfig 42개 필드는 모두 false, unknown fields 변경 여부만 true였습니다. Config의 MacAddress 변경은 false이므로 MAC 수정 근거가 없습니다. Garage는 created였고 canonical signature 내용 변화 없이 raw Mounts 순서만 바뀌었습니다. guard가 `START_GARAGE`에서 거부했고 command·diagnostic observation failure는 없었습니다. initializer 종료는 확인했고 모든 자기 컨테이너 종료는 확인하지 못했습니다. 이 기록은 전체 Cloud 성공이나 이전 실패의 유일한 원인을 뜻하지 않습니다.
+
+새 후보는 [Docker 28.0.4 공식 HostConfig·embedded Resources 정의](https://github.com/moby/moby/blob/v28.0.4/api/types/container/hostconfig.go#L342-L444)를 기준으로 **전체 top-level JSON 필드 71개**(직접 필드 40개 + Resources 31개)를 고정 진단 allowlist에 넣습니다. `CgroupParent`, `Ulimits`, `OomKillDisable`, `Sysctls`, CPU period/quota/realtime/cpuset, blkio·device·Windows 관련 필드까지 포함합니다. Go 필드와 JSON 이름이 다른 `Cpu*`, `NanoCpus`, `Dns*`는 실제 JSON tag를 따릅니다. nested object는 기존 whole canonical JSON 비교를 유지하여 내용을 버리지 않습니다. 이들 이름이 알려졌다는 이유로 값을 공개하거나 변경을 허용하지 않습니다. 새로 알려지지 않은 필드도 기존 unknown-change boolean으로 계속 잡습니다.
+
+runtime 변경은 `HOST_KEYS` 확대와 직전 readback의 source·summary SHA lineage뿐입니다. 비교 함수·Config allowlist·signature·bc5 의존 소스·180초·full 5-service model·exact CID start·readiness·cleanup guard는 그대로입니다. workflow도 현재 후보의 self SHA pin 한 곳만 바꿉니다. 16개 synthetic pure test에는 전체 71개 필드의 비밀 중첩값 미출력, 새 Resource/HostConfig 필드 변화가 여전히 원본 full guard에서 거부되고 start/stop으로 이어지지 않는 사례가 포함됩니다. 새 실제 Docker·CI 실행은 아직 없습니다.
+
 최신 전체 시험 [38839670201](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38839670201)의 source `8e55f467faee38cee124690af1e80e65f69fc18c`, runtime manifest `eb15f2681632198a29fc76c5b12f3383e56e7caeb8cbeaa8958e25e8ae703d6e`, 공개 summary SHA `eebb19a8bed2a663d8216f3583d95e7d1a9956f6e5d4d279701a615bc441357b`를 별도 이력으로 연결합니다. 263ms에 `SAME_OWN_CONTAINER_FULL_CONFIGURATION`으로 실패했고 command failure는 없었습니다. initializer 종료는 확인했으나 모든 컨테이너의 종료는 미확인입니다. Spark·Trino 시작/성공은 확인하지 못했습니다. 어떤 Config 필드가 바뀌었는지는 이 기록만으로 확인하지 못했습니다.
 
 그 전 좁은 진단 [38837630164](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38837630164)의 summary `c41ce401a46e061bb829902de97b7399cbf20288ad274612d6f8703a4ae8b07d`는 Garage Mounts의 **순서만** 바뀐 관측과 PG Compose start의 `ENV_FILE_MISSING_SIGNATURE`를 남겼습니다. 이번 후보는 그 뒤에 작성한 frozen full runner `bc5d6afb086b6ba32c1fd98586f197c3c41d1533a02bebb9b43d84a286b3c852`의 `make_attempt`를 사용합니다. 이전 두 전체 실패의 유일한 원인을 소급해 입증하지 않습니다.
@@ -45,6 +53,6 @@ finally의 initializer와 PG/Garage 종료 역시 **현재 frozen guard 그대�
 
 ## 로컬 검증
 
-새 synthetic pure test 15개가 actual frozen 의존 소스를 읽어 통과했습니다. 실제 Docker·네트워크·CI는 호출하지 않았습니다. 시작 후 synthetic MAC 변경을 full guard가 계속 거부하는 사례, Config/HostConfig의 알려진·알려지지 않은 중첩/타입/부재 변화, 원문 비밀값 미출력, 전체 Mounts 순서만 변경된 경우와 내용 변경 구분, foreign owner/PID limit 거부, heavy/unknown CID start 차단, 첫 실패와 cleanup 실패 분리, 고정 단일 시계와 원래 full 5-service model을 확인합니다. Windows 최초 test의 intent-file writer 모의 누락으로 생긴 `O_NOFOLLOW` 오류는 test 경계만 고쳤으며 runtime guard를 바꾸지 않았습니다.
+기존 15개와 이번 전체 HostConfig 회귀 1개, 총 16개 synthetic pure test가 actual frozen 의존 소스를 읽어 통과했습니다. 실제 Docker·네트워크·CI는 호출하지 않았습니다. 시작 후 synthetic MAC 변경을 full guard가 계속 거부하는 사례, Config/HostConfig의 알려진·알려지지 않은 중첩/타입/부재 변화, 원문 비밀값 미출력, 전체 Mounts 순서만 변경된 경우와 내용 변경 구분, foreign owner/PID limit 거부, heavy/unknown CID start 차단, 첫 실패와 cleanup 실패 분리, 고정 단일 시계와 원래 full 5-service model을 확인합니다. 앞선 후보의 Windows 최초 test에서 intent-file writer 모의 누락으로 생긴 `O_NOFOLLOW` 오류는 test 경계만 고쳤으며 runtime guard를 바꾸지 않았습니다.
 
 이 결과는 실제 Config 변화·원인·새 시작 성공·Spark→Trino 연결·compaction·운영 자료 보존을 입증하지 않습니다. actual readback과 후속 수정은 root의 전체 소스 검토와 별도 새 실행 선택이 필요합니다.

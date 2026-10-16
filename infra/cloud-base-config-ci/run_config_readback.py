@@ -33,15 +33,30 @@ PRIOR_MOUNT_SOURCE = "f3f5c52993ceb00fd70f73c17f0ec6d2d236b26e"
 PRIOR_MOUNT_SUMMARY = "c41ce401a46e061bb829902de97b7399cbf20288ad274612d6f8703a4ae8b07d"
 PRIOR_FULL_SOURCE = "8e55f467faee38cee124690af1e80e65f69fc18c"
 PRIOR_FULL_SUMMARY = "eebb19a8bed2a663d8216f3583d95e7d1a9956f6e5d4d279701a615bc441357b"
+PRIOR_CONFIG_SOURCE = "3990eb9eb66017ca3747cbf4cedf52ec33c37995"
+PRIOR_CONFIG_SUMMARY = "bf8c9057968497bb113314dfba9bfa1ec9d4079714af16595f3d98939941299a"
 SIGNATURE_KEYS = ("id", "imageId", "config", "host", "mounts", "created")
 CONFIG_KEYS = ("Hostname", "Domainname", "User", "AttachStdin", "AttachStdout", "AttachStderr", "ExposedPorts",
                "Tty", "OpenStdin", "StdinOnce", "Env", "Cmd", "Healthcheck", "ArgsEscaped", "Image", "Volumes",
                "WorkingDir", "Entrypoint", "NetworkDisabled", "MacAddress", "OnBuild", "Labels", "StopSignal", "StopTimeout", "Shell")
-HOST_KEYS = ("Binds", "ContainerIDFile", "LogConfig", "NetworkMode", "PortBindings", "RestartPolicy", "AutoRemove",
-             "VolumeDriver", "VolumesFrom", "ConsoleSize", "CapAdd", "CapDrop", "CgroupnsMode", "Dns", "DnsOptions",
-             "DnsSearch", "ExtraHosts", "GroupAdd", "IpcMode", "Cgroup", "Links", "OomScoreAdj", "PidMode", "Privileged",
-             "PublishAllPorts", "ReadonlyRootfs", "SecurityOpt", "UTSMode", "UsernsMode", "ShmSize", "Runtime", "Isolation",
-             "CpuShares", "Memory", "NanoCpus", "MemorySwap", "PidsLimit", "Tmpfs", "Mounts", "MaskedPaths", "ReadonlyPaths", "Init")
+# Docker v28.0.4 HostConfig plus embedded Resources JSON names, including optional fields.
+HOST_KEYS = (
+    'Binds', 'ContainerIDFile', 'LogConfig', 'NetworkMode', 'PortBindings',
+    'RestartPolicy', 'AutoRemove', 'VolumeDriver', 'VolumesFrom', 'ConsoleSize',
+    'Annotations', 'CapAdd', 'CapDrop', 'CgroupnsMode', 'Dns',
+    'DnsOptions', 'DnsSearch', 'ExtraHosts', 'GroupAdd', 'IpcMode',
+    'Cgroup', 'Links', 'OomScoreAdj', 'PidMode', 'Privileged',
+    'PublishAllPorts', 'ReadonlyRootfs', 'SecurityOpt', 'StorageOpt', 'Tmpfs',
+    'UTSMode', 'UsernsMode', 'ShmSize', 'Sysctls', 'Runtime',
+    'Isolation', 'Mounts', 'MaskedPaths', 'ReadonlyPaths', 'Init',
+    'CpuShares', 'Memory', 'NanoCpus', 'CgroupParent', 'BlkioWeight',
+    'BlkioWeightDevice', 'BlkioDeviceReadBps', 'BlkioDeviceWriteBps', 'BlkioDeviceReadIOps', 'BlkioDeviceWriteIOps',
+    'CpuPeriod', 'CpuQuota', 'CpuRealtimePeriod', 'CpuRealtimeRuntime', 'CpusetCpus',
+    'CpusetMems', 'Devices', 'DeviceCgroupRules', 'DeviceRequests', 'KernelMemory',
+    'KernelMemoryTCP', 'MemoryReservation', 'MemorySwap', 'MemorySwappiness', 'OomKillDisable',
+    'PidsLimit', 'Ulimits', 'CpuCount', 'CpuPercent', 'IOMaximumIOps',
+    'IOMaximumBandwidth',
+)
 STAGES = {"PREPARE", "CREATE_BASE_SERVICES", "INITIALIZER", "START_POSTGRES", "START_GARAGE",
           "BASE_SERVICE_READINESS", "CLEANUP_INITIALIZER", "CLEANUP_CONTAINERS"}
 LOCAL_CODES = {"STARTUP_PROBE_DEADLINE", "ONLY_TWO_BASE_ROLES", "FRESH_PRIVATE_ROOT", "FULL_MODEL_UNCHANGED",
@@ -402,6 +417,7 @@ def main():
         "priorStartupSourceCommit": PRIOR_STARTUP_SOURCE, "priorStartupSummarySha256": PRIOR_STARTUP_SUMMARY,
         "priorMountDiagnosticSourceCommit": PRIOR_MOUNT_SOURCE, "priorMountDiagnosticSummarySha256": PRIOR_MOUNT_SUMMARY,
         "priorFullSourceCommit": PRIOR_FULL_SOURCE, "priorFullSummarySha256": PRIOR_FULL_SUMMARY,
+        "priorConfigReadbackSourceCommit": PRIOR_CONFIG_SOURCE, "priorConfigReadbackSummarySha256": PRIOR_CONFIG_SUMMARY,
         "failure": primary, "versions": versions, "startupReadyObserved": ready, "startupBudgetSeconds": 180,
         "startupElapsedMillis": elapsed, "imagePullsExcludedFromStartupClock": True,
         "checks": checks,

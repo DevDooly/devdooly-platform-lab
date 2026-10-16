@@ -322,7 +322,7 @@ jobs:
           SOURCE_COMMIT: ${{ github.sha }}
         run: >-
           python3 -B infra/cloud-base-config-ci/run_config_readback.py
-          --self-sha256 2870124c794e3489f54e1649c5346380ce74048691c59cb46670565d66e7001b
+          --self-sha256 32afd59db5dd9c862f91a96e6a9418caaf09494b3d37e1d32bfd6c9ef5b7772a
           --ack-fresh-base-config-readback
       - name: Upload only the safe configuration readback summary
         if: always()
