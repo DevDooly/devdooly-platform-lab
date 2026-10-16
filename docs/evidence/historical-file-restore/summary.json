@@ -1,0 +1,88 @@
+{
+  "failedUnitAssessment": {
+    "actualUnitExitCode": 1,
+    "capturedAt": "2026-10-16T00:38:09.122549+00:00",
+    "originalCgroupDirectoryAbsent": true,
+    "originalProcessAbsent": true,
+    "passed": true,
+    "restorationRerun": false,
+    "scope": "READ_ONLY_ALREADY_FAILED_HISTORICAL_UNIT_ASSESSMENT",
+    "unitResets": 0,
+    "unitStillFailed": true,
+    "unitStops": 0
+  },
+  "files": {
+    "archiveMemberCount": 2688,
+    "authenticatedComponentCount": 4,
+    "numericOwnerModeMtimeMatched": true,
+    "restoredRegularOrHardlinkCount": 1907,
+    "wholeArchiveMemberBytesMatched": true
+  },
+  "historicalBackupDate": "2026-10-11",
+  "limits": {
+    "applicationServicesStarted": 0,
+    "automaticRetry": false,
+    "currentEightJobBackupClaimed": false,
+    "extendedAclOrXattrRestorationVerified": false,
+    "fileOnly": true,
+    "fullClusterApplicationRestoreVerified": false,
+    "jenkinsControllerRestoreVerified": false,
+    "jenkinsCredentialDecryptabilityVerified": false,
+    "k3sApiRestoreVerified": false,
+    "originalFailureRewritten": false,
+    "productionPreservationVerifiedByThisComposite": false,
+    "sqlImported": false
+  },
+  "metadataInventory": {
+    "archiveMetadataAndWholeHashesMatched": true,
+    "databaseBytes": 16408576,
+    "passed": true,
+    "rollbackJournalAbsent": true,
+    "sharedMemoryBytes": 32768,
+    "sqliteConnectionOpened": false,
+    "walBytes": 0
+  },
+  "originalFailure": {
+    "capturedAt": "2026-10-16T00:05:45.395085+00:00",
+    "cause": "VALIDATOR_ASSUMED_NO_COMPANIONS_BEFORE_SQLITE_CONNECT",
+    "code": "ONLINE_BACKUP_EXPECTED_NO_WAL_OR_JOURNAL_COMPANIONS",
+    "passed": false,
+    "separateKeyAssemblyExecutedInOriginalAttempt": false,
+    "sqliteCheckExecutedInOriginalAttempt": false
+  },
+  "originalRestorePassed": false,
+  "proofSha256": {
+    "failedUnitAssessment": "43a73316170d6cda5756e96cee02e7a76e8be5f4f61e8c5483409e350d083588",
+    "metadataInventory": "732335d3db43a3bbaed736584ab1abea17b5416b1714f113113f25d2d6d5f12b",
+    "originalRestore": "be39e3c05d6042763e91b0f6e0b9b5228bd8fd93e66ed91e54544bc12ab268be",
+    "readonlySqlite": "fc5ff1d23439c63f0cb8063385e64aacbf5ae372bd019cca9570193c9b892731",
+    "separateKeyAssembly": "23143363de051241d9276ef56dd15b57a55d22388f2e3b262b1d97e627dfa12b"
+  },
+  "readonlySqlite": {
+    "addressSpaceBytesLimit": 268435456,
+    "connectionExplicitlyClosed": true,
+    "cpuSecondsLimit": 30,
+    "databaseWalShmIdentitiesAndWholeBytesUnchanged": true,
+    "integrityCheck": "ok",
+    "onlyEmptyWalAllowed": true,
+    "passed": true,
+    "pythonVersion": "3.10.12",
+    "queryOnlyReadback": true,
+    "sqliteVersion": "3.37.2",
+    "userdataRowsReturned": 0,
+    "wallSecondsLimit": 120
+  },
+  "schemaVersion": 1,
+  "scope": "HISTORICAL_20261011_FILE_ONLY_VERIFICATION_COMPOSITE",
+  "separateKeyAssembly": {
+    "fullHomeCopied": false,
+    "keyBytes": 256,
+    "keyValueOrHashPublished": false,
+    "oneNewRootOwnedMode0600File": true,
+    "originalFailedHomeModified": false,
+    "passed": true,
+    "sourceIdentityUnchanged": true,
+    "wholeBytesConstantTimeEqual": true
+  },
+  "status": "AUTHENTICATED_FILES_EMPTY_WAL_SQLITE_AND_ONE_SEPARATE_KEY_ASSEMBLY_VERIFIED"
+}

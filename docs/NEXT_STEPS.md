@@ -54,6 +54,8 @@ GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins 
 
 [운영 대상 확인](runbooks/lab-operations.md)과 [재실행 명령](runbooks/lab-recovery.md)을 함께 제공합니다. 초기 관리자 비밀번호는 아직 유효합니다. 위 체크는 변경 여부와 보관 방식을 확인했다는 뜻이며 비밀번호 교체 완료를 뜻하지 않습니다. 외부 백업과 격리 DB 복원, 호스트 재부팅 결과는 [복구 검증](evidence/recovery/README.md)에 있습니다.
 
+역사적 외부 백업의 [파일 전용 후속 검증](evidence/historical-file-restore/README.md)은 네 구성요소의 bytes·metadata, 빈 WAL SQLite 무결성과 별도256바이트 키 조립을 확인했습니다. 첫 restore 실패는 보존했고 기존 Jenkins Home은 바꾸지 않았습니다. 전체 archive·K3s/Jenkins application 복원과 credential 복호화는 위 파일 검증과 구분해 후속으로 남깁니다.
+
 ## 2 CI/CD 연결
 
 현재 흐름은 `Jenkins 테스트 + Actions 통합 검증 → Actions 이미지 게시 → digest 기록 → draft GitOps PR → 검토 후 main 반영 → Argo CD 배포`입니다. [ADR 0004](adr/0004-jenkins-gated-actions-publication.md)에 따라 Actions를 단일 게시자로 유지하고 동일 source SHA의 Jenkins 성공을 추가 조건으로 연결했습니다. 전용 status credential과 Actions PR 설정을 활성화했고 정상 B 배포·실제 실패 차단·이전 정상 A 복구를 모두 검증했습니다. [운영·검증 절차](runbooks/cicd-publication.md)와 [실행 근거](evidence/cicd-gate/README.md)를 함께 확인합니다.
