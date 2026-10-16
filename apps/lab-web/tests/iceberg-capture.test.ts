@@ -5,13 +5,15 @@ import { createHash } from 'node:crypto';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import ts from 'typescript';
-import { captureAssetUrl, icebergCaptureManifest, icebergCaptureManifestV2, icebergCaptureManifestClosedClasspath, icebergCaptureManifestBoundedManifest, observedCount, parseIcebergCapture } from '../src/lib/iceberg-capture.ts';
-import { captureFailureCodes, captureClasspathFailureCodes, captureManifestBoundsFailureCodes, parseCaptureDiagnostic } from '../src/lib/iceberg-capture-diagnostic.ts';
+import { captureAssetUrl, icebergCaptureManifest, icebergCaptureManifestV2, icebergCaptureManifestClosedClasspath, icebergCaptureManifestBoundedManifest, icebergCaptureManifestVerifiedAbsence, observedCount, parseIcebergCapture } from '../src/lib/iceberg-capture.ts';
+import { captureFailureCodes, captureClasspathFailureCodes, captureManifestBoundsFailureCodes, captureClasspathTreeFailureCodes, parseCaptureDiagnostic } from '../src/lib/iceberg-capture-diagnostic.ts';
 
 const actualRaw = readFileSync(new URL('./fixtures/iceberg-capture-attempt2.summary.json', import.meta.url));
 const actual: Record<string, any> = JSON.parse(actualRaw.toString('utf8'));
 const actual3Raw = readFileSync(new URL('./fixtures/iceberg-capture-attempt3.summary.json', import.meta.url));
 const actual3: Record<string, any> = JSON.parse(actual3Raw.toString('utf8'));
+const actual4Raw = readFileSync(new URL('./fixtures/iceberg-capture-attempt4.summary.json', import.meta.url));
+const actual4: Record<string, any> = JSON.parse(actual4Raw.toString('utf8'));
 
 /** Synthetic producer-shaped object only; no actual capture or public asset. */
 const fixture = (): Record<string, any> => ({
@@ -68,6 +70,27 @@ test('the exact real third record keeps preparation failure and null inventory d
     assert.equal(value.diagnostic.lastPrepChild?.class, 'COLD_ABSENCE');
     assert.equal(value.diagnostic.lastPrepChild?.outcome, 'EXITED_ZERO');
     assert.equal(value.diagnostic.lastPrepChild?.returnCode, 0); assert.equal(value.diagnostic.lastPrepChild?.childReaped, true);
+    assert.ok(value.diagnostic.prepCleanup && Object.values(value.diagnostic.prepCleanup).every(item => item === true));
+  }
+});
+test('the exact real fourth record keeps target-missing failure separate from successful cleanup observations', () => {
+  assert.equal(actual4Raw.length, 1729);
+  assert.equal(createHash('sha256').update(actual4Raw).digest('hex'), '78e07be0b1116224507481de08f15a8792b26277d7734e79b2b6e8883d4dd1af');
+  const value = parseIcebergCapture(actual4); assert.ok(value); assert.equal(value.schemaVersion, 2);
+  assert.equal(value.sourceCommit, 'a00ddbccf859c249637f65303654dee659130bdc');
+  assert.equal(value.runtimeManifestSha256, icebergCaptureManifestBoundedManifest);
+  assert.equal(value.status, 'FAILED'); assert.equal(value.passed, false); assert.equal(value.failureCategory, 'PREP_NOT_VERIFIED');
+  assert.ok(Object.entries(value.counts).every(([key, count]) => count === (key === 'objectCandidateCount' ? 0 : null)));
+  assert.ok(Object.entries(value.checks).every(([key, verified]) => verified === (key === 'sourceBytesVerified')));
+  assert.equal(value.proofHashes.prepProofSha256, null); assert.equal(value.proofHashes.normalizationReceiptCanonicalSha256, null);
+  if (value.schemaVersion === 2) {
+    assert.equal(value.diagnostic.stageAttempted, 'PREP');
+    assert.equal(value.diagnostic.failureCode, 'JAR_MANIFEST_CLASSPATH_TARGET_MISSING');
+    assert.equal(value.diagnostic.lastPrepChild?.name, 'failed-prep-cold-absence');
+    assert.equal(value.diagnostic.lastPrepChild?.class, 'COLD_ABSENCE');
+    assert.equal(value.diagnostic.lastPrepChild?.outcome, 'EXITED_ZERO');
+    assert.equal(value.diagnostic.lastPrepChild?.returnCode, 0);
+    assert.equal(value.diagnostic.lastPrepChild?.childStarted, true); assert.equal(value.diagnostic.lastPrepChild?.childReaped, true);
     assert.ok(value.diagnostic.prepCleanup && Object.values(value.diagnostic.prepCleanup).every(item => item === true));
   }
 });
@@ -210,6 +233,38 @@ test('the bounded-manifest runtime alone accepts four new codes and retains the 
     next.diagnostic.failureCode = 'SYNTHETIC_PRIVATE_CANARY'; assert.equal(parseIcebergCapture(next), null);
   }
   assert.ok(parseIcebergCapture(actual)); assert.ok(parseIcebergCapture(actual3));
+});
+test('verified-absence codes belong only to their exact runtime and preserve all three actual failures', () => {
+  // Synthetic profile cases only; an allowlisted source contract is not an actual capture outcome.
+  assert.equal(typeof icebergCaptureManifestVerifiedAbsence, 'string');
+  assert.match(icebergCaptureManifestVerifiedAbsence!, /^[a-f0-9]{64}$/);
+  const older = [icebergCaptureManifestV2, icebergCaptureManifestClosedClasspath, icebergCaptureManifestBoundedManifest];
+  for (const manifest of [icebergCaptureManifest, ...older]) assert.notEqual(icebergCaptureManifestVerifiedAbsence, manifest);
+  assert.equal(captureClasspathTreeFailureCodes.length, 6);
+  const allCodes = [...captureFailureCodes, ...captureClasspathFailureCodes, ...captureManifestBoundsFailureCodes, ...captureClasspathTreeFailureCodes];
+  assert.equal(allCodes.length, 144); assert.equal(new Set(allCodes).size, 144);
+  for (const failureCode of captureClasspathTreeFailureCodes) {
+    for (const runtimeManifestSha256 of older) {
+      const value = version2(); value.runtimeManifestSha256 = runtimeManifestSha256; value.diagnostic.failureCode = failureCode;
+      assert.equal(parseIcebergCapture(value), null);
+    }
+    const value = version2(); value.diagnostic.failureCode = failureCode;
+    assert.equal(parseCaptureDiagnostic(value.diagnostic, false), null);
+    assert.equal(parseCaptureDiagnostic(value.diagnostic, false, 'SCHEMA2_CLOSED_CLASSPATH'), null);
+    assert.equal(parseCaptureDiagnostic(value.diagnostic, false, 'SCHEMA2_BOUNDED_MANIFEST'), null);
+  }
+  for (const failureCode of allCodes) {
+    const next = version2(); next.runtimeManifestSha256 = icebergCaptureManifestVerifiedAbsence; next.diagnostic.failureCode = failureCode;
+    assert.equal(parseIcebergCapture(next)?.schemaVersion, 2);
+  }
+  const unknown = version2(); unknown.runtimeManifestSha256 = icebergCaptureManifestVerifiedAbsence;
+  unknown.diagnostic.failureCode = 'SYNTHETIC_PRIVATE_CANARY'; assert.equal(parseIcebergCapture(unknown), null);
+  unknown.diagnostic.failureCode = captureClasspathTreeFailureCodes[0]; unknown.runtimeManifestSha256 = 'f'.repeat(64);
+  assert.equal(parseIcebergCapture(unknown), null);
+  const privateValue = version2(); privateValue.runtimeManifestSha256 = icebergCaptureManifestVerifiedAbsence;
+  privateValue.diagnostic.failureCode = captureClasspathTreeFailureCodes[0]; privateValue.diagnostic.env = 'SYNTHETIC_PRIVATE_CANARY';
+  assert.equal(parseIcebergCapture(privateValue), null);
+  assert.ok(parseIcebergCapture(actual)); assert.ok(parseIcebergCapture(actual3)); assert.ok(parseIcebergCapture(actual4));
 });
 test('provided-record component path never renders a JSON link for an unsafe URL', async () => {
   // Existing TypeScript/React dependencies only; compile in memory and remove CSS solely for SSR.

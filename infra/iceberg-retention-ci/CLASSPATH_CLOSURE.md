@@ -1,3 +1,5 @@
+> 현재 상태: [시도4](../../docs/evidence/iceberg-capture/ATTEMPT_4.md)의 a00 source는 Linux 73개·skip0 통과 후 `JAR_MANIFEST_CLASSPATH_TARGET_MISSING`으로 prep에 실패했습니다. 특정 JAR·token·경로 및 전체 closure·prep·compile·decoder·inventory 성공은 미확인입니다. 다음 [ABSENT_CLASSPATH.md](ABSENT_CLASSPATH.md)는 전체 추출 트리·실제 ENOENT·javac 전후 재검증을 묶는 새 SOURCE_ONLY_NOT_RUN 후보이며 Linux 80개는 미실행입니다. 아래 전체 원문과 이전 prefix는 당시 정책·검증 상태를 보존한 역사적 기록입니다. pending 문구는 현재 실행 상태가 아닙니다.
+
 > 현재 상태: [시도3](../../docs/evidence/iceberg-capture/ATTEMPT_3.md)의 a03 source는 Linux 67개·skip0 통과 후 `JAR_MANIFEST_BYTES_BOUND`로 prep에 실패했습니다. 구체적 분기와 실제 Class-Path closure는 미확인입니다. 다음 [MANIFEST_BOUNDS.md](MANIFEST_BOUNDS.md)는 새 source 후보이며 Linux 73개·prep/capture는 미실행입니다. 아래 전체 원문은 이전 후보의 기록이므로 Linux 67개 pending 문구는 그 시점의 상태입니다.
 
 # 검증된 JAR export 안의 Class-Path 참조만 허용하는 후보

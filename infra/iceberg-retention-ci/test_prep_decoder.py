@@ -73,12 +73,15 @@ class Guards(unittest.TestCase):
                 target=root/'synthetic.jar'
                 with zipfile.ZipFile(target,'w') as archive:archive.writestr(entry,b'synthetic-not-executed')
                 raw=target.read_bytes();row={'name':target.name,'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()}
-                with mock.patch.object(p,'file_hashes',return_value={**row}):
+                tree={'scope':'SYNTHETIC_HOOK_ONLY_NOT_OS_PROOF'}
+                with mock.patch.object(p,'file_hashes',return_value={**row}),mock.patch.object(p.artifacts,'classpath_tree_inventory',return_value=tree) as inventory:
                     if entry.startswith('org/apache/spark/'):
-                        self.assertEqual(p.classpath_inventory(root,[row]),p.sha(p.encoded([row])))
+                        self.assertEqual(p.classpath_inventory(root,[row]),p.sha(p.encoded({'jars':[row],'tree':tree})))
+                        inventory.assert_called_once_with(root,[row])
                     else:
                         with self.assertRaisesRegex(ValueError,'ONLY_LOCKED_RUNTIME_MAY_SUPPLY_ICEBERG_CLASSES'):
                             p.classpath_inventory(root,[row])
+                        inventory.assert_not_called()
 
 
 class SyntheticPreparation(unittest.TestCase):
@@ -192,6 +195,38 @@ class SyntheticPreparation(unittest.TestCase):
             exported=next(row for row in calls if row['name']=='export-classpath')
             self.assertEqual(exported['maximum_stdout'],p.artifacts.MAX_ARCHIVE)
             self.assertEqual(exported['stdout_filename'],'classpath.tar')
+
+
+class CapturedTreeHook(unittest.TestCase):
+    def test_full_tree_and_absence_receipt_changes_private_digest_without_exposing_receipt(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary);target=root/'synthetic.jar'
+            with zipfile.ZipFile(target,'w') as archive:archive.writestr('org/apache/spark/Safe.class',b'synthetic')
+            raw=target.read_bytes();row={'name':target.name,'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()}
+            first={'directories':['','empty'],'verifiedAbsent':['gone.jar'],'privateMarker':'SYNTHETIC_PRIVATE'}
+            second={**first,'directories':['','empty','new-directory']}
+            third={**first,'verifiedAbsent':[]}
+            with mock.patch.object(p,'file_hashes',return_value={**row}),mock.patch.object(p.artifacts,'classpath_tree_inventory',side_effect=[first,second,third]) as tree:
+                values=[p.classpath_inventory(root,[row]) for _ in range(3)]
+            self.assertEqual(len(set(values)),3);self.assertTrue(all(len(value)==64 for value in values))
+            self.assertTrue(all('SYNTHETIC_PRIVATE' not in value for value in values));self.assertEqual(tree.call_count,3)
+
+
+class PreparationTreeBoundary(unittest.TestCase):
+    harness=SyntheticPreparation.harness
+    def test_unverified_pre_tree_or_changed_post_tree_prevents_attestation_and_cleans_only_cold_actor(self):
+        for stage in ('before','after'):
+            with self.subTest(stage=stage),tempfile.TemporaryDirectory() as temporary:
+                repo,output,pins,records,calls=self.harness(temporary)
+                outcomes=[ValueError('JAR_CLASSPATH_TREE_EXACT')] if stage=='before' else ['7'*64,'8'*64]
+                code='JAR_CLASSPATH_TREE_EXACT' if stage=='before' else 'ALL_COMPILER_SOURCE_CLASSPATH_INPUTS_UNCHANGED'
+                with mock.patch.object(p,'classpath_inventory',side_effect=outcomes):
+                    with self.assertRaisesRegex(ValueError,'^'+code+'$'):p.prepare(repo,output,SOURCE,DECODER,OWN,pins)
+                names=[row['name'] for row in calls]
+                self.assertEqual(names.count('compile-main-only'),0 if stage=='before' else 1)
+                self.assertEqual(names.count('failed-prep-cold-remove'),1)
+                self.assertNotIn((str(output),'prep-attestation.private.json'),records)
+                self.assertFalse(records[(str(output),'prep-result.private.json')]['passed'])
 
 
 if __name__=='__main__':unittest.main(verbosity=2)

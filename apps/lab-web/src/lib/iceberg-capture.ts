@@ -6,6 +6,8 @@ export const icebergCaptureManifestV2 = '53493f2dfeedee530ad152b5dc08f2c08b3d560
 export const icebergCaptureManifestClosedClasspath: string | null = 'a9704dce98583b3935e05ac759a3b0e9c8af839fb9b3fa141ad1d96a13708f18';
 /** Exact reviewed bounded-manifest runtime; this pin does not claim an actual capture outcome. */
 export const icebergCaptureManifestBoundedManifest: string | null = '6aea1d3987d4a258718f4fd242d05ff1364a73cf4772272260975fce7eb172cd';
+/** Exact reviewed verified-absence runtime; this pin does not claim an actual capture outcome. */
+export const icebergCaptureManifestVerifiedAbsence: string | null = 'c8a3d89458bca95a98547472816c5fb35f922aea934cd7da1a0cd4534c0c6fbf';
 export const captureReasons = {
   FRAME_MAGIC: '입력 형식 확인 실패', FRAME_BOUND: '입력 크기 제한', FRAME_EOF: '입력 전체 바이트 미확인',
   DESCRIPTOR_INVALID: '입력 계약 확인 실패', OBJECT_MAP_INVALID: '객체 목록 확인 실패',
@@ -49,6 +51,7 @@ function diagnosticProfile(manifest: unknown): CaptureDiagnosticProfile | null {
   if (manifest === icebergCaptureManifestV2) return 'SCHEMA2_INITIAL';
   if (icebergCaptureManifestClosedClasspath !== null && manifest === icebergCaptureManifestClosedClasspath) return 'SCHEMA2_CLOSED_CLASSPATH';
   if (icebergCaptureManifestBoundedManifest !== null && manifest === icebergCaptureManifestBoundedManifest) return 'SCHEMA2_BOUNDED_MANIFEST';
+  if (icebergCaptureManifestVerifiedAbsence !== null && manifest === icebergCaptureManifestVerifiedAbsence) return 'SCHEMA2_VERIFIED_ABSENCE';
   return null;
 }
 

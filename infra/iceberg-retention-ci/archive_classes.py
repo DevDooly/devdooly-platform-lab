@@ -1,5 +1,6 @@
 """Manual bounded JAR export and new class artifact checks. No commands/network."""
 from contextlib import ExitStack
+import errno
 import hashlib
 import os
 from pathlib import Path
@@ -297,6 +298,160 @@ def _directory_fd(stack, path):
     return path,fd,info
 
 
+def _classpath_children(fd):
+    names = []
+    with os.scandir(fd) as entries:
+        for entry in entries:
+            require(len(names) < MAX_JARS + 1024 and type(entry.name) is str
+                and 1 <= len(entry.name) <= 200, 'JAR_CLASSPATH_TREE_EXACT')
+            names.append(entry.name)
+    return sorted(names)
+
+
+def _present_classpath_graph(rows, references, prove_absent):
+    """Private tree caller supplies an FD-derived resolver; default map stays strict."""
+    require(type(rows) is list and all(type(row) is dict and 'name' in row for row in rows),
+        'JAR_MANIFEST_CLASSPATH_EXPORT_MAP_REQUIRED')
+    names = {row['name'] for row in rows if type(row['name']) is str}
+    _closed_classpath_map(rows, {name: [] for name in names})
+    require(type(references) is dict and set(references) == names,
+        'JAR_MANIFEST_CLASSPATH_EXPORT_MAP_REQUIRED')
+    present, absent, count = {}, [], 0
+    for name in sorted(names):
+        tokens = references[name]
+        require(type(tokens) is list, 'JAR_MANIFEST_CLASSPATH_EXPORT_MAP_REQUIRED')
+        prefix = name.rsplit('/', 1)[0] + '/' if '/' in name else ''
+        present[name] = []
+        for token in tokens:
+            count += 1
+            require(count <= MAX_CLASSPATH_REFS, 'JAR_MANIFEST_CLASSPATH_REFERENCE_BOUND')
+            require(type(token) is str and token.isascii(), 'JAR_MANIFEST_CLASSPATH_TOKEN_REJECTED')
+            token = _classpath_token(token.encode('ascii')); target = prefix + token
+            _path('jars/' + target)
+            if target in names: present[name].append(token)
+            else:
+                missing_at = prove_absent(target)
+                require(type(missing_at) is str and (target == missing_at or target.startswith(missing_at + '/')),
+                    'JAR_CLASSPATH_ABSENCE_UNVERIFIED')
+                _path('jars/' + missing_at)
+                absent.append({'source': name, 'target': target, 'missingAt': missing_at})
+    return _closed_classpath_map(rows, present), absent
+
+
+def _verified_classpath_tree(jars, rows, *, expected_directories=None):
+    """Whole local tree and captured ENOENT facts, never a same-UID sandbox."""
+    _linux()
+    # Validate every expected regular name/size/hash with the unchanged strict map.
+    require(type(rows) is list and all(type(row) is dict and 'name' in row for row in rows),
+        'JAR_MANIFEST_CLASSPATH_EXPORT_MAP_REQUIRED')
+    names = {row['name'] for row in rows if type(row['name']) is str}
+    _closed_classpath_map(rows, {name: [] for name in names})
+    expected = {row['name']: row for row in rows}
+    try:
+        with ExitStack() as stack:
+            path, root_fd, root_info = _directory_fd(stack, jars)
+            parent, parent_fd, parent_info = _directory_fd(stack, path.parent)
+            require(path.name == 'jars' and stat.S_IMODE(parent_info.st_mode) == 0o700
+                and stat.S_IMODE(root_info.st_mode) == 0o755
+                and root_info.st_dev == parent_info.st_dev, 'JAR_CLASSPATH_TREE_REQUIRED')
+            directories, files, references, budget = {}, {}, {}, [0]
+            reference_count = 0
+            def walk(fd, relative, info):
+                nonlocal reference_count
+                require(len(directories) < 1024 and info.st_dev == root_info.st_dev
+                    and info.st_uid == os.getuid() and stat.S_IMODE(info.st_mode) == 0o755,
+                    'JAR_CLASSPATH_TREE_REQUIRED')
+                children = _classpath_children(fd)
+                require(len({name.lower() for name in children}) == len(children),
+                    'JAR_CLASSPATH_CASE_ALIAS_REJECTED')
+                directories[relative] = (fd, info, children)
+                for name in children:
+                    child_path = relative + '/' + name if relative else name
+                    _path('jars/' + child_path)
+                    child_info = os.stat(name, dir_fd=fd, follow_symlinks=False)
+                    if stat.S_ISDIR(child_info.st_mode):
+                        child_fd = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=fd)
+                        stack.callback(os.close, child_fd)
+                        require(identity(child_info) == identity(os.fstat(child_fd)), 'JAR_CLASSPATH_TREE_CHANGED')
+                        walk(child_fd, child_path, child_info)
+                    else:
+                        require(child_path in expected and stat.S_ISREG(child_info.st_mode)
+                            and child_info.st_nlink == 1 and child_info.st_uid == os.getuid()
+                            and child_info.st_dev == root_info.st_dev
+                            and stat.S_IMODE(child_info.st_mode) == 0o444
+                            and child_info.st_size == expected[child_path]['bytes'], 'JAR_CLASSPATH_TREE_EXACT')
+                        child_fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=fd)
+                        stack.callback(os.close, child_fd)
+                        require(identity(child_info) == identity(os.fstat(child_fd)), 'JAR_CLASSPATH_TREE_CHANGED')
+                        digest, total = hashlib.sha256(), 0
+                        with os.fdopen(os.dup(child_fd), 'rb') as stream:
+                            while True:
+                                chunk = stream.read(65536)
+                                if not chunk: break
+                                total += len(chunk)
+                                require(total <= expected[child_path]['bytes'], 'NEW_JAR_READBACK_BOUND')
+                                digest.update(chunk)
+                            require(total == expected[child_path]['bytes']
+                                and digest.hexdigest() == expected[child_path]['sha256'], 'NEW_JAR_READBACK_WHOLE_SHA_CHANGED')
+                            stream.seek(0)
+                            references[child_path] = _scan_jar(stream, _manifest_closed_references, manifest_budget=budget)
+                            reference_count += len(references[child_path])
+                            require(reference_count <= MAX_CLASSPATH_REFS, 'JAR_MANIFEST_CLASSPATH_REFERENCE_BOUND')
+                        require(identity(child_info) == identity(os.fstat(child_fd))
+                            == identity(os.stat(name, dir_fd=fd, follow_symlinks=False)), 'JAR_CLASSPATH_TREE_CHANGED')
+                        files[child_path] = (child_fd, child_info, fd, name)
+            walk(root_fd, '', root_info)
+            require(set(files) == set(expected), 'JAR_CLASSPATH_TREE_EXACT')
+            require(expected_directories is None or set(directories) == expected_directories,
+                'JAR_CLASSPATH_TREE_EXACT')
+            def absent(target):
+                parts = target.split('/'); current = ''
+                for index, name in enumerate(parts):
+                    fd, info, children = directories[current]
+                    require(not any(child != name and child.lower() == name.lower() for child in children),
+                        'JAR_CLASSPATH_CASE_ALIAS_REJECTED')
+                    try: actual = os.stat(name, dir_fd=fd, follow_symlinks=False)
+                    except OSError as error:
+                        require(error.errno == errno.ENOENT, 'JAR_CLASSPATH_ABSENCE_UNVERIFIED')
+                        require(identity(info) == identity(os.fstat(fd)) and _classpath_children(fd) == children,
+                            'JAR_CLASSPATH_TREE_CHANGED')
+                        return '/'.join(parts[:index + 1])
+                    child = current + '/' + name if current else name
+                    require(index < len(parts) - 1 and stat.S_ISDIR(actual.st_mode)
+                        and child in directories and identity(actual) == identity(directories[child][1]),
+                        'JAR_CLASSPATH_ABSENCE_UNVERIFIED')
+                    current = child
+                raise ValueError('JAR_CLASSPATH_ABSENCE_UNVERIFIED')
+            graph, missing = _present_classpath_graph(rows, references, absent)
+            for relative, (fd, info, children) in directories.items():
+                require(identity(info) == identity(os.fstat(fd)) and _classpath_children(fd) == children,
+                    'JAR_CLASSPATH_TREE_CHANGED')
+                if relative:
+                    parent_relative, separator, name = relative.rpartition('/')
+                    require(identity(info) == identity(os.stat(name, dir_fd=directories[parent_relative][0],
+                        follow_symlinks=False)), 'JAR_CLASSPATH_TREE_CHANGED')
+            for fd, info, parent_fd_of_file, name in files.values():
+                require(identity(info) == identity(os.fstat(fd))
+                    == identity(os.stat(name, dir_fd=parent_fd_of_file, follow_symlinks=False)), 'JAR_CLASSPATH_TREE_CHANGED')
+            require(identity(root_info) == identity(path.lstat())
+                and identity(parent_info) == identity(os.fstat(parent_fd)) == identity(parent.lstat()),
+                'JAR_CLASSPATH_TREE_CHANGED')
+            return {'schemaVersion': 1, 'scope': 'CAPTURED_EXACT_CLASSPATH_TREE_AND_ENOENT',
+                'parentIdentity': identity(parent_info),
+                'directories': [{'path': name, 'identity': identity(info)}
+                    for name, (_, info, _) in sorted(directories.items())],
+                'files': [{**expected[name], 'identity': identity(info)}
+                    for name, (_, info, _, _) in sorted(files.items())],
+                'references': references, 'presentGraph': graph, 'verifiedAbsent': missing,
+                'manifestBytes': budget[0]}
+    except OSError: raise ValueError('JAR_CLASSPATH_TREE_IO_FAILED') from None
+
+
+def classpath_tree_inventory(jars, rows):
+    """Called by prep immediately before/after its one source-controlled javac."""
+    return _verified_classpath_tree(jars, rows)
+
+
 def unpack_jars(archive, new_empty_dir):
     """Caller creates a fresh private0700 dir; returns names relative to jars/."""
     _linux(); result = []; references = {}; reference_count = 0; manifest_budget = [0]
@@ -349,7 +504,9 @@ def unpack_jars(archive, new_empty_dir):
                 result.append({'name':name.removeprefix('jars/'),'bytes':size,'sha256':sha.hexdigest()})
             with os.fdopen(os.dup(archive_fd),'rb') as stream: _consume_tar(stream,directory,jar)
             require(identity(first) == identity(os.fstat(archive_fd)) == identity(archive.lstat()), 'ARCHIVE_CHANGED_DURING_UNPACK')
-            _closed_classpath_map(result, references)
+            expected_directories = {'' if name == 'jars' else name.removeprefix('jars/')
+                for name in directories if name}
+            _verified_classpath_tree(root/'jars', result, expected_directories=expected_directories)
             root_key = lambda info:(info.st_dev,info.st_ino,info.st_uid,info.st_gid,info.st_mode)
             require(root_key(os.fstat(root_fd)) == root_key(root.lstat()) == root_key(before),
                 'JAR_OUTPUT_ROOT_IDENTITY_CHANGED')

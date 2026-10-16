@@ -135,7 +135,7 @@ def classpath_inventory(jars, rows):
                     member.filename), 'ONLY_LOCKED_RUNTIME_MAY_SUPPLY_ICEBERG_CLASSES')
         actual.append(dict(row))
     require(actual == sorted(actual, key=lambda value: value['name']), 'CANONICAL_EXPORTED_CLASSPATH_ORDER')
-    return sha(encoded(actual))
+    return sha(encoded({'jars': actual, 'tree': artifacts.classpath_tree_inventory(jars, rows)}))
 
 
 def prepare(repo, output, source_commit, decoder_source_sha256, authority_source_sha256, helper_source_pins):

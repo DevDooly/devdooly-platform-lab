@@ -1,3 +1,5 @@
+> 현재 상태: [시도4](../../docs/evidence/iceberg-capture/ATTEMPT_4.md)의 a00 source는 Linux 73개·skip0 통과 후 `JAR_MANIFEST_CLASSPATH_TARGET_MISSING`으로 prep에 실패했습니다. 특정 JAR·token·경로 및 전체 closure·prep·compile·decoder·inventory 성공은 미확인입니다. 다음 [ABSENT_CLASSPATH.md](ABSENT_CLASSPATH.md)는 전체 추출 트리·실제 ENOENT·javac 전후 재검증을 묶는 새 SOURCE_ONLY_NOT_RUN 후보이며 Linux 80개는 미실행입니다. 아래 전체 원문과 이전 prefix는 당시 정책·검증 상태를 보존한 역사적 기록입니다. pending 문구는 현재 실행 상태가 아닙니다.
+
 # 전체 export의 큰 manifest를 읽는 제한된 후보
 
 실제 세 번째 capture 실행 `38886641237`·source `a03f87837af66fd3770063d9c712c4080e15d9fa`는 Linux 67개 검사 뒤 PREP에서 `JAR_MANIFEST_BYTES_BOUND`를 기록했습니다. 공개 요약 SHA는 `7b5cd2213e8beb6cf988932eb54465828205c81eeb979aef58044f75cd882340`입니다. 이 코드는 present manifest의 선언 크기 0·64KiB 초과·읽기 불일치를 함께 사용하므로 실제 분기는 미확인입니다. 특정 JAR·manifest 값·크기는 알 수 없으며 whole Class-Path closure 성공도 주장하지 않습니다. 원래 실행과 후보 `d591`·`aed428`·runtime `a970`는 보존합니다.

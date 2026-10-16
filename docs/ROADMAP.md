@@ -171,7 +171,8 @@
 - [x] 첫 closed-copy 실행의 저장소 검증·Linux 56개 통과와 `PREP_NOT_VERIFIED` 실패 원문 보존: [시도 1 근거](evidence/iceberg-capture/ATTEMPT_1.md). 준비 실패 원인·컨테이너 정리 성공은 미확인
 - [x] Schema 2의 실제 Linux 62개·skip 0 통과와 새 prep 실패의 `JAR_MANIFEST_CLASSPATH_EXPANSION_REJECTED`·준비용 컨테이너 제거·부재 확인: [시도 2 근거](evidence/iceberg-capture/ATTEMPT_2.md). 첫 실패 원인으로 소급하지 않음
 - [x] 세 번째 새 소스의 Linux 67개·skip 0 통과와 `JAR_MANIFEST_BYTES_BOUND` 실패·준비용 컨테이너 제거·부재 확인: [시도 3 근거](evidence/iceberg-capture/ATTEMPT_3.md). 구체적 manifest 실패 분기와 실제 Class-Path closure는 미확인
-- [ ] 전체 읽기·CRC·UTF-8·참조 경계를 유지한 [manifest 처리 보완](../infra/iceberg-retention-ci/MANIFEST_BOUNDS.md)·새 prep → closed-copy metadata capture → 독립 graph closure 확인 → 순수 planner 입력 연결. 새 소스 검증과 원래 작업·decoder·inventory 성공은 미확인: [진단 계약](../infra/iceberg-retention-ci/SCHEMA2.md), [다음 절차](runbooks/iceberg-closed-copy-capture.md)
+- [x] 네 번째 새 소스의 Linux 73개·skip 0 통과와 `JAR_MANIFEST_CLASSPATH_TARGET_MISSING` 실패·준비용 컨테이너 제거·부재 확인: [시도 4 근거](evidence/iceberg-capture/ATTEMPT_4.md). 정확한 JAR·token·경로와 전체 Class-Path closure·compile 성공은 미확인
+- [ ] 전체 파일 트리·실제 부재·javac 전후 재검증을 묶는 참조 호환성 source 후보 → 새 prep → closed-copy metadata capture → 독립 graph closure 확인 → 순수 planner 입력 연결. Windows 합성 검사 32개 중 24개 통과·POSIX 전용 8개 제외를 확인했으며 Linux 80개·새 prep/capture와 원래 작업·decoder·inventory 성공은 미확인: [진단 계약](../infra/iceberg-retention-ci/SCHEMA2.md), [다음 절차](runbooks/iceberg-closed-copy-capture.md)
 - [ ] snapshot 보존·만료 정책과 운영 규모 compaction 검증
 - [x] Trino만 정상 재시작한 뒤 같은 행·metadata pointer·warehouse 전체 bytes 조회 검증. PostgreSQL은 같은 프로세스를 유지했으며 재시작은 검증하지 않음: [범위](evidence/iceberg-jdbc/README.md)
 - [x] 시험 PostgreSQL·Trino workload 0·Retain PVC 2개·warehouse 보관과 원래 8개 작업·객체 24개 보존: [종료·보존](evidence/iceberg-jdbc/README.md)

@@ -7,7 +7,7 @@ import stat
 import tarfile
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 import zipfile
 
 import archive_classes as a
@@ -231,8 +231,11 @@ class PosixClosedClasspathContracts(unittest.TestCase):
                 a.scan_jar(output/'jars/a.jar')
             bad=base/'missing.tar';bad_raw=tar(member('jars/',kind=tarfile.DIRTYPE),member('jars/a.jar',first));bad.write_bytes(bad_raw)
             partial=base/'partial';partial.mkdir(mode=0o700)
+            missing_rows=a.unpack_jars(bad,partial)
+            captured=a.classpath_tree_inventory(partial/'jars',missing_rows)
+            self.assertEqual(captured['verifiedAbsent'],[{'source':'a.jar','target':'b.jar','missingAt':'b.jar'}])
             with self.assertRaisesRegex(ValueError,'JAR_MANIFEST_CLASSPATH_TARGET_MISSING'):
-                a.unpack_jars(bad,partial)
+                a._closed_classpath_map(missing_rows,{'a.jar':['b.jar']})
             self.assertEqual((partial/'jars/a.jar').read_bytes(),first)
             self.assertEqual(stat.S_IMODE((partial/'jars/a.jar').stat().st_mode),0o444)
             self.assertEqual(bad.read_bytes(),bad_raw);self.assertEqual(archive.read_bytes(),raw)
@@ -359,13 +362,146 @@ class PosixLargeManifestContracts(unittest.TestCase):
             archive = base/'export.tar'; archive.write_bytes(raw)
             with patch.object(a, '_read_export_manifest', wraps=a._read_export_manifest) as reader:
                 rows = a.unpack_jars(archive, output)
-                self.assertEqual(reader.call_count, 1); self.assertEqual(reader.call_args.args[2], [70000])
+                # Initial whole-JAR scan plus independent exact-tree revalidation.
+                self.assertEqual(reader.call_count, 2)
+                self.assertEqual([call.args[2] for call in reader.call_args_list], [[70000],[70000]])
+                self.assertIsNot(reader.call_args_list[0].args[2],reader.call_args_list[1].args[2])
             self.assertEqual([row['name'] for row in rows], ['a.jar', 'b.jar'])
             for row, value in zip(rows, (first, second)):
                 path = output/'jars'/row['name']; self.assertEqual(path.read_bytes(), value)
                 self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o444)
                 self.assertEqual(row['sha256'], hashlib.sha256(value).hexdigest())
             self.assertEqual(archive.read_bytes(), raw)
+
+
+class CapturedAbsencePureContracts(unittest.TestCase):
+    def test_default_strict_map_all_edge_bounds_no_boolean_authority_and_bounded_iterator(self):
+        payload=jar();rows=[{'name':name,'bytes':len(payload),'sha256':hashlib.sha256(payload).hexdigest()}
+            for name in ('a.jar','b.jar')]
+        refs={'a.jar':['b.jar','gone.jar','gone.jar','not-created/child.jar'],'b.jar':['a.jar']}
+        with self.assertRaisesRegex(ValueError,'^JAR_MANIFEST_CLASSPATH_TARGET_MISSING$'):
+            a._closed_classpath_map(rows,refs)
+        # Synthetic resolver tests the private graph adapter, never OS absence authority.
+        calls=[]
+        graph,missing=a._present_classpath_graph(rows,refs,lambda target:calls.append(target) or target.split('/')[0])
+        self.assertEqual(graph,{'a.jar':('b.jar',),'b.jar':('a.jar',)})
+        self.assertEqual(calls,['gone.jar','gone.jar','not-created/child.jar'])
+        self.assertEqual(len(missing),3)
+        with self.assertRaisesRegex(ValueError,'^JAR_CLASSPATH_ABSENCE_UNVERIFIED$'):
+            a._present_classpath_graph(rows,refs,lambda target:True)
+        for token in ('../outside.jar','file:/outside.jar','missing.jar?query','missing.jar#fragment','missing%2ejar'):
+            with self.subTest(token=token):
+                resolver=Mock(side_effect=AssertionError('Unsafe token reached resolver'))
+                with self.assertRaises(ValueError):a._present_classpath_graph(rows,{'a.jar':[token],'b.jar':[]},resolver)
+                resolver.assert_not_called()
+        with patch.object(a,'MAX_CLASSPATH_REFS',2):
+            calls=[]
+            with self.assertRaisesRegex(ValueError,'^JAR_MANIFEST_CLASSPATH_REFERENCE_BOUND$'):
+                a._present_classpath_graph(rows,{'a.jar':['gone.jar']*3,'b.jar':[]},lambda target:calls.append(target) or target)
+            self.assertEqual(len(calls),2)
+        class Entries:
+            def __init__(self):self.observed=0
+            def __enter__(self):return self
+            def __exit__(self,*args):return False
+            def __iter__(self):
+                for index in range(10**9):
+                    self.observed+=1
+                    yield type('SyntheticDirent',(),{'name':'entry'+str(index)})()
+        entries=Entries()
+        with patch.object(a.os,'scandir',return_value=entries):
+            with self.assertRaisesRegex(ValueError,'^JAR_CLASSPATH_TREE_EXACT$'):a._classpath_children(123)
+        self.assertEqual(entries.observed,a.MAX_JARS+1025)
+
+
+def fresh_classpath_tree(parent,payloads,empty_dirs=()):
+    """Only POSIX synthetic fixtures call this filesystem builder."""
+    parent.mkdir(mode=0o700);root=parent/'jars';root.mkdir(mode=0o755)
+    for relative in empty_dirs:
+        directory=root/relative;directory.mkdir(parents=True,exist_ok=True)
+    for name,payload in payloads.items():
+        target=root/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(payload);target.chmod(0o444)
+    for directory in (root,*[path for path in root.rglob('*') if path.is_dir()]):directory.chmod(0o755)
+    rows=[{'name':name,'bytes':len(payload),'sha256':hashlib.sha256(payload).hexdigest()}
+        for name,payload in sorted(payloads.items())]
+    return root,rows
+
+
+@unittest.skipUnless(os.name=='posix','Actual FD tree/ENOENT/mode/symlink semantics require POSIX')
+class PosixCapturedAbsenceContracts(unittest.TestCase):
+    def test_whole_unpack_captures_empty_dirs_present_cycle_and_leaf_or_ancestor_enoent(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            base=Path(temporary);base.chmod(0o700);output=base/'new';output.mkdir(mode=0o700)
+            first=jar(manifest=b'Class-Path: b.jar gone.jar never-created/child.jar\n')
+            second=jar(manifest=b'Class-Path: a.jar\n')
+            raw=tar(member('jars/',kind=tarfile.DIRTYPE),member('jars/original-empty/',kind=tarfile.DIRTYPE),
+                member('jars/a.jar',first),member('jars/b.jar',second))
+            archive=base/'export.tar';archive.write_bytes(raw)
+            rows=a.unpack_jars(archive,output);proof=a.classpath_tree_inventory(output/'jars',rows)
+            self.assertEqual(proof,a.classpath_tree_inventory(output/'jars',rows))
+            self.assertEqual(proof['presentGraph'],{'a.jar':('b.jar',),'b.jar':('a.jar',)})
+            self.assertEqual(proof['verifiedAbsent'],[{'source':'a.jar','target':'gone.jar','missingAt':'gone.jar'},
+                {'source':'a.jar','target':'never-created/child.jar','missingAt':'never-created'}])
+            self.assertEqual([row['path'] for row in proof['directories']],['','original-empty'])
+            self.assertEqual(archive.read_bytes(),raw)
+            self.assertEqual((output/'jars/a.jar').read_bytes(),first)
+            with self.assertRaisesRegex(ValueError,'^JAR_MANIFEST_CLASSPATH_EXPANSION_REJECTED$'):
+                a.scan_jar(output/'jars/a.jar')
+
+    def test_present_directory_file_ancestor_case_alias_symlink_and_non_enoent_fail_closed(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            base=Path(temporary)
+            cases=(('directory',b'gone.jar',{},('gone.jar',),'JAR_CLASSPATH_ABSENCE_UNVERIFIED'),
+                ('file-ancestor',b'blocked.jar/child.jar',{'blocked.jar':jar()},(),'JAR_CLASSPATH_ABSENCE_UNVERIFIED'),
+                ('case-alias',b'b.jar',{'B.jar':jar()},(),'JAR_CLASSPATH_CASE_ALIAS_REJECTED'),
+                ('symlink',b'gone.jar',{},(),'JAR_CLASSPATH_TREE_EXACT'))
+            for label,token,extra,directories,code in cases:
+                payloads={'a.jar':jar(manifest=b'Class-Path: '+token+b'\n'),**extra}
+                root,rows=fresh_classpath_tree(base/label,payloads,directories)
+                if label=='symlink':(root/'gone.jar').symlink_to('a.jar')
+                with self.subTest(label=label),self.assertRaisesRegex(ValueError,'^'+code+'$'):
+                    a.classpath_tree_inventory(root,rows)
+            root,rows=fresh_classpath_tree(base/'denied',{'a.jar':jar(manifest=b'Class-Path: gone.jar\n')})
+            original=a.os.stat
+            def denied(path,*args,**kwargs):
+                if path=='gone.jar' and kwargs.get('dir_fd') is not None:raise PermissionError(a.errno.EACCES,'SYNTHETIC_PRIVATE_CANARY')
+                return original(path,*args,**kwargs)
+            with patch.object(a.os,'stat',side_effect=denied):
+                with self.assertRaisesRegex(ValueError,'^JAR_CLASSPATH_ABSENCE_UNVERIFIED$') as caught:
+                    a.classpath_tree_inventory(root,rows)
+            self.assertNotIn('SYNTHETIC_PRIVATE_CANARY',str(caught.exception))
+
+    def test_extra_files_hardlinks_hash_or_modes_reject_and_new_empty_directory_changes_fingerprint(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            base=Path(temporary);payload=jar(manifest=b'Class-Path: gone.jar\n')
+            root,rows=fresh_classpath_tree(base/'directory-change',{'a.jar':payload})
+            before=a.classpath_tree_inventory(root,rows);(root/'new-empty').mkdir(mode=0o755)
+            after=a.classpath_tree_inventory(root,rows);self.assertNotEqual(before,after)
+            self.assertIn('new-empty',[row['path'] for row in after['directories']])
+            for label in ('extra','hardlink','bytes','mode'):
+                root,rows=fresh_classpath_tree(base/label,{'a.jar':payload})
+                if label=='extra':(root/'extra.jar').write_bytes(jar());(root/'extra.jar').chmod(0o444)
+                elif label=='hardlink':os.link(root/'a.jar',root/'extra.jar')
+                elif label=='bytes':
+                    (root/'a.jar').chmod(0o644);changed=bytearray(payload);changed[0]^=1;(root/'a.jar').write_bytes(changed);(root/'a.jar').chmod(0o444)
+                else:(root/'a.jar').chmod(0o644)
+                with self.subTest(label=label),self.assertRaises(ValueError):a.classpath_tree_inventory(root,rows)
+
+    def test_injected_target_after_enoent_and_replaced_root_are_never_absence_proof(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            base=Path(temporary);root,rows=fresh_classpath_tree(base/'race',{'a.jar':jar(manifest=b'Class-Path: gone.jar\n')})
+            original=a.os.stat;injected=[]
+            def raced(path,*args,**kwargs):
+                try:return original(path,*args,**kwargs)
+                except FileNotFoundError:
+                    if path=='gone.jar' and kwargs.get('dir_fd') is not None and not injected:
+                        (root/'gone.jar').write_bytes(jar());(root/'gone.jar').chmod(0o444);injected.append(True)
+                    raise
+            with patch.object(a.os,'stat',side_effect=raced):
+                with self.assertRaisesRegex(ValueError,'^JAR_CLASSPATH_TREE_CHANGED$'):
+                    a.classpath_tree_inventory(root,rows)
+            self.assertEqual(injected,[True])
+            parent=base/'root-alias';parent.mkdir(mode=0o700);(parent/'jars').symlink_to(root,target_is_directory=True)
+            with self.assertRaises(ValueError):a.classpath_tree_inventory(parent/'jars',rows)
 
 
 if __name__=='__main__':unittest.main()
