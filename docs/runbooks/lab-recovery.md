@@ -21,6 +21,8 @@ sudo python3 infra/scripts/backup-lab.py \
 - K3s server token, credential·TLS 디렉터리, 설치 config·systemd unit
 - 이미지 digest·SHA-256·대상·시각·완료 범위를 적은 private manifest
 
+SQLite 생성기는 online backup이 끝난 뒤 **새 snapshot DB만** `journal_mode=DELETE`로 전환하고 반환값과 quick_check를 확인합니다. live source는 `mode=ro`로 열고 journal 설정을 변경하거나 checkpoint하지 않습니다. source·destination 연결을 명시적으로 닫은 뒤, 그리고 tar 직전에 snapshot의 `-wal`·`-shm`·`-journal`이 하나라도 남으면 실패합니다. 이 파일들을 삭제하거나 무시하여 archive를 만들지 않습니다. 과거 archive의 WAL 존재만으로 손상 여부를 판정하거나 과거 검증 결과를 바꾸는 정책은 아닙니다.
+
 성공 시 stdout에는 비밀값과 경로를 제외한 요약만 출력합니다. 완성된 백업 디렉터리와 manifest는 백업 루트에서 비공개로 확인합니다. 도중 실패하면 성공 manifest를 만들지 않고 부분 파일을 비공개 디렉터리에 남깁니다. 부분 백업을 복원 대상으로 선택하지 않습니다.
 
 이 작업은 **로컬 백업 생성**입니다. 서버 외부 전송·암호화, Jenkins Home 백업·복원, K3s 전체 복원, 호스트 재부팅을 실행하지 않습니다. K3s SQLite와 token·credential 자료의 복구 검증도 DB 격리 복원과 별도입니다.

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import closing
 import datetime as dt
 import hashlib
 import json
@@ -80,6 +81,27 @@ def validate_names(args: argparse.Namespace) -> None:
             raise BackupError("Namespace and resource names must be DNS labels of at most 63 characters.")
 
 
+def require_standalone_snapshot(database: Path) -> None:
+    if any(os.path.lexists(Path(str(database) + suffix)) for suffix in ("-wal", "-shm", "-journal")):
+        raise BackupError("SQLite snapshot has journal companions; archive was not created.")
+
+
+def sqlite_snapshot(source_db: Path, destination_db: Path, progress) -> None:
+    if os.path.lexists(destination_db):
+        raise BackupError("SQLite snapshot destination must be new.")
+    require_standalone_snapshot(destination_db)
+    with closing(sqlite3.connect(source_db.as_uri() + "?mode=ro", uri=True)) as source:
+        with closing(sqlite3.connect(destination_db)) as destination:
+            source.backup(destination, pages=256, progress=progress, sleep=0.05)
+            # Backup may copy WAL journal mode in the database header. Change
+            # only this new, exclusively owned destination after backup ends.
+            if destination.execute("PRAGMA journal_mode=DELETE").fetchall() != [("delete",)]:
+                raise BackupError("SQLite snapshot DELETE journal mode was not confirmed.")
+            if destination.execute("PRAGMA quick_check").fetchall() != [("ok",)]:
+                raise BackupError("SQLite snapshot integrity check failed.")
+    require_standalone_snapshot(destination_db)
+
+
 def create_backup(args: argparse.Namespace) -> dict:
     validate_names(args)
     root = checked_path(args.data_root)
@@ -144,11 +166,7 @@ def create_backup(args: argparse.Namespace) -> dict:
     def progress(_status: int, _remaining: int, _total: int) -> None:
         if time.monotonic() > deadline:
             raise BackupError("SQLite online backup exceeded its time budget.")
-    with sqlite3.connect(source_db.as_uri() + "?mode=ro", uri=True) as source:
-        with sqlite3.connect(snapshot / "state.db") as destination:
-            source.backup(destination, pages=256, progress=progress, sleep=0.05)
-            if destination.execute("PRAGMA quick_check").fetchall() != [("ok",)]:
-                raise BackupError("SQLite snapshot integrity check failed.")
+    sqlite_snapshot(source_db, snapshot / "state.db", progress)
     shutil.copy2(token, snapshot / "server-token")
     for name in ("cred", "tls"):
         location = checked_path(root / "k3s/server" / name)
@@ -162,6 +180,7 @@ def create_backup(args: argparse.Namespace) -> dict:
         shutil.copy2(service_env, snapshot / service_env.name)
     for item in backup.rglob("*"):
         item.chmod(0o700 if item.is_dir() else 0o600)
+    require_standalone_snapshot(snapshot / "state.db")
     command(["tar", "-czf", str(backup / "k3s-datastore.tar.gz"), "-C", str(snapshot), "."])
 
     summary = {

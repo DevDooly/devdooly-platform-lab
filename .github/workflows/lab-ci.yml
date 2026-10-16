@@ -16,6 +16,7 @@ on:
       - infra/spark-ci/**
       - infra/image-lock.json
       - infra/scripts/prepare-local-env.py
+      - infra/scripts/backup-lab.py
       - compose.yaml
       - .dockerignore
       - .github/workflows/lab-ci.yml
@@ -69,6 +70,9 @@ jobs:
 
       - name: Validate retention plans without credentials
         run: python3 -m unittest discover -s tests/maintenance -p 'test_*.py' -v
+
+      - name: Validate SQLite backup lifecycle without services
+        run: python3 -B -m unittest discover -s tests/operations -p 'test_*.py' -v
 
       - name: Validate Spark Silver proposal without Spark
         run: python3 -B -m unittest discover -s infra/spark-silver -p 'test_*.py' -v
