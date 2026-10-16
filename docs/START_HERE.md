@@ -82,6 +82,8 @@ Kafka·Garage의 전용 PVC 3개는 외부 사본에서 새 볼륨으로 복원�
 
 ## 다음 작업
 
+**다음 작업 지점(2026-10-16):** [PR #61](https://github.com/DevDooly/devdooly-platform-lab/pull/61)의 현재 DB 복원 카드·근거와 삭제 없는 순수 Iceberg retention planner가 main에 공개됐습니다. main `4a71ed20`의 Actions·Jenkins 52도 성공했습니다. 다음은 [closed-copy capture 절차](runbooks/iceberg-closed-copy-capture.md)에 따라 Linux 56개 검사 → 실제 Spark image classpath prep → 새 격리 Cloud metadata capture를 확인하는 단계입니다. capture 소스는 준비 중이며 Linux·실제 prep·Cloud 실행은 아직 미실행입니다. snapshot 만료·객체 GC·삭제와 미니 PC의 새 데이터 처리는 포함하지 않습니다.
+
 [다음 개발 계획](NEXT_STEPS.md)에 우선순위와 단계별 결과물·완료 조건을 정리했습니다.
 
 1. 초기 관리자 비밀번호 변경과 본인 관리 화면 로그인 확인
@@ -89,7 +91,7 @@ Kafka·Garage의 전용 PVC 3개는 외부 사본에서 새 볼륨으로 복원�
 3. 전용 status credential의 만료·회전과 게시 산출물 보존 운영 정리
 4. Pages 자격증명의 실제 만료·회전과 장기간 반복 운영 검증
 5. 필요한 경우 기존 프록시·DDNS·TLS 조건을 확인한 뒤 공개 읽기 API와 외부망 검증
-6. [보존·자원 기준](runbooks/retention-resource-budget.md)을 유지하며 객체 GC·요청 빈도 제한·과부하 용량·진행 중 장애와 AI 합성 예제의 사람 검토를 이어가기. [새 Cloud 연결·작은 compaction](evidence/cloud-lakehouse/FULL_SUCCESS.md)은 완료했으며 다음은 현재 DB 백업·격리 복원의 사전 확인과 snapshot 보존 정책. 미니 PC native7의 중지된 시험 환경과 보관 자료는 유지하기
+6. [보존·자원 기준](runbooks/retention-resource-budget.md)을 유지하며 객체 GC·요청 빈도 제한·과부하 용량·진행 중 장애와 AI 합성 예제의 사람 검토를 이어가기. [새 Cloud 연결·작은 compaction](evidence/cloud-lakehouse/FULL_SUCCESS.md)과 [현재 DB 백업·격리 복원 공개 기록](evidence/current-db-restore/README.md)은 완료했으며 다음은 [실제 closed-copy capture와 순수 보존 계획 연결](runbooks/iceberg-closed-copy-capture.md). snapshot 만료·객체 GC는 미실행이며 미니 PC native7의 중지된 시험 환경과 보관 자료는 유지하기
 
 CI/CD의 정상 배포·실패 차단·이전 digest 복구를 확인했으며, 3단계는 제한된 실제 수집·인증 실패·회복과 수동 공개 게시·브라우저를 확인했습니다. 게시 순서 회귀 교정 후 실제 재검증도 완료했고 API·웹 중단·같은 정상 B 복원도 확인했고 정기 운영 검증을 이어가며 새로운 inbound 경로는 열지 않았습니다. 기존 서비스가 있으므로 재부팅·방화벽 변경·프록시 교체를 일괄 실행하지 않습니다. Windows 외부 사본의 무결성, 격리 DB 복원과 호스트 재부팅을 검증했습니다. K3s·Jenkins archive 전체 복원은 아직 별도 작업입니다. PV의 Delete 정책 때문에 PVC·namespace를 수동 삭제하면 데이터가 지워질 수 있습니다.
 
