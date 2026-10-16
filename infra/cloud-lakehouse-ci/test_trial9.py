@@ -121,13 +121,18 @@ class Lifecycle(unittest.TestCase):
         with self.assertRaises(ValueError): attempt.start("trino")
         with self.assertRaises(ValueError): attempt.start("reader")
         attempt.cli.assert_not_called(); self.assertEqual(self.saved, [])
+        role_ids = {"spark": "a"*64, "trino": "b"*64, "reader": "c"*64}
         attempt.containers = lambda: [{"role": role, "running": False, "exitCode": 0, "oom": False,
-                                     "id": role, "startedAt": "fixed"} for role in ("spark", "trino")]
-        attempt.trino_stop = {"cid": "trino", "startedAt": "fixed", "requestReturnedZero": True,
+                                     "id": role_ids[role], "startedAt": "fixed" if role != "reader" else "0001-01-01T00:00:00Z",
+                                     "pid": 0} for role in ("spark", "trino", "reader")]
+        attempt.bound = {"reader": {"id": role_ids["reader"]}}
+        attempt.command = Mock()
+        attempt.trino_stop = {"cid": role_ids["trino"], "startedAt": "fixed", "requestReturnedZero": True,
                               "signalScope": "CONFIGURED_OR_DEFAULT_SIGTERM"}
         attempt.start("reader")
         with self.assertRaises(ValueError): attempt.start("reader")
-        self.assertEqual(attempt.cli.call_count, 1)
+        attempt.command.assert_called_once_with(["docker", "start", role_ids["reader"]])
+        attempt.cli.assert_not_called()
 
     def test_actual_completedprocess_log_contract_and_full_cid_binding(self):
         result = subprocess.CompletedProcess([], 0, b"private stdout", b"private stderr")

@@ -1,0 +1,141 @@
+{
+  "automaticRetryPerformed": false,
+  "bucketOrKeyCreated": false,
+  "businessDataSubmitted": false,
+  "capturedAt": "2026-10-16T01:54:47.885146+00:00",
+  "checks": {
+    "actualMemAvailable7Gi": true,
+    "freshPhysicalVolumes": true,
+    "fullFiveServiceComposeModel": true,
+    "initializerExitZero": true,
+    "internalNetwork": true,
+    "onlyTwoCreatedBaseRoles": true,
+    "pinnedBaseImages": true,
+    "trinoEnvFileAbsent": true
+  },
+  "commandDiagnostics": {
+    "failures": [
+      {
+        "category": "COMPOSE_START_POSTGRES",
+        "checkRequested": true,
+        "outcome": "RETURNED_NONZERO",
+        "returnCode": 1,
+        "sequence": 29,
+        "stage": "START_POSTGRES",
+        "timedOut": false
+      }
+    ],
+    "failuresTruncated": false,
+    "lastCommand": {
+      "category": "CONTAINER_INSPECT",
+      "checkRequested": true,
+      "outcome": "RETURNED_ZERO",
+      "returnCode": 0,
+      "sequence": 39,
+      "stage": "CLEANUP_CONTAINERS",
+      "timedOut": false
+    }
+  },
+  "composeRoleStartsLimitedToPostgresGarage": true,
+  "diagnosticObservationFailures": [],
+  "failure": {
+    "stage": "START_POSTGRES",
+    "validationFailureCode": "OWN_FRESH_COMMAND_FAILED_NO_RETRY"
+  },
+  "failureSoleCauseProven": false,
+  "firstFailedSummarySha256": "a42f34aba82140189f08f530574b10c6911a5ae229ff13ebca63b2b82b3ffe21",
+  "fullFiveServiceComposeModelPreserved": true,
+  "imagePullsExcludedFromStartupClock": true,
+  "latestBaseContainerDiagnostics": {
+    "garage": {
+      "exitCode": 0,
+      "identityBound": true,
+      "mountContentChanged": false,
+      "mountOrderOnlyChanged": true,
+      "oomKilled": false,
+      "role": "garage",
+      "running": false,
+      "signatureDifferences": {
+        "configChanged": false,
+        "createdChanged": false,
+        "hostChanged": false,
+        "idChanged": false,
+        "imageIdChanged": false,
+        "mountsChanged": true
+      },
+      "stateErrorPresent": false,
+      "stateErrorSignatures": [],
+      "status": "created"
+    },
+    "postgres": {
+      "exitCode": 0,
+      "identityBound": true,
+      "mountContentChanged": false,
+      "mountOrderOnlyChanged": false,
+      "oomKilled": false,
+      "role": "postgres",
+      "running": false,
+      "signatureDifferences": {
+        "configChanged": false,
+        "createdChanged": false,
+        "hostChanged": false,
+        "idChanged": false,
+        "imageIdChanged": false,
+        "mountsChanged": false
+      },
+      "stateErrorPresent": false,
+      "stateErrorSignatures": [],
+      "status": "created"
+    }
+  },
+  "miniPcContacted": false,
+  "ownedContainersStopped": false,
+  "ownedInitializerStopped": true,
+  "passed": false,
+  "priorFailedSourceCommit": "d4bd48aaa5bb68154970600a5c50ac0e3fc5ee54",
+  "priorFailedSummarySha256": "570805bc765ac6437f07f546b3b77a153c9cb91ea097c265ba91ec22d3323aac",
+  "priorRuntimeOrEvidenceModified": false,
+  "priorStartupSourceCommit": "98833225a62ca21660a94935ee0f1ab077f93be2",
+  "priorStartupSummarySha256": "a3b24f385c812f5a404c012d81113a88e3b851fec53ffa51eb73a7f67a4d45da",
+  "rawLogsOrCredentialsUploaded": false,
+  "schemaVersion": 2,
+  "scope": "ISOLATED_CLOUD_PG_GARAGE_STARTUP_DIAGNOSTIC",
+  "sourceCommit": "f3f5c52993ceb00fd70f73c17f0ec6d2d236b26e",
+  "sparkTrinoReaderStartRequested": false,
+  "startupBudgetSeconds": 180,
+  "startupElapsedMillis": 338,
+  "startupReadyObserved": false,
+  "stderrReasonObservations": [
+    {
+      "category": "COMPOSE_START_POSTGRES",
+      "checkRequested": true,
+      "outcome": "RETURNED_NONZERO",
+      "returnCode": 1,
+      "sequence": 29,
+      "stage": "START_POSTGRES",
+      "stderrSignatures": [
+        "ENV_FILE_MISSING_SIGNATURE"
+      ],
+      "timedOut": false
+    }
+  ],
+  "trinoEnvFileIntentionallyAbsent": true,
+  "unusedSparkImageNotBuiltOrPulled": true,
+  "validationFailures": [
+    {
+      "stage": "START_POSTGRES",
+      "validationFailureCode": "OWN_FRESH_COMMAND_FAILED_NO_RETRY"
+    },
+    {
+      "stage": "CLEANUP_CONTAINERS",
+      "validationFailureCode": "SAME_OWN_CONTAINER_FULL_CONFIGURATION"
+    }
+  ],
+  "vendorOrApplicationJarRead": false,
+  "versions": {
+    "compose": "2.38.2",
+    "dockerClient": "28.0.4",
+    "dockerServer": "28.0.4"
+  },
+  "volumesDeleted": false
+}

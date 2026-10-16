@@ -47,12 +47,6 @@ on:
         default: false
         type: boolean
 
-      run_cloud_startup_probe:
-        description: Diagnose only fresh PG Garage startup without heavy workloads
-        required: false
-        default: false
-        type: boolean
-
 permissions:
   contents: read
 
@@ -62,7 +56,6 @@ concurrency:
 
 jobs:
   verify:
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.run_cloud_startup_probe != true }}
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     env:
@@ -202,7 +195,7 @@ jobs:
           retention-days: 7
 
   isolated-spark:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_spark_trial == true && inputs.run_cloud_startup_probe != true }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_spark_trial == true }}
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     permissions:
@@ -228,7 +221,7 @@ jobs:
           retention-days: 7
 
   isolated-s3:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_s3_trial == true && inputs.run_cloud_startup_probe != true }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_s3_trial == true }}
     needs: verify
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -262,7 +255,7 @@ jobs:
           retention-days: 7
 
   isolated-cloud-lakehouse:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_cloud_lakehouse_trial == true && inputs.run_cloud_startup_probe != true }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_cloud_lakehouse_trial == true }}
     needs: verify
     runs-on: ubuntu-24.04
     timeout-minutes: 45
@@ -283,7 +276,7 @@ jobs:
         # The 45-minute job bound includes preparation; workload stays 600s.
         run: >-
           python3 -B infra/cloud-lakehouse-ci/run_trial9.py
-          --source-manifest-sha256 d649623c17bbb1b86f030b825e14c69620bd8b17748632056dc76aa76ee4f9c3
+          --source-manifest-sha256 eb15f2681632198a29fc76c5b12f3383e56e7caeb8cbeaa8958e25e8ae703d6e
           --ack-fresh-cloud-trial9
       - name: Upload only the safe Cloud lakehouse summary
         if: always()
@@ -291,45 +284,5 @@ jobs:
         with:
           name: isolated-cloud-lakehouse-summary-${{ github.run_id }}-${{ github.run_attempt }}
           path: .local/cloud-trial9-public/summary.json
-          if-no-files-found: error
-          retention-days: 7
-
-  isolated-cloud-startup:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_cloud_startup_probe == true }}
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    steps:
-      - name: Reject mixed startup and workload inputs before services
-        id: flags
-        env:
-          RUN_S3_TRIAL: ${{ inputs.run_s3_trial }}
-          RUN_SPARK_TRIAL: ${{ inputs.run_spark_trial }}
-          RUN_CLOUD_TRIAL: ${{ inputs.run_cloud_lakehouse_trial }}
-        run: |
-          if test "$RUN_S3_TRIAL" != false || test "$RUN_SPARK_TRIAL" != false || test "$RUN_CLOUD_TRIAL" != false; then
-            echo 'STARTUP_PROBE_REQUIRES_OTHER_TRIAL_FLAGS_FALSE' >&2
-            exit 1
-          fi
-      - name: Checkout bounded startup diagnostic
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Validate startup guards without services
-        run: python3 -B -m unittest discover -s infra/cloud-startup-ci -p 'test_*.py' -v
-      - name: Run one fresh PG Garage startup diagnostic
-        env:
-          SOURCE_COMMIT: ${{ github.sha }}
-        run: >-
-          python3 -B infra/cloud-startup-ci/run_startup_probe.py
-          --self-sha256 e603717ee969338e3473fa9a0a036e4d3ab7e5707394a2c1da5aa1f0b235215f
-          --ack-fresh-base-startup-probe
-      - name: Upload only the safe startup summary
-        if: ${{ always() && steps.flags.outcome == 'success' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: isolated-cloud-startup-summary-${{ github.run_id }}-${{ github.run_attempt }}
-          path: .local/cloud-base-startup-public/summary.json
           if-no-files-found: error
           retention-days: 7

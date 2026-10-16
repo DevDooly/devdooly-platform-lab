@@ -133,6 +133,14 @@ def mounts_verified(raw, desired, root, project, declared, prior_volumes):
     require(set(expected).issubset(seen), "ALL_REQUESTED_MOUNTS_OBSERVED")
 
 
+def canonical_mounts(mounts):
+    require(type(mounts) is list and all(type(member) is dict for member in mounts), "WHOLE_MOUNT_MEMBERS_REQUIRED")
+    # Preserve every field, JSON type and duplicate. Only the member ordering
+    # is removed; raw mounts still undergo all semantic/ownership checks.
+    return sorted(json.dumps(member, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False)
+                  for member in mounts)
+
+
 def make_attempt(base, root, project, images):
     class Attempt(base.Attempt):
         def __init__(self):
@@ -219,7 +227,7 @@ def make_attempt(base, root, project, images):
                 require("user" not in desired or raw["Config"]["User"] == desired["user"], "ACTUAL_ROLE_UID_GID")
                 mounts_verified(raw, desired, root, project, self.image_volumes[role], self.prior_volumes)
                 signature = {"id": cid, "imageId": raw["Image"], "config": raw["Config"], "host": host,
-                             "mounts": raw["Mounts"], "created": raw["Created"]}
+                             "mounts": canonical_mounts(raw["Mounts"]), "created": raw["Created"]}
                 if role in self.bound:
                     require(self.bound[role] == signature, "SAME_OWN_CONTAINER_FULL_CONFIGURATION")
                 else:
@@ -249,9 +257,15 @@ def make_attempt(base, root, project, images):
                 require(all(name in existing for name in ("spark", "trino")), "BOTH_HEAVY_ROLES_EXIST_BEFORE_READER")
                 normal_exit("spark", existing["spark"])
                 normal_exit("trino", existing["trino"], self.trino_stop)
+            target = existing.get(role)
+            require(target is not None and re.fullmatch(r"[a-f0-9]{64}", target["id"])
+                    and role in self.bound and target["id"] == self.bound[role]["id"]
+                    and target["running"] is False and target["oom"] is False and target["exitCode"] == 0
+                    and type(target["pid"]) is int and target["pid"] == 0
+                    and target["startedAt"] == "0001-01-01T00:00:00Z", "EXACT_BOUND_CREATED_CONTAINER_BEFORE_FIRST_START")
             base.save(root / ("start-" + role + "-intent.json"), {"role": role, "automaticRetry": False})
             self.started_roles.add(role)
-            self.cli("start", role)
+            self.command(["docker", "start", target["id"]])
 
         def wait_clean(self, role, maximum):
             until = time.monotonic() + self.deadline.remaining(maximum, 90)

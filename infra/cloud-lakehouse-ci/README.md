@@ -2,6 +2,20 @@
 
 **첫 실제 실행 실패.** 새 GitHub 격리 실행은 준비 검사를 통과한 뒤 서비스 시작 단계에서 실패했습니다. 실패한 명령과 전체 컨테이너 종료 상태는 확인하지 못했고 Spark·Trino·compaction 결과도 입증하지 못했습니다. [첫 실행의 원문과 한계](../../docs/evidence/cloud-lakehouse/README.md)를 보존합니다. 기존 Cloud Spark8·Mini PC native7은 별도 기록이며 다시 실행하지 않았습니다. 아래 runtime manifest의 SOURCE_ONLY 상태는 검토한 소스 패킷의 작성 상태이고, 실행 결과는 별도 근거로 확인합니다.
 
+## 시작 경계 수정 후보: SOURCE_ONLY_NOT_RUN
+
+이 후속 소스는 아직 새 full trial을 실행하지 않았습니다. 첫 두 full-trial 실패와 별도 두 startup 실패를 성공으로 바꾸지 않습니다. 첫 startup source `98833225a62ca21660a94935ee0f1ab077f93be2`의 요약 SHA `a3b24f385c812f5a404c012d81113a88e3b851fec53ffa51eb73a7f67a4d45da`는 mount 변경만 관측했습니다. 그 다음 별도 source `f3f5c52993ceb00fd70f73c17f0ec6d2d236b26e`의 Actions `38837630164` 요약 SHA `c41ce401a46e061bb829902de97b7399cbf20288ad274612d6f8703a4ae8b07d`에서는 Garage의 **순서만 바뀐 mount**와 실제 PG Compose start의 `ENV_FILE_MISSING_SIGNATURE`를 구분했습니다. 이 시도의 signature를 과거 두 rc1 실패의 단일 원인으로 소급하지 않습니다.
+
+수정은 두 경계와 시작 전 확인으로 제한합니다. 실제 `Mounts`는 기존 bind/named/anonymous·RO/RW·source·destination·owner·network·limits 검사를 그대로 거친 뒤, 전체 member를 canonical JSON 문자열의 정렬된 목록으로 비교합니다. 모든 알려지지 않은 필드·중첩 값·JSON 타입·중복을 유지하며 목록의 순서만 비교에서 제외합니다. mount 검사를 없애거나 필드를 일부 선택하지 않습니다. 같은 내용의 순서 변화는 허용하지만 내용 변경은 계속 실패합니다. [Moby 28.0.4의 MountPoints 순회](https://github.com/moby/moby/blob/v28.0.4/container/container_unix.go#L397-L412)는 순서 변화 가능성을 설명하며, 실제 구분은 위 별도 진단 결과에 따릅니다.
+
+원래 Compose create로 만든 container를 새로 inspect하여 전체 구성·full CID가 bound identity와 같고, not-running·exit 0·nonOOM·PID 0·zero StartedAt인 **아직 시작하지 않은 대상**만 `docker start <verified-full-CID>`로 한 번 시작합니다. 이름 조회·새 container 생성·`docker compose start`의 전체 model 재해석을 사용하지 않습니다. 이미 외부에서 시작한 같은 CID도 거부하며 요청 전 immutable intent와 once-only 표시는 유지합니다. Compose 2.38.2의 [start project loading](https://github.com/docker/compose/blob/v2.38.2/cmd/compose/start.go)과 env-file 처리 범위를 피해 이미 검증한 container를 시작하는 변경입니다. 원래 model과 Trino env-file 작성 순서는 그대로이고 dummy env를 넣지 않습니다.
+
+5개 role의 순차 gate, 동일 이미지/limit/mount/권한, 초기화, SQL/fixture/JAR, 단일 600초 clock과 reserve, 정상 Trino proc PID/startTicks/cgroup 확인, generic failure cleanup은 변경하지 않습니다. 추가 GET·mutation·재시도·clock reset·강제 cleanup은 없습니다. start command 진단 category는 이제 `CONTAINER_START`와 기존 stage로 표시하며 원래 Compose command의 관측 분류도 코드에 보존합니다.
+
+임시 `run_cloud_startup_probe` input/job와 그 전용 skip 조건은 workflow에서 제거합니다. 기존 일반 verify·수동 세 trial 경로를 startup 추가 이전 bytes의 구조로 되돌리고, full-trial runtime manifest SHA 한 곳만 새 후보에 맞춥니다. 역사 `infra/cloud-startup-ci`의 source pin은 이전 `5f60`을 그대로 보존하므로 현재 ref에서 재실행하지 않습니다. 해당 README가 명시한 이전 ref의 역사 시험과 새 full-trial 후보를 구분합니다.
+
+새 순수 검사는 기존 15개 lifecycle/SQL 계약과 4개 명령 privacy 계약을 유지하고, reader start의 정상 transport 기대만 검증한 full CID 호출로 바꿉니다. 새 4개는 전체 mount 내용·타입·중복/unknown field, 순서 변화 허용과 내용·RO·source·owner·CID·limits 거부, 5개 role의 once-only와 heavy 순서, 외부 PID/StartedAt·기존 정상 Trino stop의 PID/CID/startTicks drift 거부를 확인합니다. C-only Windows 실행에서 총 **23개 실패·오류·skip 0**입니다. Docker·Linux 시작·Spark/Trino 결과를 검증한 수치가 아닙니다.
+
 새 GitHub-hosted Linux runner에서만 실행할 수 있다. 새 UUID Compose project·local volume·Garage bucket의 물리 identity를 확인하고, 기존 고정 Silver 코드·합성 fixture·실제 lock의 세 JAR를 그대로 사용한다. 이미지 build와 pull은 준비 단계로 별도 표시한다. 첫 PostgreSQL/Garage start 직전 단 한 번 만든 **600초 monotonic clock**을 모든 workload 단계가 공유한다. 초기화 실패나 deadline에는 같은 mutation·SQL을 재접수하지 않는다.
 
 Spark application 한 개가 Bronze 6+6행과 기존 Silver 변환·MERGE1·같은 application의 순차 replay1/write0을 수행한다. 실제 current data file이 정확히2개·각6행·작은 파일이고 delete file이 없을 때만 `rewrite_data_files`를 한 번 호출한다. 실제 반환 rewritten2/added1/failed0과 current file2→1을 검사한다. Snapshot은 **append6 → append12 → replace12**이며 ID의 수치 크기나 시간 동률 대신 실제 parent 연결로 순서를 정한다. Snapshot expiration·orphan removal·GC는 없다. [Iceberg1.11 procedure와 실제 출력 계약](https://raw.githubusercontent.com/apache/iceberg/apache-iceberg-1.11.0/docs/docs/spark-procedures.md#L341-L419), [replace operation 소스](https://raw.githubusercontent.com/apache/iceberg/apache-iceberg-1.11.0/core/src/main/java/org/apache/iceberg/BaseRewriteFiles.java#L39-L42)

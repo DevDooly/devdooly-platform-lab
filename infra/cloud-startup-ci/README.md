@@ -1,5 +1,7 @@
 # PG/Garage 시작 명령만 분리하는 Cloud 진단 후보
 
+**현재 ref의 실행 경로는 종료했습니다.** 이 역사 source/test의 원래 `5f60` dependency pin은 변경하지 않습니다. full runner의 시작 경계를 수정한 현재 ref에서는 그 pin이 맞지 않으므로 이 driver를 실행하지 않습니다. 임시 workflow input/job도 제거했습니다. 역사 재현 검토에는 실제 두 번째 startup source `f3f5c52993ceb00fd70f73c17f0ec6d2d236b26e`의 checkout과 당시 검토된 source/manifest가 필요하며, 아래 이전 SOURCE_ONLY 작성 상태나 명령 안내는 현재 ref의 실행 승인이 아닙니다. 기존 두 실제 startup 실패는 그대로 보존하며 자동 재실행하지 않습니다.
+
 **SOURCE_ONLY_NOT_RUN**. 이 새 후보는 아직 게시·dispatch·Docker 실행하지 않았습니다. 기존 Cloud9 runtime과 첫 두 실패 artifact를 바꾸거나 재실행하지 않습니다. 미니 PC·운영 namespace·운영 DB·원본 객체에 접근하지 않습니다.
 
 ## 별도 mount 진단 v2: 아직 실행하지 않은 후보
