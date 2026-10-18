@@ -21,14 +21,15 @@ jobs:
     if: github.repository == 'DevDooly/devdooly-platform-lab' && inputs.confirm_measurement == true
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    env:
-      JMH_RESULT_DIR: ${{ runner.temp }}/window-jmh-${{ github.run_id }}-${{ github.run_attempt }}
-      JMH_PUBLIC_DIR: ${{ runner.temp }}/window-jmh-public-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
+      - name: Set isolated measurement output paths
+        run: |
+          printf 'JMH_RESULT_DIR=%s/window-jmh-%s-%s\n' "$RUNNER_TEMP" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
+          printf 'JMH_PUBLIC_DIR=%s/window-jmh-public-%s-%s\n' "$RUNNER_TEMP" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
       - name: Bind the exact committed source before building
         run: |
           python3 -I -B infra/benchmarks/java-window-jmh/prepare_public.py preflight \
