@@ -63,7 +63,7 @@ export default function PlatformObservationCard({ observationUrl }: { observatio
     : view.freshness === 'clock-check' ? '기록과 브라우저 시각 확인 필요'
     : view.freshness === 'within-window' ? '최근 2시간 이내 수집 기록' : '성공 기록 없음';
 
-  return <section className="section platform-record-section" aria-labelledby="platform-record-title">
+  return <section id="platform-record" className="section platform-record-section" aria-labelledby="platform-record-title">
     <div className="section-heading platform-record-heading"><div><span className="eyebrow">OBSERVED / PUBLIC RECORD</span><h2 id="platform-record-title">배포 이후, 마지막으로 확인한 상태.</h2><p>미니 PC에서 수집한 공개 기록입니다. 실시간 상태와 구분해 읽습니다.</p></div><button type="button" className="button button-small" disabled={loading} onClick={() => void refresh()}>{loading ? '기록 읽는 중' : '게시된 기록 다시 읽기'}<span aria-hidden="true">↻</span></button></div>
 
     <div className="platform-record-meta" aria-live="polite" aria-atomic="true">
