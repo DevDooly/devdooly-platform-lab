@@ -1,0 +1,166 @@
+{
+  "capturedAt": "2026-10-16T12:00:00.123456789Z",
+  "currentSnapshotId": "300",
+  "files": [
+    {
+      "id": "initial-manifest",
+      "kind": "MANIFEST_LIST"
+    },
+    {
+      "id": "shared-data",
+      "kind": "DATA"
+    },
+    {
+      "id": "tag-data",
+      "kind": "DELETE"
+    },
+    {
+      "id": "backup-data",
+      "kind": "DATA"
+    },
+    {
+      "id": "validation-data",
+      "kind": "MANIFEST"
+    },
+    {
+      "id": "recent-data",
+      "kind": "DATA"
+    },
+    {
+      "id": "candidate-only-data",
+      "kind": "DATA"
+    },
+    {
+      "id": "table-metadata",
+      "kind": "METADATA"
+    },
+    {
+      "id": "unreferenced-data",
+      "kind": "DATA"
+    }
+  ],
+  "kind": "iceberg-retention-inventory",
+  "observations": {
+    "complete": true,
+    "metadataAfterId": "metadata-pointer-1",
+    "metadataAfterSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "metadataBeforeId": "metadata-pointer-1",
+    "metadataBeforeSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "pinsComplete": true,
+    "refsComplete": true,
+    "snapshotFileClosureComplete": true,
+    "writersQuiescent": true
+  },
+  "pins": [
+    {
+      "fileIds": [
+        "backup-data"
+      ],
+      "id": "backup-1",
+      "kind": "BACKUP",
+      "snapshotIds": [
+        "600"
+      ]
+    },
+    {
+      "fileIds": [
+        "validation-data"
+      ],
+      "id": "validation-1",
+      "kind": "VALIDATION",
+      "snapshotIds": [
+        "700"
+      ]
+    }
+  ],
+  "refs": [
+    {
+      "kind": "BRANCH",
+      "name": "main",
+      "snapshotId": "300"
+    },
+    {
+      "kind": "TAG",
+      "name": "keep-tag",
+      "snapshotId": "500"
+    }
+  ],
+  "schemaVersion": 1,
+  "scope": "SYNTHETIC_REFERENCE_FIXTURE",
+  "snapshots": [
+    {
+      "committedAt": "2026-10-01T00:00:00Z",
+      "fileIds": [
+        "initial-manifest"
+      ],
+      "id": "100",
+      "parentId": null
+    },
+    {
+      "committedAt": "2026-10-01T00:00:00Z",
+      "fileIds": [
+        "shared-data"
+      ],
+      "id": "200",
+      "parentId": "100"
+    },
+    {
+      "committedAt": "2026-10-01T00:00:00Z",
+      "fileIds": [
+        "shared-data"
+      ],
+      "id": "300",
+      "parentId": "200"
+    },
+    {
+      "committedAt": "2026-10-01T00:00:00Z",
+      "fileIds": [
+        "tag-data"
+      ],
+      "id": "400",
+      "parentId": null
+    },
+    {
+      "committedAt": "2026-10-01T00:00:00Z",
+      "fileIds": [
+        "tag-data"
+      ],
+      "id": "500",
+      "parentId": "400"
+    },
+    {
+      "committedAt": "2026-10-01T00:00:00Z",
+      "fileIds": [
+        "backup-data"
+      ],
+      "id": "600",
+      "parentId": null
+    },
+    {
+      "committedAt": "2026-10-01T00:00:00Z",
+      "fileIds": [
+        "validation-data"
+      ],
+      "id": "700",
+      "parentId": null
+    },
+    {
+      "committedAt": "2026-10-16T11:00:00Z",
+      "fileIds": [
+        "recent-data"
+      ],
+      "id": "800",
+      "parentId": null
+    },
+    {
+      "committedAt": "2026-10-01T00:00:00Z",
+      "fileIds": [
+        "candidate-only-data",
+        "shared-data"
+      ],
+      "id": "900",
+      "parentId": null
+    }
+  ],
+  "tableId": "synthetic-table"
+}

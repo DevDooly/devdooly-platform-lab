@@ -1,0 +1,539 @@
+{
+  "kind": "iceberg-policy-scenarios",
+  "policy": {
+    "maxInventoryAgeSeconds": 300,
+    "minSnapshotAgeSeconds": 604800,
+    "minimumSnapshotsToKeep": 1,
+    "schemaVersion": 1
+  },
+  "provenance": {
+    "generatorSourceCommit": null,
+    "generatorSourceSha256": "832308dfab8a790e6c999530541abe9f5ab48f3e73164f165871814baf92eeab",
+    "liveMetadataCollected": false,
+    "offlineComputation": true,
+    "onlyPublicFixtures": true,
+    "plannerSourceCommit": "245d61a5749760a20918ab091d9410ce6735b1c0",
+    "plannerSourceSha256": "ec1ff5dc06d9da666d9ef1d32557937e36e0a63bc124f08ad6ed39edbf0224ae",
+    "plannerSourceTree": "3216836b9d0329a0616234edb36316aff9b75f9b",
+    "publicFixtureInputs": [
+      {
+        "bytes": 3215,
+        "file": "current-ancestor.inventory.json",
+        "sha256": "f8cfdcc431b78943e4b940a1c42e5e50c4f484d788240a4edf4c8f1f5b446660"
+      },
+      {
+        "bytes": 3214,
+        "file": "detached-candidate.inventory.json",
+        "sha256": "8a9279748b4e8d1ed25621a534f9e474484a059c853be04815cd63a28d02fa78"
+      },
+      {
+        "bytes": 3214,
+        "file": "stale-inventory.inventory.json",
+        "sha256": "8a9279748b4e8d1ed25621a534f9e474484a059c853be04815cd63a28d02fa78"
+      }
+    ],
+    "serviceCommandsExecuted": false,
+    "wallClockEvaluation": false
+  },
+  "scenarios": [
+    {
+      "changedCondition": "snapshot100의 parent를900으로 연결: current300 → 200 → 100 → 900",
+      "description": "현재 snapshot의 조상은 오래됐어도 보호합니다.",
+      "fixtureBytesSha256": "f8cfdcc431b78943e4b940a1c42e5e50c4f484d788240a4edf4c8f1f5b446660",
+      "fixtureFile": "current-ancestor.inventory.json",
+      "id": "current-ancestor",
+      "label": "현재 이력에 연결된 오래된 snapshot",
+      "plan": {
+        "applyEnabled": false,
+        "deletionExecutorImplemented": false,
+        "evaluatedAt": "2026-10-16T12:00:00.123456789Z",
+        "evaluationTimeProvidedByCaller": true,
+        "files": [
+          {
+            "action": "KEEP",
+            "id": "backup-data",
+            "reasons": [
+              "BACKUP_FILE_PIN",
+              "RETAINED_SNAPSHOT_REFERENCE"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "candidate-only-data",
+            "reasons": [
+              "RETAINED_SNAPSHOT_REFERENCE"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "initial-manifest",
+            "reasons": [
+              "RETAINED_SNAPSHOT_REFERENCE"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "recent-data",
+            "reasons": [
+              "RETAINED_SNAPSHOT_REFERENCE"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "shared-data",
+            "reasons": [
+              "RETAINED_SNAPSHOT_REFERENCE",
+              "SHARED_SNAPSHOT_FILE"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "table-metadata",
+            "reasons": [
+              "METADATA_OR_UNKNOWN_ALWAYS_PROTECTED"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "tag-data",
+            "reasons": [
+              "RETAINED_SNAPSHOT_REFERENCE",
+              "SHARED_SNAPSHOT_FILE"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "unreferenced-data",
+            "reasons": [
+              "UNREFERENCED_FILE_NOT_AUTHORIZED"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "validation-data",
+            "reasons": [
+              "RETAINED_SNAPSHOT_REFERENCE",
+              "VALIDATION_FILE_PIN"
+            ]
+          }
+        ],
+        "inventoryCapturedAt": "2026-10-16T12:00:00.123456789Z",
+        "inventoryClaimsIndependentlyVerified": false,
+        "inventoryScope": "SYNTHETIC_REFERENCE_FIXTURE",
+        "inventorySha256": "3505e96fb895681c050d9cfb70f607582c29e4afc571e7c67dd615e71513b0ee",
+        "kind": "iceberg-retention-plan",
+        "objectCandidateCount": 0,
+        "schemaVersion": 1,
+        "snapshotCandidateCount": 0,
+        "snapshots": [
+          {
+            "action": "KEEP",
+            "id": "100",
+            "reasons": [
+              "CURRENT_ANCESTOR",
+              "REF_ANCESTOR"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "200",
+            "reasons": [
+              "CURRENT_ANCESTOR",
+              "REF_ANCESTOR"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "300",
+            "reasons": [
+              "CURRENT_SNAPSHOT",
+              "REF_SNAPSHOT"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "400",
+            "reasons": [
+              "REF_ANCESTOR"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "500",
+            "reasons": [
+              "REF_SNAPSHOT"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "600",
+            "reasons": [
+              "BACKUP_PIN"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "700",
+            "reasons": [
+              "VALIDATION_PIN"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "800",
+            "reasons": [
+              "MINIMUM_SNAPSHOT_COUNT",
+              "WITHIN_MINIMUM_AGE"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "900",
+            "reasons": [
+              "CURRENT_ANCESTOR",
+              "REF_ANCESTOR"
+            ]
+          }
+        ],
+        "status": "DETERMINED",
+        "suppressionReasons": [],
+        "tableId": "synthetic-table"
+      }
+    },
+    {
+      "changedCondition": "기준 공개 fixture: current/ref/pin 밖의 오래된900",
+      "description": "분리된900만 만료 검토 후보이며 파일은 모두 보호합니다.",
+      "fixtureBytesSha256": "8a9279748b4e8d1ed25621a534f9e474484a059c853be04815cd63a28d02fa78",
+      "fixtureFile": "detached-candidate.inventory.json",
+      "id": "detached-candidate",
+      "label": "보호 범위 밖의 오래된 detached snapshot",
+      "plan": {
+        "applyEnabled": false,
+        "deletionExecutorImplemented": false,
+        "evaluatedAt": "2026-10-16T12:00:00.123456789Z",
+        "evaluationTimeProvidedByCaller": true,
+        "files": [
+          {
+            "action": "KEEP",
+            "id": "backup-data",
+            "reasons": [
+              "BACKUP_FILE_PIN",
+              "RETAINED_SNAPSHOT_REFERENCE"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "candidate-only-data",
+            "reasons": [
+              "CANDIDATE_SNAPSHOT_NOT_EXPIRED"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "initial-manifest",
+            "reasons": [
+              "RETAINED_SNAPSHOT_REFERENCE"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "recent-data",
+            "reasons": [
+              "RETAINED_SNAPSHOT_REFERENCE"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "shared-data",
+            "reasons": [
+              "CANDIDATE_SNAPSHOT_NOT_EXPIRED",
+              "RETAINED_SNAPSHOT_REFERENCE",
+              "SHARED_SNAPSHOT_FILE"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "table-metadata",
+            "reasons": [
+              "METADATA_OR_UNKNOWN_ALWAYS_PROTECTED"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "tag-data",
+            "reasons": [
+              "RETAINED_SNAPSHOT_REFERENCE",
+              "SHARED_SNAPSHOT_FILE"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "unreferenced-data",
+            "reasons": [
+              "UNREFERENCED_FILE_NOT_AUTHORIZED"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "validation-data",
+            "reasons": [
+              "RETAINED_SNAPSHOT_REFERENCE",
+              "VALIDATION_FILE_PIN"
+            ]
+          }
+        ],
+        "inventoryCapturedAt": "2026-10-16T12:00:00.123456789Z",
+        "inventoryClaimsIndependentlyVerified": false,
+        "inventoryScope": "SYNTHETIC_REFERENCE_FIXTURE",
+        "inventorySha256": "13089c19bc165aaabcb173dbf8f52099414028fded4424edf951818abe3a97c1",
+        "kind": "iceberg-retention-plan",
+        "objectCandidateCount": 0,
+        "schemaVersion": 1,
+        "snapshotCandidateCount": 1,
+        "snapshots": [
+          {
+            "action": "KEEP",
+            "id": "100",
+            "reasons": [
+              "CURRENT_ANCESTOR",
+              "REF_ANCESTOR"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "200",
+            "reasons": [
+              "CURRENT_ANCESTOR",
+              "REF_ANCESTOR"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "300",
+            "reasons": [
+              "CURRENT_SNAPSHOT",
+              "REF_SNAPSHOT"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "400",
+            "reasons": [
+              "REF_ANCESTOR"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "500",
+            "reasons": [
+              "REF_SNAPSHOT"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "600",
+            "reasons": [
+              "BACKUP_PIN"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "700",
+            "reasons": [
+              "VALIDATION_PIN"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "800",
+            "reasons": [
+              "MINIMUM_SNAPSHOT_COUNT",
+              "WITHIN_MINIMUM_AGE"
+            ]
+          },
+          {
+            "action": "EXPIRATION_CANDIDATE",
+            "id": "900",
+            "reasons": [
+              "OLD_DETACHED_HISTORY_ONLY"
+            ]
+          }
+        ],
+        "status": "DETERMINED",
+        "suppressionReasons": [],
+        "tableId": "synthetic-table"
+      }
+    },
+    {
+      "changedCondition": "기준 입력 그대로, 가정 평가 시각만 수집 뒤300초+1ns",
+      "description": "오래된 입력에서는 후보 판정을 보류합니다.",
+      "fixtureBytesSha256": "8a9279748b4e8d1ed25621a534f9e474484a059c853be04815cd63a28d02fa78",
+      "fixtureFile": "stale-inventory.inventory.json",
+      "id": "stale-inventory",
+      "label": "수집 뒤300초를 넘긴 입력",
+      "plan": {
+        "applyEnabled": false,
+        "deletionExecutorImplemented": false,
+        "evaluatedAt": "2026-10-16T12:05:00.123456790Z",
+        "evaluationTimeProvidedByCaller": true,
+        "files": [
+          {
+            "action": "KEEP",
+            "id": "backup-data",
+            "reasons": [
+              "BACKUP_FILE_PIN",
+              "RETAINED_SNAPSHOT_REFERENCE",
+              "UNDETERMINED_INVENTORY"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "candidate-only-data",
+            "reasons": [
+              "RETAINED_SNAPSHOT_REFERENCE",
+              "UNDETERMINED_INVENTORY"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "initial-manifest",
+            "reasons": [
+              "RETAINED_SNAPSHOT_REFERENCE",
+              "UNDETERMINED_INVENTORY"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "recent-data",
+            "reasons": [
+              "RETAINED_SNAPSHOT_REFERENCE",
+              "UNDETERMINED_INVENTORY"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "shared-data",
+            "reasons": [
+              "RETAINED_SNAPSHOT_REFERENCE",
+              "SHARED_SNAPSHOT_FILE",
+              "UNDETERMINED_INVENTORY"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "table-metadata",
+            "reasons": [
+              "METADATA_OR_UNKNOWN_ALWAYS_PROTECTED",
+              "UNDETERMINED_INVENTORY"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "tag-data",
+            "reasons": [
+              "RETAINED_SNAPSHOT_REFERENCE",
+              "SHARED_SNAPSHOT_FILE",
+              "UNDETERMINED_INVENTORY"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "unreferenced-data",
+            "reasons": [
+              "UNDETERMINED_INVENTORY"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "validation-data",
+            "reasons": [
+              "RETAINED_SNAPSHOT_REFERENCE",
+              "UNDETERMINED_INVENTORY",
+              "VALIDATION_FILE_PIN"
+            ]
+          }
+        ],
+        "inventoryCapturedAt": "2026-10-16T12:00:00.123456789Z",
+        "inventoryClaimsIndependentlyVerified": false,
+        "inventoryScope": "SYNTHETIC_REFERENCE_FIXTURE",
+        "inventorySha256": "13089c19bc165aaabcb173dbf8f52099414028fded4424edf951818abe3a97c1",
+        "kind": "iceberg-retention-plan",
+        "objectCandidateCount": 0,
+        "schemaVersion": 1,
+        "snapshotCandidateCount": 0,
+        "snapshots": [
+          {
+            "action": "KEEP",
+            "id": "100",
+            "reasons": [
+              "UNDETERMINED_INVENTORY"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "200",
+            "reasons": [
+              "UNDETERMINED_INVENTORY"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "300",
+            "reasons": [
+              "UNDETERMINED_INVENTORY"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "400",
+            "reasons": [
+              "UNDETERMINED_INVENTORY"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "500",
+            "reasons": [
+              "UNDETERMINED_INVENTORY"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "600",
+            "reasons": [
+              "UNDETERMINED_INVENTORY"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "700",
+            "reasons": [
+              "UNDETERMINED_INVENTORY"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "800",
+            "reasons": [
+              "UNDETERMINED_INVENTORY"
+            ]
+          },
+          {
+            "action": "KEEP",
+            "id": "900",
+            "reasons": [
+              "UNDETERMINED_INVENTORY"
+            ]
+          }
+        ],
+        "status": "UNDETERMINED",
+        "suppressionReasons": [
+          "STALE_INVENTORY"
+        ],
+        "tableId": "synthetic-table"
+      }
+    }
+  ],
+  "schemaVersion": 1,
+  "scope": "SYNTHETIC_REFERENCE_FIXTURE"
+}
