@@ -407,6 +407,64 @@ class KafkaObservationServiceTest {
         }, name); thread.setDaemon(true); thread.start(); await(started); return thread;
     }
     @FunctionalInterface interface OwnedAction { void run() throws Exception; }
+    @Test void rpcDiagnosticRequiresExactExplicitTestFlagAndKeepsFixedFailure() {
+        String property = "lab.kafka-observation.tests", previous = System.getProperty(property);
+        java.io.PrintStream original = System.out;
+        var bytes = new java.io.ByteArrayOutputStream();
+        try (var output = new java.io.PrintStream(bytes, true, java.nio.charset.StandardCharsets.UTF_8)) {
+            System.setOut(output);
+            for (String value : new String[] {null, "false", "TRUE", " true"}) {
+                if (value == null) { System.clearProperty(property); } else { System.setProperty(property, value); }
+                bytes.reset();
+                failingDiagnosticRpc(new org.apache.kafka.common.errors.TimeoutException("PRIVATE_RPC_CANARY endpoint/password"),
+                    ReadOnlyKafkaAdmin.RpcStage.DESCRIBE_CLUSTER, KAFKA_UNAVAILABLE);
+                assertThat(bytes.toString(java.nio.charset.StandardCharsets.UTF_8)).isEmpty();
+            }
+        } finally {
+            System.setOut(original);
+            if (previous == null) { System.clearProperty(property); } else { System.setProperty(property, previous); }
+        }
+    }
+
+    @Test void rpcDiagnosticExportsOnlyKnownExactCauseEnumAndSuppressesUnknownPrivateValues() {
+        String property = "lab.kafka-observation.tests", previous = System.getProperty(property);
+        java.io.PrintStream original = System.out;
+        var bytes = new java.io.ByteArrayOutputStream();
+        try (var output = new java.io.PrintStream(bytes, true, java.nio.charset.StandardCharsets.UTF_8)) {
+            System.setOut(output); System.setProperty(property, "true");
+            Throwable[] causes = {new org.apache.kafka.common.errors.TimeoutException("PRIVATE_RPC_CANARY"),
+                new org.apache.kafka.common.errors.UnsupportedVersionException("PRIVATE_RPC_CANARY"),
+                new org.apache.kafka.common.errors.GroupIdNotFoundException("PRIVATE_RPC_CANARY"),
+                new IllegalStateException("PRIVATE_RPC_CANARY endpoint/password"),
+                new org.apache.kafka.common.errors.TimeoutException("PRIVATE_RPC_CANARY") {}};
+            String[] kinds = {"RPC_TIMEOUT", "UNSUPPORTED_RPC_VERSION", "GROUP_ID_NOT_FOUND",
+                "UNCLASSIFIED_EXECUTION_FAILURE", "UNCLASSIFIED_EXECUTION_FAILURE"};
+            for (int index = 0; index < causes.length; index++) {
+                bytes.reset();
+                failingDiagnosticRpc(causes[index], ReadOnlyKafkaAdmin.RpcStage.LIST_COMMITTED,
+                    index == 2 ? GROUP_UNAVAILABLE : KAFKA_UNAVAILABLE);
+                String actual = bytes.toString(java.nio.charset.StandardCharsets.UTF_8);
+                assertThat(actual).isEqualTo("{\"kind\":\"KAFKA_OBSERVER_RPC_DIAGNOSTIC\",\"stage\":\"LIST_COMMITTED\",\"failureKind\":\""
+                    + kinds[index] + "\"}" + System.lineSeparator());
+                assertThat(actual).doesNotContain("PRIVATE_", "Exception", "endpoint", "password");
+            }
+            bytes.reset();
+            failingDiagnosticRpc(new IllegalStateException("PRIVATE_RPC_CANARY"), null, KAFKA_UNAVAILABLE);
+            assertThat(bytes.toString(java.nio.charset.StandardCharsets.UTF_8)).isEmpty();
+        } finally {
+            System.setOut(original);
+            if (previous == null) { System.clearProperty(property); } else { System.setProperty(property, previous); }
+        }
+    }
+
+    static void failingDiagnosticRpc(Throwable cause, ReadOnlyKafkaAdmin.RpcStage stage, KafkaObservationService.Code expected) {
+        var future = new KafkaFutureImpl<Void>(); future.completeExceptionally(cause);
+        assertThatThrownBy(() -> new ReadOnlyKafkaAdmin.Deadline(10_000_000_000L, () -> 0).await(future, stage))
+            .isInstanceOfSatisfying(KafkaObservationService.ObservationFailure.class, fixed -> {
+                assertThat(fixed.code()).isEqualTo(expected); assertThat(fixed.getCause()).isNull(); assertThat(fixed.getStackTrace()).isEmpty();
+            });
+    }
+
     static final class TrackingFuture<T> extends KafkaFutureImpl<T> {
         private final CountDownLatch waiting;
         TrackingFuture(CountDownLatch waiting) { this.waiting = waiting; }

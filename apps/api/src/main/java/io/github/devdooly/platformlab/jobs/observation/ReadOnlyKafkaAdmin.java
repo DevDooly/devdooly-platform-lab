@@ -59,6 +59,30 @@ interface ReadOnlyKafkaAdmin {
         ReadOnlyKafkaAdmin open(KafkaObservationSettings settings, Deadline deadline, ThreadGroup ownerGroup);
     }
 
+    enum RpcStage { DESCRIBE_CLUSTER, DESCRIBE_TOPIC, DESCRIBE_GROUP, LIST_COMMITTED, LIST_START, LIST_END }
+
+    static void rpcFailureDiagnostic(RpcStage stage, ExecutionException unavailable) {
+        try {
+            if (stage == null || !"true".equals(System.getProperty("lab.kafka-observation.tests"))) { return; }
+            Throwable cause = unavailable.getCause();
+            Class<?> type = cause == null ? null : cause.getClass();
+            String fixed = "UNCLASSIFIED_EXECUTION_FAILURE";
+            if (type == org.apache.kafka.common.errors.TimeoutException.class) { fixed = "RPC_TIMEOUT"; }
+            else if (type == org.apache.kafka.common.errors.UnsupportedVersionException.class) { fixed = "UNSUPPORTED_RPC_VERSION"; }
+            else if (type == org.apache.kafka.common.errors.UnknownTopicOrPartitionException.class) { fixed = "TARGET_TOPIC_UNAVAILABLE"; }
+            else if (type == org.apache.kafka.common.errors.CoordinatorNotAvailableException.class) { fixed = "GROUP_COORDINATOR_UNAVAILABLE"; }
+            else if (type == org.apache.kafka.common.errors.NotCoordinatorException.class) { fixed = "GROUP_COORDINATOR_CHANGED"; }
+            else if (type == GroupIdNotFoundException.class) { fixed = "GROUP_ID_NOT_FOUND"; }
+            else if (type == org.apache.kafka.common.errors.GroupAuthorizationException.class) { fixed = "GROUP_AUTHORIZATION_DENIED"; }
+            else if (type == org.apache.kafka.common.errors.TopicAuthorizationException.class) { fixed = "TOPIC_AUTHORIZATION_DENIED"; }
+            else if (type == org.apache.kafka.common.errors.ClusterAuthorizationException.class) { fixed = "CLUSTER_AUTHORIZATION_DENIED"; }
+            else if (type == org.apache.kafka.common.errors.DisconnectException.class) { fixed = "RPC_DISCONNECTED"; }
+            else if (type == org.apache.kafka.common.errors.NetworkException.class) { fixed = "RPC_NETWORK_UNAVAILABLE"; }
+            System.out.println("{\"kind\":\"KAFKA_OBSERVER_RPC_DIAGNOSTIC\",\"stage\":\"" + stage.name()
+                + "\",\"failureKind\":\"" + fixed + "\"}");
+        } catch (RuntimeException ignored) { /* Diagnostics never replace the original fixed observer failure. */ }
+    }
+
     record Deadline(long endNanos, LongSupplier clock) {
         long remainingNanos() {
             long remaining = endNanos - clock.getAsLong();
@@ -69,12 +93,14 @@ interface ReadOnlyKafkaAdmin {
             long nanos = remainingNanos();
             return (int) Math.min(Integer.MAX_VALUE, Math.max(1, (nanos + 999_999) / 1_000_000));
         }
-        <T> T await(KafkaFuture<T> future) {
+        <T> T await(KafkaFuture<T> future) { return await(future, null); }
+        <T> T await(KafkaFuture<T> future, RpcStage stage) {
             if (future == null) { throw failure(KAFKA_UNAVAILABLE); }
             try { return future.get(remainingNanos(), TimeUnit.NANOSECONDS); }
             catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); throw failure(CAPTURE_TIMEOUT); }
             catch (TimeoutException timeout) { throw failure(CAPTURE_TIMEOUT); }
             catch (ExecutionException unavailable) {
+                rpcFailureDiagnostic(stage, unavailable);
                 if (unavailable.getCause() instanceof GroupIdNotFoundException) { throw failure(GROUP_UNAVAILABLE); }
                 throw failure(KAFKA_UNAVAILABLE);
             }
@@ -166,11 +192,11 @@ interface ReadOnlyKafkaAdmin {
         @Override public Target identity(Deadline deadline) {
             requireOwner();
             String clusterId = deadline.await(admin.describeCluster(
-                new DescribeClusterOptions().timeoutMs(deadline.remainingMillis())).clusterId());
+                new DescribeClusterOptions().timeoutMs(deadline.remainingMillis())).clusterId(), RpcStage.DESCRIBE_CLUSTER);
             Map<String, TopicDescription> topicMap = deadline.await(admin.describeTopics(Set.of(settings.topic()),
-                new DescribeTopicsOptions().timeoutMs(deadline.remainingMillis())).allTopicNames());
+                new DescribeTopicsOptions().timeoutMs(deadline.remainingMillis())).allTopicNames(), RpcStage.DESCRIBE_TOPIC);
             Map<String, ConsumerGroupDescription> groupMap = deadline.await(admin.describeConsumerGroups(Set.of(settings.group()),
-                new DescribeConsumerGroupsOptions().timeoutMs(deadline.remainingMillis())).all());
+                new DescribeConsumerGroupsOptions().timeoutMs(deadline.remainingMillis())).all(), RpcStage.DESCRIBE_GROUP);
             if (topicMap == null || !topicMap.keySet().equals(Set.of(settings.topic())) || topicMap.get(settings.topic()) == null) {
                 throw failure(TARGET_UNVERIFIED);
             }
@@ -195,13 +221,13 @@ interface ReadOnlyKafkaAdmin {
             requireOwner();
             Map<String, Map<TopicPartition, OffsetAndMetadata>> commitMap = deadline.await(admin.listConsumerGroupOffsets(
                 Map.of(settings.group(), new ListConsumerGroupOffsetsSpec().topicPartitions(Set.of(partition))),
-                new ListConsumerGroupOffsetsOptions().requireStable(true).timeoutMs(deadline.remainingMillis())).all());
+                new ListConsumerGroupOffsetsOptions().requireStable(true).timeoutMs(deadline.remainingMillis())).all(), RpcStage.LIST_COMMITTED);
             if (commitMap == null || !commitMap.keySet().equals(Set.of(settings.group()))) { throw failure(OFFSETS_UNVERIFIED); }
             Long offset = committedOffset(commitMap.get(settings.group()), partition);
             long start = exactOffset(deadline.await(admin.listOffsets(Map.of(partition, OffsetSpec.earliest()),
-                new ListOffsetsOptions(IsolationLevel.READ_COMMITTED).timeoutMs(deadline.remainingMillis())).all()), partition);
+                new ListOffsetsOptions(IsolationLevel.READ_COMMITTED).timeoutMs(deadline.remainingMillis())).all(), RpcStage.LIST_START), partition);
             long end = exactOffset(deadline.await(admin.listOffsets(Map.of(partition, OffsetSpec.latest()),
-                new ListOffsetsOptions(IsolationLevel.READ_COMMITTED).timeoutMs(deadline.remainingMillis())).all()), partition);
+                new ListOffsetsOptions(IsolationLevel.READ_COMMITTED).timeoutMs(deadline.remainingMillis())).all(), RpcStage.LIST_END), partition);
             return new Offsets(start, end, offset);
         }
 

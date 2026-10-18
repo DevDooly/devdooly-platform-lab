@@ -311,13 +311,13 @@ class BoundaryTests(unittest.TestCase):
             self.assertEqual(summary['status'], 'FAILED'); self.assertEqual(summary['failureCode'], 'SOURCE_CHANGED')
             self.assertIs(summary['sourceBytesUnchanged'], False); self.assertIs(summary['ownedResourcesRemoved'], cleaned)
 
-    def test_normal_api_requires_exact_216_actual_cases_and_zero_skips(self):
+    def test_normal_api_requires_exact_218_actual_cases_and_zero_skips(self):
         folder = self.root / 'normal'; folder.mkdir()
         report = folder / 'TEST-normal.xml'
-        for tests, skipped, cases in [(216, 0, 216), (215, 0, 215), (217, 0, 217), (216, 1, 216), (216, 0, 215)]:
+        for tests, skipped, cases in [(218, 0, 218), (217, 0, 217), (219, 0, 219), (218, 1, 218), (218, 0, 217)]:
             report.write_text('<testsuite name="normal" tests="' + str(tests) + '" failures="0" errors="0" skipped="' + str(skipped) + '">' +
                 ''.join('<testcase name="case-' + str(index) + '"/>' for index in range(cases)) + '</testsuite>')
-            if (tests, skipped, cases) == (216, 0, 216): self.assertEqual(runner.verify_normal_api_reports(folder), 216)
+            if (tests, skipped, cases) == (218, 0, 218): self.assertEqual(runner.verify_normal_api_reports(folder), 218)
             else:
                 with self.subTest(tests=tests, skipped=skipped, cases=cases), self.assertRaises(runner.Failure): runner.verify_normal_api_reports(folder)
 
@@ -422,7 +422,7 @@ class BoundaryTests(unittest.TestCase):
                 problem = runner.ET.SubElement(case, tag, message=message, type=error_type)
                 problem.text = 'PRIVATE_STACK_CANARY\n    at ' + runner.CLASS + '.' + runner.METHOD + '(KafkaObservationIT.java:' + str(frame_line) + ')\n'
             report.write_bytes(runner.ET.tostring(suite))
-        def capture(status=1, state=None):
+        def capture(status=1, state=None, include_rpc=False):
             output = io.StringIO()
             reader = contextlib.nullcontext()
             if runner.os.name == 'nt':
@@ -435,10 +435,17 @@ class BoundaryTests(unittest.TestCase):
             with reader, contextlib.redirect_stdout(output):
                 runner.public_it_failure_diagnostic(staged, {relative: runner.digest(public)}, status,
                     {'State': state if state is not None else {'Running': False, 'ExitCode': 1, 'OOMKilled': False}})
-            encoded = output.getvalue(); value = json.loads(encoded)
+            encoded = output.getvalue(); records = [json.loads(line) for line in encoded.splitlines()]
+            self.assertTrue(records); value = records[-1]
             self.assertEqual(set(value), {'kind', 'failureKind', 'testSourceLine'})
             self.assertEqual(value['kind'], 'KAFKA_IT_FAILURE_DIAGNOSTIC')
             self.assertNotIn('PRIVATE_', encoded); self.assertNotIn(str(self.root), encoded)
+            if include_rpc:
+                for record in records[:-1]:
+                    self.assertEqual(set(record), {'kind', 'stage', 'failureKind'})
+                    self.assertEqual(record['kind'], 'KAFKA_OBSERVER_RPC_DIAGNOSTIC')
+                return records
+            self.assertEqual(len(records), 1)
             return value
         return report, write_report, capture
 
@@ -491,6 +498,33 @@ class BoundaryTests(unittest.TestCase):
             with self.subTest(message=message, error_type=error_type):
                 write_report('error', message=message, error_type=error_type)
                 self.assertEqual(capture()['failureKind'], 'JUNIT_ERROR')
+
+    def test_rpc_system_out_only_exports_one_valid_finite_record_from_owned_case(self):
+        report, write_report, capture = self.it_diagnostic_fixture()
+        valid = {'kind': 'KAFKA_OBSERVER_RPC_DIAGNOSTIC', 'stage': 'LIST_COMMITTED', 'failureKind': 'RPC_TIMEOUT'}
+        write_report('error', message='KAFKA_UNAVAILABLE',
+            error_type='io.github.devdooly.platformlab.jobs.observation.KafkaObservationService$ObservationFailure')
+        suite = runner.ET.fromstring(report.read_bytes()); case = suite.find('testcase')
+        runner.ET.SubElement(suite, 'system-out').text = 'PRIVATE_PROVIDER_CANARY\n' + json.dumps(valid)
+        runner.ET.SubElement(case, 'system-out').text = json.dumps(valid)  # Identical duplicated capture is one record.
+        report.write_bytes(runner.ET.tostring(suite))
+        records = capture(include_rpc=True); self.assertEqual(len(records), 2); self.assertEqual(records[0], valid)
+        self.assertEqual(records[1]['failureKind'], 'OBSERVER_KAFKA_UNAVAILABLE')
+
+    def test_rpc_system_out_rejects_unknown_duplicate_extra_and_conflicting_private_input(self):
+        report, write_report, capture = self.it_diagnostic_fixture()
+        valid = {'kind': 'KAFKA_OBSERVER_RPC_DIAGNOSTIC', 'stage': 'LIST_COMMITTED', 'failureKind': 'RPC_TIMEOUT'}
+        invalid = [json.dumps(dict(valid, stage='PRIVATE_STAGE_CANARY')), json.dumps(dict(valid, failureKind='PRIVATE_TYPE_CANARY')),
+            json.dumps(dict(valid, extra='PRIVATE_VALUE_CANARY')), '{"kind":"KAFKA_OBSERVER_RPC_DIAGNOSTIC","stage":"LIST_COMMITTED","stage":"PRIVATE_DUP_CANARY","failureKind":"RPC_TIMEOUT"}',
+            '{"kind":"KAFKA_OBSERVER_RPC_DIAGNOSTIC","stage":NaN,"failureKind":"RPC_TIMEOUT"}', 'PRIVATE_OVERSIZE_CANARY' * 40,
+            json.dumps(valid) + '\n' + json.dumps(dict(valid, stage='LIST_END'))]
+        for text in invalid:
+            with self.subTest(size=len(text)):
+                write_report('error'); suite = runner.ET.fromstring(report.read_bytes())
+                runner.ET.SubElement(suite.find('testcase'), 'system-out').text = text
+                report.write_bytes(runner.ET.tostring(suite))
+                records = capture(include_rpc=True); self.assertEqual(len(records), 1)
+                self.assertEqual(records[0]['failureKind'], 'JUNIT_ERROR')
 
 if __name__ == '__main__':
     unittest.main()

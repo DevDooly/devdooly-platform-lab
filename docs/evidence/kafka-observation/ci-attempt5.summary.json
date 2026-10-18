@@ -1,0 +1,21 @@
+{
+  "allJvmThreadsVerified": false,
+  "expectedTests": 1,
+  "failureCode": "IT_FAILED",
+  "httpOrMiniPcRuntimeVerified": false,
+  "kafkaAclVerified": false,
+  "kind": "kafka-observation-ci-result",
+  "ownedResourcesRemoved": true,
+  "publicExecutionEnabled": false,
+  "runtimeManifestSha256": "9182bc06f021b94cf34ca52640bd99dd6984cab1447bb5a324a13bd5a240a2b9",
+  "schemaVersion": 1,
+  "scope": "ISOLATED_KAFKA_IT",
+  "skips": null,
+  "sourceBytesUnchanged": false,
+  "sourceCommit": "f69b420e51a60ce61f0fffa708131f25524e46e6",
+  "status": "FAILED",
+  "surefireXmlSha256": null,
+  "synthetic": true,
+  "testSourceAssertionsVerified": false,
+  "verifiedTests": 0
+}

@@ -194,8 +194,8 @@
     },
     {
       "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/observation/ReadOnlyKafkaAdmin.java",
-      "sha256": "8d030186ed2766cea9dd661e8636f116bd5e32dc2c28d6d633984543e398b2e7",
-      "bytes": 15240
+      "sha256": "b26b8ed9449b62a6cb88d5432839ebe2b9a86494dc912be5ee7d880e1f0174fe",
+      "bytes": 17735
     },
     {
       "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/runtime/ContinuousJobRunner.java",
@@ -474,8 +474,8 @@
     },
     {
       "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/observation/KafkaObservationServiceTest.java",
-      "sha256": "cc507606480b6f13140bafd173f590790d40e6520b9ee5e1dd2c88ff69d864cb",
-      "bytes": 33476
+      "sha256": "9f2736ad9287bb02f052e0670c6330b09669443c0cea921b12404f881818fd7b",
+      "bytes": 37495
     },
     {
       "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/runtime/ContinuousJobRunnerTest.java",
@@ -539,13 +539,13 @@
     },
     {
       "path": "infra/kafka-observation-ci/run_once.py",
-      "sha256": "187da24f9aa6163963522408807e6b64baf29c9dcbc0a2aa50d1032910ccc3d2",
-      "bytes": 45334
+      "sha256": "a645f8c670c12854c4149d7ff8b45f2072f20fc01de960113fe7cb1fdad111f6",
+      "bytes": 47474
     },
     {
       "path": "infra/kafka-observation-ci/test_run_once.py",
-      "sha256": "200a515a1456432d842e410ead99121938cf00ee108104d484bc288770e54877",
-      "bytes": 36563
+      "sha256": "6779c037ce90e3b7ef069db44f532c20782b595712243db1626df860b739b1bd",
+      "bytes": 39304
     }
   ]
 }

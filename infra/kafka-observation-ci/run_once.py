@@ -26,7 +26,7 @@ JDK = 'eclipse-temurin:21-jdk@sha256:3e3c176ffed168beb42c607be9bc1639b466cf00261
 PRIVATE = '.local/kafka-observation-ci/private'
 PUBLIC = '.local/kafka-observation-ci-public/summary.json'
 LABEL = 'io.github.devdooly.kafka-observation'
-NORMAL_API_TESTS = 216
+NORMAL_API_TESTS = 218
 BROKER_TMPFS = '/var/lib/kafka/data:rw,nosuid,nodev,noexec,size=268435456,uid=1000,gid=1000,mode=0700'
 BROKER_SECRETS_TMPFS = '/etc/kafka/secrets:rw,nosuid,nodev,noexec,size=1048576,uid=1000,gid=1000,mode=0700'
 BROKER_CONFIG_TMPFS = '/mnt/shared/config:rw,nosuid,nodev,noexec,size=1048576,uid=1000,gid=1000,mode=0700'
@@ -508,6 +508,29 @@ def public_it_failure_diagnostic(staged, source_snapshot, cli_status, container)
                         found = {int(match.group(1)) for line in (problem.text or '').splitlines()
                             if (match := frame.fullmatch(line)) is not None and begins[0] <= int(match.group(1)) < ends[0]}
                         if len(found) == 1: source_line = next(iter(found))
+                        # Exact finite JSON from this owned one-test report only; never expose other system-out.
+                        rpc_stages = {'DESCRIBE_CLUSTER', 'DESCRIBE_TOPIC', 'DESCRIBE_GROUP', 'LIST_COMMITTED', 'LIST_START', 'LIST_END'}
+                        rpc_kinds = {'RPC_TIMEOUT', 'UNSUPPORTED_RPC_VERSION', 'TARGET_TOPIC_UNAVAILABLE',
+                            'GROUP_COORDINATOR_UNAVAILABLE', 'GROUP_COORDINATOR_CHANGED', 'GROUP_ID_NOT_FOUND',
+                            'GROUP_AUTHORIZATION_DENIED', 'TOPIC_AUTHORIZATION_DENIED', 'CLUSTER_AUTHORIZATION_DENIED',
+                            'RPC_DISCONNECTED', 'RPC_NETWORK_UNAVAILABLE', 'UNCLASSIFIED_EXECUTION_FAILURE'}
+                        records = set()
+                        for node in suite.findall('system-out') + case.findall('system-out'):
+                            for line in (node.text or '').splitlines():
+                                if len(line.encode('utf-8')) > 512: continue
+                                try:
+                                    value = json.loads(line, object_pairs_hook=unique_pairs,
+                                        parse_constant=lambda unused: (_ for _ in ()).throw(ValueError()))
+                                    if (type(value) is dict and set(value) == {'kind', 'stage', 'failureKind'}
+                                            and value['kind'] == 'KAFKA_OBSERVER_RPC_DIAGNOSTIC'
+                                            and type(value['stage']) is str and value['stage'] in rpc_stages
+                                            and type(value['failureKind']) is str and value['failureKind'] in rpc_kinds):
+                                        records.add((value['stage'], value['failureKind']))
+                                except (Failure, ValueError, TypeError): pass
+                        if len(records) == 1:
+                            rpc_stage, rpc_kind = next(iter(records))
+                            print(json.dumps({'kind': 'KAFKA_OBSERVER_RPC_DIAGNOSTIC', 'stage': rpc_stage,
+                                              'failureKind': rpc_kind}, sort_keys=True))
     except Exception:
         # Keep only a fixed classification already established; never print the failed parse/value/exception.
         pass
