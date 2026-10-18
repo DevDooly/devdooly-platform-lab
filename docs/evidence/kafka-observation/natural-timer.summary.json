@@ -1,0 +1,118 @@
+{
+  "canonicalization": "JSON sorted keys, compact separators, ensure_ascii=true, allow_nan=false, trailing LF; SHA-256 of ASCII bytes",
+  "kind": "kafka-natural-timer-public-evidence",
+  "measuredCadence": {
+    "naturalRoundCount": 2,
+    "naturalToNaturalIntervalCount": 1,
+    "previousServiceExitToNextTriggerDisplay": "30m 7.601007s",
+    "previousServiceExitToNextTriggerMicroseconds": 1807601007,
+    "triggerToTriggerDisplay": "30m 11.603964s",
+    "triggerToTriggerMicroseconds": 1811603964,
+    "withinConfiguredWindow": true
+  },
+  "notVerified": [
+    "longTermAvailability",
+    "kafkaAcl",
+    "credentialRotation",
+    "livePublicApiConnectivity"
+  ],
+  "recordedOn": "2026-10-18",
+  "rounds": [
+    {
+      "canonicalSha256": {
+        "jobs": "7b0353e1466af23da9f1e27a16b082dce0c7ff15058cf6eb9b8a7d6e3cad4014",
+        "kafka": "d96f21c2664cb02121b4846e47a244106922521681f332e80bfe1ae1f704dd85",
+        "platform": "cdd3ef22d5eef4801e1a90e217aa46d3787a5b52af39e5958e8b4c3b6caad05e"
+      },
+      "observation": {
+        "exportedJobCount": 8,
+        "fileMetadataCount": 16,
+        "jenkinsState": "success",
+        "jobCount": 8,
+        "jobsCapturedAt": "2026-10-18T07:32:29.751961377Z",
+        "kafkaCaptureStartedAt": "2026-10-18T07:32:29.878017847Z",
+        "kafkaCapturedAt": "2026-10-18T07:32:30.113233320Z",
+        "kafkaCommitState": "OBSERVED",
+        "kafkaCommittedOffset": 8,
+        "kafkaGroupState": "STABLE",
+        "kafkaLag": 0,
+        "kafkaReadCommittedEndOffset": 8,
+        "platformCapturedAt": "2026-10-18T07:32:29.585962Z",
+        "runtimeStage": "IDLE"
+      },
+      "pagesRunId": 39108053239,
+      "pagesRunUrl": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39108053239",
+      "pagesVerifiedAtUTC": "2026-10-18T07:36:37.237480Z",
+      "publicArtifactsAndHttpExactBytesMatch": true,
+      "readOnlyVerifiedAtUTC": "2026-10-18T07:34:47.281624711Z",
+      "round": 1,
+      "serviceCompletedAtUTC": "2026-10-18T07:32:31.799605000Z",
+      "serviceStartedAtUTC": "2026-10-18T07:32:27.811446000Z",
+      "sourceAndConfigPreserved": true,
+      "strictSnapshotKinds": [
+        "platform",
+        "jobs",
+        "kafka"
+      ]
+    },
+    {
+      "canonicalSha256": {
+        "jobs": "9c8a92b0f1890b57de867a54e8888bd8fc184e5bad56b30d55b06e188c2d1429",
+        "kafka": "46f98b19eabb417d3bcf7456b368d6f09d9cce3c2f47e1a1212873c5e325febc",
+        "platform": "31533b5ce4d10676eac170f1ca659590fef5f22f72f616e853d011ab4cd7edc6"
+      },
+      "observation": {
+        "exportedJobCount": 8,
+        "fileMetadataCount": 16,
+        "jenkinsState": "success",
+        "jobCount": 8,
+        "jobsCapturedAt": "2026-10-18T08:02:41.540400604Z",
+        "kafkaCaptureStartedAt": "2026-10-18T08:02:41.665744606Z",
+        "kafkaCapturedAt": "2026-10-18T08:02:41.917441123Z",
+        "kafkaCommitState": "OBSERVED",
+        "kafkaCommittedOffset": 8,
+        "kafkaGroupState": "STABLE",
+        "kafkaLag": 0,
+        "kafkaReadCommittedEndOffset": 8,
+        "platformCapturedAt": "2026-10-18T08:02:41.368941Z",
+        "runtimeStage": "IDLE"
+      },
+      "pagesRunId": 39109935742,
+      "pagesRunUrl": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39109935742",
+      "pagesVerifiedAtUTC": "2026-10-18T08:08:41.685426Z",
+      "publicArtifactsAndHttpExactBytesMatch": true,
+      "readOnlyVerifiedAtUTC": "2026-10-18T08:06:52.275890659Z",
+      "round": 2,
+      "serviceCompletedAtUTC": "2026-10-18T08:02:43.512018000Z",
+      "serviceStartedAtUTC": "2026-10-18T08:02:39.416534000Z",
+      "sourceAndConfigPreserved": true,
+      "strictSnapshotKinds": [
+        "platform",
+        "jobs",
+        "kafka"
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "scope": "PERSONAL_MINI_PC_TWO_NATURAL_ROUNDS",
+  "sourceCommits": {
+    "api": "245d61a5749760a20918ab091d9410ce6735b1c0",
+    "repositoryMainDuringRounds": "13447fa88987050f64e47c01684ecb9c233b34fb",
+    "worker": "74a8e98844a8fea0653951136ede0e7de0d7ac08"
+  },
+  "status": "VERIFIED",
+  "timerContract": {
+    "accuracySeconds": 60,
+    "onUnitInactiveSeconds": 1800,
+    "randomizedDelaySeconds": 60
+  },
+  "verification": {
+    "allFieldsCanonicalMatchHostPerRound": true,
+    "artifactAndPublicHttpExactBytesMatchPerRound": true,
+    "manualAndForcedSystemdRunsCountedAsNatural": false,
+    "sourceConfigUnitsAndTimerPreserved": true,
+    "threeStrictSnapshotContractsPerRound": true,
+    "twoDistinctNaturalInvocations": true,
+    "twoDistinctPagesRuns": true
+  }
+}

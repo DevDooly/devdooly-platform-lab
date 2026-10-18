@@ -8,7 +8,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 ## 현재 상태
 
-기존 미니 PC의 서비스와 자료를 보존하면서 Java·데이터 처리·배포·복구 경험을 실제 검증 기록으로 연결합니다.
+현재 목표는 기존 미니 PC의 서비스·자료를 보존하면서 Java·데이터 처리·배포·복구 경험과 공개 연결을 검증 기록으로 보여주는 것입니다.
 
 | 영역 | 확인한 범위 | 근거 |
 | --- | --- | --- |
@@ -16,9 +16,9 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 | 데이터·복구 | Cloud Spark→Trino·compaction, DB 논리 복원·Kafka/Garage PVC 격리 복원 | [Cloud](docs/evidence/cloud-lakehouse/FULL_SUCCESS.md), [DB](docs/evidence/current-db-restore/README.md), [PVC](docs/evidence/runtime-pvc-restore/README.md) |
 | 보존 계획·화면 | Iceberg 실제 metadata의 KEEP 계획, 기술별 근거 탐색·합성 정책 선택 UI의 로컬 검증 | [실측 기록](docs/evidence/iceberg-capture/ATTEMPT_9.md), [합성 예제](examples/iceberg-retention-scenarios/README.md) |
 
-2026-10-18 기준, Kafka 관측 API 활성화·collector 설치와 실제 systemd 서비스·수동 host 실행을 확인했습니다. 두 실행의 platform·job·Kafka 전체 관측 필드는 호스트 수집본과 같고, 게시 artifact와 공개 HTTP 응답은 각각 전체 bytes가 일치합니다. 원래 30분 주기의 자연 실행 2회는 후속으로 남깁니다. 현재 범위는 [Kafka 진행 기록](docs/evidence/kafka-observation/README.md)을 따릅니다.
+지금 완료: Kafka 관측 API·collector 연결, systemd·수동 host 실행, 원래 타이머의 자연 실행 2회·회차 간격 1개와 각 회차의 공개 3파일 대조를 확인했습니다. [자연 관측 근거](docs/evidence/kafka-observation/README.md#원래-타이머의-자연-2회와-공개-게시-대조)를 따르며, 화면은 마지막 수집 기록을 보여줍니다.
 
-K3s·Jenkins archive 전체 복원, snapshot 만료·운영 객체 삭제는 별도 후속입니다. 검증 수치·실패 이력·과거 진행 단계는 [2026-10-18 진행·검증 기록](docs/progress-history.md)에 보존합니다.
+다음 단계: 내부 Kubernetes 게이트웨이 배포 → 외부 HTTPS 연결 → 자격증명 회전을 순서대로 진행합니다. 게이트웨이는 격리 검증 620개와 [PR #73 CI](https://github.com/DevDooly/devdooly-platform-lab/pull/73)를 통과했으며, 공개 REST·실시간 API 연결은 아직 배포하지 않았습니다. 장기간 운영, K3s·Jenkins archive 전체 복원과 snapshot 만료·운영 객체 삭제는 별도 후속입니다. [과거 검증·실패 기록](docs/progress-history.md)은 보존합니다.
 
 ## 로컬 실행
 
