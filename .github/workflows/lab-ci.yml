@@ -123,7 +123,7 @@ jobs:
           pins = {
               'infra/kafka-observation-ci/run_once.py': 'a645f8c670c12854c4149d7ff8b45f2072f20fc01de960113fe7cb1fdad111f6',
               'infra/kafka-observation-ci/test_run_once.py': '6779c037ce90e3b7ef069db44f532c20782b595712243db1626df860b739b1bd',
-              'infra/kafka-observation-ci/runtime-manifest.json': 'cf00028eae7f20991ba965b1cd2c3a3dc1b86b814fe4279f4fe72db8dc85e645',
+              'infra/kafka-observation-ci/runtime-manifest.json': '7e86afa4cf4c4b13459040e566cf43e876390146e49565f71751d2909d02a84c',
           }
           for name, expected in pins.items():
               assert hashlib.sha256(Path(name).read_bytes()).hexdigest() == expected
@@ -152,18 +152,18 @@ jobs:
         run: |
           chmod +x mvnw
           if [ "$KAFKA_OBSERVATION_OPT_IN" = 'true' ]; then
-            python3 -I -B ../../infra/kafka-observation-ci/run_once.py prepare --source-manifest-sha256 cf00028eae7f20991ba965b1cd2c3a3dc1b86b814fe4279f4fe72db8dc85e645 --ack-fresh-hosted-kafka-it
+            python3 -I -B ../../infra/kafka-observation-ci/run_once.py prepare --source-manifest-sha256 7e86afa4cf4c4b13459040e566cf43e876390146e49565f71751d2909d02a84c --ack-fresh-hosted-kafka-it
           else
             ./mvnw -B -ntp verify
           fi
 
       - name: Run one owned Kafka observation IT
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_kafka_observation_trial == true }}
-        run: python3 -I -B infra/kafka-observation-ci/run_once.py run --source-manifest-sha256 cf00028eae7f20991ba965b1cd2c3a3dc1b86b814fe4279f4fe72db8dc85e645 --ack-fresh-hosted-kafka-it
+        run: python3 -I -B infra/kafka-observation-ci/run_once.py run --source-manifest-sha256 7e86afa4cf4c4b13459040e566cf43e876390146e49565f71751d2909d02a84c --ack-fresh-hosted-kafka-it
 
       - name: Confirm owned Kafka cleanup even after failure
         if: ${{ always() && github.event_name == 'workflow_dispatch' && inputs.run_kafka_observation_trial == true }}
-        run: python3 -I -B infra/kafka-observation-ci/run_once.py cleanup --source-manifest-sha256 cf00028eae7f20991ba965b1cd2c3a3dc1b86b814fe4279f4fe72db8dc85e645 --ack-fresh-hosted-kafka-it
+        run: python3 -I -B infra/kafka-observation-ci/run_once.py cleanup --source-manifest-sha256 7e86afa4cf4c4b13459040e566cf43e876390146e49565f71751d2909d02a84c --ack-fresh-hosted-kafka-it
 
       - name: Upload only Kafka observation public summary
         if: ${{ always() && github.event_name == 'workflow_dispatch' && inputs.run_kafka_observation_trial == true }}

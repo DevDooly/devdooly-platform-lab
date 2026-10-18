@@ -166,7 +166,7 @@ interface ReadOnlyKafkaAdmin {
             properties.put(AdminClientConfig.CLIENT_ID_CONFIG, CLIENT_ID);
             properties.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, 1000);
             properties.put(AdminClientConfig.DEFAULT_API_TIMEOUT_MS_CONFIG, 3000);
-            properties.put(AdminClientConfig.RETRIES_CONFIG, 0);
+            properties.put(AdminClientConfig.RETRIES_CONFIG, 1);
             properties.put(AdminClientConfig.ENABLE_METRICS_PUSH_CONFIG, false);
             properties.put(AdminClientConfig.METRIC_REPORTER_CLASSES_CONFIG, List.of());
             return Map.copyOf(properties);

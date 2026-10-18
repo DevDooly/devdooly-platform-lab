@@ -263,11 +263,11 @@ class KafkaObservationServiceTest {
         assertThat(fingerprint).isNotEqualTo(KafkaObservationService.targetFingerprint(current, "other-group"));
     }
 
-    @Test void exactPinnedClientAndAdminPropertiesDisableReportersMetricsPushAndRetries() {
+    @Test void exactPinnedClientAndAdminPropertiesDisableReportersMetricsPushAndBoundRetries() {
         assertThatCode(ReadOnlyKafkaAdmin.KafkaAdminAdapter::verifyLibrary).doesNotThrowAnyException();
         var values = ReadOnlyKafkaAdmin.KafkaAdminAdapter.properties(settings(true));
         assertThat(values).containsEntry(AdminClientConfig.ENABLE_METRICS_PUSH_CONFIG, false)
-            .containsEntry(AdminClientConfig.METRIC_REPORTER_CLASSES_CONFIG, List.of()).containsEntry(AdminClientConfig.RETRIES_CONFIG, 0)
+            .containsEntry(AdminClientConfig.METRIC_REPORTER_CLASSES_CONFIG, List.of()).containsEntry(AdminClientConfig.RETRIES_CONFIG, 1)
             .containsEntry(AdminClientConfig.CLIENT_ID_CONFIG, ReadOnlyKafkaAdmin.KafkaAdminAdapter.CLIENT_ID);
         assertThat(values.keySet()).doesNotContain("group.id", "key.serializer", "value.serializer", "sasl.jaas.config");
         assertThatCode(() -> new AdminClientConfig(values)).doesNotThrowAnyException();
