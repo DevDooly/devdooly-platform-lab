@@ -1,3 +1,4 @@
+import { isPublicReadPath } from './public-api-base.ts';
 export type OutcomeStatus = 'SUCCESS' | 'FAILED' | 'DUPLICATE' | 'PENDING';
 export interface Run {
   id: string; name: string; status: string; synthetic: boolean; seed: number;
@@ -55,7 +56,10 @@ export function isRelease(value: unknown): value is Release {
     && (value.imageDigest === null || text(value.imageDigest)) && text(value.deploymentStatus) && timestamp(value.startedAt);
 }
 export async function getJson(base: string, path: string, signal?: AbortSignal): Promise<unknown> {
-  const response = await fetch(`${base.replace(/\/$/, '')}${path}`, { signal, headers: { Accept: 'application/json' }, cache: 'no-store', credentials: 'omit', redirect: 'error' });
+  // The page validates public configuration; retain the generic integration/smoke transport.
+  if (base === 'invalid-public-api-base' || !isPublicReadPath(path)) throw new Error('공개 조회 주소를 확인할 수 없습니다.');
+  const url = `${base.replace(/\/$/, '')}${path}`;
+  const response = await fetch(url, { signal, headers: { Accept: 'application/json' }, cache: 'no-store', credentials: 'omit', redirect: 'error' });
   if (!response.ok) throw new Error(`API 응답 ${response.status}`);
   return response.json();
 }

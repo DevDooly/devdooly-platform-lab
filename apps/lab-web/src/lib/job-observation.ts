@@ -116,11 +116,11 @@ export function validateJobObservation(value: unknown): value is JobObservationR
 
 export type JobBrowserError = 'NOT_CONFIGURED' | 'HTTP_ERROR' | 'NETWORK_ERROR' | 'INVALID_RECORD' | 'ABORTED' | 'OLDER_RECORD';
 export interface JobObservationLoad { record: JobObservationRecord | null; browserError: JobBrowserError | null; retainedPrevious: boolean; }
-export async function loadJobObservation(options: { url: string; previousRecord?: JobObservationRecord | null; signal?: AbortSignal; fetcher?: typeof fetch }): Promise<JobObservationLoad> {
+export async function loadJobObservation(options: { url: string; previousRecord?: JobObservationRecord | null; signal?: AbortSignal; fetcher?: typeof fetch; rejectRedirects?: boolean }): Promise<JobObservationLoad> {
   const previous = validateJobObservation(options.previousRecord) ? options.previousRecord : null;
   const failed = (browserError: JobBrowserError): JobObservationLoad => ({ record: previous, browserError, retainedPrevious: previous !== null });
   try {
-    const response = await (options.fetcher || fetch)(options.url, { headers: { Accept: 'application/json' }, signal: options.signal, cache: 'no-store', credentials: 'omit' });
+    const response = await (options.fetcher || fetch)(options.url, { headers: { Accept: 'application/json' }, signal: options.signal, cache: 'no-store', credentials: 'omit', ...(options.rejectRedirects ? { redirect: 'error' as const } : {}) });
     if (!response.ok) return failed(response.status === 404 ? 'NOT_CONFIGURED' : 'HTTP_ERROR');
     const text = await response.text();
     if (new TextEncoder().encode(text).byteLength > MAX_JOB_OBSERVATION_BYTES) return failed('INVALID_RECORD');

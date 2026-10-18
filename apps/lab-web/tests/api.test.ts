@@ -52,8 +52,8 @@ test('HTTP adapter loads list, detail, runtime summary and releases without a PO
     assert.equal(result.summary.status, 'UP');
     assert.equal(paths.length, 4);
     assert.ok(paths.every(path => path.startsWith('GET ')));
-    await assert.rejects(fetchRun(base, 'unknown/id'), /API 응답 404/);
-    assert.ok(paths.includes('GET /api/demo/runs/unknown%2Fid'));
+    await assert.rejects(fetchRun(base, 'unknown/id'), /공개 조회 주소/);
+    assert.equal(paths.length, 4, 'A noncanonical public detail path must not send another request');
   } finally { await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
 });
 test('malformed HTTP payload is rejected instead of being shown as live data', async () => {
