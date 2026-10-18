@@ -1,5 +1,18 @@
 # Platform Lab 다음 개발 계획
 
+## 최신 안내 — 2026-10-18 UTC 검증 반영
+
+현재 상태는 이 안내와 연결된 최신 근거를 우선합니다. 아래 **이전 계획과 검증 기록**은 각 수집·작성 시점의 기록이며, 당시의 “미실행·미연결”과 미완료 체크를 최신 상태로 해석하지 않습니다. 한국 시각으로 10월 19일에 해당하는 후속 검증도 포함합니다.
+
+- **새 Cloud snapshot 만료:** [실행 39140688897의 근거](evidence/cloud-iceberg-expiration/README.md)에서 snapshot 1개 만료와 data·manifest·manifest list 각 1개 삭제, tag·공유 파일·current 18행·Silver 12행 보존을 확인했습니다. 미니 PC에 접속하지 않고 새 합성 warehouse만 사용했습니다.
+- **공개 HTTPS와 live 조회:** [외부 HTTPS·공개 화면 근거](evidence/public-read-https/README.md)에서 표준 TLS·허용 GET 6개·지정 거부 3개를 확인하고, Pages의 실시간 작업 8개·Kafka 조회 연결과 시계 경고 표시·해소를 대조했습니다. 공개 POST·관리 도구·실행 기능은 제공하지 않습니다.
+- **격리 Kafka ACL:** [실제 격리 시험](evidence/kafka-acl/README.md)에서 DESCRIBE 관측 profile의 조회와 선택 RPC 거부 5개·잘못된 비밀번호의 인증 실패 1개를 확인했습니다. 운영 Kafka 권한이나 TLS 기밀성 검증은 아닙니다.
+- **저장된 snapshot 관측 화면:** 저장된 만료 전 4/25·만료 후 3/23(snapshot/객체 수)의 [전후 비교 화면](https://devdooly.github.io/devdooly-platform-lab/#snapshot-expiration)을 공개하고 전후 전환을 확인했습니다([PR120](https://github.com/DevDooly/devdooly-platform-lab/pull/120), [Pages 39142668759](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39142668759)).
+
+**다음·보류:** DB와 Garage의 공유 filesystem은 읽기 전용으로 확인했지만, quota·자원 예산·실제 앱 reader·회계 연결이 미확정이므로 [PR102 접수 gate](https://github.com/DevDooly/devdooly-platform-lab/pull/102)는 미연결·보류입니다. 운영 자료의 만료/GC, 장기간 가용성·성능 SLA, 작업 진행 중 호스트 장애·HA는 미검증입니다. 휴대폰 외부망 확인·인증서 자연 갱신·자격증명 회전도 위 hosted/browser 결과와 별도 범위로 남깁니다.
+
+## 이전 계획과 검증 기록
+
 이전 readiness 운영 검증(2026-10-15 14:54 UTC)에서 readiness 배포·idle worker 교체·같은 ID 읽기 전용 재시도와 8작업·16파일·24객체를 확인했습니다. [전체 근거와 한계](evidence/worker-readiness/CORRECTED_IMAGE.md)를 기준으로 읽습니다. 이후 [native7의 Trino 조회·재시작](evidence/iceberg-jdbc/README.md)과 별도 [Cloud Spark 시험 8의 적재·순차 replay](evidence/spark-silver/README.md)를 검증하고 정적 기록 화면에 연결했습니다. 이후 [새 Cloud 전체 시험](evidence/cloud-lakehouse/FULL_SUCCESS.md)에서 별도 fresh warehouse의 Spark→Trino 연결·현재 파일 2→1 compaction·자기 자원 종료를 확인했습니다. [현재 DB의 a7 논리 백업·격리 복원](evidence/current-db-restore/README.md)은 8개 테이블 스키마·비runtime 7개 테이블의 행·BLOB과 원본 보존을 확인했고, 기록과 카드는 PR #61로 공개했습니다. 원래 stop receipt는 실패로 유지하며 정상 exit는 UNOBSERVED이고 전체 애플리케이션 복구는 미검증입니다. [9차 새 closed-copy capture](evidence/iceberg-capture/ATTEMPT_9.md)에서 Linux87·skip0과 같은 실행의 actors·clock·metadata graph·inventory·전체 KEEP 연결을 확인했습니다. 스냅샷3·참조1·보호 항목1·객체20인 보존 계획이며, 다음은 이 실제 요약의 화면·회귀 확인과 보존 정책·운영 규모 및 다른 장애 경계의 독립 검토입니다. Snapshot 만료·객체 삭제는 미실행이며 미니 PC native7의 중지된 시험 환경과 보관 자료는 유지합니다.
 
 초기 계획: 2026년 10월 12일 · 최근 V4 운영 전환·독립 AI Java 예제 검증: 2026년 10월 15일
