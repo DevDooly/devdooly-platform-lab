@@ -80,5 +80,16 @@ export default function CloudLakehouseCard({ record, observationUrl }: { record?
         <a href={evidenceUrl} target="_blank" rel="noreferrer">성공 범위와 이전 실패 ↗</a><a href={summaryUrl} target="_blank" rel="noreferrer">원문 결과 요약 ↗</a></div>
     </> : <div className="cloud-lakehouse-unavailable" role="status"><h3>{loaded === undefined ? '검증 기록을 불러오고 있습니다.' : '검증 기록을 확인할 수 없습니다.'}</h3>
       <p>실패·부분 기록이나 종료 근거가 없는 기록에는 성공 수치를 표시하지 않습니다.</p><a href={evidenceUrl} target="_blank" rel="noreferrer">실행 근거와 실패 기록 ↗</a></div>}
+    <aside className="cloud-lakehouse-record-time" aria-labelledby="cloud-trino-restart-title">
+      <h3 id="cloud-trino-restart-title">후속 검증 · Trino 정상 재기동 <time dateTime="2026-10-18">(2026-10-18)</time></h3>
+      <p>정상 종료 후 새 컨테이너로 한 번 교체하고, 전후 각각 10개 조회의 결과가 같음을 확인했습니다.<br/>
+        전체 객체 20개의 bytes와 기존 객체 14개를 보존했습니다.<br/>
+        새 격리 Cloud의 시험 기록이며, 미니 PC·장애 복구·현재 가용성 검증은 아닙니다.</p>
+      <div className="cloud-lakehouse-links">
+        <a href={`${repo}/blob/main/docs/evidence/cloud-lakehouse-restart/README.md`} target="_blank" rel="noreferrer">정상 재기동 검증 근거 ↗</a>
+        <a href={`${repo}/blob/main/docs/evidence/cloud-lakehouse-restart/summary.json`} target="_blank" rel="noreferrer">새 실행 결과 원문 ↗</a>
+        <a href={`${repo}/actions/runs/39131250407`} target="_blank" rel="noreferrer">실제 재기동 실행 ↗</a>
+      </div>
+    </aside>
   </section>;
 }

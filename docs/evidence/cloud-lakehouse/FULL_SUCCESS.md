@@ -25,3 +25,5 @@ Trino 종료 코드는 실제 143입니다. 같은 CID·PID/startTicks/cgroup을
 [전체 성공 summary](full-success.summary.json)는 실제 3,114바이트 원문입니다. SHA-256은 `1271685e34712c96b7dacaf7e84e5f32ac52fb925875e262843002ee6ef3b78f`이며, root의 retrieval·dispatch receipt와 v4 검증기가 producer `73e22932…`, runtime manifest `c63aded0…`, reviewed packet `78b5b18a…`를 연결했습니다. 공개 DTO의 snapshot operation `append/append/replace`와 자원 제한은 이 passed 실행이 통과한 고정 소스 계약에서 가져왔습니다. 원문에 없는 측정값을 추가한 것이 아닙니다.
 
 이전 일곱 실패 원문은 보존합니다: [첫 전체 실패](README.md), [두 번째 전체 실패](ATTEMPT2.md), [첫 시작 진단](STARTUP_DIAGNOSTIC.md), [Mounts 진단](STARTUP_MOUNT_DIAGNOSTIC.md), [세 번째 전체 실패](ATTEMPT3.md), [설정 진단](CONFIG_READBACK.md), [HostConfig 진단](HOSTCONFIG_READBACK.md). 새 성공은 다른 source의 새 실행이며 이전 실패를 재통과시키거나 자동 재시도한 결과가 아닙니다.
+
+후속 검증: 2026-10-18 별도의 새 Cloud warehouse에서 [Trino 정상 종료·새 컨테이너 재기동](../cloud-lakehouse-restart/README.md)을 통과했습니다. 재기동 전후의 조회와 전체 객체를 비교한 결과이며, 위 10월 16일 실행의 검사 범위는 그대로입니다.
