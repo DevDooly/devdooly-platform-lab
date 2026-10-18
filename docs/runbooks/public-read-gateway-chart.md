@@ -42,7 +42,7 @@ Docker 주소가 바뀌면 예전 `/32`는 새 주소를 허용하지 않습니�
 
 이 결과는 NAT 경로나 NetworkPolicy의 독점 원인을 증명하지 않습니다. 이후 기존 Traefik에 전용 공개 route를 게시하고, 원 YAML 파일 7개와 provider root의 소유·identity 정보가 유지됐음을 확인했습니다. 표준 CA·SNI TLS 검증은 현재 self-signed 인증서에서 실패했으며, 인증서 발급·인터넷의 허용/거부 조회·Pages 실시간 연결은 아직 완료하지 않았습니다. TLS 우회나 live 변수 등록으로 이 실패를 통과 처리하지 않습니다.
 
-별도의 [GitHub hosted candidate 검사](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39125726243)는 전용 candidate secret만 사용해 live 설정을 바꾸지 않고 실행했습니다. 공개 IPv4 선택은 확인됐지만 표준 TLS는 통과하지 못했고 `TLS_OR_NETWORK_UNVERIFIED`로 종료됐습니다. 9개 검사 모두 HTTP status가 없어 정상 HTTP 조회·허용/거부 검증 완료의 근거가 아닙니다. 이 외부 실패를 로컬의 self-signed 인증서 관측과 같은 원인으로 단정하지 않습니다. Pages live 변수와 production URL secret은 등록하거나 변경하지 않았으며, 표준 TLS와 hosted GET6·거부3이 모두 통과한 뒤에만 실시간 화면 전환을 진행합니다.
+별도의 [GitHub hosted candidate 검사](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39125726243)는 전용 candidate secret만 사용해 live 설정을 바꾸지 않고 실행했습니다. 공개 IPv4 선택은 확인됐지만 표준 TLS는 통과하지 못했고 `TLS_OR_NETWORK_UNVERIFIED`로 종료됐습니다. 9개 검사 모두 HTTP status가 없어 정상 HTTP 조회·허용/거부 검증 완료의 근거가 아닙니다. 이 외부 실패를 로컬의 self-signed 인증서 관측과 같은 원인으로 단정하지 않습니다. Pages live 변수와 production URL secret은 등록하거나 변경하지 않았으며, 표준 TLS와 hosted GET6·거부3이 모두 통과한 뒤에만 실시간 화면 전환을 진행합니다. 검사 시점의 [실제 유한 결과와 해석](../evidence/public-read-https/README.md)을 저장소에도 보존했습니다.
 
 클라이언트 Pod는 만들지 않습니다. 배포 후 별도 검증을 하려면 지정한 client selector를 쓰는 격리 Job 등이 필요합니다. Docker 검증의 tmpfs `noexec/nosuid/nodev`나 PID 64 제한을 Kubernetes emptyDir·Deployment가 똑같이 제공한다고 주장하지 않습니다. Memory emptyDir는 Pod 메모리를 사용합니다.
 
