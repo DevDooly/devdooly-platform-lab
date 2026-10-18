@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "kind": "public-https-smoke",
+  "status": "PASS",
+  "errorCode": "NONE",
+  "validatorSourceCommit": "772d14973ac2ecf647efb496863d6f0f10cb700c",
+  "captureStartedAt": "2026-10-18T14:12:45.329Z",
+  "capturedAt": "2026-10-18T14:13:00.391Z",
+  "routeOwnershipAcknowledged": true,
+  "publicIpv4Verified": true,
+  "standardTlsVerified": true,
+  "checks": {
+    "SUMMARY": {
+      "passed": true,
+      "status": 200,
+      "sourceCommit": "245d61a5749760a20918ab091d9410ce6735b1c0",
+      "observedAt": "2026-10-18T14:12:45.955965432Z"
+    },
+    "RELEASES": {
+      "passed": true,
+      "status": 200,
+      "sourceCommit": "245d61a5749760a20918ab091d9410ce6735b1c0",
+      "observedAt": "2026-10-18T14:12:47.641380014Z"
+    },
+    "RUN_LIST": {
+      "passed": true,
+      "status": 200,
+      "sourceCommit": "245d61a5749760a20918ab091d9410ce6735b1c0",
+      "observedAt": "2026-10-18T14:12:49.368525089Z"
+    },
+    "RUN_DETAIL_EXAMPLE": {
+      "passed": true,
+      "status": 200,
+      "sourceCommit": "245d61a5749760a20918ab091d9410ce6735b1c0",
+      "observedAt": "2026-10-18T14:12:50.978041419Z"
+    },
+    "JOBS": {
+      "passed": true,
+      "status": 200,
+      "sourceCommit": "245d61a5749760a20918ab091d9410ce6735b1c0",
+      "observedAt": "2026-10-18T14:12:52.950234420Z"
+    },
+    "KAFKA": {
+      "passed": true,
+      "status": 200,
+      "sourceCommit": "245d61a5749760a20918ab091d9410ce6735b1c0",
+      "observedAt": "2026-10-18T14:12:54.920480175Z"
+    },
+    "DENIED_PATH": {
+      "passed": true,
+      "status": 404,
+      "sourceCommit": null,
+      "observedAt": null
+    },
+    "DENIED_ORIGIN": {
+      "passed": true,
+      "status": 403,
+      "sourceCommit": null,
+      "observedAt": null
+    },
+    "DENIED_METHOD": {
+      "passed": true,
+      "status": 405,
+      "sourceCommit": null,
+      "observedAt": null
+    }
+  }
+}

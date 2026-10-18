@@ -31,7 +31,7 @@ const steps = [
   { number: '00', title: '환경과 데이터 먼저 확인', text: '기존 서비스와 포트·데이터 경로를 점검하고 별도 Lab의 설치 범위를 정했습니다.', state: '점검 완료', tone: 'active' },
   { number: '01', title: '작은 API와 조회 화면', text: '고정 seed 합성 데이터, Spring Boot 조회 API와 Astro·React 화면을 연결합니다.', state: 'MVP 구현', tone: 'active' },
   { number: '02', title: '빌드부터 배포까지', text: '같은 소스 SHA의 Jenkins·Actions 검증 후 이미지 게시와 Argo CD·Helm 배포를 연결했습니다. 검증 기록은 위 CI/CD 근거에서 확인합니다.', state: '실제 배포', tone: 'active' },
-  { number: '03', title: '외부에서도 읽을 수 있게', text: '미니 PC의 관측 기록을 공개합니다. 실시간 API 연결과 공개 HTTPS 경로는 별도로 준비합니다.', state: '관측 기록 공개', tone: 'active' },
+  { number: '03', title: '외부에서도 읽을 수 있게', text: 'DuckDNS 기반 HTTPS 조회 6개와 경로·Origin·method 거부 3개를 GitHub 외부 runner에서 확인했습니다.', state: 'HTTPS 검증 완료', tone: 'active' },
   { number: '04', title: '메시징과 객체 저장소', text: 'Kafka·Garage·상시 worker를 배포하고 파일 저장 확인, 재시작과 격리 복원을 검증했습니다.', state: '배포·검증', tone: 'active' },
   { number: '05', title: 'AI 개선 사례', text: '개인 Java 시간창 예제로 UTC 오류를 재현·수정하고, 같은 답을 구하는 두 알고리즘의 JMH 측정 기록을 공개합니다. 사람 검토는 대기 중입니다.', state: '로컬 재현·측정', tone: 'active' },
   { number: '06', title: '데이터 플랫폼 확장', text: 'Iceberg·Trino의 시점 조회와 정상 재시작 후 보존을 검증했습니다. 별도 GitHub 격리 실행기에서 Spark 분류·순차 재처리, 파일 compaction과 같은 warehouse의 Trino 조회를 확인했습니다.', state: '부분 실증', tone: 'active' },

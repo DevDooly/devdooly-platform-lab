@@ -1,5 +1,27 @@
 # 공개 HTTPS 후보 검사 기록
 
+## DuckDNS 후속 hosted 검증 통과
+
+2026-10-18 [GitHub hosted 검사 39134935997](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39134935997)에서 별도 DDNS 도메인의 표준 CA·SNI TLS와 허용 조회 6개, 지정 거부 3개를 확인했다. [실제 성공 결과 JSON](hosted-duckdns-success-20261018.result.json)은 같은 run의 artifact 1,882바이트를 변경 없이 보존한다.
+
+| 항목 | 당시 확인한 결과 |
+| --- | --- |
+| 검사기 소스 | `772d14973ac2ecf647efb496863d6f0f10cb700c` |
+| 조회 API 소스 | `245d61a5749760a20918ab091d9410ce6735b1c0` — 6개 응답에서 같음 |
+| 검사 시각(UTC) | 2026-10-18 14:12:45.329 ~ 14:13:00.391 |
+| 공개 IPv4·표준 TLS | 선택한 공개 IPv4, 기본 CA·SNI 검증 통과 |
+| 허용 GET | summary·releases·run list·run detail 예시·jobs·Kafka 6개 모두 200 |
+| 거부 요청 | 잘못된 경로 404 · 허용되지 않은 Origin 403 · 허용되지 않은 method 405 |
+| 결과 | `PASS / NONE` |
+
+검사는 소유한 전용 경로의 고정 조회 목록과 지정 거부 요청만 다룬다. 각 응답의 DTO·소스·수집 시각을 검사했으며 시각에는 최대 5초의 미래 clock skew 허용 정책을 적용했다. 서버 시계 정확도, 모든 경로·쓰기 요청 차단, 관리 기능, 장기간 가용성이나 성능을 증명하지 않는다. JSON에는 endpoint 주소·응답 본문·인증서·자격증명이 없다.
+
+이번 검사는 기존 후보 URL secret만 사용했다. 후속 Pages 실시간 조회 설정은 반영했으며 실제 공개 화면은 자연 배포 뒤 대조한다. 이 JSON 자체가 후속 설정과 공개 화면을 검증한 근거는 아니다. 이전 실패와 당시 CAA 결과는 아래와 원 JSON에 그대로 보존하며 이번 성공의 구체적인 발급 원인을 그 과거 결과만으로 소급 확정하지 않는다.
+
+## 이전 도메인의 최초 검사·CAA 기록
+
+아래 원문은 이전 도메인과 각 검사 시점의 상태를 보존한 기록이다. 새 DDNS의 현재 CAA 정책이나 최신 연결 상태를 뜻하지 않는다.
+
 2026-10-18 [GitHub hosted 검사 39125726243](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39125726243)는 공개 IPv4를 선택했지만 표준 TLS를 확인하지 못해 `TLS_OR_NETWORK_UNVERIFIED`로 종료됐다. 첫 summary 요청에서 HTTP 응답을 확인하지 못했으며, 이후 GET과 거부 경로 검사는 진행하지 않았다.
 
 | 항목 | 실제 결과 |
