@@ -68,7 +68,7 @@ export default function KafkaObservationCard({ apiBase = '/api', observationUrl,
   }
   useEffect(() => {
     previous.current = null; previousLive.current = null; previousRecorded.current = null; setSourceMode(mode); setFallbackUsed(false); setFallbackError(null); setRecord(null); setError(null); setRetained(false); void refresh();
-    const clock = window.setInterval(() => setNow(Date.now()), 30_000);
+    const clock = window.setInterval(() => setNow(Date.now()), 1_000);
     return () => { active.current?.abort(); active.current = null; window.clearInterval(clock); };
   }, [url, mode, preferLive, observationUrl]);
   return <section id="kafka-observation" className="section kafka-observation-section" aria-labelledby="kafka-observation-title">
