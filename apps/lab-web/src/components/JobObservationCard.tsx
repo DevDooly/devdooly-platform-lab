@@ -59,7 +59,7 @@ export default function JobObservationCard({ apiBase, observationUrl, mode, pref
   }
   useEffect(() => {
     previous.current = null; previousLive.current = null; previousRecorded.current = null; setSourceMode(mode); setFallbackUsed(false); setFallbackError(null); setRecord(null); void refresh();
-    const clock = window.setInterval(() => setNow(Date.now()), 30_000);
+    const clock = window.setInterval(() => setNow(Date.now()), 1_000);
     const poll = mode === 'api' ? window.setInterval(() => void refresh(), 10_000) : null;
     return () => { active.current?.abort(); active.current = null; window.clearInterval(clock); if (poll !== null) window.clearInterval(poll); };
   }, [url, mode, preferLive, observationUrl]);
