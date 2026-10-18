@@ -21,7 +21,19 @@
 
 ![수동 Pages 게시 후 공개 Kafka 관측 카드](screenshots/manual-pages-kafka-desktop.jpg)
 
-collector 설치와 수동 게시 이후, 실제 systemd/manualhost 실행과 원래30분 주기의 자연 실행2회는 아직 검증하지 않았다.
+## 실제 systemd·수동 host 실행과 공개 동등성
+
+| 실행 경로 | 2026-10-18 UTC | Pages 실행 |
+| --- | --- | --- |
+| systemd 서비스 기동 | 07:02 | [39106166374](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39106166374) |
+| 수동 host 실행 | 07:08 | [39106551622](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39106551622) |
+
+각 실행에서 소스·설정·systemd unit·timer 보존과 platform·job·Kafka 세 관측의 원 계약 검사를 통과했다. 작업8개 모두 EXPORTED·파일 메타데이터16개, API 소스 `245d61a5`·worker 소스 `74a8e988`, Kafka 그룹 STABLE·commit8·READ_COMMITTED LSO8·lag0을 확인했다.
+
+두 실행 각각 호스트 수집본과 게시본의 canonical 전체 필드가 같았다. 게시 artifact와 공개 HTTP 응답은 각각 전체 raw bytes가 일치했다. 호스트 JSON의 공백·키 순서와 게시 JSON의 표현이 같다는 뜻으로 확대하지 않는다. systemd 실행은 서비스 기동·invocation을 확인했고, 수동 경로는 서비스 기동과 별개로 실행했다.
+
+이 두 결과는 원래 30분 timer의 자연 회차가 아니다. 자연 실행 2회와 회차 간격 확인은 후속으로 남긴다.
+
 
 ## 이전 로컬 실행 당시의 기록
 

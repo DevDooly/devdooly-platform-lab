@@ -16,7 +16,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 | 데이터·복구 | Cloud Spark→Trino·compaction, DB 논리 복원·Kafka/Garage PVC 격리 복원 | [Cloud](docs/evidence/cloud-lakehouse/FULL_SUCCESS.md), [DB](docs/evidence/current-db-restore/README.md), [PVC](docs/evidence/runtime-pvc-restore/README.md) |
 | 보존 계획·화면 | Iceberg 실제 metadata의 KEEP 계획, 기술별 근거 탐색·합성 정책 선택 UI의 로컬 검증 | [실측 기록](docs/evidence/iceberg-capture/ATTEMPT_9.md), [합성 예제](examples/iceberg-retention-scenarios/README.md) |
 
-2026-10-18 기준, Kafka 관측 API 활성화·collector 설치·수동 Pages 게시와 공개 화면 확인을 마쳤습니다. 공개 JSON은 원 수집 기록의 18개 필드 전체 값과 일치합니다. 실제 systemd/manualhost 실행과 원래 30분 주기의 자연 실행 2회는 아직 검증하지 않았습니다. 현재 범위는 [Kafka 진행 기록](docs/evidence/kafka-observation/README.md)을 따릅니다.
+2026-10-18 기준, Kafka 관측 API 활성화·collector 설치와 실제 systemd 서비스·수동 host 실행을 확인했습니다. 두 실행의 platform·job·Kafka 전체 관측 필드는 호스트 수집본과 같고, 게시 artifact와 공개 HTTP 응답은 각각 전체 bytes가 일치합니다. 원래 30분 주기의 자연 실행 2회는 후속으로 남깁니다. 현재 범위는 [Kafka 진행 기록](docs/evidence/kafka-observation/README.md)을 따릅니다.
 
 K3s·Jenkins archive 전체 복원, snapshot 만료·운영 객체 삭제는 별도 후속입니다. 검증 수치·실패 이력·과거 진행 단계는 [2026-10-18 진행·검증 기록](docs/progress-history.md)에 보존합니다.
 
