@@ -104,3 +104,67 @@ jobs:
             ${{ runner.temp }}/image-proposal-retention/captured-plan.json
           if-no-files-found: error
           retention-days: 7
+
+  offline-capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Validate nine public capture cases without HTTP
+        env:
+          VALIDATION_SOURCE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python3 -I -B - <<'PY'
+          import hashlib
+          import importlib.util
+          import json
+          import os
+          from pathlib import Path
+          import platform
+          import re
+          import unittest
+
+          pins = {
+              'infra/maintenance/image-proposals/collect_public_inputs.py': 'aa5979d21c7622f036604df8424a2b73514ff8b3922a1382243960e9fe93aa66',
+              'infra/maintenance/image-proposals/test_collect_public_inputs.py': 'dae83b6868167cc4328f9dd669ac7024157e843621de0141db884ca196019286',
+              'infra/maintenance/image-proposals/public-capture-pins.json': '98e3dd67620aef49d466eaa65d0afbbae825b52556cf20072ef0b03d635ba5b0',
+              'infra/maintenance/image-proposals/examples/captured-declarations/values.yaml': '2f1859daec986e70317225b5af05af1f665ad3410035f101e00011b70ff19cb4',
+              'infra/maintenance/image-proposals/examples/captured-declarations/runtime.yaml': 'e7abddbf66fd1a3c67d6f5cf042f3d96ecffefc40171165f4db989c2c39c3a46',
+          }
+          before = {}
+          for name, expected in pins.items():
+              raw = Path(name).read_bytes()
+              assert hashlib.sha256(raw).hexdigest() == expected, 'REVIEWED_COLLECTOR_SOURCE_REQUIRED'
+              before[name] = raw
+          folder = Path('infra/maintenance/image-proposals').resolve()
+          specification = importlib.util.spec_from_file_location('public_capture_synthetic_tests', folder / 'test_collect_public_inputs.py')
+          module = importlib.util.module_from_spec(specification)
+          specification.loader.exec_module(module)
+          suite = unittest.defaultTestLoader.loadTestsFromModule(module)
+          assert suite.countTestCases() == 9, 'EXACT_NINE_CAPTURE_CASES_REQUIRED'
+          result = unittest.TextTestRunner(verbosity=2).run(suite)
+          assert result.testsRun == 9 and result.wasSuccessful() and not result.skipped, 'NINE_PASS_WITH_ZERO_SKIPS_REQUIRED'
+          assert all(Path(name).read_bytes() == raw for name, raw in before.items()), 'COLLECTOR_SOURCE_BYTES_UNCHANGED_REQUIRED'
+          source = os.environ['VALIDATION_SOURCE_COMMIT']
+          assert re.fullmatch('[a-f0-9]{40}', source)
+          summary = {'schemaVersion': 1, 'scope': 'SYNTHETIC_PUBLIC_CAPTURE_BOUNDARIES_ONLY',
+                     'passed': True, 'sourceCommit': source, 'pythonVersion': platform.python_version(),
+                     'testsRun': result.testsRun, 'skips': len(result.skipped),
+                     'sourceBytesUnchanged': True, 'publicGetRequestsExecuted': 0,
+                     'credentialsRead': False, 'applyEnabled': False, 'mutationOperations': 0,
+                     'clusterOrSshOperations': 0}
+          output = Path(os.environ['RUNNER_TEMP']) / 'image-proposal-public-capture'
+          output.mkdir(exist_ok=False)
+          (output / 'validation-result.json').write_text(json.dumps(summary, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(summary, sort_keys=True))
+          PY
+      - name: Upload only finite synthetic capture result
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: image-proposal-public-capture-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/image-proposal-public-capture/validation-result.json
+          if-no-files-found: error
+          retention-days: 7

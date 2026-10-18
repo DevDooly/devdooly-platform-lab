@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "scope": "REVIEWED_PUBLIC_DECLARATION_BYTES_NOT_LIVE_WORKLOAD",
+  "baseMain": "1a9365fbad66fcc8e0cf5ab3cf957c1f70dc15fe",
+  "files": [
+    {
+      "path": "gitops/environments/home-lab/values.yaml",
+      "role": "api",
+      "sourceCommit": "245d61a5749760a20918ab091d9410ce6735b1c0",
+      "bytes": 489,
+      "sha256": "2f1859daec986e70317225b5af05af1f665ad3410035f101e00011b70ff19cb4",
+      "gitBlobSha": "daa3f666a8185f1b7e94c8a457c7ade9660c4a8e"
+    },
+    {
+      "path": "gitops/environments/home-lab/runtime.yaml",
+      "role": "worker",
+      "sourceCommit": "74a8e98844a8fea0653951136ede0e7de0d7ac08",
+      "bytes": 909,
+      "sha256": "e7abddbf66fd1a3c67d6f5cf042f3d96ecffefc40171165f4db989c2c39c3a46",
+      "gitBlobSha": "2689b10305cb736a69f26ce2b2c7b827594baca9"
+    }
+  ]
+}
