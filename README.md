@@ -19,7 +19,9 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 지금 완료: Kafka 관측 API·collector 연결, systemd·수동 host 실행, 원래 타이머의 자연 실행 2회·회차 간격 1개와 각 회차의 공개 3파일 대조를 확인했습니다. [자연 관측 근거](docs/evidence/kafka-observation/README.md#원래-타이머의-자연-2회와-공개-게시-대조)를 따르며, 화면은 마지막 수집 기록을 보여줍니다.
 
-내부 게이트웨이 조회와 기존 상태 보존 검증을 마쳤고, 기존 Traefik과 설정 파일 7개를 유지했습니다([검증 범위](docs/runbooks/public-read-gateway-chart.md)). DuckDNS의 표준 TLS와 외부 runner의 조회 6개·거부 3개에 이어, 공개 화면의 작업·Kafka 실시간 조회도 확인했습니다([공개 HTTPS·화면 근거](docs/evidence/public-read-https/README.md)). 작업 8개의 export 상태와 Kafka 관측을 대조했으며, 같은 Kafka 기록의 시계 경고가 해소되는 것도 확인했습니다. 격리 Kafka의 DESCRIBE 조회·선택 RPC와 인증 거부도 확인했으며([검증 근거](docs/evidence/kafka-acl/README.md)), 다음은 자격증명 유효성 확인과 필요한 경우의 회전입니다.
+내부 게이트웨이 조회와 기존 상태 보존 검증을 마쳤고, 기존 Traefik과 설정 파일 7개를 유지했습니다([검증 범위](docs/runbooks/public-read-gateway-chart.md)). DuckDNS의 표준 TLS와 외부 runner의 조회 6개·거부 3개에 이어, 공개 화면의 작업·Kafka 실시간 조회도 확인했습니다([공개 HTTPS·화면 근거](docs/evidence/public-read-https/README.md)). 작업 8개의 export 상태와 Kafka 관측을 대조했으며, 같은 Kafka 기록의 시계 경고가 해소되는 것도 확인했습니다. 격리 Kafka와 공개 근거 카드 연결을 완료했으며([검증 근거](docs/evidence/kafka-acl/README.md)), 토큰 2개도 각 목적의 GET 응답 200을 확인했습니다(회전 미실행).
+
+다음은 새 warehouse의 snapshot 만료·공유 파일 보존 시험으로, 아직 실행하지 않았습니다. 환경 준비에 따라 약 15~30분을 예상하며 전체 hosted job의 최대 45분과 성공 workload의 600초는 구분합니다.
 
 ## 로컬 실행
 

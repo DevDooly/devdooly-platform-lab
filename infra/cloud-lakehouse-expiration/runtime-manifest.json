@@ -1,0 +1,94 @@
+{
+  "files": {
+    "README.ko.md": {
+      "bytes": 7339,
+      "sha256": "c647b540b8333132ccd36729211e40e55f99de77af0b65a816d34d130e53496b"
+    },
+    "bootstrap_expiration.py": {
+      "bytes": 15024,
+      "sha256": "82d41024e2d3cb058edebc0399a9402b9f86576b320f3326176e238cdab688ee"
+    },
+    "contract.py": {
+      "bytes": 12904,
+      "sha256": "b6f55c62b27caf24b2cddbc7c73a356cf5e27cd5d3485285e20f1812dda52462"
+    },
+    "run_expiration.py": {
+      "bytes": 24884,
+      "sha256": "93727f30b82b8f73850f486996296e0a3a371237a65c1875b09ad9c7199ad098"
+    },
+    "test_contract.py": {
+      "bytes": 10257,
+      "sha256": "8a26e8065d6b415d30d8e92bb83e75d2dcd3b4eba8b8ac7e97bd35599e047a1f"
+    }
+  },
+  "frozenRuntimeManifestSha256": "c63aded0a891bb66cb1fb2de591d67e237467681eb4a4e5a337b9d1d1b02d5e8",
+  "frozenSources": {
+    "infra/cloud-lakehouse-ci/bootstrap_trial9.py": {
+      "bytes": 7195,
+      "sha256": "cb2504cc9bb192c6e97eb4acf0d6d441c51c030db1e9abde197607245b4cbd6b"
+    },
+    "infra/cloud-lakehouse-ci/compose_trial9.py": {
+      "bytes": 1630,
+      "sha256": "cd2e98131046913d7dafbdfe2716af8ac350a56235406a9c5b5bb06613b58f76"
+    },
+    "infra/cloud-lakehouse-ci/contract.py": {
+      "bytes": 8582,
+      "sha256": "e88d2bedfeb95b71b22e2b5b04701119e8203431d3c8e8cc521958f2dcfad98a"
+    },
+    "infra/cloud-lakehouse-ci/frozen_s3_primitives.py": {
+      "bytes": 2033,
+      "sha256": "1225b659b67ce8f1e3d0b7268c4a6c087b97d0154d70400de4420f1a6b340a13"
+    },
+    "infra/cloud-lakehouse-ci/pinned_trino_configuration.py": {
+      "bytes": 2269,
+      "sha256": "1cabbc33a9a1fddbb28562514ad24d240eb09dc7219fcc5f1483429c6b4de17b"
+    },
+    "infra/cloud-lakehouse-ci/run_trial9.py": {
+      "bytes": 46112,
+      "sha256": "73e2293210aba3d9522013d923f8d97bd292baa4623736239d55cc21d9321fe2"
+    },
+    "infra/cloud-lakehouse-ci/runtime-manifest.json": {
+      "bytes": 2125,
+      "sha256": "c63aded0a891bb66cb1fb2de591d67e237467681eb4a4e5a337b9d1d1b02d5e8"
+    },
+    "infra/cloud-lakehouse-ci/s3_readonly.py": {
+      "bytes": 6762,
+      "sha256": "4fe35a61a61f4880edb8171d7bfd68a285e9179f07a8d3460a9a3b99a179821f"
+    },
+    "infra/spark-ci/bootstrap_spark.py": {
+      "bytes": 13997,
+      "sha256": "e10ef3cca6a71b7ce362ab769fdb1436e2b84bf3705e584d6d14c9173b0ab816"
+    },
+    "infra/spark-ci/compose_plan.py": {
+      "bytes": 3072,
+      "sha256": "fcaa911c8dcb9c6b56821ed3ff40d71c282658c8f5beb88200bff07c25336ee5"
+    },
+    "infra/spark-ci/run_ci.py": {
+      "bytes": 46815,
+      "sha256": "d190d5f39ca9232f6417319033c1d4f645966e318468d601eaba32a9b3a3d144"
+    },
+    "infra/spark-silver/Dockerfile.candidate": {
+      "bytes": 845,
+      "sha256": "334b4865c926062d40f25801e6c05a6390b9c957c87c4c7b3416aed62001bf24"
+    },
+    "infra/spark-silver/artifact-lock.downloaded.json": {
+      "bytes": 2629,
+      "sha256": "6ca247b283025189ecf36c67ae03fe9101b25a53fe7b62593725e076276e33e3"
+    },
+    "infra/spark-silver/silver_contract.py": {
+      "bytes": 3147,
+      "sha256": "889fdb91ec4613d19f62a622e4cc889a27e38012905019f05d4743130f8268df"
+    },
+    "infra/spark-silver/spark_silver.py": {
+      "bytes": 8027,
+      "sha256": "71bd63230704c6d880eb1208abc63ef5080448cfd46bf3295f1bc77f38ddd9f7"
+    },
+    "infra/spark-silver/synthetic-v1.ndjson": {
+      "bytes": 1100,
+      "sha256": "39ba10d8c47dce790f3ccc9c9134fea593d6de31f1f3a7992ca61d9f554da3b5"
+    }
+  },
+  "schemaVersion": 1,
+  "scope": "FRESH_CLOUD_ICEBERG_TAGGED_SNAPSHOT_EXPIRATION",
+  "status": "SOURCE_ONLY_NOT_RUN"
+}
