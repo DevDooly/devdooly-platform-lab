@@ -182,8 +182,17 @@ function main() {
   check('PINNED_IMAGE_MATCHES_COHORT', policyManifest.images.nginx === expectedImage &&
     JSON.parse(lockBytes).images['nginx:stable-alpine'] === expectedImage);
   const project = parse(regularRead(path.join(root, 'gitops/bootstrap/project.yaml')))[0];
-  check('APP_PROJECT_PERMISSION_IS_SEPARATE_PENDING_SCOPE', !project.spec.namespaceResourceWhitelist.some(
-    rule => rule.group === 'networking.k8s.io' && rule.kind === 'NetworkPolicy'));
+  equal('APP_PROJECT_EXACT_SEVEN_NAMESPACED_KINDS', project.spec.namespaceResourceWhitelist, [
+    { group: 'apps', kind: 'Deployment' }, { group: 'apps', kind: 'StatefulSet' },
+    { group: '', kind: 'Service' }, { group: '', kind: 'ConfigMap' },
+    { group: '', kind: 'PersistentVolumeClaim' }, { group: '', kind: 'ServiceAccount' },
+    { group: 'networking.k8s.io', kind: 'NetworkPolicy' },
+  ]);
+  equal('APP_PROJECT_DEDICATED_DESTINATION', project.spec.destinations, [
+    { namespace: 'platform-lab', server: 'https://kubernetes.default.svc' },
+  ]);
+  equal('APP_PROJECT_NO_CLUSTER_SCOPED_PERMISSION', project.spec.clusterResourceWhitelist, []);
+  equal('APP_PROJECT_IDENTITY', [project.metadata.name, project.metadata.namespace], ['platform-lab', 'argocd']);
   const dirs = Object.fromEntries(['cache', 'config', 'data', 'plugins', 'tmp'].map(name => {
     const directory = path.join(output, name);
     fs.mkdirSync(directory);
@@ -216,7 +225,9 @@ function main() {
     stderrBytesDiscarded: version.stderr.length, semver: observedVersion,
   };
   check('HELM_VERSION_4_3_0', version.status === 0 && version.stderr.length === 0 && observedVersion === 'v4.3.0+gbec5b06');
-  const valueRoot = process.platform === 'linux' ? path.join(path.dirname(args.get('--baseline-receipt')), 'baseline-source') : root;
+  // Historical K comparison is separate from a render using current live-environment values.
+  const valueRoot = path.join(path.dirname(args.get('--baseline-receipt')),
+    process.platform === 'linux' ? 'baseline-source' : 'workspace');
   const baselineSourceBytes = regularRead(path.join(chart, 'ci/public-gateway-main-k-source.json'));
   check('PINNED_MAIN_K_PUBLIC_SOURCE_MANIFEST', digest(baselineSourceBytes) === baselineSourceManifestHash);
   const baselineSources = JSON.parse(baselineSourceBytes);
@@ -344,7 +355,8 @@ function main() {
   report.baselineRenderSha256 = digest(disabled.bytes);
   report.enabledRenderSha256 = digest(enabled.bytes);
   report.policyManifestSha256 = policyManifestHash;
-  report.appProjectNetworkPolicyPermission = 'NOT_GRANTED_IN_PUBLIC_SOURCE';
+  report.appProjectNetworkPolicyPermission = 'DECLARED_IN_SOURCE_NOT_APPLIED_BY_THIS_CHECK';
+  report.renderValueScope = 'PINNED_MAIN_K_FIXTURE_NOT_LIVE_ENVIRONMENT';
   report.phase = 'COMPLETE';
   report.passed = true;
 }

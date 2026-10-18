@@ -24,3 +24,5 @@ spec:
       kind: PersistentVolumeClaim
     - group: ""
       kind: ServiceAccount
+    - group: networking.k8s.io
+      kind: NetworkPolicy
