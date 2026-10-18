@@ -42,6 +42,27 @@ def require(condition, code='INVALID_CONFIGURATION'):
     if not condition:
         raise Failure(code)
 
+def public_guard_diagnostic(error, phase):
+    """Best-effort public source location only; never format exception or values."""
+    if not isinstance(error, Failure) or type(phase) is not str or phase not in ('RUN', 'CLEANUP'):
+        return
+    try:
+        trace = error.__traceback__; source_line = None
+        for _ in range(32):
+            if trace is None:
+                break
+            frame = trace.tb_frame
+            if frame.f_code.co_filename == __file__ and frame.f_code.co_name != 'require':
+                source_line = trace.tb_lineno
+            trace = trace.tb_next
+        if trace is not None or type(source_line) is not int or not 1 <= source_line <= 10000:
+            return
+        print(json.dumps({'kind': 'KAFKA_IT_ASSERTION_DIAGNOSTIC', 'phase': phase,
+                          'assertionSourceLine': source_line}, sort_keys=True))
+    except Exception:
+        # A diagnostic failure must not replace the original failure or cleanup result.
+        return
+
 def digest(raw):
     return hashlib.sha256(raw).hexdigest()
 
@@ -419,7 +440,8 @@ class OwnedDocker:
                 code, out, _ = self.call([*listing, '--filter', 'id=' + row['id'], '--format', '{{.ID}}'])
                 require(code == 0 and out.strip() == b'', 'CLEANUP_UNVERIFIED')
                 row['phase'] = 'REMOVED'; save_state(self.task, self.state)
-            except (Failure, OSError, ValueError, KeyError, TypeError, AttributeError):
+            except (Failure, OSError, ValueError, KeyError, TypeError, AttributeError) as error:
+                public_guard_diagnostic(error, 'CLEANUP')
                 all_removed = False
         return all_removed
 
@@ -533,6 +555,7 @@ def run(repo, expected, environment):
         unchanged = True
     except BaseException as error:
         code = error.code if isinstance(error, Failure) else 'UNKNOWN_OUTCOME'
+        public_guard_diagnostic(error, 'RUN')
     finally:
         owned.deadline = time.monotonic() + 90
         try:

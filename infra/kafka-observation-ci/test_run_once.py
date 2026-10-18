@@ -1,6 +1,8 @@
 """Offline failure-boundary fixtures only. No Docker, Java, sockets or network are started."""
 from pathlib import Path
 import copy
+import contextlib
+import io
 import importlib.util
 import json
 import tempfile
@@ -265,7 +267,7 @@ class BoundaryTests(unittest.TestCase):
             repo = self.root / str(index); task = repo / runner.PRIVATE; task.mkdir(parents=True)
             state = dict(self.state(), schemaVersion=1, phase='PREPARED', prepared=True, manifestSha256='c' * 64)
             runner.write_new(task / 'state.json', state)
-            with patch.object(runner, 'hosted_context'), patch.object(runner.os, 'getuid', return_value=1001), patch.object(runner.os, 'getgid', return_value=1001), \
+            with patch.object(runner, 'hosted_context'), patch.object(runner.os, 'getuid', return_value=1001, create=True), patch.object(runner.os, 'getgid', return_value=1001, create=True), \
                     patch.object(runner, 'source_snapshot', side_effect=runner.Failure('SOURCE_CHANGED')), \
                     patch.object(runner.OwnedDocker, 'cleanup', return_value=cleaned, side_effect=outcome if isinstance(outcome, Exception) else None), patch.object(runner.subprocess, 'Popen') as process:
                 self.assertEqual(runner.run(repo, 'c' * 64, environment), 1); process.assert_not_called()
@@ -292,6 +294,79 @@ class BoundaryTests(unittest.TestCase):
                 bad = dict(environment, **{key: value})
                 with self.subTest(key=key), self.assertRaises(runner.Failure): runner.hosted_context(bad)
         with patch.object(runner.sys, 'platform', 'win32'), self.assertRaises(runner.Failure): runner.hosted_context(environment)
+
+    def test_public_diagnostic_is_only_a_fixed_phase_and_same_file_assertion_line(self):
+        owned = runner.OwnedDocker(self.root, self.state(), 100, lambda *args, **kwargs: self.fail('No CLI expected'))
+        output = io.StringIO()
+        try:
+            owned.inspect({'id': None, 'name': 'PRIVATE_RESOURCE_CANARY'})
+        except runner.Failure as error:
+            error.args = ('PRIVATE_ERROR_CANARY',)
+            error.private_value = 'PRIVATE_FIELD_CANARY'
+            with contextlib.redirect_stdout(output): runner.public_guard_diagnostic(error, 'RUN')
+        else:
+            self.fail('Expected the actual typed identity guard to reject the row')
+        value = json.loads(output.getvalue())
+        self.assertEqual(set(value), {'kind', 'phase', 'assertionSourceLine'})
+        self.assertEqual(value['kind'], 'KAFKA_IT_ASSERTION_DIAGNOSTIC'); self.assertEqual(value['phase'], 'RUN')
+        self.assertIs(type(value['assertionSourceLine']), int); self.assertTrue(1 <= value['assertionSourceLine'] <= 10000)
+        line = Path(runner.__file__).read_text(encoding='utf-8').splitlines()[value['assertionSourceLine'] - 1]
+        self.assertIn("row.get('id')", line); self.assertIn('RESOURCE_IDENTITY_UNVERIFIED', line)
+        self.assertNotIn('PRIVATE_', output.getvalue()); self.assertNotIn(str(self.root), output.getvalue())
+
+    def test_diagnostic_suppresses_foreign_frames_unknown_exceptions_and_invalid_phases(self):
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            runner.public_guard_diagnostic(runner.Failure('SOURCE_CHANGED'), 'RUN')
+            try:
+                raise runner.Failure('SOURCE_CHANGED')
+            except runner.Failure as foreign:
+                runner.public_guard_diagnostic(foreign, 'RUN')
+            try:
+                runner.require(False, 'SOURCE_CHANGED')
+            except runner.Failure as error:
+                runner.public_guard_diagnostic(error, 'PRIVATE_PHASE_CANARY')
+                runner.public_guard_diagnostic(error, ['RUN'])
+            runner.public_guard_diagnostic(RuntimeError('PRIVATE_EXCEPTION_CANARY'), 'RUN')
+        self.assertEqual(output.getvalue(), '')
+
+    def test_run_first_failure_location_precedes_cleanup_without_changing_failed_summary(self):
+        repo = self.root / 'run'; task = repo / runner.PRIVATE; task.mkdir(parents=True)
+        state = dict(self.state(), schemaVersion=1, phase='PREPARED', prepared=True, manifestSha256='c' * 64)
+        runner.write_new(task / 'state.json', state)
+        original_cleanup = runner.OwnedDocker.cleanup
+        def failed_source(*args): runner.require(False, 'SOURCE_CHANGED')
+        def failed_cleanup(owned):
+            owned.state['resources'].append({'kind': 'network', 'id': None, 'name': 'PRIVATE_NAME_CANARY', 'phase': 'CREATED'})
+            return original_cleanup(owned)
+        output = io.StringIO()
+        with patch.object(runner, 'hosted_context'), patch.object(runner.os, 'getuid', return_value=1001, create=True), \
+                patch.object(runner.os, 'getgid', return_value=1001, create=True), patch.object(runner, 'source_snapshot', side_effect=failed_source), \
+                patch.object(runner.OwnedDocker, 'cleanup', autospec=True, side_effect=failed_cleanup), \
+                patch.object(runner.subprocess, 'Popen') as process, contextlib.redirect_stdout(output):
+            self.assertEqual(runner.run(repo, 'c' * 64, {'SOURCE_COMMIT': 'a' * 40, 'GITHUB_RUN_ID': '123'}), 1)
+            process.assert_not_called()
+        records = [json.loads(line) for line in output.getvalue().splitlines()]
+        self.assertEqual(len(records), 2); self.assertEqual([row['phase'] for row in records], ['RUN', 'CLEANUP'])
+        for row in records:
+            self.assertEqual(set(row), {'kind', 'phase', 'assertionSourceLine'})
+            self.assertEqual(row['kind'], 'KAFKA_IT_ASSERTION_DIAGNOSTIC')
+        source_lines = Path(runner.__file__).read_text(encoding='utf-8').splitlines()
+        self.assertIn('source_snapshot(repo, expected)', source_lines[records[0]['assertionSourceLine'] - 1])
+        self.assertIn("row.get('id')", source_lines[records[1]['assertionSourceLine'] - 1])
+        self.assertNotIn('PRIVATE_', output.getvalue()); self.assertNotIn(str(self.root), output.getvalue())
+        result = runner.load_json(repo / runner.PUBLIC)
+        self.assertEqual(len(result), 19); self.assertEqual(result['failureCode'], 'SOURCE_CHANGED')
+        self.assertEqual(result['status'], 'FAILED'); self.assertEqual(result['verifiedTests'], 0)
+        self.assertIsNone(result['surefireXmlSha256']); self.assertIsNone(result['skips'])
+        self.assertIs(result['sourceBytesUnchanged'], False); self.assertIs(result['ownedResourcesRemoved'], False)
+
+    def test_diagnostic_output_failure_does_not_change_cleanup_guard_result(self):
+        state = self.state(); state['resources'].append({'kind': 'network', 'id': None, 'name': 'PRIVATE_NAME_CANARY', 'phase': 'CREATED'})
+        owned = runner.OwnedDocker(self.root, state, 100, lambda *args, **kwargs: self.fail('No CLI expected'))
+        with patch('builtins.print', side_effect=OSError('PRIVATE_STDOUT_CANARY')):
+            self.assertIs(owned.cleanup(), False)
+        self.assertEqual(state['resources'][0]['phase'], 'CREATED')
 
 if __name__ == '__main__':
     unittest.main()

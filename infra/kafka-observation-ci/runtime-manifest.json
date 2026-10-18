@@ -539,13 +539,13 @@
     },
     {
       "path": "infra/kafka-observation-ci/run_once.py",
-      "sha256": "d56e3d721d441784bf0a3e11d834ae0de14621d6b0acac7ec17fb2b25e635eb1",
-      "bytes": 38871
+      "sha256": "95372ee4700c20a42a9cdc915bfefdb110d443eea3b2de86661e40a08f1c39a3",
+      "bytes": 39981
     },
     {
       "path": "infra/kafka-observation-ci/test_run_once.py",
-      "sha256": "305cad9f1cf922f1d20830d3ef9998f709d94c00ad0f2fec5017f47c1658645d",
-      "bytes": 21298
+      "sha256": "0a59d3006d4ba62c90f865ee20dcf692549ab9809d3bda2c8d506eb65f283460",
+      "bytes": 26675
     }
   ]
 }

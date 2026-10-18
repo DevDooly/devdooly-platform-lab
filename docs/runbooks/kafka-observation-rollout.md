@@ -2,9 +2,17 @@
 
 현재는 [로컬 검증](../evidence/kafka-observation/README.md)까지 완료한 소스 후보다. 기존 job/worker·readiness·운영 GitOps·RBAC·host timer를 이 문서만으로 바꾸지 않는다. 새 관측을 끄는 기본값을 유지한 채 아래 단계의 실제 결과를 구분해 기록한다.
 
+## 현재 실행 gate · 2026-10-18
+
+[격리 CI2](../evidence/kafka-observation/CI_ATTEMPT_2.md)는 offline24/API 준비 검증 뒤 IT·cleanup에서 실패했다. RESOURCE_IDENTITY_UNVERIFIED·XML null·검증0과 원래 실패를 보존한다. sourceBytesUnchanged/ownedResourcesRemoved false를 source 변경·자원 부재 또는 완전 정리의 증거로 해석하지 않는다. source/identity 읽기 진단과 새 검토 source의 실제 IT·cleanup 검증 전에는 main/미니 PC rollout을 진행하지 않는다.
+
+PR64의 API template은 기본 false env도 추가하며 Application은 main chart를 자동 sync한다. 이미지 제안 전이라도 API Recreate가 생길 수 있으므로 **PR64 main 반영 전에** fresh 보존 점검·현재 DB backup·정상 rollback 입력을 준비한다. 같은 main SHA의 Jenkins/Actions와 실제 이미지·draft GitOps 검증 뒤 API/web만 default false로 전환하고, 별도 config opt-in→host 수집→원래30분 자연 회차를 순서대로 확인한다. 기존 worker·DB·Kafka/Garage·PVC·offset·Docker·timer unit을 보존한다.
+
+expected cluster ID는 기존 runtime.kafka SecretKeyRef를 재사용하고 실제 값은 읽거나 Git에 넣지 않는다. sourceCommit은 게시한 API 소스, topic/group은 기존 worker 설정, namespace는 현재 platform-lab을 유지한다. api.kafkaObservation은 enabled만 지원하며 임의 expectedClusterId 값을 values에 추가하지 않는다.
+
 ## 1. 새 격리 broker에서 의미 확인
 
-현재 real Kafka IT는 실행하지 않았다. KafkaObservationIT는 명시적인 `lab.kafka-observation.tests=true`와 별도 시험 설정을 요구한다. 실행기부터 새 자기 broker·자원 소유권·종료와 정리 범위를 확인해야 한다. 기존 미니 PC broker를 시험 대상으로 쓰지 않는다. 이 시험의 driver는 합성 topic 생성·발행·consumer commit·transaction을 수행하므로 production 조회 API의 읽기 동작과 구분한다.
+현재 격리 CI2는 IT 단계에서 실패했으며 고정 IT1의 실행·통과 여부는 미확인이다. KafkaObservationIT는 명시적인 `lab.kafka-observation.tests=true`와 별도 시험 설정을 요구한다. 실행기부터 새 자기 broker·자원 소유권·종료와 정리 범위를 확인해야 한다. 기존 미니 PC broker를 시험 대상으로 쓰지 않는다. 이 시험의 driver는 합성 topic 생성·발행·consumer commit·transaction을 수행하므로 production 조회 API의 읽기 동작과 구분한다.
 
 새 격리 환경에서 NO_COMMIT의 null, 양수 lag, 관측된0 lag, 미완료 transaction과 READ_COMMITTED LSO 차이, 대상 cluster/topic/group 검증을 확인한다. 시험 종료 후 자기 자원만 회수하고 기존 데이터·offset을 보존한다. 실제 broker 결과가 없으면 합성 Service19·HTTP6을 이 단계의 증거로 쓰지 않는다.
 
