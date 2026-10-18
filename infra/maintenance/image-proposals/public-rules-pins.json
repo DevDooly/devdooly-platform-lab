@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "basePublicSource": "1a9365fbad66fcc8e0cf5ab3cf957c1f70dc15fe",
+  "files": [
+    {
+      "path": "gitops_values.py",
+      "repositoryPath": "infra/scripts/gitops_values.py",
+      "bytes": 6627,
+      "sha256": "965ccc1c839d691819845fc64e89c8489166d3069158798fd71f7a3e9770ca2d"
+    },
+    {
+      "path": "ci_publication_gate.py",
+      "repositoryPath": "infra/scripts/ci_publication_gate.py",
+      "bytes": 18007,
+      "sha256": "ee5f40c5541e38a73adbdb6222485a628e85deebf5f9445e9a59ef5841f44481"
+    },
+    {
+      "path": "validate_gitops_pr.py",
+      "repositoryPath": "infra/scripts/validate_gitops_pr.py",
+      "bytes": 3099,
+      "sha256": "e15ee1d4e2a797eb925095fa567f7bf6e0482c4fea5df66d2c05a927a5dc2af8"
+    },
+    {
+      "path": "propose_gitops_pr.py",
+      "repositoryPath": "infra/scripts/propose_gitops_pr.py",
+      "bytes": 12025,
+      "sha256": "5fe03c7eeb7e04d39fb1bf564c29d6c8a1c5c6a369b1d4a97f6b5a6f20186f26"
+    }
+  ],
+  "scope": "PINNED_EXISTING_REPOSITORY_PUBLIC_RULES"
+}
