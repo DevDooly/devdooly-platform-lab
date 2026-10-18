@@ -1,0 +1,49 @@
+{
+  "allowlistedRoutePatterns": 6,
+  "cleanupStatuses": {
+    "fake": "REMOVED_VERIFIED",
+    "gateway": "REMOVED_VERIFIED",
+    "network": "REMOVED_VERIFIED"
+  },
+  "connectionRejectionsObserved": 1,
+  "dbOrKafkaStarted": false,
+  "deniedUriCases": 25,
+  "globalMultiPeerLimitIndependentlyExercised": false,
+  "hostPortsPublished": false,
+  "httpChecks": 620,
+  "httpProbe": {
+    "checks": 620,
+    "failingCase": null,
+    "observedStatus": null,
+    "passed": true,
+    "phase": "COMPLETE",
+    "resultVerified": true,
+    "returnCode": 0,
+    "started": true,
+    "upstreamDelta": null
+  },
+  "lastCleanupCommand": {
+    "category": "NETWORK_LIST",
+    "returnCode": 0
+  },
+  "lastWorkloadCommand": {
+    "category": "CONTAINER_INSPECT",
+    "returnCode": 0
+  },
+  "methodCases": 10,
+  "nginxVersion": "1.30.5",
+  "ownedContainerMaximum": 2,
+  "ownedInternalNetworkMaximum": 1,
+  "ownedResourcesRemoved": true,
+  "passed": true,
+  "phase": "COMPLETE",
+  "publicEndpointExposed": false,
+  "rateRejectionsObserved": 33,
+  "realMiniPcContacted": false,
+  "schemaVersion": 1,
+  "scope": "ISOLATED_PUBLIC_READ_GATEWAY_PROTOTYPE",
+  "sourceManifestSha256": "2eb8a146c1e0babc925f0ab6468b404d29e84b077465829d4b491ef13063cf94",
+  "sparkOrJvmStarted": false,
+  "validationCheckpoint": "CONTAINER_MOUNTS",
+  "workloadPhase": "COMPLETE"
+}

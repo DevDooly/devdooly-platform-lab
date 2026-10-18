@@ -1,8 +1,9 @@
 # 공개 조회 게이트웨이 프로토타입
 
-별도의 공개 조회 게이트웨이를 검토하기 위한 **미실행 후보**다. 기존 웹 프록시,
-API 이미지, Kubernetes, 미니 PC, 공유기, DNS, 인증서, 터널, GitHub Pages 설정을
-변경하지 않는다. 아래 CI 실행기도 공개 접속 주소를 만들지 않는다.
+별도의 공개 조회 게이트웨이와 **격리 검증 구현**이다. 실제 Linux CI의 합성 HTTP
+검사와 소유 자원 정리 결과는 [검증 기록](../../docs/evidence/public-read-gateway/README.md)을
+따른다. 기존 웹 프록시·API 이미지·Kubernetes·미니 PC·공유기·DNS·인증서·터널·
+GitHub Pages 설정을 변경하지 않았고, 실제 API나 외부 공개 endpoint를 배포하지 않았다.
 
 ## 허용 요청
 
@@ -106,10 +107,10 @@ python3 -I -B infra/public-gateway/run_once.py \
   --ack-isolated-public-gateway
 ```
 
-`ci-step-proposal.yml`은 실제 workflow 밖의 제안이다. 실제 `lab-ci.yml`에 job을
-복사할 때만 hash를 주입하고 push paths에 `infra/public-gateway/**`를 추가한다.
-제안 파일 자신에 manifest hash를 넣어 자기참조시키지 않는다. 소스 8개와 manifest는
-모두 LF bytes로 고정한다.
+실제 `lab-ci.yml`의 독립 `public-read-gateway` job에 이 검증을 연결했고 push paths에
+`infra/public-gateway/**`를 추가했다. `ci-step-proposal.yml`은 보관용 job 템플릿이며
+직접 실행되지 않는다. 실제 workflow에서 검토한 manifest hash를 주입하며 이 템플릿
+자신에 hash를 넣어 자기참조시키지 않는다. 소스8개와 manifest는 모두 LF bytes다.
 
 준비·검증 예산은 600초, 이미지당 pull 최대180초, HTTP probe 최대180초다. 이후
 별도의 제한된 정리를 수행한다. 실패한 컨테이너·HTTP suite를 재시작하지 않고
