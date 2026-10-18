@@ -2664,6 +2664,19 @@ body  {
   margin-left: 0;
 }
 
+@media (max-width: 680px) {
+  .ai-note {
+    display: grid;
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .ai-note > .tag {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+
 .connection-banner  {
   gap: 12px;
   padding: 18px;
