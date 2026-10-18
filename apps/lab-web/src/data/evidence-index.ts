@@ -12,6 +12,7 @@ export const evidenceScopes = [
   { id: 'mini-pc', label: '미니 PC' },
   { id: 'cloud', label: 'Cloud 격리' },
   { id: 'windows', label: 'Windows 개인 예제' },
+  { id: 'ci', label: 'GitHub Linux CI' },
 ] as const;
 
 export type EvidenceTopic = typeof evidenceTopics[number]['id'];
@@ -29,7 +30,7 @@ export interface EvidenceItem {
   evidence: string;
   evidenceLabel?: string;
   recordLabel?: string;
-  screen: string;
+  screen?: string;
 }
 
 const repo = 'https://github.com/DevDooly/devdooly-platform-lab';
@@ -105,5 +106,14 @@ export const evidenceItems: readonly EvidenceItem[] = [
     recordedOn: '2026-10-18',
     source: `${repo}/tree/1a9365fbad66fcc8e0cf5ab3cf957c1f70dc15fe/infra/charts/platform-lab`,
     evidence: `${repo}/blob/main/docs/evidence/public-read-gateway-internal/README.md`, evidenceLabel: '조회·진단·보존 기록', recordLabel: '내부 조회·접근 진단', screen: '#platform',
+  },
+  {
+    id: 'java-retention-model', topics: ['java'], scope: 'ci', state: 'verified',
+    title: '합성 Java 모델 · 객체 보존과 재전달',
+    description: '오래된 계획·참조 보호·부분 결과·재전달·전체 확인을 immutable RAM 전이로 다룹니다. 고정 소스의 Linux CI에서 5개 시나리오를 통과했습니다.',
+    boundary: '순수 Java 합성 모델입니다. 실제 DB·저장소 삭제·물리 GC·SLA를 검증하지 않으며 운영 KEEP 정책은 유지합니다.',
+    recordedOn: '2026-10-18',
+    source: `${repo}/tree/7166ce84e03a69b2b0f1c853c3394d295f664af2/examples/java-object-retention-protocol`,
+    evidence: `${repo}/actions/runs/39127247057`, evidenceLabel: 'Linux CI 5/5 · 소스 7166ce84', recordLabel: 'Linux CI 5/5',
   },
 ];
