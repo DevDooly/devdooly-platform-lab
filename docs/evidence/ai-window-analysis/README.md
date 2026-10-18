@@ -4,6 +4,8 @@
 
 [예제와 재현 명령](../../../examples/java-window-analysis/README.md), [계산 계약](../../../examples/java-window-analysis/DESIGN.md), [AI 활용·사람 검토 상태](../../../examples/java-window-analysis/PROVENANCE.md), [전체 공개 근거](summary.json), [페이지용 실제 관측 JSON](../../../apps/lab-web/public/observations/ai-window.latest.json)을 함께 제공합니다.
 
+2026-10-18에는 같은 공개 소스의 [별도 GitHub-hosted Linux 측정](hosted-linux-20261018/README.md)을 추가했습니다. 정확한 source commit에서 16조합·48 forks·240 intervals를 확인했으며, 2개 조합의 큰 오차와 공유 CPU의 한계를 함께 기록했습니다. 아래 Windows 수치·측정 당시 `sourceCommit:null`·사람 검토 `PENDING`은 그대로 유지합니다.
+
 ## 무엇을 개선했나
 
 여러 관측 세션을 고정 UTC 시간창에 맞춰 **총 관측 시간과 최대 동시 세션 수**를 구합니다. 기준 구현은 모든 endpoint 사이 구간에서 모든 세션을 다시 검사합니다. 개선 구현은 같은 시점의 시작/종료 delta를 합친 뒤 시간 순으로 한 번 순회합니다. 정렬·TreeMap 갱신 비용을 포함하여 O(n log n)으로 표기합니다.
