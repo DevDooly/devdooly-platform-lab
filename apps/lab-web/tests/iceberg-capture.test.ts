@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import ts from 'typescript';
-import { captureAssetUrl, icebergCaptureManifest, icebergCaptureManifestV2, icebergCaptureManifestClosedClasspath, icebergCaptureManifestBoundedManifest, icebergCaptureManifestVerifiedAbsence, icebergCaptureManifestNormalizationPhases, icebergCaptureManifestDecoderLifecyclePhases, icebergCaptureManifestDecoderReplyPhases, observedCount, parseIcebergCapture } from '../src/lib/iceberg-capture.ts';
+import { captureAssetUrl, icebergCaptureManifest, icebergCaptureManifestV2, icebergCaptureManifestClosedClasspath, icebergCaptureManifestBoundedManifest, icebergCaptureManifestVerifiedAbsence, icebergCaptureManifestNormalizationPhases, icebergCaptureManifestDecoderLifecyclePhases, icebergCaptureManifestDecoderReplyPhases, icebergCaptureManifestStdoutProtocol, observedCount, parseIcebergCapture } from '../src/lib/iceberg-capture.ts';
 import { captureFailureCodes, captureClasspathFailureCodes, captureManifestBoundsFailureCodes, captureClasspathTreeFailureCodes, captureNormalizationPhaseCodes, captureDecoderLifecyclePhaseCodes, captureDecoderReplyPhaseCodes, captureStages, parseCaptureDiagnostic } from '../src/lib/iceberg-capture-diagnostic.ts';
 
 const actualRaw = readFileSync(new URL('./fixtures/iceberg-capture-attempt2.summary.json', import.meta.url));
@@ -614,4 +614,40 @@ test('reply proof JSON and link guards require their new exact profile and prese
   assert.equal(actual7.diagnostic.failureCode, 'NORMALIZE_DECODER_REPLY_BINDING_UNVERIFIED');
   assert.equal(actual6.diagnostic.failureCode, 'NORMALIZE_DECODER_LIFECYCLE_UNVERIFIED');
   assert.equal(actual5.diagnostic.failureCode, 'UNKNOWN');
+});
+
+test('stdout protocol runtime reuses the exact 165-code reply contract without inventing an actual result', () => {
+  // Every record with the new runtime below is synthetic; actual8 remains unchanged.
+  assert.equal(icebergCaptureManifestStdoutProtocol, '3b1b5d4b0be4298d993a93fbbf39306a6ac69abaabc876b2ae78789772bded19');
+  const historical = [icebergCaptureManifest, icebergCaptureManifestV2, icebergCaptureManifestClosedClasspath,
+    icebergCaptureManifestBoundedManifest, icebergCaptureManifestVerifiedAbsence,
+    icebergCaptureManifestNormalizationPhases, icebergCaptureManifestDecoderLifecyclePhases, icebergCaptureManifestDecoderReplyPhases];
+  assert.ok(!historical.includes(icebergCaptureManifestStdoutProtocol));
+  const allCodes = [...captureFailureCodes, ...captureClasspathFailureCodes, ...captureManifestBoundsFailureCodes,
+    ...captureClasspathTreeFailureCodes, ...captureNormalizationPhaseCodes, ...captureDecoderLifecyclePhaseCodes,
+    ...captureDecoderReplyPhaseCodes];
+  assert.equal(allCodes.length, 165); assert.equal(new Set(allCodes).size, 165);
+  for (const failureCode of allCodes) {
+    const value = structuredClone(actual8); value.runtimeManifestSha256 = icebergCaptureManifestStdoutProtocol;
+    value.diagnostic.failureCode = failureCode; value.diagnostic.stageAttempted = failureCode.startsWith('NORMALIZE_') ? 'NORMALIZE' : 'PREP';
+    const parsed = parseIcebergCapture(value); assert.ok(parsed); assert.equal(parsed.status, 'FAILED'); assert.equal(parsed.passed, false);
+    assert.deepEqual(parsed.checks, actual8.checks); assert.deepEqual(parsed.counts, actual8.counts);
+    assert.equal(parsed.proofHashes.normalizationReceiptCanonicalSha256, null);
+    assert.equal(parseIcebergCapture({ ...value, runtimeManifestSha256: 'f'.repeat(64) }), null);
+    if (failureCode.startsWith('NORMALIZE_')) {
+      const wrongStage = structuredClone(value); wrongStage.diagnostic.stageAttempted = 'DECODER';
+      assert.equal(parseIcebergCapture(wrongStage), null);
+    }
+  }
+  for (const change of [{ passed: true }, { decoderExitCode: 0 }, { rawError: 'SYNTHETIC_PRIVATE_CANARY' }]) {
+    assert.equal(parseIcebergCapture({ ...actual8, runtimeManifestSha256: icebergCaptureManifestStdoutProtocol, ...change }), null);
+  }
+  const privateDiagnostic = structuredClone(actual8); privateDiagnostic.runtimeManifestSha256 = icebergCaptureManifestStdoutProtocol;
+  privateDiagnostic.diagnostic.rawReply = 'SYNTHETIC_PRIVATE_CANARY'; assert.equal(parseIcebergCapture(privateDiagnostic), null);
+  const unknown = structuredClone(actual8); unknown.runtimeManifestSha256 = icebergCaptureManifestStdoutProtocol;
+  unknown.diagnostic.failureCode = 'STDOUT_PRIVATE_PROVIDER_FAILURE'; assert.equal(parseIcebergCapture(unknown), null);
+  assert.equal(createHash('sha256').update(actual8Raw).digest('hex'), 'e96ca40d6bfeadfe0a8c51d73aec5c59977f418b3894470bcc4574870af2ca9e');
+  assert.equal(actual8.runtimeManifestSha256, icebergCaptureManifestDecoderReplyPhases);
+  assert.equal(actual8.diagnostic.failureCode, 'NORMALIZE_DECODER_REPLY_JSON_UNVERIFIED');
+  for (const actual of [actual3, actual4, actual5, actual6, actual7, actual8]) assert.ok(parseIcebergCapture(actual));
 });

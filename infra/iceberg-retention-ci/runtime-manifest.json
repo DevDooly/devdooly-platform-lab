@@ -51,9 +51,9 @@
       "sha256": "5d583ebf1fef4aeabace71c1071a9d054ea59c679c761285063f5fcd97396857"
     },
     {
-      "bytes": 38858,
+      "bytes": 39087,
       "path": "src/org/apache/iceberg/ClosedCopyDecoder.java",
-      "sha256": "d7f9fbab4e1951e5364dcec7e78b8aa1b86531ba034a4c1748b47158a80399d9"
+      "sha256": "21556d45310fcdacf63707eccfff51600a98c61f0f03bf4df911242c9f9f107a"
     }
   ],
   "immutableInputs": [

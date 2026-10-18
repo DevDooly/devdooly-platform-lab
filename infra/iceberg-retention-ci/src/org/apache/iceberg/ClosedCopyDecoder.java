@@ -49,13 +49,15 @@ public final class ClosedCopyDecoder {
       "UNSUPPORTED_METADATA_FEATURE", "UNSUPPORTED_CODEC", "UNSUPPORTED_SCHEMA", "UNSUPPORTED_ENTRY_CONTENT",
       "MISSING_APPROVED_CHILD", "FOREIGN_REFERENCE", "GRAPH_CONFLICT", "MISSING_SNAPSHOT_REFERENCE",
       "REFERENCE_CYCLE", "GRAPH_BOUND", "DECODER_INTERNAL", "DECODER_BUDGET_EXPIRED");
-  static final ObjectMapper JSON;
-  static {
-    JsonFactory factory = new JsonFactory();
-    factory.enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION);
-    factory.setStreamReadConstraints(StreamReadConstraints.builder().maxNestingDepth(64)
-        .maxStringLength(8192).maxNumberLength(128).build());
-    JSON = new ObjectMapper(factory);
+  private static final class JsonHolder {
+    static final ObjectMapper JSON;
+    static {
+      JsonFactory factory = new JsonFactory();
+      factory.enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION);
+      factory.setStreamReadConstraints(StreamReadConstraints.builder().maxNestingDepth(64)
+          .maxStringLength(8192).maxNumberLength(128).build());
+      JSON = new ObjectMapper(factory);
+    }
   }
 
   static final class Problem extends RuntimeException {
@@ -95,8 +97,8 @@ public final class ClosedCopyDecoder {
       String decoded = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
           .onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(raw)).toString();
       need(!decoded.startsWith("\ufeff"), code);
-      try (JsonParser parser = JSON.getFactory().createParser(decoded)) {
-        JsonNode value = JSON.readTree(parser);
+      try (JsonParser parser = JsonHolder.JSON.getFactory().createParser(decoded)) {
+        JsonNode value = JsonHolder.JSON.readTree(parser);
         need(value != null && parser.nextToken() == null, code);
         strictTree(value, 0, new int[] {0}, code); return value;
       }
@@ -111,7 +113,7 @@ public final class ClosedCopyDecoder {
     if (value.isContainerNode()) for (JsonNode child : value) strictTree(child, depth + 1, count, code);
   }
   static String hashArray(String prefix, String... values) {
-    try { return prefix + sha(JSON.writeValueAsBytes(Arrays.asList(values))); }
+    try { return prefix + sha(JsonHolder.JSON.writeValueAsBytes(Arrays.asList(values))); }
     catch (Exception ignored) { throw new Problem("DECODER_INTERNAL"); }
   }
   static final class Budget {
@@ -224,7 +226,7 @@ public final class ClosedCopyDecoder {
   }
 
   static final class Graph {
-    final Frame frame; final ObjectNode node = JSON.createObjectNode(), completeness, provenance;
+    final Frame frame; final ObjectNode node = JsonHolder.JSON.createObjectNode(), completeness, provenance;
     final ArrayNode metadata, snapshots, refs, edges, files;
     final Set<String> edgeKeys = new HashSet<>();
     Graph(Frame frame) {
@@ -484,7 +486,7 @@ public final class ClosedCopyDecoder {
   }
 
   static ObjectNode reply(String status, String reason, String descriptor, Graph graph) {
-    ObjectNode result = JSON.createObjectNode().put("schemaVersion", 1).put("scope", "CLOSED_COPY_ICEBERG_FORMAT2_GRAPH").put("status", status);
+    ObjectNode result = JsonHolder.JSON.createObjectNode().put("schemaVersion", 1).put("scope", "CLOSED_COPY_ICEBERG_FORMAT2_GRAPH").put("status", status);
     ArrayNode reasons = result.putArray("reasonCodes"); if (reason != null) reasons.add(reason);
     if (descriptor == null) result.putNull("descriptorSha256"); else result.put("descriptorSha256", descriptor);
     if (graph == null) result.putNull("graph"); else { graph.finish(); result.set("graph", graph.node); }
@@ -510,6 +512,8 @@ public final class ClosedCopyDecoder {
     }
   }
   public static void main(String[] args) {
+    final java.io.PrintStream protocolOut = System.out;
+    System.setOut(System.err);
     long millis;
     try {
       need(args.length == 2 && args[0].equals("--budget-millis") && args[1].matches("[1-9][0-9]{0,4}"), "DESCRIPTOR_INVALID");
@@ -522,9 +526,9 @@ public final class ClosedCopyDecoder {
     }, "closed-copy-relative-budget"); watchdog.setDaemon(true); watchdog.start();
     try {
       ObjectNode result = decode(System.in, millis);
-      byte[] raw = JSON.writeValueAsBytes(result);
-      if (raw.length + 1 > MAX_REPLY) { result = reply("REJECTED", "GRAPH_BOUND", result.path("descriptorSha256").isTextual() ? result.path("descriptorSha256").textValue() : null, null); raw = JSON.writeValueAsBytes(result); }
-      System.out.write(raw); System.out.write('\n'); System.out.flush();
+      byte[] raw = JsonHolder.JSON.writeValueAsBytes(result);
+      if (raw.length + 1 > MAX_REPLY) { result = reply("REJECTED", "GRAPH_BOUND", result.path("descriptorSha256").isTextual() ? result.path("descriptorSha256").textValue() : null, null); raw = JsonHolder.JSON.writeValueAsBytes(result); }
+      protocolOut.write(raw); protocolOut.write('\n'); protocolOut.flush();
       done.set(true); watchdog.interrupt();
       System.exit(result.path("status").asText().equals("DECODED") ? 0 : result.path("status").asText().equals("UNDETERMINED") ? 2 : 3);
     } catch (Throwable ignored) {
