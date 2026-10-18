@@ -18,7 +18,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 지금 완료: Kafka 관측 API·collector 연결, systemd·수동 host 실행, 원래 타이머의 자연 실행 2회·회차 간격 1개와 각 회차의 공개 3파일 대조를 확인했습니다. [자연 관측 근거](docs/evidence/kafka-observation/README.md#원래-타이머의-자연-2회와-공개-게시-대조)를 따르며, 화면은 마지막 수집 기록을 보여줍니다.
 
-다음 단계: 내부 Kubernetes 게이트웨이 배포 → 외부 HTTPS 연결 → 자격증명 회전을 순서대로 진행합니다. 게이트웨이는 격리 검증 620개와 [PR #73 CI](https://github.com/DevDooly/devdooly-platform-lab/pull/73)를 통과했으며, 공개 REST·실시간 API 연결은 아직 배포하지 않았습니다. 장기간 운영, K3s·Jenkins archive 전체 복원과 snapshot 만료·운영 객체 삭제는 별도 후속입니다. [과거 검증·실패 기록](docs/progress-history.md)은 보존합니다.
+내부 게이트웨이의 [조회·접근 진단과 기존 상태 보존](docs/evidence/public-read-gateway-internal/README.md)을 마쳤습니다. 다음은 외부 HTTPS 연결 → 공개 조회 화면 연결 → 자격증명 회전입니다. 공개 REST·실시간 API는 아직 연결하지 않았으며, 장기간 운영과 전체 복원·운영 객체 삭제는 별도 후속입니다. [과거 검증·실패 기록](docs/progress-history.md)은 보존합니다.
 
 ## 로컬 실행
 

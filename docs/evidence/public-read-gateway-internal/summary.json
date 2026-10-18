@@ -1,0 +1,61 @@
+{
+  "actualResultsReceived": true,
+  "finalPreservation": {
+    "allComparedFieldsEqual": true,
+    "exportFileMetadataCount": 16,
+    "exportedJobsCount": 8,
+    "kafkaCommittedOffset": 8,
+    "kafkaLag": 0,
+    "kafkaReadCommittedEndOffset": 8,
+    "passed": true,
+    "pvcCount": 4,
+    "stableCategoriesCompared": 6
+  },
+  "firstClientAttempt": {
+    "allowedGetVerified": 6,
+    "cleanupConfirmedAbsent": 3,
+    "deniedHttpCasesVerified": 3,
+    "gatewayTcpOutcome": "OTHER_ERROR",
+    "originalErrno": "NOT_COLLECTED",
+    "overallPassed": false
+  },
+  "followUpDiagnostic": {
+    "allowAfterHttpStatus": 200,
+    "allowBeforeHttpStatus": 200,
+    "cleanupConfirmedAbsent": 4,
+    "collectionPassed": true,
+    "directApiHttpStatus": 200,
+    "elapsedMillis": 0,
+    "errnoName": "ECONNREFUSED",
+    "errnoNumber": 111,
+    "gatewayAndApiDnsResolved": true,
+    "gatewayDnsConsistent": true,
+    "gatewayTcpAttempts": 1,
+    "gatewayTcpOutcome": "OS_ERROR"
+  },
+  "kind": "internal-public-read-gateway-observation",
+  "limits": {
+    "credentialRotationVerified": false,
+    "externalHttpsVerified": false,
+    "firstFailureExactCauseEstablished": false,
+    "historicalPointInTimeOnly": true,
+    "liveRateSaturationExercised": false,
+    "longTermAvailabilityProven": false,
+    "networkPolicyExclusiveCausalityProven": false,
+    "nodeHostNatPolicyPathsVerified": false,
+    "publicRealtimeApiConnected": false,
+    "wholeDatabaseOrBlobEqualityVerified": false
+  },
+  "recordedOn": "2026-10-18",
+  "rollout": {
+    "declaredGatewayObjectsVerified": 4,
+    "observedReady": true
+  },
+  "schemaVersion": 1,
+  "sourceCommits": {
+    "activationMerge": "1a9365fbad66fcc8e0cf5ab3cf957c1f70dc15fe",
+    "api": "245d61a5749760a20918ab091d9410ce6735b1c0",
+    "worker": "74a8e98844a8fea0653951136ede0e7de0d7ac08"
+  },
+  "verificationState": "READ_PATHS_AND_DIAGNOSTIC_OBSERVED"
+}
