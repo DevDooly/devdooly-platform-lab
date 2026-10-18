@@ -56,6 +56,10 @@ PUT·DELETE intent는 private `0600` 새 영수증에 먼저 기록한다. timeo
 
 종료는 소유한 정확한 full container ID에 TERM만 보내고 최대 130초 기다린다. 정상 exit 0/143·non-OOM을 요구하며 강제 kill/delete fallback은 없다. 새 Docker named volume은 기존 PVC 정리 계획기의 지원 대상이 아니므로 자동 정리하지 않고 보존한다. 원본 SQL·기존 object whole GET 및 원본 workload/host의 최종 보존 검증은 별도 실제 영수증과 연결한다.
 
+## 합성 Java 프로토콜 예제
+
+[독립 Java 예제](../../examples/java-object-retention-protocol/README.ko.md)는 순수 Java의 RAM 상태에서 오래된 계획·보호 참조·부분 결과·재전달·전체 확인의 5개 합성 시나리오를 다룹니다. 실제 DB·저장소 adapter나 삭제 실행기는 없으며 운영 객체를 삭제하지 않습니다. 기존 운영 계획기의 모든 run·unknown 객체 KEEP 규칙과 apply 비활성 상태는 그대로 유지합니다.
+
 ## 운영 GC를 만들기 전 남은 일
 
 영속 job tombstone·삭제 intent, admission/worker 조율, run ID 재사용 금지, outbox/Kafka replay horizon, 백업 의존성과 보존 기한, 삭제 직전 재수집·재계산·identity 조건, 부분 삭제·unknown outcome 복구가 필요하다. 현재 순수 planner나 격리 A/C 실험으로 이 프로토콜을 구현했다고 주장하지 않는다. 운영 객체 삭제, metadata DB 축소, RF>1·HA·장기간 용량 검증은 별도 범위다.

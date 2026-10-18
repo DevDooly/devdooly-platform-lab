@@ -1,0 +1,37 @@
+name: Verify synthetic object retention protocol
+
+on:
+  pull_request:
+    paths:
+      - 'examples/java-object-retention-protocol/**'
+      - '.github/workflows/object-retention-protocol.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'examples/java-object-retention-protocol/**'
+      - '.github/workflows/object-retention-protocol.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: object-retention-protocol-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  synthetic-model:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Verify only the independent synthetic model
+        run: |
+          env -u JAVA_TOOL_OPTIONS -u JDK_JAVA_OPTIONS -u _JAVA_OPTIONS -u MAVEN_OPTS -u MAVEN_ARGS \
+            timeout 240s mvn -B -ntp -f examples/java-object-retention-protocol/pom.xml verify
