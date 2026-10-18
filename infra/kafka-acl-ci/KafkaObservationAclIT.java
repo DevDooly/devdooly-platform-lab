@@ -110,11 +110,6 @@ class KafkaObservationAclIT {
                 setup.current = SetupStep.CREATE_TOPICS;
                 driver.createTopics(List.of(new NewTopic(topic, 1, (short) 1).configs(Map.of("retention.ms", "86400000")),
                     new NewTopic(otherTopic, 1, (short) 1))).all().get(10, TimeUnit.SECONDS);
-                setup.current = SetupStep.OTHER_GROUP_OFFSETS;
-                driver.alterConsumerGroupOffsets(otherGroup, Map.of(otherPartition, new OffsetAndMetadata(0)))
-                    .all().get(10, TimeUnit.SECONDS);
-                setup.current = SetupStep.OTHER_GROUP_DESCRIBE;
-                check(driver.describeConsumerGroups(Set.of(otherGroup)).all().get(10, TimeUnit.SECONDS).containsKey(otherGroup));
                 setup.current = SetupStep.CONSUMER_CONFIG;
                 Map<String, Object> consumerProperties = new LinkedHashMap<>(adminProperties);
                 consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, group);
@@ -158,6 +153,11 @@ class KafkaObservationAclIT {
                     }
                     setup.current = SetupStep.INITIAL_COMMIT;
                     fixture.commitSync(Map.of(partition, new OffsetAndMetadata(1)), Duration.ofSeconds(10));
+                    setup.current = SetupStep.OTHER_GROUP_OFFSETS;
+                    driver.alterConsumerGroupOffsets(otherGroup, Map.of(otherPartition, new OffsetAndMetadata(0)))
+                        .all().get(10, TimeUnit.SECONDS);
+                    setup.current = SetupStep.OTHER_GROUP_DESCRIBE;
+                    check(driver.describeConsumerGroups(Set.of(otherGroup)).all().get(10, TimeUnit.SECONDS).containsKey(otherGroup));
                     setup.current = SetupStep.ACL_PROFILE;
                     Set<AclBinding> profile = Set.of(
                         describe(ResourceType.CLUSTER, "kafka-cluster"),
