@@ -1,0 +1,21 @@
+{
+  "acceptedJsonCountInWindow": 3,
+  "capturedAt": "2026-10-18T14:29:16.161870Z",
+  "currentBootJournalRequested": true,
+  "journalReadCompleted": true,
+  "journalRowsRead": 12,
+  "lastTriggerLinkedAcceptedCount": 1,
+  "lastTriggerLinkedUpdaterAt": "2026-10-18T14:24:26.191294Z",
+  "lastTriggerLinkedUpdaterMonotonicUs": 607654739112,
+  "lastTriggerMonotonicUs": 607653198317,
+  "passed": true,
+  "phase": "COMPLETE",
+  "schemaVersion": 1,
+  "scope": "DUCKDNS_NATURAL_TIMER_READONLY",
+  "serverWritesRequested": false,
+  "timerActiveEnabled": true,
+  "tokenStatOrReadPerformed": false,
+  "updaterInvoked": false,
+  "windowEndAt": "2026-10-18T14:29:16.142497Z",
+  "windowStartAt": "2026-10-18T14:08:48.164108Z"
+}

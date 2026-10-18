@@ -1,0 +1,47 @@
+{
+  "scope": "PUBLIC_OBSERVATION_CLOCK_UI_CHECK",
+  "pagesRunId": 39137122814,
+  "frontendSource": "0602b8d57f591ee4496c92428ea82b5d8fbbca4c",
+  "freshAssets": [
+    "JobObservationCard.B2zuxqOw.js",
+    "KafkaObservationCard.-7_CKDie.js"
+  ],
+  "jobImmediate": {
+    "browserUtc": "2026-10-18T14:45:37.319Z",
+    "capturedAheadOfBrowserMs": -454,
+    "fallbackNotice": false,
+    "jobCards": 8,
+    "jobClockNotice": true,
+    "jobsCapturedAt": "2026-10-18T14:45:36.865999348Z",
+    "kafkaClockNotice": false
+  },
+  "jobLater": {
+    "browserUtc": "2026-10-18T14:45:43.181Z",
+    "capturedAheadOfBrowserMs": -5497,
+    "fallbackNotice": false,
+    "jobCards": 8,
+    "jobClockNotice": false,
+    "jobsCapturedAt": "2026-10-18T14:45:37.684977222Z",
+    "kafkaClockNotice": false
+  },
+  "kafkaImmediate": {
+    "browserUtc": "2026-10-18T14:46:04.962Z",
+    "capturedAheadOfBrowserMs": -220,
+    "clockNotice": true,
+    "fallbackNotice": false,
+    "kafkaCapturedAt": "2026-10-18T14:46:04.742415437Z"
+  },
+  "kafkaLater": {
+    "browserUtc": "2026-10-18T14:46:11.327Z",
+    "capturedAheadOfBrowserMs": -6585,
+    "clockNotice": false,
+    "fallbackNotice": false,
+    "kafkaCapturedAt": "2026-10-18T14:46:04.742415437Z"
+  },
+  "sameKafkaCapturedRecord": true,
+  "sameKafkaRecordNoticeCleared": true,
+  "jobLaterClockNotice": false,
+  "apiPollChanged": false,
+  "strictFuturePolicyChanged": false,
+  "backgroundCadenceOrSlaVerified": false
+}
