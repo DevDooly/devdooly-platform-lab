@@ -1,0 +1,100 @@
+/** Curated public personal-Lab records. These are historical evidence, never a live status feed. */
+export const evidenceTopics = [
+  { id: 'java', label: 'Java · Spring Boot' },
+  { id: 'kafka', label: 'Kafka' },
+  { id: 'kubernetes', label: 'Kubernetes · Helm' },
+  { id: 'delivery', label: 'CI/CD' },
+  { id: 'iceberg', label: 'Iceberg' },
+  { id: 'llm', label: 'AI 활용 · 검증 과정' },
+] as const;
+
+export const evidenceScopes = [
+  { id: 'mini-pc', label: '미니 PC' },
+  { id: 'cloud', label: 'Cloud 격리' },
+  { id: 'windows', label: 'Windows 개인 예제' },
+] as const;
+
+export type EvidenceTopic = typeof evidenceTopics[number]['id'];
+export type EvidenceScope = typeof evidenceScopes[number]['id'];
+export interface EvidenceItem {
+  id: string;
+  topics: readonly EvidenceTopic[];
+  scope: EvidenceScope;
+  state: 'verified' | 'pending';
+  title: string;
+  description: string;
+  boundary: string;
+  recordedOn: string | null;
+  source: string;
+  evidence: string;
+  evidenceLabel?: string;
+  recordLabel?: string;
+  screen: string;
+}
+
+const repo = 'https://github.com/DevDooly/devdooly-platform-lab';
+const recordSource = 'dc050fb5adc714cada8a6d29b9d733ada446d454';
+const kafkaSource = 'f7b5567963f9a34a34d5f201fb2ed747bdf7652a';
+
+export const evidenceItems: readonly EvidenceItem[] = [
+  {
+    id: 'java-runtime', topics: ['java'], scope: 'mini-pc', state: 'verified',
+    title: 'Java 작업 처리와 파일 확인',
+    description: 'Spring Boot 작업 처리와 export를 구현하고, 배포한 서비스의 결과 파일과 기존 데이터 보존을 확인했습니다.',
+    boundary: '당시 배포 검증 기록입니다. 현재 가용성이나 처리량 SLA를 뜻하지 않습니다.',
+    recordedOn: '2026-10-15',
+    source: `${repo}/tree/74a8e98844a8fea0653951136ede0e7de0d7ac08/apps/api`,
+    evidence: `${repo}/blob/${recordSource}/docs/evidence/s3-runtime-rollout/README.md`, screen: '#job-observation',
+  },
+  {
+    id: 'kafka-isolated', topics: ['java', 'kafka'], scope: 'cloud', state: 'verified',
+    title: 'Commit · LSO · lag를 구분한 조회',
+    description: 'CI7의 고정 IT1에서 NO_COMMIT, 양수·0 lag와 미완료 transaction, 소스 보존과 자기 자원 정리를 확인했습니다.',
+    boundary: '새 broker의 격리 시험입니다. 신규 미니 PC 관측 연결과 Kafka ACL은 별도입니다.',
+    recordedOn: '2026-10-18',
+    source: `${repo}/blob/${kafkaSource}/apps/api/src/main/java/io/github/devdooly/platformlab/jobs/observation/ReadOnlyKafkaAdmin.java`,
+    evidence: `${repo}/blob/${recordSource}/docs/evidence/kafka-observation/CI_ATTEMPT_7.md`, evidenceLabel: 'CI7 검증 근거', screen: '#kafka-observation',
+  },
+  {
+    id: 'kubernetes-runtime', topics: ['kubernetes'], scope: 'mini-pc', state: 'verified',
+    title: 'Helm으로 배포한 상시 worker',
+    description: 'K3s에 API·worker·저장소를 배포하고 Argo CD 상태, 연속 작업의 처리·파일 확인·슬롯 해제를 검증했습니다.',
+    boundary: '개인 단일 노드 Lab의 과거 기록입니다. 고가용성이나 전체 클러스터 복원 검증은 아닙니다.',
+    recordedOn: '2026-10-15', source: `${repo}/tree/ed5815e7d72c6ea4f52456d902b7407c7a4a67b0/infra/charts/platform-lab`,
+    evidence: `${repo}/blob/${recordSource}/docs/evidence/runtime-deployment/README.md`, screen: '#platform',
+  },
+  {
+    id: 'delivery-gate', topics: ['delivery', 'kubernetes'], scope: 'mini-pc', state: 'verified',
+    title: '실패한 변경을 배포 전에 차단',
+    description: '같은 소스의 Jenkins·Actions 검증, 이미지 게시와 GitOps 배포를 연결하고 실제 테스트 실패 차단·이전 이미지 복구를 확인했습니다.',
+    boundary: '검증한 배포·복구 시나리오입니다. 자격증명 회전과 무중단 배포는 별도입니다.',
+    recordedOn: '2026-10-11', source: `${repo}/blob/cd48da4eaf0dd5ae245f7caa890c99f5ba92db17/Jenkinsfile`,
+    evidence: `${repo}/blob/${recordSource}/docs/evidence/cicd-gate/README.md`, screen: '#platform',
+  },
+  {
+    id: 'iceberg-retention', topics: ['iceberg'], scope: 'cloud', state: 'verified',
+    title: 'Iceberg metadata로 보존 계획 만들기',
+    description: '9차 실행의 닫힌 metadata·inventory를 순수 계획기에 연결했습니다. 스냅샷3·객체20의 결과는 모두 KEEP입니다.',
+    boundary: '정지한 격리 데이터의 보존 계획입니다. snapshot 만료·객체 삭제·Parquet 내용 해석은 수행하지 않았습니다.',
+    recordedOn: '2026-10-18',
+    source: `${repo}/tree/5862ba0c617d17d4c51382bccaa0266253974e82/infra/maintenance`,
+    evidence: `${repo}/blob/${recordSource}/docs/evidence/iceberg-capture/ATTEMPT_9.md`, screen: '#iceberg-capture',
+  },
+  {
+    id: 'ai-java-example', topics: ['java', 'llm'], scope: 'windows', state: 'verified',
+    title: 'AI 제안을 테스트와 측정으로 검토',
+    description: '개인 합성 Java 예제로 UTC 오류 회귀와 같은 답을 구하는 두 알고리즘을 비교하고, AI 제안·검증 과정을 기록했습니다.',
+    boundary: 'Windows 합성 예제의 테스트·JMH 측정이며 사람 검토는 대기 중입니다. LLM 자체의 개선 효과·모델 운영·회사 실무 성과를 입증하지 않습니다.',
+    recordedOn: '2026-10-15', source: `${repo}/blob/${recordSource}/examples/java-window-analysis/PROVENANCE.md`,
+    evidence: `${repo}/blob/${recordSource}/docs/evidence/ai-window-analysis/README.md`, recordLabel: '측정 기록 · 사람 검토 대기', screen: '#ai-window',
+  },
+  {
+    id: 'kafka-mini-pc-pending', topics: ['kafka', 'kubernetes'], scope: 'mini-pc', state: 'pending',
+    title: '새 Kafka 관측의 배포 환경 연결',
+    description: '격리 CI7 이후 미니 PC API·host 수집·공개 기록 연결과 원래 timer의 자연 회차를 확인하는 후속 단계입니다.',
+    boundary: '이 항목의 전환 완료는 아직 기록하지 않았습니다. 기존 worker의 Kafka 처리 기록과 구분합니다.',
+    recordedOn: null,
+    source: `${repo}/blob/${recordSource}/docs/runbooks/kafka-observation-rollout.md`,
+    evidence: `${repo}/pull/64`, evidenceLabel: '후속 변경과 계획', screen: '#kafka-observation',
+  },
+];
