@@ -125,4 +125,13 @@ export const evidenceItems: readonly EvidenceItem[] = [
     source: `${repo}/tree/772d14973ac2ecf647efb496863d6f0f10cb700c/infra/public-https-smoke`,
     evidence: `${repo}/blob/main/docs/evidence/public-read-https/README.md`, evidenceLabel: '외부 조회·공개 화면 기록', recordLabel: '시점별 외부 조회 검증', screen: '#platform',
   },
+  {
+    id: 'kafka-acl-isolated', topics: ['java', 'kafka', 'delivery'], scope: 'cloud', state: 'verified',
+    title: 'DESCRIBE 조회와 선택 RPC·인증 거부',
+    description: '새 격리 Kafka에서 필요한 조회와 다른 대상·쓰기 요청 5개, 잘못된 비밀번호 거부를 확인했습니다. 선택한 상태·소스 보존과 소유 자원 정리도 확인했습니다.',
+    boundary: '합성 SASL/ACL 시험 1건입니다. 모든 쓰기 차단·TLS 기밀성·모든 JVM thread 종료·SLA를 검증한 결과가 아닙니다.',
+    recordedOn: '2026-10-19',
+    source: `${repo}/tree/83e141eaf2d3269920ec8599fcd49241dd8f160b/infra/kafka-acl-ci`,
+    evidence: `${repo}/blob/main/docs/evidence/kafka-acl/README.md`, evidenceLabel: '허용 조회·거부 6건·보존 근거', recordLabel: '격리 ACL IT 1/1',
+  },
 ];
