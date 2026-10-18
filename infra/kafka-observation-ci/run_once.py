@@ -28,6 +28,8 @@ PUBLIC = '.local/kafka-observation-ci-public/summary.json'
 LABEL = 'io.github.devdooly.kafka-observation'
 NORMAL_API_TESTS = 216
 BROKER_TMPFS = '/var/lib/kafka/data:rw,nosuid,nodev,noexec,size=268435456,uid=1000,gid=1000,mode=0700'
+BROKER_SECRETS_TMPFS = '/etc/kafka/secrets:rw,nosuid,nodev,noexec,size=1048576,uid=1000,gid=1000,mode=0700'
+BROKER_CONFIG_TMPFS = '/mnt/shared/config:rw,nosuid,nodev,noexec,size=1048576,uid=1000,gid=1000,mode=0700'
 JVM_TMPFS = '/tmp:rw,nosuid,nodev,size=134217728,mode=1777'
 CODES = {'PREPARATION_FAILED', 'UNKNOWN_OUTCOME', 'RESOURCE_IDENTITY_UNVERIFIED', 'DEADLINE_EXCEEDED',
          'SOURCE_CHANGED', 'IT_FAILED', 'XML_UNVERIFIED', 'CLEANUP_UNVERIFIED', 'INVALID_CONFIGURATION'}
@@ -366,7 +368,9 @@ class OwnedDocker:
 
     def mounts(self, row, value, host, config):
         role = row['role']
-        expected_tmpfs = {'/var/lib/kafka/data': BROKER_TMPFS.split(':', 1)[1]} if role == 'broker' else {'/tmp': JVM_TMPFS.split(':', 1)[1]}
+        expected_tmpfs = {'/var/lib/kafka/data': BROKER_TMPFS.split(':', 1)[1],
+            '/etc/kafka/secrets': BROKER_SECRETS_TMPFS.split(':', 1)[1],
+            '/mnt/shared/config': BROKER_CONFIG_TMPFS.split(':', 1)[1]} if role == 'broker' else {'/tmp': JVM_TMPFS.split(':', 1)[1]}
         require(host.get('Tmpfs') == expected_tmpfs, 'RESOURCE_IDENTITY_UNVERIFIED')
         declared = config.get('Volumes')
         require(declared is None or type(declared) is dict and set(declared).issubset(expected_tmpfs), 'RESOURCE_IDENTITY_UNVERIFIED')
@@ -507,7 +511,7 @@ def run(repo, expected, environment):
         broker = owned.create('container', prefix + '-broker', [
             ['create', '--name', prefix + '-broker', '--network', network['id'], '--user', '1000:1000', '--cpus', '1',
              '--memory', '1g', '--memory-swap', '1g', '--pids-limit', '256', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges',
-             '--tmpfs', BROKER_TMPFS, *env_args], [KAFKA]],
+             '--tmpfs', BROKER_TMPFS, '--tmpfs', BROKER_SECRETS_TMPFS, '--tmpfs', BROKER_CONFIG_TMPFS, *env_args], [KAFKA]],
              role='broker', image=KAFKA, imageId=broker_image, networkMode=network['id'])
         require(owned.call(['start', broker['id']])[0] == 0, 'UNKNOWN_OUTCOME')
         until = min(owned.deadline, time.monotonic() + 60)

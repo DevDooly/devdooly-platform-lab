@@ -39,10 +39,12 @@ class BoundaryTests(unittest.TestCase):
             'ReadonlyRootfs': False, 'CapDrop': ['ALL'], 'CapAdd': None, 'SecurityOpt': ['no-new-privileges'],
             'PidMode': '', 'IpcMode': 'private', 'UTSMode': '', 'UsernsMode': '', 'Devices': None,
             'DeviceRequests': None, 'VolumesFrom': None, 'Links': None, 'Mounts': None,
-            'Tmpfs': {'/var/lib/kafka/data': runner.BROKER_TMPFS.split(':', 1)[1]}}
+            'Tmpfs': {'/var/lib/kafka/data': runner.BROKER_TMPFS.split(':', 1)[1],
+                '/etc/kafka/secrets': runner.BROKER_SECRETS_TMPFS.split(':', 1)[1],
+                '/mnt/shared/config': runner.BROKER_CONFIG_TMPFS.split(':', 1)[1]}}
         value = {'Id': row['id'], 'Name': '/' + row['name'], 'Created': row['createdAt'], 'Image': row['imageId'],
             'Config': {'Image': row['image'], 'User': '1000:1000', 'Labels': {runner.LABEL: 'b' * 32,
-                runner.LABEL + '.source': 'a' * 40, runner.LABEL + '.run': '123'}, 'Volumes': {'/var/lib/kafka/data': {}}},
+                runner.LABEL + '.source': 'a' * 40, runner.LABEL + '.run': '123'}, 'Volumes': {'/etc/kafka/secrets': {}, '/var/lib/kafka/data': {}, '/mnt/shared/config': {}}},
             'HostConfig': host, 'State': {'Running': False, 'Status': 'created', 'StartedAt': '0001-01-01T00:00:00Z'},
             'NetworkSettings': {'Networks': {network['name']: {'NetworkID': ''}}}, 'Mounts': []}
         if role == 'jvm':
@@ -259,6 +261,40 @@ class BoundaryTests(unittest.TestCase):
         for changed in cases:
             current[:] = [changed]
             with self.subTest(change=changed), self.assertRaises(runner.Failure): owned.inspect(row)
+
+    def test_declared_kafka_volumes_are_covered_by_three_safe_bounded_tmpfs(self):
+        state, row, value = self.container_fixture()
+        expected = {
+            '/var/lib/kafka/data': 'rw,nosuid,nodev,noexec,size=268435456,uid=1000,gid=1000,mode=0700',
+            '/etc/kafka/secrets': 'rw,nosuid,nodev,noexec,size=1048576,uid=1000,gid=1000,mode=0700',
+            '/mnt/shared/config': 'rw,nosuid,nodev,noexec,size=1048576,uid=1000,gid=1000,mode=0700'}
+        self.assertEqual(value['HostConfig']['Tmpfs'], expected)
+        self.assertEqual(set(value['Config']['Volumes']), set(expected))
+        value['Mounts'] = [{'Type': 'tmpfs', 'Destination': target, 'Source': '', 'RW': True}
+                           for target in expected]
+        def execute(args, deadline, **kwargs): return (0, json.dumps([value]).encode(), b'')
+        owned = runner.OwnedDocker(self.root, state, 100, execute)
+        self.assertEqual(owned.inspect(row)['Mounts'], value['Mounts'])
+
+    def test_missing_unbounded_or_unexpected_broker_mounts_remain_rejected(self):
+        state, row, valid = self.container_fixture(); current = [valid]
+        def execute(args, deadline, **kwargs): return (0, json.dumps(current).encode(), b'')
+        owned = runner.OwnedDocker(self.root, state, 100, execute)
+        cases = []
+        for target in ('/etc/kafka/secrets', '/mnt/shared/config'):
+            changed = copy.deepcopy(valid); del changed['HostConfig']['Tmpfs'][target]; cases.append(changed)
+            changed = copy.deepcopy(valid); changed['HostConfig']['Tmpfs'][target] = 'rw,size=1073741824'; cases.append(changed)
+            changed = copy.deepcopy(valid); changed['Mounts'] = [{'Type': 'volume', 'Destination': target,
+                'Source': '/var/lib/docker/volumes/unknown', 'RW': True}]; cases.append(changed)
+        changed = copy.deepcopy(valid); changed['Config']['Volumes']['/unexpected'] = {}; cases.append(changed)
+        changed = copy.deepcopy(valid); changed['HostConfig']['Tmpfs']['/unexpected'] = 'rw,size=1048576'; cases.append(changed)
+        changed = copy.deepcopy(valid); changed['Mounts'] = [{'Type': 'tmpfs', 'Destination': '/unexpected', 'Source': '', 'RW': True}]; cases.append(changed)
+        changed = copy.deepcopy(valid); changed['Mounts'] = [{'Type': 'bind', 'Destination': '/etc/kafka/secrets', 'Source': '/etc', 'RW': True}]; cases.append(changed)
+        for index, changed in enumerate(cases):
+            current[:] = [changed]
+            with self.subTest(index=index), self.assertRaises(runner.Failure) as caught:
+                owned.inspect(row)
+            self.assertEqual(caught.exception.code, 'RESOURCE_IDENTITY_UNVERIFIED')
 
     def test_source_guard_failure_publishes_failed_even_when_cleanup_is_unknown(self):
         environment = {'SOURCE_COMMIT': 'a' * 40, 'GITHUB_RUN_ID': '123'}

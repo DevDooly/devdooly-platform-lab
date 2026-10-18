@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "scope": "PUBLIC_SOURCE_PINNED_CONNECTOR_KAFKA_FAILURE_DIAGNOSTICS",
+  "runId": "39088277065",
+  "runAttempt": 1,
+  "verifyJobId": 117559348765,
+  "sourceCommit": "0e694af3ed0f915dad178f816f2c9d742ca9b183",
+  "publicRunnerSha256": "95372ee4700c20a42a9cdc915bfefdb110d443eea3b2de86661e40a08f1c39a3",
+  "workflowSha256": "1302d8988a9324c1774c2f7938eb5c6b8747e4c2f1d77d0656c4bc42e6ceffc2",
+  "runtimeManifestSha256": "25b0441354945a0357293181258214fe21fa5f92a2fe4dba2a6f4f8fb5bc6501",
+  "publicSummarySha256": "0d6af47f3089271ae2f0573dcecb5b0fcfdd80daf3db3a4a3374ba74a17d580a",
+  "metadataEvidence": "ROOT_VALIDATED_PUBLIC_CI3_RUN_AND_JOB_METADATA",
+  "selectionMethod": "FIXED_FIELDS_UNDER_EXACT_RUN_AND_CLEANUP_COMMAND_GROUPS",
+  "transport": "PURPOSE_BUILT_GITHUB_CONNECTOR",
+  "sourcePublicStatementsValidatedByAst": true,
+  "records": [
+    {
+      "assertionSourceLine": 372,
+      "kind": "KAFKA_IT_ASSERTION_DIAGNOSTIC",
+      "phase": "RUN",
+      "publicSourceStatement": "require(declared is None or type(declared) is dict and set(declared).issubset(expected_tmpfs), 'RESOURCE_IDENTITY_UNVERIFIED')"
+    },
+    {
+      "assertionSourceLine": 320,
+      "kind": "KAFKA_IT_ASSERTION_DIAGNOSTIC",
+      "phase": "CLEANUP",
+      "publicSourceStatement": "require(type(row.get('createdAt')) is str and created == row['createdAt'], 'RESOURCE_IDENTITY_UNVERIFIED')"
+    },
+    {
+      "assertionSourceLine": 320,
+      "kind": "KAFKA_IT_ASSERTION_DIAGNOSTIC",
+      "phase": "CLEANUP",
+      "publicSourceStatement": "require(type(row.get('createdAt')) is str and created == row['createdAt'], 'RESOURCE_IDENTITY_UNVERIFIED')"
+    }
+  ],
+  "cleanupOccurrenceCounts": [
+    {
+      "assertionSourceLine": 320,
+      "count": 2
+    }
+  ],
+  "ephemeralPublicJobTextRead": true,
+  "rawJobTextPersisted": false,
+  "privateArtifactsRead": false,
+  "separateProviderStderrFetched": false,
+  "exactInspectValuesReadOrInferred": false,
+  "itExecutionOrSuccessInferred": false,
+  "resourceAbsenceOrLeakInferred": false,
+  "sourceChangeInferred": false
+}
