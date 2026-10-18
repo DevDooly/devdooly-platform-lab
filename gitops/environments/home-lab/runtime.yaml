@@ -2,6 +2,8 @@
 # API environment changes only when root coordinates the real rollout.
 api:
   environment: mini-pc
+  kafkaObservation:
+    enabled: true
 # Root coordinates staged enablement after backup, migration and private bootstrap.
 runtime:
   kafka:
