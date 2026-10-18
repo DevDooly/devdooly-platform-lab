@@ -1,5 +1,7 @@
 # Decoder 검증 구간: 다음 source 후보
 
+**실제7 갱신(2026-10-18):** [새 실행](../../docs/evidence/iceberg-capture/ATTEMPT_7.md)은 source `bf044545`·runtime `6b362710…`에서 Linux85·UID0·skip0·source 전후 동일을 확인했습니다. Cloud는 SUMMARY_NOT_VERIFIED/NORMALIZE/NORMALIZE_DECODER_REPLY_BINDING_UNVERIFIED 실패입니다. 이는 응답 전체 증명과 frame·descriptor·actor binding의 attempted guard 구간이며 JSON 해석도 포함하므로 정확한 원인·특정 hash 불일치·decoder 종료 코드·graph 또는 수정 성공을 단정하지 않습니다. prep·원래 main 한 번/반환0·새 decoder 정지/CLI 회수는 true이고 통합 actors/clock·inventory·전체 KEEP은 false, 관측 count·정규화 hash는 null입니다. 이하 초기 검토 헤더와 동결 proposal은 당시 상태 그대로 보존합니다.
+
 현재 runtime 후보는 `6b362710597d77ee7a37a59a39aef5e3d6ff59d1f509ca0103192b104a0340fc`이며 normalizer와 CLI 두 행만 바꿉니다. 나머지 runtime9개와 immutable input5개는 그대로입니다. source `10a7955d…`의 production/test와 원래 proposal은 root·독립 peer source 검토를 통과했습니다. 새 Windows 집중19개는 root의 한 번 실행에서 18개 통과·POSIX1개 skip·실패/오류0, source 전후 동일·C stage 바인딩·D HEAD902 clean 전후 동일을 확인했습니다. 결과 전체 SHA는 `3ca277971201e4be876ecfa174756440e4e40f65ce6af4f6739d5a15319f72ed`입니다. 새 Linux85개·Cloud·Java 실행은 미실행입니다. 이전 Windows18개는 17개 통과·POSIX1개 skip의 역사적 결과이고 실제6 source613의 Linux84 통과·NORMALIZE_DECODER_LIFECYCLE_UNVERIFIED 실패를 보존합니다. 새 단계는 검증 구간만 구분하며 실제 원인·decoder 종료 코드·graph·inventory 또는 수정 성공을 주장하지 않습니다.
 
 아래는 원래 동결 proposal `13d6778a…`의 전체 본문입니다. 본문의 미실행 표시는 source 동결 당시 상태이며, 이후 독립 검증 결과는 이 헤더에서 구분합니다.

@@ -6,7 +6,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 ## 현재 작업 목표와 진행 단계
 
-2026-10-16 기준, 기존 미니 PC 서비스와 자료를 보존하면서 데이터 처리·배포·복구 경험을 실제 검증 기록으로 연결하는 것이 목표입니다.
+2026-10-18 기준, 기존 미니 PC 서비스와 자료를 보존하면서 데이터 처리·배포·복구 경험을 실제 검증 기록으로 연결하는 것이 목표입니다.
 
 | 단계 | 상태 | 확인한 결과와 다음 경계 |
 | --- | --- | --- |
@@ -15,15 +15,17 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 | Spark → Trino·compaction | Cloud 격리 검증 완료 | 6→12→12행·현재 파일 2→1·Trino 10개 조회·자기 컨테이너 종료, [실제 근거](docs/evidence/cloud-lakehouse/FULL_SUCCESS.md) |
 | 현재 DB 백업·격리 복원 | 논리 복원·공개 기록 완료 | 8개 테이블 스키마·7개 비runtime 테이블 행·BLOB과 원본 DB 보존 확인. 원래 stop 실패와 정상 exit 미관측, 별도 DB 0·Pod 0·Bound/Retain 관측을 [근거](docs/evidence/current-db-restore/README.md)와 [화면](https://devdooly.github.io/devdooly-platform-lab/#db-restore)에 구분 |
 | Iceberg 보존 계획 | 순수 계획기 공개 완료 | 삭제 없는 dry-run·maintenance 테스트 59개 통과, [실행 범위](docs/runbooks/iceberg-retention-dry-run.md); 실제 snapshot 만료·객체 삭제는 미실행 |
-| Iceberg 실제 metadata capture | Linux 84개 통과·정규화 검증 단계 미확인 | [여섯 번째 실행](docs/evidence/iceberg-capture/ATTEMPT_6.md)은 prep·원래 main 반환 0·새 decoder 정지/CLI 회수를 확인했지만 decoder lifecycle guard 구간에서 검증 미통과. 정확한 원인·graph·inventory·전체 KEEP은 미확인 |
+| Iceberg 실제 metadata capture | Linux 85개 통과·응답 binding 검증 구간 미확인 | [일곱 번째 실행](docs/evidence/iceberg-capture/ATTEMPT_7.md)은 prep·원래 main 반환0·새 decoder 정지/CLI 회수를 확인했지만 전체 capture는 실패. 정확한 원인·decoder exit·graph·inventory·전체 KEEP은 미확인 |
 
 **현재 진행:** [PR #61](https://github.com/DevDooly/devdooly-platform-lab/pull/61)의 DB 복원 카드·문서와 retention planner가 main에 공개됐습니다. main `4a71ed20`의 Actions와 Jenkins 52도 성공했습니다. 이는 저장소 검증·공개 상태이며 실제 배포 애플리케이션의 source나 서버 가용성이 새로 확인됐다는 뜻은 아닙니다.
 
-**다음 확인:** 소스 `61306712`의 [여섯 번째 실행](docs/evidence/iceberg-capture/ATTEMPT_6.md)은 기본 CI·Linux 84개·skip 0, prep·원래 main 한 번/반환 0·새 decoder 정지/CLI 회수를 확인했습니다. 전체 결과는 `SUMMARY_NOT_VERIFIED`, 시도 단계는 `NORMALIZE`, 코드는 `NORMALIZE_DECODER_LIFECYCLE_UNVERIFIED`입니다. 이는 검증을 시도한 guard 구간이며 정확한 내부 원인·decoder 종료 코드·graph 성공을 뜻하지 않습니다. 통합 stopped actors·clock·inventory·전체 KEEP 검증은 미확인이고 관측 count와 정규화 hash는 null입니다. 다음은 decoder lifecycle 검증 구간을 고정 하위 단계 7개로 구분하는 진단 보강입니다. Windows 집중 검사 19개 중 18개 통과·POSIX 전용 1개 제외이며 Linux 85개와 새 capture는 아직 미실행입니다. 원인 수정·graph 성공을 주장하지 않으며 앞선 다섯 실패와 별도 DB 복원·Cloud 성공을 보존합니다. [실행 절차](docs/runbooks/iceberg-closed-copy-capture.md)를 따릅니다.
+**다음 확인:** 소스 `bf044545`의 [일곱 번째 실행](docs/evidence/iceberg-capture/ATTEMPT_7.md)은 기본 CI·Linux 85개·UID0·skip0·source 전후 동일과 prep·원래 main 한 번/반환0·새 decoder 정지/CLI 회수를 확인했습니다. 전체 결과는 `SUMMARY_NOT_VERIFIED` 실패이며 `NORMALIZE_DECODER_REPLY_BINDING_UNVERIFIED`는 응답 전체 증명과 frame·descriptor·actor 관계를 확인하려던 구간입니다. 정확한 원인·특정 hash 불일치·decoder 종료 코드·graph·통합 actors/clock·inventory·전체 KEEP은 미확인이고 관측 count와 정규화 hash는 null입니다. 다음 원인 조사·수정 또는 추가 진단 범위는 아직 정하지 않았습니다. 앞선 여섯 실패와 별도 DB 복원·Cloud 성공을 보존하며 [실행 절차](docs/runbooks/iceberg-closed-copy-capture.md)를 따릅니다.
 
 이번 작업의 중단 기준은 **계정 잔여 한도 60%**입니다. 해당 기준에 도달하면 새 무거운 실행을 시작하지 않고, 이미 시작한 자기 자원의 종료·증거 보존을 마친 뒤 진행 상태를 남깁니다. 완료 시각은 실제 검사·CI 결과에 따라 정하며 고정 ETA를 약속하지 않습니다. Snapshot expiration·객체 GC·삭제, 미니 PC의 새 데이터 처리나 전체 6단계 완료는 이번 capture 범위에 포함하지 않습니다.
 
 **중단 기록(2026-10-16):** 계정 잔여 한도 60%에 도달해 자동 진행을 멈췄습니다. 커밋 f24ff21e의 decoder 검증 하위 단계 7개 진단은 Windows 집중 검사 19개 중 18개 통과·POSIX 전용 1개 제외, 웹 86개·타입 검사·Pages 빌드 통과까지 확인했습니다. 새 Linux 85개와 7차 capture는 시작하지 않았습니다. 재개 시 현재 ref의 전체 SHA 확인 → Linux 85개·UID0·skip0 검증 → 새 격리 capture 한 번 → 원문·화면·문서 반영 순서로 진행합니다. [PR #63](https://github.com/DevDooly/devdooly-platform-lab/pull/63)은 초안이며 main 병합·공개 Pages 반영은 미실행입니다. 6차 capture의 실패와 미관측 값은 그대로 보존하며 이 후속 작업에서 미니 PC에 접촉하지 않았습니다.
+
+**재개 기록(2026-10-18):** 사용량 초기화 후 계정 잔여 99%에서 자동 진행을 재개했으며 중단 기준은 잔여 60%로 유지합니다. 위 2026-10-16 중단 문단은 당시 상태로 보존합니다. 현재 ref의 Linux85 통과와 7차 capture 실패는 [새 근거](docs/evidence/iceberg-capture/ATTEMPT_7.md)에 구분합니다. 이 후속 검증은 미니 PC에 접촉하지 않았고 PR #63은 초안입니다. 이번 근거 반영 후 웹 회귀 87개·Astro 타입 검사 26개 파일·Pages 빌드가 통과했고, 빌드된 공개 원문은 1,794 bytes·SHA-256 `70d95a4b…`로 수집본과 같습니다. 이 로컬 검증은 Cloud capture 성공이나 main 공개를 뜻하지 않습니다.
 
 ## 현재 구현과 검증
 
