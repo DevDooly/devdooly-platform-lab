@@ -8,8 +8,20 @@
 
 이후 [활성화 설정 #67](https://github.com/DevDooly/devdooly-platform-lab/pull/67)이 06:15 UTC에 main `e94bc5b1`로 반영됐다. 06:20 UTC의 새 읽기 전용 점검에서 애플리케이션 소스 `245d61a5`를 유지한 API의 활성화 설정과 HTTP200·엄격한18필드 관측 계약을 확인했다. 활성화 플래그와 Kafka 환경 설정4개만 바뀌는 경계, API·웹 Pod 소유 관계와 OCI→CRI·imageID 연결, 기존 worker 소스·이미지와 업무 DB·PVC/PV·Docker·timer 보존을 통과했다. API Pod는 활성화 설정 적용을 위해 새로 생성됐으며 다른 업무 workload·Pod 보존과 구분한다.
 
-host 수집·Pages의 실제 Kafka 기록 연결과 원래30분 주기의 자연 실행2회는 아직 검증하지 않았다. 이 점검은 순차 읽기이며 원자적 동시점 상태·서비스 전체 복원·offset 변경·실제 부하 시험을 수행하지 않았다. 이번 로컬 백업을 외부 사본·복원·Kafka/Garage 동시점 백업으로 확대하지 않는다. 접속 주소·자격증명과 비공개 백업·보존 identity는 공개 문서에 포함하지 않는다.
+위 활성화 점검은 순차 읽기이며 원자적 동시점 상태·서비스 전체 복원·offset 변경·실제 부하 시험을 수행하지 않았다. 이번 로컬 백업을 외부 사본·복원·Kafka/Garage 동시점 백업으로 확대하지 않는다. 접속 주소·자격증명과 비공개 백업·보존 identity는 공개 문서에 포함하지 않는다.
 
+
+## collector 설치·수동 공개 게시 검증
+
+첫 설치 실행은 전제조건 확인에 실패했다. 후속 읽기 전용 진단에서 기존 코드 6개가 root 소유·0600이고 후보는 0644를 기대했다는 차이를 확인했다. 기존 6개 파일의 이전 상태·새 2개 파일 부재와 timer enabled·active도 확인했다. 코드 파일의 기존0600을 보존하도록 수정한 새 설치는 06:48 UTC에14개 확인 항목을 통과했다. 코드8개의 일관성, 되돌리기용 백업과 timer 복원을 확인했다. 이전 실패를 최초 실행 성공으로 바꾸지 않는다.
+
+[수동 Pages 실행](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39104865401)의 build·deploy가 성공했다. 엄격한18필드 관측 DTO 전체 값은 원 수집본과 같았으며, compact JSON+newline562 bytes의 SHA-256은 `e8da4c1bfc6883fde4cf48d6c7028a53e38523822c97d9e1711c3bd4264bb51b`이다. 게시 artifact와 [공개 JSON](https://devdooly.github.io/devdooly-platform-lab/observations/kafka.latest.json)은 HTTP200·전체 bytes가 일치했다. 이 수동 게시 결과는 host의 실제 systemd/manualhost 실행이나 자연 timer 회차를 검증한 결과가 아니다.
+
+공개 브라우저에서 그룹 STABLE·partition0, commit8·READ_COMMITTED LSO8·lag0과 수집 시각06:26:24 UTC·애플리케이션 소스 `245d61a5`, 다시 읽기 버튼을 확인했다. 마지막 수집 기록의 화면이며 실시간 API 조회를 주장하지 않는다.
+
+![수동 Pages 게시 후 공개 Kafka 관측 카드](screenshots/manual-pages-kafka-desktop.jpg)
+
+collector 설치와 수동 게시 이후, 실제 systemd/manualhost 실행과 원래30분 주기의 자연 실행2회는 아직 검증하지 않았다.
 
 ## 이전 로컬 실행 당시의 기록
 
