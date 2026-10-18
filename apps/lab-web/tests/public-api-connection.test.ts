@@ -205,3 +205,46 @@ test('parent cancellation aborts the changed helper reads and cannot turn the re
   assert.equal(selected.sourceMode, 'recorded'); assert.equal(selected.record, previousRecorded);
   assert.equal(selected.record?.capturedAt, previousRecorded.capturedAt); assert.equal(selected.fallbackUsed, true);
 });
+
+test('reserved HTTPS prefix preserves the six public GET adapters and rejects neighbouring paths', async context => {
+  const reservedBase = 'https://api.example.test/platform-lab/api';
+  assert.deepEqual(publicApiConfiguration(reservedBase), { apiBase: reservedBase, externalHttps: true, invalid: false });
+  assert.equal(publicApiConfiguration(reservedBase + '/').apiBase, reservedBase);
+  assert.equal(publicApiConfiguration(base).apiBase, base);
+  for (const invalid of [reservedBase + '/extra', 'https://api.example.test/platform-lab/admin',
+    'https://api.example.test/other/api', 'https://api.example.test/api/platform-lab/api',
+    '/platform-lab/api', 'http://api.example.test/platform-lab/api', reservedBase + '?', reservedBase + '#']) {
+    assert.equal(publicApiConfiguration(invalid).invalid, true, invalid);
+  }
+  const sample = JSON.parse(readFileSync(new URL('../src/data/snapshot.json', import.meta.url), 'utf8'));
+  const observedAt = '2026-10-18T12:00:02Z';
+  const run = { ...sample.runs[0], startedAt: observedAt, completedAt: observedAt };
+  const detail = { ...sample.detail, ...run, observedAt };
+  const calls: string[] = [];
+  const read: typeof fetch = async (input, options) => {
+    const url = publicGet(input, options); calls.push(url);
+    if (url === reservedBase + '/demo/runs') return json({ items: [run], observedAt });
+    if (url === reservedBase + '/demo/runs/' + run.id) return json(detail);
+    if (url === reservedBase + '/platform/summary') return json({ ...sample.summary, status: 'UP', observedAt });
+    if (url === reservedBase + '/platform/releases') return json({ items: [], observedAt });
+    if (url === reservedBase + '/jobs/observation') return json(job());
+    if (url === reservedBase + '/kafka/observation') return json(kafka());
+    throw new Error('UNEXPECTED_RESERVED_TEST_URL');
+  };
+  context.mock.method(globalThis, 'fetch', read);
+  const lab = await fetchLab(publicApiConfiguration(reservedBase).apiBase);
+  const jobs = await loadJobObservation({ url: publicReadUrl(reservedBase, '/jobs/observation')!,
+    fetcher: read, rejectRedirects: true });
+  const broker = await loadKafkaObservation({ url: publicReadUrl(reservedBase, '/kafka/observation')!,
+    apiBase: reservedBase, nowMs: now, allowIsolated: false, fetcher: read, rejectRedirects: true });
+  assert.equal(lab.detail.inputCount, 12); assert.equal(lab.detail.successCount, 7);
+  assert.equal(jobs.browserError, null); assert.equal(jobs.record?.sourceCommit, job().sourceCommit);
+  assert.equal(broker.browserError, null); assert.deepEqual({ ...broker.record }, kafka());
+  assert.deepEqual([...calls].sort(), ['/demo/runs', '/demo/runs/' + run.id, '/platform/summary',
+    '/platform/releases', '/jobs/observation', '/kafka/observation'].map(path => reservedBase + path).sort());
+  for (const path of ['/admin', '/jobs/observation?run=x', '/kafka/observation#x', '/demo/runs/a%2Fb']) {
+    assert.equal(publicReadUrl(reservedBase, path), null);
+    await assert.rejects(getJson(reservedBase, path));
+  }
+  assert.equal(calls.length, 6, 'Rejected paths must not add transport calls');
+});

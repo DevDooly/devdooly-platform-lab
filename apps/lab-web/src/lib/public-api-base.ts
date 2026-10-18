@@ -9,10 +9,10 @@ export function publicApiConfiguration(value?: string): PublicApiConfiguration {
   try {
     const url = new URL(value);
     if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash
-      || !/^\/api\/?$/.test(url.pathname) || url.port
+      || !/^\/(?:api|platform-lab\/api)\/?$/.test(url.pathname) || url.port
       || !/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/.test(url.hostname)
       || /^[0-9.]+$/.test(url.hostname) || /\.(?:local|localhost|internal|svc)$/.test(url.hostname)) return invalid;
-    return { apiBase: `${url.origin}/api`, externalHttps: true, invalid: false };
+    return { apiBase: `${url.origin}${url.pathname.replace(/\/$/, '')}`, externalHttps: true, invalid: false };
   } catch { return invalid; }
 }
 
