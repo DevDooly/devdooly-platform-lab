@@ -449,6 +449,74 @@ class OwnedDocker:
                 all_removed = False
         return all_removed
 
+def public_it_failure_diagnostic(staged, source_snapshot, cli_status, container):
+    """Owned bounded XML only. Emit fixed enums/public source line, never provider values."""
+    failure_kind = 'JUNIT_REPORT_UNVERIFIED'; source_line = None
+    observer_codes = {'NOT_CONFIGURED', 'INVALID_CONFIGURATION', 'CAPTURE_BUSY', 'OBSERVER_POISONED',
+        'CAPTURE_TIMEOUT', 'KAFKA_UNAVAILABLE', 'TARGET_UNVERIFIED', 'GROUP_UNAVAILABLE',
+        'GROUP_UNSTABLE', 'OFFSETS_UNVERIFIED', 'CLOCK_UNVERIFIED', 'CLOSE_UNVERIFIED'}
+    try:
+        state = container['State']
+        if state.get('OOMKilled') is True:
+            failure_kind = 'CONTAINER_OOM_KILLED'
+        elif state.get('Running') is True:
+            failure_kind = 'CONTAINER_STILL_RUNNING'
+        elif type(cli_status) is int and cli_status != 0 and type(state.get('ExitCode')) is int and state['ExitCode'] == 0:
+            failure_kind = 'CONTAINER_ATTACH_UNVERIFIED'
+        else:
+            report = staged / 'target/surefire-reports' / ('TEST-' + CLASS + '.xml')
+            try:
+                report.lstat()
+            except FileNotFoundError:
+                failure_kind = 'JUNIT_REPORT_ABSENT'
+            else:
+                require(not any(path.is_symlink() for path in (staged, report.parent.parent, report.parent)))
+                raw = read(report, 1048576)
+                require(b'<!DOCTYPE' not in raw and b'<!ENTITY' not in raw)
+                suite = ET.fromstring(raw)
+                require(suite.tag == 'testsuite' and suite.attrib.get('name') == CLASS)
+                cases = suite.findall('testcase')
+                require(len(cases) == 1 and cases[0].attrib.get('classname') == CLASS and cases[0].attrib.get('name') == METHOD)
+                case = cases[0]
+                counts = tuple(suite.attrib.get(key) for key in ('tests', 'failures', 'errors', 'skipped'))
+                mapping = {('1', '1', '0', '0'): ('JUNIT_ASSERTION_FAILED', 'failure'),
+                    ('1', '0', '1', '0'): ('JUNIT_ERROR', 'error'),
+                    ('1', '0', '0', '1'): ('JUNIT_SKIPPED', 'skipped'),
+                    ('1', '0', '0', '0'): ('JUNIT_SUCCEEDED_PROCESS_FAILED', None)}
+                require(counts in mapping)
+                fixed_kind, tag = mapping[counts]
+                problems = [element for element in case if element.tag in ('failure', 'error', 'skipped')]
+                require(not problems if tag is None else len(problems) == 1 and problems[0].tag == tag)
+                failure_kind = fixed_kind
+                if tag in ('failure', 'error'):
+                    problem = problems[0]
+                    # Our exception has stacktrace disabled. Only exact own type + exact finite Code is safe.
+                    if (problem.attrib.get('type') == 'io.github.devdooly.platformlab.jobs.observation.KafkaObservationService$ObservationFailure'
+                            and problem.attrib.get('message') in observer_codes):
+                        failure_kind = 'OBSERVER_' + problem.attrib['message']
+                    relative = 'apps/api/src/test/java/io/github/devdooly/platformlab/jobs/observation/KafkaObservationIT.java'
+                    expected = source_snapshot.get(relative)
+                    if type(expected) is str and SHA.fullmatch(expected) is not None:
+                        public_source = read(staged / Path(relative).relative_to('apps/api'))
+                        require(digest(public_source) == expected)
+                        lines = public_source.decode('utf-8', 'strict').splitlines()
+                        begins = [index + 1 for index, line in enumerate(lines) if '@Test void ' + METHOD + '(' in line]
+                        ends = [index + 1 for index, line in enumerate(lines) if 'static String required(' in line]
+                        require(len(begins) == len(ends) == 1 and begins[0] < ends[0])
+                        frame = re.compile(r'^[ \t]*at ' + re.escape(CLASS) + r'\.' + re.escape(METHOD)
+                            + r'\(KafkaObservationIT\.java:([1-9][0-9]{0,4})\)[ \t]*$')
+                        found = {int(match.group(1)) for line in (problem.text or '').splitlines()
+                            if (match := frame.fullmatch(line)) is not None and begins[0] <= int(match.group(1)) < ends[0]}
+                        if len(found) == 1: source_line = next(iter(found))
+    except Exception:
+        # Keep only a fixed classification already established; never print the failed parse/value/exception.
+        pass
+    try:
+        print(json.dumps({'kind': 'KAFKA_IT_FAILURE_DIAGNOSTIC', 'failureKind': failure_kind,
+                          'testSourceLine': source_line}, sort_keys=True))
+    except Exception:
+        return
+
 def image_identity(owned, image):
     code, _, _ = owned.call(['pull', image])
     require(code == 0, 'PREPARATION_FAILED')
@@ -546,6 +614,8 @@ def run(repo, expected, environment):
         status, out, err = owned.call(['start', '-a', jvm['id']])
         (task / 'it.stdout.log').write_bytes(out); (task / 'it.stderr.log').write_bytes(err)
         value = owned.inspect(jvm)
+        if not (status == 0 and value['State']['Running'] is False and value['State']['ExitCode'] == 0):
+            public_it_failure_diagnostic(staged, state['sourceSnapshot'], status, value)
         require(status == 0 and value['State']['Running'] is False and value['State']['ExitCode'] == 0, 'IT_FAILED')
         reports = list((staged / 'target/surefire-reports').glob('TEST-*.xml'))
         require(len(reports) == 1, 'XML_UNVERIFIED'); xml_hash = verify_xml(reports[0])

@@ -404,5 +404,93 @@ class BoundaryTests(unittest.TestCase):
             self.assertIs(owned.cleanup(), False)
         self.assertEqual(state['resources'][0]['phase'], 'CREATED')
 
+    def it_diagnostic_fixture(self):
+        staged = self.root / 'it-api'; staged.mkdir()
+        relative = 'apps/api/src/test/java/io/github/devdooly/platformlab/jobs/observation/KafkaObservationIT.java'
+        source = staged / Path(relative).relative_to('apps/api'); source.parent.mkdir(parents=True)
+        public = ('class KafkaObservationIT {\n    @Test void ' + runner.METHOD + '() throws Exception {\n'
+            + '        assertThat(true).isTrue();\n    }\n    static String required(String name) { return name; }\n}\n').encode()
+        source.write_bytes(public)
+        folder = staged / 'target/surefire-reports'; folder.mkdir(parents=True)
+        report = folder / ('TEST-' + runner.CLASS + '.xml')
+        def write_report(tag, message='PRIVATE_MESSAGE_CANARY', error_type='PRIVATE_PROVIDER_TYPE_CANARY', frame_line=3):
+            counts = {'failure': ('1', '0', '0'), 'error': ('0', '1', '0'), 'skipped': ('0', '0', '1'), None: ('0', '0', '0')}
+            failed, errors, skipped = counts[tag]
+            suite = runner.ET.Element('testsuite', name=runner.CLASS, tests='1', failures=failed, errors=errors, skipped=skipped)
+            case = runner.ET.SubElement(suite, 'testcase', classname=runner.CLASS, name=runner.METHOD)
+            if tag is not None:
+                problem = runner.ET.SubElement(case, tag, message=message, type=error_type)
+                problem.text = 'PRIVATE_STACK_CANARY\n    at ' + runner.CLASS + '.' + runner.METHOD + '(KafkaObservationIT.java:' + str(frame_line) + ')\n'
+            report.write_bytes(runner.ET.tostring(suite))
+        def capture(status=1, state=None):
+            output = io.StringIO()
+            reader = contextlib.nullcontext()
+            if runner.os.name == 'nt':
+                # Exercise pure XML/privacy classification on Windows; Linux still uses the real O_NOFOLLOW reader.
+                def fixture_read(path, limit=1048576):
+                    raw = path.read_bytes()
+                    if len(raw) > limit: raise runner.Failure('INVALID_CONFIGURATION')
+                    return raw
+                reader = patch.object(runner, 'read', side_effect=fixture_read)
+            with reader, contextlib.redirect_stdout(output):
+                runner.public_it_failure_diagnostic(staged, {relative: runner.digest(public)}, status,
+                    {'State': state if state is not None else {'Running': False, 'ExitCode': 1, 'OOMKilled': False}})
+            encoded = output.getvalue(); value = json.loads(encoded)
+            self.assertEqual(set(value), {'kind', 'failureKind', 'testSourceLine'})
+            self.assertEqual(value['kind'], 'KAFKA_IT_FAILURE_DIAGNOSTIC')
+            self.assertNotIn('PRIVATE_', encoded); self.assertNotIn(str(self.root), encoded)
+            return value
+        return report, write_report, capture
+
+    def test_it_diagnostic_classifies_actual_single_report_without_provider_values(self):
+        report, write_report, capture = self.it_diagnostic_fixture()
+        for tag, kind in [('failure', 'JUNIT_ASSERTION_FAILED'), ('error', 'JUNIT_ERROR'),
+                ('skipped', 'JUNIT_SKIPPED'), (None, 'JUNIT_SUCCEEDED_PROCESS_FAILED')]:
+            with self.subTest(tag=tag):
+                write_report(tag); value = capture(); self.assertEqual(value['failureKind'], kind)
+                self.assertEqual(value['testSourceLine'], 3 if tag in ('failure', 'error') else None)
+        write_report('failure', frame_line=50000)
+        self.assertIsNone(capture()['testSourceLine'])
+        write_report('failure')
+        suite = runner.ET.fromstring(report.read_bytes()); problem = suite.find('testcase/failure')
+        problem.text += '    at ' + runner.CLASS + '.' + runner.METHOD + '(KafkaObservationIT.java:4)\n'
+        report.write_bytes(runner.ET.tostring(suite)); self.assertIsNone(capture()['testSourceLine'])
+        source = report.parents[2] / 'src/test/java/io/github/devdooly/platformlab/jobs/observation/KafkaObservationIT.java'
+        original = source.read_bytes(); source.write_bytes(b'PRIVATE_SOURCE_CANARY')
+        write_report('failure'); self.assertIsNone(capture()['testSourceLine']); source.write_bytes(original)
+        write_report('error'); report.write_bytes(report.read_bytes().replace(runner.CLASS.encode(), b'PRIVATE_FOREIGN_CLASS_CANARY'))
+        value = capture(); self.assertEqual(value['failureKind'], 'JUNIT_REPORT_UNVERIFIED'); self.assertIsNone(value['testSourceLine'])
+
+    def test_it_diagnostic_rejects_invalid_bounded_xml_and_keeps_container_enums_fixed(self):
+        report, write_report, capture = self.it_diagnostic_fixture()
+        self.assertEqual(capture()['failureKind'], 'JUNIT_REPORT_ABSENT')
+        for raw in [b'PRIVATE_INVALID_XML_CANARY', b'<!DOCTYPE PRIVATE_CANARY><testsuite/>', b'x' * 1048577]:
+            with self.subTest(size=len(raw)):
+                report.write_bytes(raw); value = capture()
+                self.assertEqual(value['failureKind'], 'JUNIT_REPORT_UNVERIFIED'); self.assertIsNone(value['testSourceLine'])
+        for state, kind in [({'Running': False, 'ExitCode': 137, 'OOMKilled': True}, 'CONTAINER_OOM_KILLED'),
+                ({'Running': True, 'ExitCode': 0}, 'CONTAINER_STILL_RUNNING'),
+                ({'Running': False, 'ExitCode': 0}, 'CONTAINER_ATTACH_UNVERIFIED')]:
+            self.assertEqual(capture(state=state)['failureKind'], kind)
+        with patch('builtins.print', side_effect=OSError('PRIVATE_PRINT_CANARY')):
+            runner.public_it_failure_diagnostic(self.root, {}, 1, {'State': {}})
+
+    def test_it_diagnostic_only_accepts_exact_own_stackless_observer_code_pairs(self):
+        report, write_report, capture = self.it_diagnostic_fixture()
+        own = 'io.github.devdooly.platformlab.jobs.observation.KafkaObservationService$ObservationFailure'
+        codes = {'NOT_CONFIGURED', 'INVALID_CONFIGURATION', 'CAPTURE_BUSY', 'OBSERVER_POISONED', 'CAPTURE_TIMEOUT',
+            'KAFKA_UNAVAILABLE', 'TARGET_UNVERIFIED', 'GROUP_UNAVAILABLE', 'GROUP_UNSTABLE', 'OFFSETS_UNVERIFIED',
+            'CLOCK_UNVERIFIED', 'CLOSE_UNVERIFIED'}
+        for code in codes:
+            with self.subTest(code=code):
+                write_report('error', message=code, error_type=own)
+                report.write_bytes(report.read_bytes().replace(('    at ' + runner.CLASS).encode(), b'    at PRIVATE_UNKNOWN_FRAME_CANARY'))
+                value = capture(); self.assertEqual(value['failureKind'], 'OBSERVER_' + code); self.assertIsNone(value['testSourceLine'])
+        for message, error_type in [('CAPTURE_TIMEOUT', 'PRIVATE_PROVIDER_TYPE_CANARY'), ('PRIVATE_MESSAGE_CANARY', own),
+                ('CAPTURE_TIMEOUT PRIVATE_CANARY', own), (' CAPTURE_TIMEOUT', own), ('CAPTURE_TIMEOUT', own + 'PRIVATE_CANARY')]:
+            with self.subTest(message=message, error_type=error_type):
+                write_report('error', message=message, error_type=error_type)
+                self.assertEqual(capture()['failureKind'], 'JUNIT_ERROR')
+
 if __name__ == '__main__':
     unittest.main()

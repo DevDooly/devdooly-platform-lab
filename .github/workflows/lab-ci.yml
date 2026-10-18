@@ -121,16 +121,16 @@ jobs:
           from pathlib import Path
           import unittest
           pins = {
-              'infra/kafka-observation-ci/run_once.py': '2bc99f6d94c99ddf17311fbc0751a23e3329430758fd8eb360bd27dfede5d54d',
-              'infra/kafka-observation-ci/test_run_once.py': '20cfa5f4b11858ca190258da5e6991878989a21ca820ce4b3f68e248ef9e1e81',
-              'infra/kafka-observation-ci/runtime-manifest.json': '2d13eed47ed2d5c3c06375a1ae875d83feff16a561c1d6e42479fc3bdcbf7e9e',
+              'infra/kafka-observation-ci/run_once.py': '187da24f9aa6163963522408807e6b64baf29c9dcbc0a2aa50d1032910ccc3d2',
+              'infra/kafka-observation-ci/test_run_once.py': '200a515a1456432d842e410ead99121938cf00ee108104d484bc288770e54877',
+              'infra/kafka-observation-ci/runtime-manifest.json': '9182bc06f021b94cf34ca52640bd99dd6984cab1447bb5a324a13bd5a240a2b9',
           }
           for name, expected in pins.items():
               assert hashlib.sha256(Path(name).read_bytes()).hexdigest() == expected
           suite = unittest.defaultTestLoader.discover('infra/kafka-observation-ci', pattern='test_*.py')
-          assert suite.countTestCases() == 30
+          assert suite.countTestCases() == 33
           result = unittest.TextTestRunner(verbosity=2).run(suite)
-          assert result.testsRun == 30 and result.wasSuccessful() and not result.skipped
+          assert result.testsRun == 33 and result.wasSuccessful() and not result.skipped
           for name, expected in pins.items():
               assert hashlib.sha256(Path(name).read_bytes()).hexdigest() == expected
           PY
@@ -152,18 +152,18 @@ jobs:
         run: |
           chmod +x mvnw
           if [ "$KAFKA_OBSERVATION_OPT_IN" = 'true' ]; then
-            python3 -I -B ../../infra/kafka-observation-ci/run_once.py prepare --source-manifest-sha256 2d13eed47ed2d5c3c06375a1ae875d83feff16a561c1d6e42479fc3bdcbf7e9e --ack-fresh-hosted-kafka-it
+            python3 -I -B ../../infra/kafka-observation-ci/run_once.py prepare --source-manifest-sha256 9182bc06f021b94cf34ca52640bd99dd6984cab1447bb5a324a13bd5a240a2b9 --ack-fresh-hosted-kafka-it
           else
             ./mvnw -B -ntp verify
           fi
 
       - name: Run one owned Kafka observation IT
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_kafka_observation_trial == true }}
-        run: python3 -I -B infra/kafka-observation-ci/run_once.py run --source-manifest-sha256 2d13eed47ed2d5c3c06375a1ae875d83feff16a561c1d6e42479fc3bdcbf7e9e --ack-fresh-hosted-kafka-it
+        run: python3 -I -B infra/kafka-observation-ci/run_once.py run --source-manifest-sha256 9182bc06f021b94cf34ca52640bd99dd6984cab1447bb5a324a13bd5a240a2b9 --ack-fresh-hosted-kafka-it
 
       - name: Confirm owned Kafka cleanup even after failure
         if: ${{ always() && github.event_name == 'workflow_dispatch' && inputs.run_kafka_observation_trial == true }}
-        run: python3 -I -B infra/kafka-observation-ci/run_once.py cleanup --source-manifest-sha256 2d13eed47ed2d5c3c06375a1ae875d83feff16a561c1d6e42479fc3bdcbf7e9e --ack-fresh-hosted-kafka-it
+        run: python3 -I -B infra/kafka-observation-ci/run_once.py cleanup --source-manifest-sha256 9182bc06f021b94cf34ca52640bd99dd6984cab1447bb5a324a13bd5a240a2b9 --ack-fresh-hosted-kafka-it
 
       - name: Upload only Kafka observation public summary
         if: ${{ always() && github.event_name == 'workflow_dispatch' && inputs.run_kafka_observation_trial == true }}
