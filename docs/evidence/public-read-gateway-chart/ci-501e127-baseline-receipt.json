@@ -1,0 +1,20 @@
+{
+  "appliedToCluster": false,
+  "clusterAccessRequested": false,
+  "helmArchiveSha256": "86584a54def73570558f66f5111cc53dfed56689637ae32c1201205d494f54fb",
+  "helmExecutableSha256": "57ce7fc4ea77b28ee6fa91ae071abcade74d3f524e80c9decff5877a5ac8eda4",
+  "kubeVersionInput": "1.36.5",
+  "mainCommit": "13447fa88987050f64e47c01684ecb9c233b34fb",
+  "namespaceInput": "platform-lab",
+  "objectCount": 12,
+  "passed": true,
+  "releaseName": "lab",
+  "renderBytes": 25810,
+  "renderSha256": "1862ec4a796a4ec860a78e84c35bb8ebf2db483ffe432974cd62ee88a0173a32",
+  "returnCode": 0,
+  "schemaVersion": 1,
+  "scope": "PINNED_MAIN_K_LINUX_OFFLINE_BASELINE",
+  "sourceBytesUnchanged": true,
+  "sourceManifestSha256": "4f385f7011eee90b62a66976f20bb46225a21dc95956867b504d228faf9bf282",
+  "stderrBytesDiscarded": 0
+}
