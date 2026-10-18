@@ -1,0 +1,174 @@
+{
+  "application": {
+    "namespace": "platform-lab",
+    "path": "infra/charts/platform-lab",
+    "releaseName": "lab",
+    "valueFiles": [
+      "gitops/environments/home-lab/values.yaml",
+      "gitops/environments/home-lab/runtime.yaml"
+    ]
+  },
+  "clusterAccessRequested": false,
+  "dWrites": 0,
+  "dependencyUpdateRequested": false,
+  "files": [
+    {
+      "bytes": 771,
+      "gitBlob": "58e8eeea5f2f8c843f08bd0ae1da149e785d9b28",
+      "path": "gitops/bootstrap/application.yaml",
+      "sha256": "eccc5ab69d3a60e27f2baef190eb8830f78fc2a6f95075f7d9fe20e84c4d789f"
+    },
+    {
+      "bytes": 788,
+      "gitBlob": "66cf1a9752645f6646ee87b2561e6f5063230857",
+      "path": "gitops/environments/home-lab/runtime.yaml",
+      "sha256": "92ac46eb09905f11efeb49bf985ea8982d02c740f036ef756fad6b624f686754"
+    },
+    {
+      "bytes": 489,
+      "gitBlob": "daa3f666a8185f1b7e94c8a457c7ade9660c4a8e",
+      "path": "gitops/environments/home-lab/values.yaml",
+      "sha256": "2f1859daec986e70317225b5af05af1f665ad3410035f101e00011b70ff19cb4"
+    },
+    {
+      "bytes": 11,
+      "gitBlob": "e2052a177ff123ee494c68d145223c8f468a2655",
+      "path": "infra/charts/platform-lab/.helmignore",
+      "sha256": "6a6fa93861682c1cfc64c9d3367815c1b7b01a78888b7ca158a5250d22b4fa0a"
+    },
+    {
+      "bytes": 201,
+      "gitBlob": "cafac5f7a1e141f477855ee0db750eb786c75eca",
+      "path": "infra/charts/platform-lab/Chart.yaml",
+      "sha256": "c67368f35e4fe8399c2658e6ac98d53ba459b60547bbf6a54d0bc171a459779f"
+    },
+    {
+      "bytes": 18443,
+      "gitBlob": "c3eba5b3fb7a043b542a5e70c031035f46784096",
+      "path": "infra/charts/platform-lab/README.md",
+      "sha256": "79abdd97e6f09533d18260d65c25d2f7e4941f1b61c746ac906dcfa3e8962137"
+    },
+    {
+      "bytes": 473,
+      "gitBlob": "3c108a5ec54860bb2a3df5930e962567fc432252",
+      "path": "infra/charts/platform-lab/ci/lint-values.yaml",
+      "sha256": "d853d40e6c506677b2e17731edec0aa12e64545fa93d6cff5103da9da847bca1"
+    },
+    {
+      "bytes": 2389,
+      "gitBlob": "acacd977fce118a1d1b9f6a2b83a04b2f650adff",
+      "path": "infra/charts/platform-lab/ci/render-validation.json",
+      "sha256": "4ab1bf1154f2d721e55cea554e46724ecbae493ad6f3c837acc4fd27ae138cfd"
+    },
+    {
+      "bytes": 526,
+      "gitBlob": "d7acb29ca9517a3e140b88d2f2c8257f3e1da38f",
+      "path": "infra/charts/platform-lab/ci/runtime-lint-values.yaml",
+      "sha256": "750a9711f1187c2fcd9f5243795d0355c627738dcf3e396abd4e108e3ec9c3af"
+    },
+    {
+      "bytes": 3174,
+      "gitBlob": "51a4ecc7e5248d3071d868350d5821ad35008d0e",
+      "path": "infra/charts/platform-lab/ci/runtime-render-validation.json",
+      "sha256": "9e687612c96222a64c8369cc2bd0be3aa3bc98bfb420cfeaef407fdfff4bf385"
+    },
+    {
+      "bytes": 10206,
+      "gitBlob": "00740841838577f21462b395d75dfab4425e132a",
+      "path": "infra/charts/platform-lab/ci/validate-render.mjs",
+      "sha256": "fb8a6cac3749e748c071d9b740d5adf882582534f3c4d60b0ea049dca1bef85d"
+    },
+    {
+      "bytes": 22535,
+      "gitBlob": "e30b15b42440fd52dcd433e206da9777b27da5ae",
+      "path": "infra/charts/platform-lab/ci/validate-runtime-render.mjs",
+      "sha256": "e84f8d857a6a2f5464edcf489494c11805ca09a5fb7926051826e3fb9e42f71d"
+    },
+    {
+      "bytes": 886,
+      "gitBlob": "f43a266c23208acac969be3716ea826511a184c2",
+      "path": "infra/charts/platform-lab/templates/_helpers.tpl",
+      "sha256": "6623f5abe0426b05b04f0b671cfde53d64b0ed27612a3a339ecdb797d87259cc"
+    },
+    {
+      "bytes": 4279,
+      "gitBlob": "92af161fd1702eb369527f2681f6638767390003",
+      "path": "infra/charts/platform-lab/templates/api-deployment.yaml",
+      "sha256": "aa1845a59badef27e4465ca16eb67c585f44e929d95b97f66666bdb0542ec2f8"
+    },
+    {
+      "bytes": 3437,
+      "gitBlob": "d038936eb87f278ed3a926c19a55c5a842f252af",
+      "path": "infra/charts/platform-lab/templates/database-statefulset.yaml",
+      "sha256": "8dd0f3037ffdc4f7e78033bbf42e8bbf14468772a03cd4e114f50ccc46010ab8"
+    },
+    {
+      "bytes": 3721,
+      "gitBlob": "a5946ef46266148c7a19ad987bd3a96db3ae09a8",
+      "path": "infra/charts/platform-lab/templates/runtime-garage.yaml",
+      "sha256": "c1eec7bb4575f5a8f66da4d2497a52502ac068304d39e4da2301644fbb44ae29"
+    },
+    {
+      "bytes": 5407,
+      "gitBlob": "d1f384bb12d05afe3623c25c90f6b664b43d9543",
+      "path": "infra/charts/platform-lab/templates/runtime-kafka.yaml",
+      "sha256": "6ca7d0acf22528f055af3debd2955c2e2bee17d4080cc29a00b8efd2bcd43383"
+    },
+    {
+      "bytes": 5129,
+      "gitBlob": "f3fa7ef1cf769458bac7493edee5094eb812d047",
+      "path": "infra/charts/platform-lab/templates/runtime-worker.yaml",
+      "sha256": "2b1a638ecc4723313f4a573dc184f3f0608e60c9415d3b2b5890aca7a1b6bd56"
+    },
+    {
+      "bytes": 194,
+      "gitBlob": "78b34bf5b9224ebc2e7ffb0d188361546c264387",
+      "path": "infra/charts/platform-lab/templates/serviceaccount.yaml",
+      "sha256": "67cd30f38c10d9481f0675904aefee1347a40111133b8ed8ad2675d4efc650ca"
+    },
+    {
+      "bytes": 1169,
+      "gitBlob": "3e83dfed7803cfe1a121b24f36f8628271ee92ec",
+      "path": "infra/charts/platform-lab/templates/services.yaml",
+      "sha256": "d4fc69294279402825a09a48cb43c0aef7ffd693a564949a7623ac2df4a17dd6"
+    },
+    {
+      "bytes": 2390,
+      "gitBlob": "da26b8f12c960c279d993c6832335e6c9285d81f",
+      "path": "infra/charts/platform-lab/templates/web-deployment.yaml",
+      "sha256": "52646efeb27b3ab1324aeaade953c1e88ea6bd0ffe62d216d5c9ab525e86f373"
+    },
+    {
+      "bytes": 25679,
+      "gitBlob": "fd2d9ae547479d84c70f5c1d1d3518ddaa2808b6",
+      "path": "infra/charts/platform-lab/values.schema.json",
+      "sha256": "2b2ebc714afd9e24e89fbfb20007be56fb11f8604e2359257aa29ff958dbadfd"
+    },
+    {
+      "bytes": 3499,
+      "gitBlob": "86877629e3374d4a32a67590456eafabf488f47f",
+      "path": "infra/charts/platform-lab/values.yaml",
+      "sha256": "20626f1cb1560255df10ad31c70f3dadc5214dfb685940db0770816a6ebb706d"
+    }
+  ],
+  "gatewayValuesOverrideAdded": false,
+  "helmExecutable": {
+    "bytes": 67507712,
+    "expectedVersion": "4.3.0",
+    "pathExplicitlyAuthorizedByRoot": true,
+    "sha256": "2f65add9f1d5c96fc70ad70f06f1c47b3ef21bee4a9f086d861bb138429e9c13",
+    "versionCommandExecuted": false
+  },
+  "kubeVersion": "1.36.5",
+  "mainCommit": "13447fa88987050f64e47c01684ecb9c233b34fb",
+  "privateLocalFilesReadBeyondAuthorizedExecutable": 0,
+  "schemaVersion": 1,
+  "scope": "MAIN_K_PUBLIC_CHART_OFFLINE_DISABLED_GATEWAY_BASELINE",
+  "sourceBounds": {
+    "maximumFileBytes": 524288,
+    "maximumFiles": 64,
+    "maximumTotalBytes": 2097152
+  },
+  "sourceCount": 23,
+  "sourceTotalBytes": 115796
+}

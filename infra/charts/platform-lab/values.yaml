@@ -119,3 +119,7 @@ runtime:
     resources:
       requests: {cpu: 100m, memory: 256Mi, ephemeral-storage: 64Mi}
       limits: {cpu: "1", memory: 768Mi, ephemeral-storage: 256Mi}
+
+# Optional internal read gateway; no live enablement or external listener by default.
+publicReadGateway:
+  enabled: false

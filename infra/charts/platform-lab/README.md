@@ -160,3 +160,7 @@ node infra/charts/platform-lab/ci/validate-runtime-render.mjs
 
 - [Kafka 공식 Docker 예제](https://github.com/apache/kafka/blob/4.3.1/docker/examples/docker-compose-files/single-node/plaintext/docker-compose.yml), [공식 configure](https://github.com/apache/kafka/blob/4.3.1/docker/resources/common-scripts/configure), [Dockerfile의 appuser](https://github.com/apache/kafka/blob/4.3.1/docker/jvm/Dockerfile)
 - [Garage 공식 설정](https://garagehq.deuxfleurs.fr/documentation/reference-manual/configuration/), [단일 노드와 수동 bootstrap](https://garagehq.deuxfleurs.fr/documentation/quick-start/)
+
+## 선택적 조회 gateway
+
+`publicReadGateway.enabled`의 기본값은 `false`입니다. 고정 정책·ClusterIP·NetworkPolicy 선언과 활성화 전 조건은 [별도 운영 안내](../../../docs/runbooks/public-read-gateway-chart.md)를 따릅니다. Windows 오프라인 렌더의 기존 12개 보존·4개 추가는 [실제 결과](../../../docs/evidence/public-read-gateway-chart/README.md)에 기록했습니다. 새 Linux CI 연결, 실제 home-lab 활성화·AppProject 변경·외부 노출은 후속입니다.
