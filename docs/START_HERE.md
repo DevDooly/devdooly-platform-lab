@@ -82,7 +82,7 @@ Kafka·Garage의 전용 PVC 3개는 외부 사본에서 새 볼륨으로 복원�
 
 ## 다음 작업
 
-**다음 작업 지점(2026-10-18):** PR #61의 DB 복원 기록·카드와 삭제 없는 retention planner는 main에 공개됐으며 기존 main CI 기록과 구분합니다. 소스 `bf044545`의 [일곱 번째 capture](evidence/iceberg-capture/ATTEMPT_7.md)은 기본 CI·Linux85·UID0·skip0·source 전후 동일과 prep·원래 main 한 번/반환0·새 decoder 정지/CLI 회수를 확인했습니다. 전체 결과는 SUMMARY_NOT_VERIFIED 실패이고 NORMALIZE_DECODER_REPLY_BINDING_UNVERIFIED는 시도한 응답 binding 검증 구간만 뜻합니다. 정확한 원인·특정 hash 불일치·decoder 종료 코드·graph·통합 actors/clock·inventory·전체 KEEP은 미확인이며 관측 count·정규화 hash는 null입니다. 다음 원인 조사·수정 또는 추가 진단 범위는 아직 정하지 않았습니다. [실행 절차](runbooks/iceberg-closed-copy-capture.md)에 따라 앞선 여섯 실패를 보존하며 snapshot 만료·객체 삭제·미니 PC의 새 데이터 처리는 포함하지 않습니다. 계정 사용량 초기화 후 재개했고 잔여60%에서 안전하게 중단합니다.
+**다음 작업 지점(2026-10-18):** PR #61의 DB 복원 기록·카드와 삭제 없는 retention planner는 main에 공개됐으며 기존 main CI 기록과 구분합니다. 소스 `bf044545`의 [일곱 번째 capture](evidence/iceberg-capture/ATTEMPT_7.md)은 기본 CI·Linux85·UID0·skip0·source 전후 동일과 prep·원래 main 한 번/반환0·새 decoder 정지/CLI 회수를 확인했습니다. 전체 결과는 SUMMARY_NOT_VERIFIED 실패이고 NORMALIZE_DECODER_REPLY_BINDING_UNVERIFIED는 시도한 응답 binding 검증 구간만 뜻합니다. 정확한 원인·특정 hash 불일치·decoder 종료 코드·graph·통합 actors/clock·inventory·전체 KEEP은 미확인이며 관측 count·정규화 hash는 null입니다. 다음은 [응답 검증 세분화](../infra/iceberg-retention-ci/REPLY_SUBPHASES.md)입니다. 원래 검증 조건을 유지하면서 전체 proof·strict JSON 해석·입력 관계 비교를 고정 구간 3개로 구분합니다. Windows 집중20개 중 19개 통과·POSIX1개 제외, 웹88개·타입 검사·Pages 빌드를 확인했습니다. 새 Linux86개와 실제 capture는 아직 미실행이며 원인 수정·graph·inventory 성공을 뜻하지 않습니다. [실행 절차](runbooks/iceberg-closed-copy-capture.md)에 따라 앞선 여섯 실패를 보존하며 snapshot 만료·객체 삭제·미니 PC의 새 데이터 처리는 포함하지 않습니다. 계정 사용량 초기화 후 재개했고 잔여60%에서 안전하게 중단합니다.
 
 [다음 개발 계획](NEXT_STEPS.md)에 우선순위와 단계별 결과물·완료 조건을 정리했습니다.
 

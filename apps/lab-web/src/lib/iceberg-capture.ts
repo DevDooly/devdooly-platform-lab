@@ -1,5 +1,5 @@
 /** Stored CLI summary only. This parser cannot run a capture or apply retention. */
-import { captureDecoderLifecyclePhaseCodes, captureNormalizationPhaseCodes, parseCaptureDiagnostic, type CaptureDiagnostic, type CaptureDiagnosticProfile } from './iceberg-capture-diagnostic.ts';
+import { captureDecoderLifecyclePhaseCodes, captureDecoderReplyPhaseCodes, captureNormalizationPhaseCodes, parseCaptureDiagnostic, type CaptureDiagnostic, type CaptureDiagnosticProfile } from './iceberg-capture-diagnostic.ts';
 export const icebergCaptureManifest = 'c8cecad8fc09ab20a78382c4a96daf5c9e761065cb774abd6cd9b65d0ee8be28';
 export const icebergCaptureManifestV2 = '53493f2dfeedee530ad152b5dc08f2c08b3d560ac39fac887820129913c8db3d';
 /** Exact reviewed closed-classpath runtime; this pin does not claim an actual capture outcome. */
@@ -12,6 +12,8 @@ export const icebergCaptureManifestVerifiedAbsence: string | null = 'c8a3d89458b
 export const icebergCaptureManifestNormalizationPhases = '8c0dd76a436a5c5b8554015fbd90192e8514a8d261be67382335da9bbbcf1098';
 /** Exact reviewed decoder-subphase runtime; this pin does not claim a new actual outcome. */
 export const icebergCaptureManifestDecoderLifecyclePhases: string | null = '6b362710597d77ee7a37a59a39aef5e3d6ff59d1f509ca0103192b104a0340fc';
+/** Exact reviewed reply-subphase runtime; this pin does not claim a new actual outcome. */
+export const icebergCaptureManifestDecoderReplyPhases: string | null = 'bcbd7cc6f30d211f669bdc99994e6f41d3dc942ea3123a8aead1a2af31db9671';
 export const captureReasons = {
   FRAME_MAGIC: '입력 형식 확인 실패', FRAME_BOUND: '입력 크기 제한', FRAME_EOF: '입력 전체 바이트 미확인',
   DESCRIPTOR_INVALID: '입력 계약 확인 실패', OBJECT_MAP_INVALID: '객체 목록 확인 실패',
@@ -58,6 +60,7 @@ function diagnosticProfile(manifest: unknown): CaptureDiagnosticProfile | null {
   if (icebergCaptureManifestVerifiedAbsence !== null && manifest === icebergCaptureManifestVerifiedAbsence) return 'SCHEMA2_VERIFIED_ABSENCE';
   if (manifest === icebergCaptureManifestNormalizationPhases) return 'SCHEMA2_NORMALIZATION_PHASES';
   if (icebergCaptureManifestDecoderLifecyclePhases !== null && manifest === icebergCaptureManifestDecoderLifecyclePhases) return 'SCHEMA2_DECODER_LIFECYCLE_PHASES';
+  if (icebergCaptureManifestDecoderReplyPhases !== null && manifest === icebergCaptureManifestDecoderReplyPhases) return 'SCHEMA2_DECODER_REPLY_PHASES';
   return null;
 }
 
@@ -97,7 +100,7 @@ export function parseIcebergCapture(value: unknown): IcebergCapture | null {
     || !['PREP_NOT_VERIFIED', 'COMPOSITE_NOT_VERIFIED', 'SUMMARY_NOT_VERIFIED'].includes(value.failureCategory)) return null;
   if (value.schemaVersion === 2) {
     const diagnostic = parseCaptureDiagnostic(value.diagnostic, value.passed, diagnosticProfile(value.runtimeManifestSha256)!);
-    if (diagnostic === null || (([...captureNormalizationPhaseCodes, ...captureDecoderLifecyclePhaseCodes] as readonly (string | null)[]).includes(diagnostic.failureCode)
+    if (diagnostic === null || (([...captureNormalizationPhaseCodes, ...captureDecoderLifecyclePhaseCodes, ...captureDecoderReplyPhaseCodes] as readonly (string | null)[]).includes(diagnostic.failureCode)
       && value.status !== 'FAILED')) return null;
   }
   return value as unknown as IcebergCapture;

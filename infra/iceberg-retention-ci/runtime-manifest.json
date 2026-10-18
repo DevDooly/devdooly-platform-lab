@@ -36,9 +36,9 @@
       "sha256": "39c4330db7b5b0ce78deb7bf1607aa540e3d3fa94c3a78e70bb8fcbd5bbf9840"
     },
     {
-      "bytes": 22856,
+      "bytes": 24058,
       "path": "normalize_graph.py",
-      "sha256": "142d7c842e09ee15b8eb2cec54c729159bf13a9dea0c331b104e5fc93193b9ae"
+      "sha256": "eff4000a00875e42554f67d4572b2b408cfa08ed97b919aedcb50ee9646bfce8"
     },
     {
       "bytes": 19005,
@@ -46,9 +46,9 @@
       "sha256": "f4eba5fdfb31020da9e4a68a64be8961abfea955c97f941eac7bdae8c20bd61a"
     },
     {
-      "bytes": 40269,
+      "bytes": 40412,
       "path": "run_capture.py",
-      "sha256": "b283da01f5bba010e0cd1945963d4ce3860a0ca57f81597470a23bb5adf548cb"
+      "sha256": "5d583ebf1fef4aeabace71c1071a9d054ea59c679c761285063f5fcd97396857"
     },
     {
       "bytes": 38858,

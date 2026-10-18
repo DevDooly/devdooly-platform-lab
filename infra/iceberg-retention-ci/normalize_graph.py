@@ -1,7 +1,7 @@
 """Pure private graph validation and frozen-planner projection; no OS reads."""
 import re
 
-from copy_loader import (HEX, FILE_ALIAS, canonical, digest, exact, number, proof_value,
+from copy_loader import (HEX, FILE_ALIAS, canonical, digest, exact, number, proof_bytes, proof_value,
     require, source_header, strict_json, utc_ns, validate_authority_bundle,
     validate_stopped, descriptor_from_map)
 
@@ -35,6 +35,9 @@ NORMALIZATION_PHASE_CODES = frozenset((
     'NORMALIZE_DECODER_REPLY_BINDING_UNVERIFIED',
     'NORMALIZE_DECODER_WRITERS_AFTER_UNVERIFIED',
     'NORMALIZE_DECODER_ORDER_UNVERIFIED',
+    'NORMALIZE_DECODER_REPLY_PROOF_UNVERIFIED',
+    'NORMALIZE_DECODER_REPLY_JSON_UNVERIFIED',
+    'NORMALIZE_DECODER_REPLY_LINKS_UNVERIFIED',
 ))
 
 
@@ -46,6 +49,15 @@ DECODER_LIFECYCLE_PHASE_CODES = frozenset((
     'NORMALIZE_DECODER_REPLY_BINDING_UNVERIFIED',
     'NORMALIZE_DECODER_WRITERS_AFTER_UNVERIFIED',
     'NORMALIZE_DECODER_ORDER_UNVERIFIED',
+    'NORMALIZE_DECODER_REPLY_PROOF_UNVERIFIED',
+    'NORMALIZE_DECODER_REPLY_JSON_UNVERIFIED',
+    'NORMALIZE_DECODER_REPLY_LINKS_UNVERIFIED',
+))
+
+
+DECODER_REPLY_PHASE_CODES = frozenset((
+    'NORMALIZE_DECODER_REPLY_PROOF_UNVERIFIED',
+    'NORMALIZE_DECODER_REPLY_JSON_UNVERIFIED',
 ))
 
 
@@ -87,6 +99,17 @@ def checked_descriptor(loaded, authority):
     return value
 
 
+def checked_reply_proof(proof):
+    """The same pure proof_value operations with two source-owned phase labels."""
+    reply_phase = 'NORMALIZE_DECODER_REPLY_PROOF_UNVERIFIED'
+    try:
+        raw = proof_bytes(proof, 4*1024**2)
+        reply_phase = 'NORMALIZE_DECODER_REPLY_JSON_UNVERIFIED'
+        return strict_json(raw, 4*1024**2)
+    except BaseException:
+        raise NormalizationFailure(reply_phase) from None
+
+
 def checked_decoder(reply_bytes, loaded, authority, decoder, verified, expected_authority_source_sha256):
     decoder_phase = 'NORMALIZE_DECODER_BUNDLE_UNVERIFIED'
     try:
@@ -115,7 +138,8 @@ def checked_decoder(reply_bytes, loaded, authority, decoder, verified, expected_
             and record['ownDecoderStopped'] is True and record['attachCliReaped'] is True and record['watchdogFired'] is False
             and type(record['exitCode']) is int and record['exitCode'] in (0,2,3), 'ORIGINAL_CLOCK_DECODER_STOP_AND_REAP_REQUIRED')
         decoder_phase = 'NORMALIZE_DECODER_REPLY_BINDING_UNVERIFIED'
-        proof_value(decoder['reply'], 4*1024**2)
+        checked_reply_proof(decoder['reply'])
+        decoder_phase = 'NORMALIZE_DECODER_REPLY_LINKS_UNVERIFIED'
         require(decoder['reply']['raw'] == reply_bytes and record['replySha256'] == decoder['reply']['sha256']
             and type(record['replyBytes']) is int and record['replyBytes'] == len(reply_bytes)
             and record['descriptorSha256'] == digest(loaded['descriptorBytes']) and record['frameSha256'] == digest(loaded['frameBytes'])
@@ -131,7 +155,11 @@ def checked_decoder(reply_bytes, loaded, authority, decoder, verified, expected_
             and utc_ns(before['capturedAt']) <= utc_ns(after['capturedAt']) <= utc_ns(record['capturedAt']),
             'SAME_ALL_FIVE_STOPPED_ACTORS_AFTER_DECODER')
         return record
-    except BaseException:
+    except BaseException as error:
+        code = getattr(error, 'phaseCode', None) if type(error) is NormalizationFailure else None
+        if (decoder_phase == 'NORMALIZE_DECODER_REPLY_BINDING_UNVERIFIED'
+                and type(code) is str and code in DECODER_REPLY_PHASE_CODES):
+            raise
         raise NormalizationFailure(decoder_phase) from None
 
 
