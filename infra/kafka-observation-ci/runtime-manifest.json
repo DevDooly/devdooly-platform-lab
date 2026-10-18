@@ -9,8 +9,8 @@
     },
     {
       "path": "apps/api/.mvn/wrapper/maven-wrapper.properties",
-      "sha256": "930fdd3a07af34e69146e7af89ebfb26d9370106dc8b0f2581b87a6fa713a5c9",
-      "bytes": 452
+      "sha256": "0b5359963fea3daf57fb251cde89bf9fc0b746a3930b8baa108b622a7f0ffc7b",
+      "bytes": 446
     },
     {
       "path": "apps/api/README.md",

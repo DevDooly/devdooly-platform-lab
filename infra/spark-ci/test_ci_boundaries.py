@@ -100,8 +100,9 @@ class CiBoundaries(unittest.TestCase):
         raw = (Path(__file__).resolve().parents[2] / '.github/workflows/lab-ci.yml').read_text('utf-8')
         manual = raw.split('  workflow_dispatch:\n    inputs:\n', 1)[1].split('\npermissions:', 1)[0]
         self.assertRegex(manual, r'(?m)^      run_spark_trial:\n        description: [^\n]+\n        required: false\n        default: false\n        type: boolean$')
+        self.assertRegex(manual, r'(?m)^      run_kafka_observation_trial:\n        description: [^\n]+\n        required: false\n        default: false\n        type: boolean$')
         job = re.split(r'\n  [a-z][a-z0-9-]*:\n', raw.split('\n  isolated-spark:\n', 1)[1], maxsplit=1)[0]
-        self.assertIn("if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_spark_trial == true }}", job)
+        self.assertIn("if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_spark_trial == true && inputs.run_kafka_observation_trial != true }}", job)
         self.assertIn('permissions:\n  contents: read', raw)
         self.assertIn('persist-credentials: false', job)
         self.assertIn('path: .local/spark-ci-public/summary.json', job)
