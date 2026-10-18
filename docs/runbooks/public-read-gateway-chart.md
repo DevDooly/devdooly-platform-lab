@@ -2,6 +2,8 @@
 
 현재 상태(2026-10-18): [내부 조회·접근 진단과 보존 검증](../evidence/public-read-gateway-internal/README.md)을 마쳤습니다. 외부 HTTPS·공개 live GET 연결은 별도 미완료입니다. 아래 활성화 선행조건과 미실행 표시는 당시 계획·관측 기록이며 현재 내부 배포 상태와 구분합니다.
 
+공개 live GET의 연결 준비에서는 HTTPS base의 pathname으로 `/api` 또는 `/platform-lab/api`를 허용합니다. 기존 Traefik 경로를 보존할 전용 외부 namespace는 `/platform-lab/api`를 계획으로 선택했으며, 실제 route 충돌과 적용은 metadata 검토 뒤 확인합니다. 현재 `LAB_PUBLIC_API_URL`은 미설정 상태로 유지하고 상대 `/api`·Pages 게시본의 기존 기본 동작을 보존합니다. 이 UI 설정 지원은 외부 HTTPS·라우팅·공개 API 접속 완료를 뜻하지 않습니다.
+
 이 선언은 검증한 조회 정책을 K3s에 올리기 위한 준비입니다. chart 기본값은 `publicReadGateway.enabled: false`이며, 내부 활성화 후보는 `home-lab/runtime.yaml`에 true를 선언합니다. 실제 AppProject 권한 적용과 runtime 활성화는 아래 순서로 별도 진행해야 합니다. Windows 오프라인 검사와 소스 `501e127`의 실제 Linux CI에서 기본값·명시적 false의 기존 렌더 보존과 true의 4개 resource 추가를 확인했습니다. [실제 결과와 첫 실패](../evidence/public-read-gateway-chart/README.md)를 구분해 남깁니다. 내부 활성화 후보의 Windows 오프라인 K fixture 검사 1회(Helm 15호출)와 현재 N 값의 별도 렌더 1회는 통과했습니다. [K fixture 결과](../evidence/public-read-gateway-internal/activation-render.k-fixture.json)와 [현재 값 결과](../evidence/public-read-gateway-internal/activation-render.current-values.json)를 구분합니다. 새 활성화 소스의 Linux CI·클러스터 배포·외부 HTTPS는 아직 실행하지 않았습니다.
 
 ## 구현과 기존 검증의 경계
