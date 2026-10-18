@@ -1,0 +1,14 @@
+{
+  "dbOrKafkaStarted": false,
+  "hostPortsPublished": false,
+  "ownedContainerMaximum": 2,
+  "ownedInternalNetworkMaximum": 1,
+  "ownedResourcesRemoved": false,
+  "passed": false,
+  "phase": "CLEANUP",
+  "publicEndpointExposed": false,
+  "realMiniPcContacted": false,
+  "schemaVersion": 1,
+  "scope": "ISOLATED_PUBLIC_READ_GATEWAY_PROTOTYPE",
+  "sparkOrJvmStarted": false
+}

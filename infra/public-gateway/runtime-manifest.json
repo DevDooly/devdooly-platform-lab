@@ -1,0 +1,50 @@
+{
+  "files": [
+    {
+      "bytes": 4893,
+      "path": "nginx.conf",
+      "sha256": "3aeff90b45791f5d075a436fbd1b7780e53b42e11438080e247114a298530638"
+    },
+    {
+      "bytes": 1137,
+      "path": "proxy.inc",
+      "sha256": "9d1b00d60e51889a77473e713564bb1022d2854f802b5f63a2691a323cebc8cb"
+    },
+    {
+      "bytes": 3820,
+      "path": "fake_upstream.py",
+      "sha256": "168d859cefa9c7f0075ab33e06f8c0a04184472da3b648b6f68ff2058895116b"
+    },
+    {
+      "bytes": 10115,
+      "path": "verify_http.py",
+      "sha256": "7fdfd86f1a39e71a5e3834064da019bab30483b817015f0d5527b40f5bc9cb87"
+    },
+    {
+      "bytes": 23350,
+      "path": "run_once.py",
+      "sha256": "42de351d5657efa2b77137c96f6139456ec2e001ad74638a3d2dbfaa4d7eff2b"
+    },
+    {
+      "bytes": 10261,
+      "path": "README.md",
+      "sha256": "ccb005d4da251c329401958d284babdb589163234fa36c2e162179b753ea27f8"
+    },
+    {
+      "bytes": 1110,
+      "path": "ci-step-proposal.yml",
+      "sha256": "b92de601b66f3656d82731397d1a90d885492cb2c54c10ddce6c6efea7b0bebb"
+    },
+    {
+      "bytes": 991,
+      "path": "source-image-evidence.json",
+      "sha256": "3dff1d7974c65a6989ae9117dcc74b78e57f80a3267e362f03f8b7744e8af7eb"
+    }
+  ],
+  "images": {
+    "nginx": "nginx:stable-alpine@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94",
+    "pythonFixtureOnly": "docker.io/apache/spark@sha256:0b8f5befe00d258df03b252158b3894b8654390f1958741accf98155539a662a"
+  },
+  "schemaVersion": 1,
+  "scope": "ISOLATED_PUBLIC_READ_GATEWAY_PROTOTYPE"
+}

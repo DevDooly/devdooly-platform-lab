@@ -1,0 +1,37 @@
+{
+  "cleanupStatuses": {
+    "fake": "REMOVED_VERIFIED",
+    "gateway": "REMOVED_VERIFIED",
+    "network": "REMOVED_VERIFIED"
+  },
+  "dbOrKafkaStarted": false,
+  "hostPortsPublished": false,
+  "httpProbe": {
+    "checks": 376,
+    "passed": false,
+    "phase": "DENIED_METHOD",
+    "resultVerified": true,
+    "returnCode": 1,
+    "started": true
+  },
+  "lastCleanupCommand": {
+    "category": "NETWORK_LIST",
+    "returnCode": 0
+  },
+  "lastWorkloadCommand": {
+    "category": "CONTAINER_EXEC",
+    "returnCode": 1
+  },
+  "ownedContainerMaximum": 2,
+  "ownedInternalNetworkMaximum": 1,
+  "ownedResourcesRemoved": true,
+  "passed": false,
+  "phase": "ACTUAL_HTTP_PROBES",
+  "publicEndpointExposed": false,
+  "realMiniPcContacted": false,
+  "schemaVersion": 1,
+  "scope": "ISOLATED_PUBLIC_READ_GATEWAY_PROTOTYPE",
+  "sparkOrJvmStarted": false,
+  "validationCheckpoint": "HTTP_PROBE_RESULT",
+  "workloadPhase": "ACTUAL_HTTP_PROBES"
+}

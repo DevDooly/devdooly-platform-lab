@@ -55,7 +55,7 @@ export function isRelease(value: unknown): value is Release {
     && (value.imageDigest === null || text(value.imageDigest)) && text(value.deploymentStatus) && timestamp(value.startedAt);
 }
 export async function getJson(base: string, path: string, signal?: AbortSignal): Promise<unknown> {
-  const response = await fetch(`${base.replace(/\/$/, '')}${path}`, { signal, headers: { Accept: 'application/json' }, cache: 'no-store' });
+  const response = await fetch(`${base.replace(/\/$/, '')}${path}`, { signal, headers: { Accept: 'application/json' }, cache: 'no-store', credentials: 'omit', redirect: 'error' });
   if (!response.ok) throw new Error(`API 응답 ${response.status}`);
   return response.json();
 }

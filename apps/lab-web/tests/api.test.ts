@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
-import { fetchLab, fetchRun, isRun, isRunDetail } from '../src/lib/api.ts';
+import { fetchLab, fetchRun, getJson, isRun, isRunDetail } from '../src/lib/api.ts';
 
 const sample = JSON.parse(await readFile(new URL('../src/data/snapshot.json', import.meta.url), 'utf8'));
 const expected = JSON.parse(await readFile(new URL('../../../tests/scenarios/sensor-validation-v1.json', import.meta.url), 'utf8'));
@@ -62,4 +62,29 @@ test('malformed HTTP payload is rejected instead of being shown as live data', a
   const address = server.address(); assert.ok(address && typeof address === 'object');
   try { await assert.rejects(fetchLab(`http://127.0.0.1:${address.port}/api`), /실행 목록 형식/); }
   finally { await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
+});
+
+test('public read adapter rejects a redirect without requesting its target', async () => {
+  let requests = 0;
+  let targetRequests = 0;
+  const server = createServer((request, response) => {
+    requests += 1;
+    if (request.url === '/redirect-target') {
+      targetRequests += 1;
+      response.setHeader('Content-Type', 'application/json');
+      response.end('{}');
+    } else {
+      response.writeHead(302, { Location: '/redirect-target' });
+      response.end();
+    }
+  });
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+  const address = server.address(); assert.ok(address && typeof address === 'object');
+  try {
+    await assert.rejects(getJson(`http://127.0.0.1:${address.port}/api`, '/platform/summary'), TypeError);
+    assert.equal(requests, 1);
+    assert.equal(targetRequests, 0);
+  } finally {
+    await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+  }
 });
