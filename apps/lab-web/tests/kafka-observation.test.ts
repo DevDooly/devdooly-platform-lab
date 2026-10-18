@@ -227,3 +227,51 @@ test('readout renders absent, zero, missing commit, stale and fixed unverified m
   assert.ok(!/<details[^>]*\bopen(?:\s|=|>)/.test(zero)); assert.ok(!zero.includes('<button'));
   assert.ok(!zero.includes('bootstrapServers')); assert.ok(!zero.includes('topicUuid')); assert.ok(!zero.includes('groupId'));
 });
+
+
+test('browser loader accepts exactly five seconds ahead without changing timestamps or showing a recent record early', async () => {
+  const next = { ...sample(), captureStartedAt: '2026-10-18T12:00:13.000000000Z', capturedAt: '2026-10-18T12:00:15.000000000Z' };
+  assert.equal(parseKafkaObservation(encoded(next), now), null);
+  assert.equal(validateKafkaObservation(next, now), false);
+  const loaded = await loadKafkaObservation({ url, previousRecord: sample(), nowMs: now, fetcher: fetcher(next) });
+  assert.equal(loaded.browserError, null); assert.equal(loaded.retainedPrevious, false);
+  assert.equal(loaded.record?.captureStartedAt, next.captureStartedAt);
+  assert.equal(loaded.record?.capturedAt, next.capturedAt);
+  assert.deepEqual(loaded.record && JSON.parse(encoded(loaded.record)), next);
+  assert.equal(kafkaObservationView(loaded.record, now), 'clock-check');
+  assert.equal(kafkaObservationView(loaded.record, now + 4999), 'clock-check');
+  assert.equal(kafkaObservationView(loaded.record, now + 5000), 'recent');
+});
+
+test('browser loader rejects five seconds plus one nanosecond and preserves the prior capture unchanged', async () => {
+  const previous = sample();
+  const next = { ...sample(), captureStartedAt: '2026-10-18T12:00:13.000000000Z', capturedAt: '2026-10-18T12:00:15.000000001Z' };
+  const loaded = await loadKafkaObservation({ url, previousRecord: previous, nowMs: now, fetcher: fetcher(next) });
+  assert.equal(loaded.browserError, 'INVALID_RECORD'); assert.equal(loaded.retainedPrevious, true);
+  assert.equal(loaded.record, previous); assert.equal(loaded.record?.capturedAt, previous.capturedAt);
+});
+
+test('browser clock tolerance still rejects malformed precise UTC dates and preserves private failure details', async () => {
+  const previous = sample();
+  for (const capturedAt of ['Wed, 18 Oct 2026 12:00:15 GMT (SYNTHETIC_PRIVATE_CANARY)',
+    '2026-10-18T12:00:15.0000000001Z', '2026-02-30T12:00:15Z']) {
+    const loaded = await loadKafkaObservation({ url, previousRecord: previous, nowMs: now,
+      fetcher: fetcher({ ...sample(), captureStartedAt: '2026-10-18T12:00:13Z', capturedAt }) });
+    assert.equal(loaded.browserError, 'INVALID_RECORD'); assert.equal(loaded.record, previous);
+    assert.equal(loaded.retainedPrevious, true); assert.equal(loaded.record?.capturedAt, previous.capturedAt);
+    assert.ok(!encoded(loaded).includes('SYNTHETIC_PRIVATE_CANARY'));
+  }
+});
+
+test('browser clock tolerance rejects invalid or overflow-prone now values without discarding prior memory', async () => {
+  const previous = sample();
+  for (const nowMs of [NaN, Infinity, -Infinity, now + 0.5, Number.MAX_SAFE_INTEGER,
+    Number.MAX_SAFE_INTEGER - 4999, Number.MAX_SAFE_INTEGER + 1, true as unknown as number]) {
+    const loaded = await loadKafkaObservation({ url, previousRecord: previous, nowMs, fetcher: fetcher(sample()) });
+    assert.equal(loaded.browserError, 'INVALID_RECORD'); assert.equal(loaded.record, previous);
+    assert.equal(loaded.retainedPrevious, true); assert.equal(loaded.record?.capturedAt, previous.capturedAt);
+  }
+  const highestSafeCeiling = await loadKafkaObservation({ url, nowMs: Number.MAX_SAFE_INTEGER - 5000, fetcher: fetcher(sample()) });
+  assert.equal(highestSafeCeiling.browserError, null);
+  assert.equal(highestSafeCeiling.record?.capturedAt, previous.capturedAt);
+});
