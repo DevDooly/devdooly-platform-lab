@@ -32,8 +32,23 @@
 
 두 실행 각각 호스트 수집본과 게시본의 canonical 전체 필드가 같았다. 게시 artifact와 공개 HTTP 응답은 각각 전체 raw bytes가 일치했다. 호스트 JSON의 공백·키 순서와 게시 JSON의 표현이 같다는 뜻으로 확대하지 않는다. systemd 실행은 서비스 기동·invocation을 확인했고, 수동 경로는 서비스 기동과 별개로 실행했다.
 
-이 두 결과는 원래 30분 timer의 자연 회차가 아니다. 자연 실행 2회와 회차 간격 확인은 후속으로 남긴다.
+이 두 결과는 원래 30분 timer의 자연 회차가 아니다. 아래 자연 실행 2회 검증과 별개로 기록한다.
 
+
+## 원래 타이머의 자연 2회와 공개 게시 대조
+
+2026-10-18에 원래 30분 타이머의 자연 실행 2회와 두 회차 사이의 간격 1개를 확인했습니다. 회차 사이에 main·코드·설정·unit·timer를 바꾸거나 수동 실행을 추가하지 않았습니다. 두 회차의 저장소 main은 `13447fa8`, API 소스는 `245d61a5`, worker 소스는 `74a8e988`입니다.
+
+| 자연 회차 | 실제 서비스 시작–완료 (UTC) | 게시·공개 파일 대조 |
+| --- | --- | --- |
+| 1 | 07:32:27.811446–07:32:31.799605 | [Pages 39108053239](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39108053239) |
+| 2 | 08:02:39.416534–08:02:43.512018 | [Pages 39109935742](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39109935742) |
+
+실측 trigger→trigger 간격은 **30분 11.603964초**, 이전 서비스 exit→다음 trigger는 **30분 7.601007초**입니다. 두 값은 서로 다른 측정입니다. 설정은 `OnUnitInactiveSec=30min`, `RandomizedDelaySec=60s`, `AccuracySec=1min`이며 항상 정확히 30분마다 시작한다고 주장하지 않습니다.
+
+각 회차에서 platform·job·Kafka의 엄격한 공개 계약 3개를 확인했습니다. 작업 8개는 EXPORTED, 파일 metadata는 16개였고 Kafka는 STABLE·commit 8·READ_COMMITTED LSO 8·lag 0이었습니다. 허용된 게시 artifact 3개는 호스트 수집본과 **전체 필드 canonical SHA-256**이 같았고, 해당 게시 artifact와 당시 공개 HTTP 응답은 **전체 raw bytes**가 같았습니다. 호스트의 pretty JSON과 게시 JSON의 원래 공백까지 같다는 뜻은 아닙니다. 회차별 수집 시각·소스·공개 canonical hash는 [요약 JSON](natural-timer.summary.json)에 기록했습니다.
+
+이는 두 자연 회차를 확인한 시점 기록입니다. 장기간 가용성·Kafka ACL·자격증명 회전은 별도 후속이며, 공개 화면은 마지막 수집 기록을 보여줍니다. 공개 실시간 API 연결을 검증한 결과가 아닙니다. 앞선 수동 host 실행과 강제 systemd 기동은 이 자연 회차 수에 포함하지 않았습니다.
 
 ## 이전 로컬 실행 당시의 기록
 
