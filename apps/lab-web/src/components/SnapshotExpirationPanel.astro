@@ -1,0 +1,176 @@
+---
+import saved from '../data/cloud-expiration-observation.json';
+
+const repository = 'https://github.com/DevDooly/devdooly-platform-lab';
+const sourceCommit = '482d3ca4b564282feceb31f392c6a981302a7c2d';
+const evidenceUrl = `${repository}/blob/main/docs/evidence/cloud-iceberg-expiration/README.md`;
+const expectedCounts = {
+  currentRows: 18, deletedDataFiles: 1, deletedManifestLists: 1, deletedManifests: 1,
+  expiredSnapshotCount: 1, newMetadataObjectCount: 1, oldSurvivorObjectCount: 22,
+  postExpirationWholeObjects: 23, protectedObjectCount: 22, retainedPreviousRows: 12,
+  retainedSnapshotCount: 3, silverRows: 12, tagRows: 6, trinoSelectInvocations: 4,
+} as const;
+const checkNames = ['actualMemAvailable7Gi', 'expirationVerified', 'freshPhysicalVolumes', 'internalNetwork',
+  'jdbcAndWholePostExpirationObjectsUnchanged', 'normalSparkExit', 'normalTrinoExit', 'pinnedImages',
+  'pythonReaderExit', 'singleClock', 'sourcePins', 'survivingProcessesUnchanged', 'vendor'];
+const object = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
+
+/** Check this one saved display record; no retention decision or live request is made here. */
+function verified(value: unknown): value is { capturedAt: string; result: typeof expectedCounts } {
+  if (!object(value) || value.schemaVersion !== 1 || value.scope !== 'FRESH_CLOUD_ICEBERG_TAGGED_SNAPSHOT_EXPIRATION'
+    || value.sourceCommit !== sourceCommit || value.capturedAt !== '2026-10-18T15:31:51.263387+00:00'
+    || value.passed !== true || value.phase !== 'COMPLETE' || value.failureCode !== null
+    || value.snapshotExpirationOutcome !== 'VERIFIED' || value.sourceBeforeAfterSame !== true
+    || value.onlyFreshCloudResources !== true || value.miniPcContacted !== false
+    || value.physicalStorageGcVerified !== false || value.productionPlannerApplyEnabled !== false
+    || value.volumesDeleted !== false || value.runtimeAvailabilityOrPerformanceClaimed !== false) return false;
+  const cleanup = value.cleanup;
+  if (!object(cleanup) || cleanup.initializerStopped !== true || cleanup.ownedBoundContainersStopped !== true
+    || cleanup.unboundContainerObserved !== false) return false;
+  const result = value.result, checks = value.checks;
+  return object(result) && Object.keys(result).length === Object.keys(expectedCounts).length
+    && Object.entries(expectedCounts).every(([key, count]) => result[key] === count)
+    && object(checks) && Object.keys(checks).length === checkNames.length && checkNames.every(key => checks[key] === true);
+}
+
+const observation = verified(saved) ? saved : null;
+const snapshots = [
+  { id: 'S1', rows: 6, role: 'tag', files: ['a1'], reason: 'tag가 참조하는 snapshot' },
+  { id: 'S2', rows: 12, role: '만료 대상', files: ['a1', 'a2'], reason: '만료할 이전 snapshot' },
+  { id: 'S3', rows: 12, role: '이전 snapshot', files: ['b1'], reason: '유지한 이전 snapshot' },
+  { id: 'S4', rows: 18, role: 'current', files: ['b1', 'a3'], reason: '현재 snapshot' },
+];
+const files = [
+  { id: 'a1', rows: 6, before: 'S1 · S2가 공유', after: 'S1 tag가 계속 참조', note: 'S2가 만료되어도 tag 때문에 보존' },
+  { id: 'a2', rows: 6, before: 'S2만 참조', after: '남은 snapshot의 참조 없음', note: '삭제 후 같은 key의 NoSuchKey / 404 확인' },
+  { id: 'b1', rows: 12, before: 'S3 · S4가 공유', after: 'S3 · S4가 계속 공유', note: '남은 두 snapshot이 공유하므로 보존' },
+  { id: 'a3', rows: 6, before: 'S4가 참조', after: 'S4 current가 계속 참조', note: '현재 snapshot의 데이터로 보존' },
+];
+const stages = [
+  { id: 'before', label: '만료 전', snapshots: 4, objects: 25, description: 'S2도 참조할 수 있는 시점입니다. a1과 b1은 각각 두 snapshot이 공유합니다.' },
+  { id: 'after', label: '만료 후', snapshots: 3, objects: 23, description: 'S2만 만료했습니다. a2는 삭제하고, tag와 남은 snapshot이 참조하는 a1·b1·a3는 보존했습니다.' },
+];
+---
+<section id="snapshot-expiration" class="section expiration-panel" aria-labelledby="expiration-title" data-expiration-panel>
+  <div class="section-heading expiration-heading">
+    <div><span class="eyebrow">ICEBERG / KEEP SHARED FILES</span>
+      <h2 id="expiration-title">snapshot은 만료해도,<br/>공유 파일은 남깁니다.</h2>
+      <p>격리 Cloud에서 한 번 실행한 합성 데이터 검증입니다. 전후 기록을 바꾸며 참조와 보존 결과를 살펴봅니다.</p>
+    </div>
+    <span class="tag">기록 관측 · {observation ? '검증 완료' : '미검증'}</span>
+  </div>
+  {observation ? <>
+    <p class="expiration-date">기록 시각 <time datetime={observation.capturedAt}>2026-10-18 15:31:51 UTC</time> · 한국 시각 10월 19일<br/>
+      S1–S4와 a1·a2·b1·a3는 이 실행을 설명하는 별칭이며 실제 snapshot ID나 파일명이 아닙니다.</p>
+    <div class="expiration-controls" role="group" aria-label="저장된 만료 전후 기록" aria-describedby="expiration-control-hint">
+      <button type="button" aria-pressed="false" aria-controls="expiration-view" data-expiration-stage="before">만료 전</button>
+      <button type="button" aria-pressed="true" aria-controls="expiration-view" data-expiration-stage="after">만료 후</button>
+      <span id="expiration-control-hint">저장된 화면 전환</span>
+    </div>
+    <p class="expiration-status" role="status" aria-live="polite" aria-atomic="true" data-expiration-status>만료 후 · snapshot 3개 · 전체 객체 23개</p>
+    <div id="expiration-view">
+      {stages.map(stage => <div data-expiration-view={stage.id} hidden={stage.id === 'before'}>
+        <p class="expiration-stage-note">{stage.description}</p>
+        <h3 class="expiration-subtitle">{stage.label} · snapshot {stage.snapshots}개</h3>
+        <ol class="expiration-snapshots" aria-label={`${stage.label} snapshot과 live data 참조`}>
+          {snapshots.map(snapshot => {
+            const expired = stage.id === 'after' && snapshot.id === 'S2';
+            return <li class:list={{ 'expiration-expired': expired }}>
+              <div class="expiration-row-title"><strong>{snapshot.id}</strong><span>{expired ? '만료됨' : snapshot.role}</span></div>
+              <p class="expiration-rows">{snapshot.rows}<small>행{expired ? ' · 이전 기록' : ''}</small></p>
+              <p class="expiration-ref-label">{expired ? '만료 전 참조' : 'live data 참조'}</p>
+              <div class="expiration-aliases">{snapshot.files.map(file => <span class:list={{ 'expiration-former-ref': expired }}>{file}</span>)}</div>
+              <p class="expiration-reason">{expired ? '보존 snapshot에서 제외' : snapshot.reason}</p>
+            </li>;
+          })}
+        </ol>
+        <h3 class="expiration-subtitle">{stage.label} · 데이터 파일 별칭 4개</h3>
+        <ul class="expiration-files" aria-label={`${stage.label} 공유 데이터 파일 상태`}>
+          {files.map(file => {
+            const deleted = stage.id === 'after' && file.id === 'a2';
+            return <li class:list={{ 'expiration-deleted': deleted }}>
+              <div class="expiration-row-title"><strong>{file.id}</strong><span>{stage.id === 'before' ? '존재' : deleted ? '삭제 확인' : '보존 확인'}</span></div>
+              <p>{stage.id === 'before' ? file.before : file.after}</p>
+              <p class="expiration-file-note">{stage.id === 'before' ? `${file.rows}행의 데이터 파일` : file.note}</p>
+            </li>;
+          })}
+        </ul>
+      </div>)}
+    </div>
+    <dl class="expiration-metrics" aria-label="같은 실행의 사후 검증 결과">
+      <div><dt>전체 객체 전후</dt><dd>25 − 3 + 1 = {observation.result.postExpirationWholeObjects}<p>data 1 + manifest 1 + manifest list 1 삭제<br/>새 metadata 1개 추가</p></dd></div>
+      <div><dt>보호한 기존 객체</dt><dd>{observation.result.protectedObjectCount}<small>개</small><p>기존 survivor 22개 bytes 보존</p></dd></div>
+      <div><dt>사후 행 대조</dt><dd>{observation.result.currentRows}<small>현재 Bronze</small> / {observation.result.silverRows}<small>Silver</small><p>Spark: tag 6행 · 이전 snapshot 12행도 대조</p></dd></div>
+    </dl>
+    <p class="expiration-boundary">이 그림은 live data 참조를 설명하며, 전체 객체 수와 삭제·보존 검증 범위는 근거 문서에서 확인합니다.<br/>
+      Trino는 현재 Bronze와 Silver를 조회했습니다. tag·과거 snapshot 행 대조는 Spark에서 수행했습니다.<br/>
+      새 격리 Cloud의 과거 기록으로, 물리 GC·공간 회수·현재 가용성·운영 SLA를 검증한 결과는 아닙니다.</p>
+  </> : <p class="expiration-unverified" role="status">이 실행의 검증 기록을 확인할 수 없어 전후 수치를 표시하지 않습니다.</p>}
+  <div class="expiration-links">
+    <a href={evidenceUrl} target="_blank" rel="noreferrer">공유 파일 보존 근거 ↗</a>
+    <a href={`${repository}/blob/main/docs/evidence/cloud-iceberg-expiration/summary.json`} target="_blank" rel="noreferrer">원문 결과 요약 ↗</a>
+    <a href={`${repository}/actions/runs/39140688897`} target="_blank" rel="noreferrer">실제 GitHub 실행 ↗</a>
+    <a href={`${repository}/tree/${sourceCommit}/infra/cloud-lakehouse-expiration`} target="_blank" rel="noreferrer">검증한 고정 소스 ↗</a>
+  </div>
+</section>
+<script>
+  const panel = document.querySelector<HTMLElement>('[data-expiration-panel]');
+  if (panel) {
+    const buttons = panel.querySelectorAll<HTMLButtonElement>('[data-expiration-stage]');
+    const views = panel.querySelectorAll<HTMLElement>('[data-expiration-view]');
+    const status = panel.querySelector<HTMLElement>('[data-expiration-status]');
+    buttons.forEach(button => button.addEventListener('click', () => {
+      const stage = button.dataset.expirationStage;
+      if (stage !== 'before' && stage !== 'after') return;
+      buttons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+      views.forEach(view => { view.hidden = view.dataset.expirationView !== stage; });
+      if (status) status.textContent = stage === 'before'
+        ? '만료 전 · snapshot 4개 · 전체 객체 25개'
+        : '만료 후 · snapshot 3개 · 전체 객체 23개';
+    }));
+  }
+</script>
+<style>
+  .expiration-panel { border-top:1px solid var(--line); padding-top:64px; padding-bottom:64px; }
+  .expiration-heading { gap:24px; align-items:flex-start; flex-wrap:wrap; }
+  .expiration-heading > div { flex:1 1 34rem; min-width:0; }
+  .expiration-heading h2 { font-size:var(--font-section-title); line-height:1.5; }
+  .expiration-heading p { margin-top:16px; max-width:46em; color:var(--muted); }
+  .expiration-heading .tag { white-space:normal; }
+  .expiration-date { margin:24px 0; font-size:var(--font-small); color:var(--muted); }
+  .expiration-controls { display:flex; flex-wrap:wrap; align-items:center; gap:12px; }
+  .expiration-controls button { min-height:48px; padding:10px 24px; border:1px solid var(--green); background:var(--surface); font-weight:600; }
+  .expiration-controls button[aria-pressed="true"] { background:var(--green); color:var(--surface); }
+  .expiration-controls span { font-size:var(--font-small); color:var(--muted); }
+  .expiration-status { margin:20px 0 8px; font-weight:700; }
+  .expiration-stage-note { color:var(--muted); max-width:56em; }
+  .expiration-subtitle { margin:28px 0 14px; font-size:var(--font-card-title); }
+  .expiration-snapshots,.expiration-files { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin:0; padding:0; list-style:none; }
+  .expiration-snapshots li,.expiration-files li { min-width:0; padding:20px; border:1px solid var(--line); background:var(--surface); }
+  .expiration-snapshots li { border-top:4px solid var(--green); }
+  .expiration-row-title { display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 12px; }
+  .expiration-row-title strong { font:600 1.25rem var(--mono); }
+  .expiration-row-title span { font-size:var(--font-small); color:var(--green); }
+  .expiration-rows { margin:16px 0; font:600 1.75rem var(--mono); }
+  .expiration-rows small { margin-left:8px; font:var(--font-small) var(--sans); }
+  .expiration-ref-label,.expiration-reason,.expiration-file-note { font-size:var(--font-small); color:var(--muted); }
+  .expiration-aliases { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
+  .expiration-aliases span { min-width:44px; padding:3px 10px; border:1px solid var(--green); background:var(--mint); font-family:var(--mono); text-align:center; }
+  .expiration-files li > p { margin-top:12px; }
+  .expiration-snapshots .expiration-expired { border-top-color:var(--orange-ink); background:var(--orange-soft); }
+  .expiration-expired .expiration-row-title span,.expiration-deleted .expiration-row-title span { color:var(--orange-ink); }
+  .expiration-aliases .expiration-former-ref { border-style:dashed; border-color:var(--orange-ink); background:transparent; text-decoration:line-through; }
+  .expiration-files .expiration-deleted { border:1px dashed var(--orange-ink); background:var(--orange-soft); }
+  .expiration-metrics { display:grid; grid-template-columns:1.3fr 1fr 1.3fr; gap:14px; margin:28px 0; }
+  .expiration-metrics > div { min-width:0; padding:22px; border:1px solid var(--line); background:var(--cream); }
+  .expiration-metrics dt,.expiration-metrics p { font-size:var(--font-small); color:var(--muted); }
+  .expiration-metrics dd { margin:10px 0; font:600 1.25rem var(--mono); }
+  .expiration-metrics small { margin-left:6px; font:var(--font-small) var(--sans); }
+  .expiration-boundary { font-size:var(--font-small); color:var(--muted); line-height:1.9; }
+  .expiration-links { display:flex; flex-wrap:wrap; gap:14px 28px; margin-top:24px; font-weight:600; }
+  .expiration-links a { display:inline-flex; align-items:center; min-height:44px; text-decoration:underline; text-underline-offset:4px; }
+  .expiration-unverified { margin-top:24px; padding:24px; border:1px solid var(--line); background:var(--surface); }
+  [data-expiration-view][hidden] { display:none !important; }
+  @media(max-width:960px) { .expiration-snapshots,.expiration-files { grid-template-columns:repeat(2,minmax(0,1fr)); } .expiration-metrics { grid-template-columns:1fr; } }
+  @media(max-width:620px) { .expiration-panel { padding-top:44px; padding-bottom:44px; } .expiration-snapshots,.expiration-files { grid-template-columns:1fr; } .expiration-snapshots li,.expiration-files li { padding:20px 18px; } .expiration-controls span { flex-basis:100%; } }
+</style>

@@ -10,6 +10,7 @@ import WorkerReadinessProof from '../components/WorkerReadinessProof.astro';
 import IcebergDataflowCard from '../components/IcebergDataflowCard';
 import SparkTrialCard from '../components/SparkTrialCard';
 import CloudLakehouseCard from '../components/CloudLakehouseCard';
+import SnapshotExpirationPanel from '../components/SnapshotExpirationPanel.astro';
 import IcebergCaptureCard from '../components/IcebergCaptureCard';
 import IcebergPolicyScenarios from '../components/IcebergPolicyScenarios';
 import icebergPolicyScenarios from '../data/iceberg-policy-scenarios.generated.json';
@@ -78,6 +79,7 @@ const steps = [
       <IcebergDataflowCard client:load observationUrl={`${assetBase}observations/iceberg.latest.json`}/>
       <SparkTrialCard client:load observationUrl={`${assetBase}observations/spark.latest.json`}/>
       <CloudLakehouseCard client:load observationUrl={`${assetBase}observations/cloud-lakehouse.latest.json`}/>
+      <SnapshotExpirationPanel />
       <IcebergCaptureCard client:load observationUrl={`${assetBase}evidence/iceberg-capture/summary.json`}/>
       <IcebergPolicyScenarios client:load bundle={icebergPolicyScenarios}/>
       <CurrentDbRestoreCard />

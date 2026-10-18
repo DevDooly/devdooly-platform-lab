@@ -141,6 +141,6 @@ export const evidenceItems: readonly EvidenceItem[] = [
     boundary: '새 Cloud 격리 시험입니다. 운영 KEEP는 유지하며 물리 GC·볼륨 삭제·공간 회수·SLA를 검증한 결과가 아닙니다.',
     recordedOn: '2026-10-19',
     source: `${repo}/tree/482d3ca4b564282feceb31f392c6a981302a7c2d/infra/cloud-lakehouse-expiration`,
-    evidence: `${repo}/blob/main/docs/evidence/cloud-iceberg-expiration/README.md`, evidenceLabel: '만료·공유 파일·행·정리 근거', recordLabel: 'snapshot 1개 만료 · 3개 보존',
+    evidence: `${repo}/blob/main/docs/evidence/cloud-iceberg-expiration/README.md`, evidenceLabel: '만료·공유 파일·행·정리 근거', recordLabel: 'snapshot 1개 만료 · 3개 보존', screen: '#snapshot-expiration',
   },
 ];
