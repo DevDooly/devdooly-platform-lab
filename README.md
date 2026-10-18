@@ -19,7 +19,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 지금 완료: Kafka 관측 API·collector 연결, systemd·수동 host 실행, 원래 타이머의 자연 실행 2회·회차 간격 1개와 각 회차의 공개 3파일 대조를 확인했습니다. [자연 관측 근거](docs/evidence/kafka-observation/README.md#원래-타이머의-자연-2회와-공개-게시-대조)를 따르며, 화면은 마지막 수집 기록을 보여줍니다.
 
-내부 게이트웨이 조회와 기존 상태 보존 검증을 마쳤고, 기존 Traefik과 설정 파일 7개를 유지했습니다([검증 범위](docs/runbooks/public-read-gateway-chart.md)). DuckDNS 도메인의 표준 TLS와 GitHub 외부 runner의 조회 6개·거부 3개를 확인했습니다([공개 HTTPS 근거](docs/evidence/public-read-https/README.md)). Pages 실시간 조회 설정을 반영했으며 공개 화면 대조는 배포 후 확인합니다. 다음은 격리 Kafka의 DESCRIBE 권한·인증 거부 검증과 자격증명 회전입니다.
+내부 게이트웨이 조회와 기존 상태 보존 검증을 마쳤고, 기존 Traefik과 설정 파일 7개를 유지했습니다([검증 범위](docs/runbooks/public-read-gateway-chart.md)). DuckDNS의 표준 TLS와 외부 runner의 조회 6개·거부 3개에 이어, 공개 화면의 작업·Kafka 실시간 조회도 확인했습니다([공개 HTTPS·화면 근거](docs/evidence/public-read-https/README.md)). 작업 8개의 export 상태와 Kafka 관측을 대조했으며, 같은 Kafka 기록의 시계 경고가 해소되는 것도 확인했습니다. 다음은 격리 Kafka의 DESCRIBE 권한·인증 거부 검증 마무리와 자격증명 회전입니다.
 
 ## 로컬 실행
 

@@ -116,4 +116,13 @@ export const evidenceItems: readonly EvidenceItem[] = [
     source: `${repo}/tree/7166ce84e03a69b2b0f1c853c3394d295f664af2/examples/java-object-retention-protocol`,
     evidence: `${repo}/actions/runs/39127247057`, evidenceLabel: 'Linux CI 5/5 · 소스 7166ce84', recordLabel: 'Linux CI 5/5',
   },
+  {
+    id: 'public-read-https', topics: ['kafka', 'kubernetes', 'delivery'], scope: 'mini-pc', state: 'verified',
+    title: '외부 HTTPS 조회와 공개 화면 연결',
+    description: '외부 환경에서 HTTPS 조회와 허용 경로·Origin·method의 응답을 검증하고, 미니 PC의 작업·Kafka 관측을 공개 화면에 연결했습니다.',
+    boundary: '확인 시점의 읽기 전용 조회 기록입니다. 장기간 가용성이나 서버 장애 복구 검증은 별도입니다.',
+    recordedOn: '2026-10-18',
+    source: `${repo}/tree/772d14973ac2ecf647efb496863d6f0f10cb700c/infra/public-https-smoke`,
+    evidence: `${repo}/blob/main/docs/evidence/public-read-https/README.md`, evidenceLabel: '외부 조회·공개 화면 기록', recordLabel: '시점별 외부 조회 검증', screen: '#platform',
+  },
 ];

@@ -1,0 +1,15 @@
+{
+  "apiSource245Shown": true,
+  "capturedAt": "2026-10-18T14:35:57.172Z",
+  "exportedCardCount": 8,
+  "fallbackNoticePresent": false,
+  "jobCards": 8,
+  "jobClockNotice": true,
+  "jobsCapturedAt": "2026-10-18T14:35:55.083374315Z",
+  "kafkaClockNotice": false,
+  "kafkaCommit8Lso8Lag0Text": true,
+  "kafkaStablePartition0": true,
+  "liveApiConnected": true,
+  "scope": "PUBLIC_PAGES_LIVE_READ_BROWSER",
+  "verifiedHttpsProgressShown": true
+}
