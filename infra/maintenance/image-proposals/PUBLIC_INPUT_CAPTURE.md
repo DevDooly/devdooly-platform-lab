@@ -25,9 +25,9 @@ head나 선택 metadata가 변하면 한쪽을 현재 사실로 채택하지 않
 
 ## 수동 실행과 검증 범위
 
-원 소스의 합성 경계 검사 8개는 Windows Python 3.12.14에서 skip 0으로 통과했습니다. head drift·부분 review·사람 활동·공개 선언 변경·unknown·main drift·고정 URL/호출 예산을 다룹니다. 이후 부모 process 시작 실패 검사 1개도 별도로 통과했고 이전 8개를 수동 반복하지 않았습니다. 최종 소스 전체 9개에 대한 Linux 검증은 아직 확인 전입니다.
+원 소스의 합성 경계 검사 8개는 Windows Python 3.12.14에서 skip 0으로 통과했습니다. head drift·부분 review·사람 활동·공개 선언 변경·unknown·main drift·고정 URL/호출 예산을 다룹니다. 이후 부모 process 시작 실패 검사 1개도 별도로 통과했고 이전 8개를 수동 반복하지 않았습니다. 소스 `1ceb6855`의 [Linux CI 39115988241](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39115988241)에서 최종 합성 9개가 skip 0으로 통과했습니다. 같은 실행의 기존 planner 14개와 역사적 예제 KEEP 16 / 후보 0도 확인했습니다. CI의 public GET은 0회이며 검사한 source bytes는 전후 동일했습니다.
 
-기존 retention workflow에 별도 `offline-capture` job을 추가해 고정 합성 9개만 자동 검증하도록 준비했습니다. 합성 검사는 [검토한 공개 선언 fixture](examples/captured-declarations/) 두 개만 사용하므로 향후 정상 배포에서 GitOps 값이 바뀌어도 영향을 받지 않습니다. 실제 collector가 현재 공개 선언의 고정 핀을 확인하는 정책은 유지합니다. public GET·클러스터·SSH·자격증명·실제 정리는 호출하지 않습니다. 기존 planner 14개 job은 그대로 유지하며, collector 수정 때문에 그 14개를 수동 반복하지 않습니다. 실제 네트워크 요청 전에는 고정 대상·자원 한도·출력 위치를 검토합니다.
+기존 retention workflow의 별도 `offline-capture` job은 고정 합성 9개만 자동 검증합니다. 합성 검사는 [검토한 공개 선언 fixture](examples/captured-declarations/) 두 개만 사용하므로 향후 정상 배포에서 GitOps 값이 바뀌어도 영향을 받지 않습니다. 실제 collector가 현재 공개 선언의 고정 핀을 확인하는 정책은 유지합니다. public GET·클러스터·SSH·자격증명·실제 정리는 호출하지 않습니다. 기존 planner 14개 job은 그대로 유지하며, collector 수정 때문에 그 14개를 수동 반복하지 않습니다. 실제 네트워크 요청 전에는 고정 대상·자원 한도·출력 위치를 검토합니다.
 
 ```sh
 python3 -I -B infra/maintenance/image-proposals/test_collect_public_inputs.py
