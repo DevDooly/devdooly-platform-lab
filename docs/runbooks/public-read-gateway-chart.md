@@ -28,6 +28,16 @@ chart의 `files/public-gateway/nginx.conf`와 `proxy.inc`는 해당 정책 파�
 
 이 표는 NetworkPolicy에 선언한 Pod peer 범위입니다. [Kubernetes 공식 문서](https://kubernetes.io/docs/concepts/services-networking/network-policies/)에 따르면 해당 Pod가 있는 node의 접근을 차단할 수 없고, source/destination NAT와 정책 적용 순서가 구현마다 다를 수 있으므로 node·host·NAT 경로와 외부 Traefik→K3s 연결은 별도 통합 검증이 필요합니다.
 
+## 선택적인 proxy 주소 한 개
+
+`publicReadGateway.trustedProxyCidr`의 기본값은 빈 문자열입니다. 비어 있으면 기존 NetworkPolicy 선언을 유지합니다. 선택할 때는 canonical RFC1918 IPv4 주소 한 개의 `/32`만 허용하며, 기존 client Pod 규칙 뒤에 해당 source의 TCP 8080 ingress 규칙 하나만 추가합니다. 기존 selector·API/DNS egress·다른 resource는 유지합니다. 예시 `10.23.45.67/32`는 합성 값이며 실제 운영 주소가 아닙니다. 넓은 subnet·IPv6·public/loopback 주소·잘못된 octet·선행 0·문자열 이외의 값은 거부합니다. 이 값만 설정해 gateway를 활성화하지는 않습니다.
+
+실제 주소는 Git values나 공개 문서에 넣지 않습니다. 필요한 경우 현재 Application의 소유권·source·기존 Helm parameter를 확인한 뒤 비공개 운영 변경으로 parameter 한 개만 전달합니다. [Argo CD의 Helm parameter](https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#helm-value-precedence)는 valueFiles보다 우선하므로 기존 parameter와 관리 주체를 먼저 확인해야 합니다. 이 override의 실제 적용·주소와 정책 유지·namespace에서의 GET·원복 검증은 별도 운영 단계이며, 현재 후보 작성만으로 완료하지 않습니다.
+
+Docker 주소가 바뀌면 예전 `/32`는 새 주소를 허용하지 않습니다. 다만 주소 재사용, node 접근 예외와 NAT 때문에 이를 proxy의 영구 identity나 완전한 격리 보장으로 해석할 수 없습니다. 주소 변경 시 기존 값을 제거하고 새 identity·주소·경로를 다시 확인합니다. 과거 namespace GET의 연결 거부도 NetworkPolicy 단독 원인으로 확정하지 않았습니다. 실제 소스 주소와 정책의 적용 관계는 새 통합 검증이 필요하며, 실패하면 subnet이나 node 범위를 자동으로 넓히지 않습니다. Traefik 재시작·Docker 네트워크 변경·NodePort·추가 Ingress controller·직접 API 공개는 이 변경에 포함하지 않습니다.
+
+오프라인 검사는 기존 검사기에 빈 문자열의 enabled bytes 보존, 세 RFC1918 범위의 단일 `/32`가 NetworkPolicy 한 규칙만 추가하는지, disabled bytes 보존과 잘못된 입력 12개 거부를 추가합니다. Windows Helm 4.3.0에서 기존 경로와 새 조건을 합친 오프라인 32회 검사를 통과했고 원본 소스·도구 bytes가 유지됨을 확인했습니다. 실제 private parameter·운영 정책 적용·외부 연결은 아직 수행하지 않았습니다.
+
 클라이언트 Pod는 만들지 않습니다. 배포 후 별도 검증을 하려면 지정한 client selector를 쓰는 격리 Job 등이 필요합니다. Docker 검증의 tmpfs `noexec/nosuid/nodev`나 PID 64 제한을 Kubernetes emptyDir·Deployment가 똑같이 제공한다고 주장하지 않습니다. Memory emptyDir는 Pod 메모리를 사용합니다.
 
 ## 활성화 전에 남은 조건

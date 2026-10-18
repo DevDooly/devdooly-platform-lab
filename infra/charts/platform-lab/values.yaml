@@ -123,3 +123,5 @@ runtime:
 # Optional internal read gateway; no live enablement or external listener by default.
 publicReadGateway:
   enabled: false
+  # Optional private runtime override: one canonical RFC1918 IPv4 /32 only.
+  trustedProxyCidr: ""
