@@ -8,6 +8,9 @@ import time
 ORIGIN = "https://devdooly.github.io"
 CHECKS = 0
 PHASE = "START"
+CASE = "START"
+OBSERVED_STATUS = None
+UPSTREAM_DELTA = None
 
 
 class CheckFailed(Exception):
@@ -46,6 +49,23 @@ def mode(value):
     need(status == 200)
 
 
+def begin_case(case):
+    global CASE, OBSERVED_STATUS, UPSTREAM_DELTA
+    CASE, OBSERVED_STATUS, UPSTREAM_DELTA = case, None, None
+
+
+def record_observation(status, before=None):
+    global OBSERVED_STATUS, UPSTREAM_DELTA
+    if type(status) is not int or not 100 <= status <= 599:
+        raise CheckFailed()
+    OBSERVED_STATUS = status
+    if before is not None:
+        delta = stats()["count"] - before
+        if type(delta) is not int or not -512 <= delta <= 512:
+            raise CheckFailed()
+        UPSTREAM_DELTA = delta
+
+
 def public_headers(headers, origin=True):
     need(headers.get("cache-control") == "no-store")
     need(headers.get("vary") == "Origin")
@@ -59,6 +79,7 @@ def good(path, headers=None):
     if headers is not None:
         actual_headers = headers
     status, output_headers, raw = request(path, headers=actual_headers)
+    record_observation(status)
     need(status == 200)
     public_headers(output_headers, actual_headers.get("Origin") == ORIGIN)
     row = json.loads(raw)["request"]
@@ -69,10 +90,11 @@ def good(path, headers=None):
 def reject(path, expected, **kwargs):
     before = stats()["count"]
     status, headers, raw = request(path, **kwargs)
+    record_observation(status, before)
     need(status == expected)
     if expected == 405:
         need(headers.get("allow") == "GET")
-    need(stats()["count"] == before)
+    need(UPSTREAM_DELTA == 0)
     need(json.loads(raw)["kind"] == "public-gateway-error")
     need(headers.get("cache-control") == "no-store")
 
@@ -80,12 +102,14 @@ def reject(path, expected, **kwargs):
 def run():
     global PHASE
     PHASE = "READY"
+    begin_case("READY")
     if sys.argv[1:] == ["--ready"]:
         need(stats()["count"] >= 0)
         need(request("/api/platform/summary")[0] == 200)
         return {"passed": True, "phase": "READY", "checks": CHECKS}
     need(not sys.argv[1:])
     PHASE = "ALLOWED_GET"
+    begin_case("ALLOWED_GET")
     paths = ["/api/platform/summary", "/api/platform/releases", "/api/demo/runs",
              "/api/jobs/observation", "/api/kafka/observation", "/api/demo/runs/synthetic-v1-seed-42"]
     for path in paths:
@@ -100,6 +124,7 @@ def run():
     good("/api/platform/summary", headers={"Content-Length": "0", "Authorization": "", "Cookie": ""})
 
     PHASE = "DENIED_URI"
+    begin_case("DENIED_URI")
     bad_paths = ["/", "/api", "/api/", "/api/jobs", "/api/jobs/start", "/actuator/health", "/metrics",
                  "/__fixture__/stats", "/api/kafka/observation/topics", "/api/platform/summary/",
                  "/api/platform/summary?", "/api/platform/summary?x=1", "/api//platform/summary",
@@ -109,19 +134,40 @@ def run():
     for path in bad_paths:
         reject(path, 404)
     PHASE = "DENIED_METHOD"
-    for method in ("HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE", "TRACE", "CONNECT"):
+    begin_case("DENIED_METHOD")
+    for method in ("HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"):
+        begin_case("METHOD_" + method)
         # HEAD has no entity in its response regardless of error_page's JSON body.
         if method == "HEAD":
             before = stats()["count"]
-            status, headers, _ = request(paths[0], method=method)
-            need(status == 405 and headers.get("allow") == "GET" and stats()["count"] == before)
+            status, headers, raw = request(paths[0], method=method)
+            record_observation(status, before)
+            need(status == 405 and headers.get("allow") == "GET" and UPSTREAM_DELTA == 0)
+            need(raw == b"" and headers.get("cache-control") == "no-store")
         else:
             reject(paths[0], 405, method=method)
+    begin_case("PARSER_TRACE")
+    before = stats()["count"]
+    status, headers, _ = request(paths[0], method="TRACE")
+    record_observation(status, before)
+    need(status == 405 and headers.get("allow") == "GET" and UPSTREAM_DELTA == 0)
+    for case, target in (("CONNECT_ORIGIN", paths[0]),
+                         ("CONNECT_AUTHORITY", "api.platform-lab.svc.cluster.local:8080")):
+        begin_case(case)
+        before = stats()["count"]
+        status, headers, _ = request(target, method="CONNECT")
+        record_observation(status, before)
+        need(status in {400, 405} and UPSTREAM_DELTA == 0)
+        if status == 405:
+            need(headers.get("allow") == "GET")
     PHASE = "PARSER_METHOD_REJECTION"
+    begin_case("PARSER_METHOD_REJECTION")
     before = stats()["count"]
     status, _, _ = request(paths[0], method="get")
-    need(status == 400 and stats()["count"] == before)  # native parser body is not asserted
+    record_observation(status, before)
+    need(status == 400 and UPSTREAM_DELTA == 0)  # native parser body is not asserted
     PHASE = "DENIED_INPUT"
+    begin_case("DENIED_INPUT")
     for headers in ({"Authorization": "Bearer synthetic-test"}, {"Cookie": "synthetic-test=1"},
                     {"Content-Type": "application/json"}, {"Transfer-Encoding": "chunked"},
                     {"Expect": "100-continue"}):
@@ -132,12 +178,14 @@ def run():
         reject(paths[0], 403, headers={"Origin": origin})
 
     PHASE = "RATE"
+    begin_case("RATE")
     time.sleep(4)
     with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
         responses = list(pool.map(lambda _: request(paths[0], headers={"Origin": ORIGIN}), range(40)))
     need(any(row[0] == 429 for row in responses))
     need(all(row[0] in {200, 429} for row in responses))
     PHASE = "CONNECTION"
+    begin_case("CONNECTION")
     time.sleep(4)
     mode("hold")
     before = stats()["count"]
@@ -148,35 +196,42 @@ def run():
             time.sleep(0.03)
         need(stats()["count"] == before + 6)
         status, headers, raw = request(paths[0])
+        record_observation(status)
         need(status == 429 and json.loads(raw)["code"] == "READ_LIMITED")
         need(all(future.result()[0] == 200 for future in pending))
     mode("ok")
 
     PHASE = "FAILURE_FALLBACK"
+    begin_case("FAILURE_FALLBACK")
     for selected in ("redirect", "error", "close", "slow"):
+        begin_case({"redirect": "UPSTREAM_REDIRECT", "error": "UPSTREAM_ERROR",
+                    "close": "UPSTREAM_CLOSE", "slow": "UPSTREAM_SLOW"}[selected])
         time.sleep(1)
         mode(selected)
         before = stats()["count"]
         started = time.monotonic()
         status, headers, raw = request(paths[0], headers={"Origin": ORIGIN})
         elapsed = time.monotonic() - started
+        record_observation(status, before)
         need(status == 503 and json.loads(raw) == {"kind": "public-gateway-error", "code": "READ_UNAVAILABLE"})
         public_headers(headers)
-        need(stats()["count"] == before + 1)  # exactly one attempt, never a retry
+        need(UPSTREAM_DELTA == 1)  # exactly one attempt, never a retry
         if selected == "slow":
             need(10 <= elapsed <= 17)  # idle timeout, not a claim about whole-response duration
     mode("ok")
     PHASE = "COMPLETE"
     return {"passed": True, "phase": PHASE, "checks": CHECKS, "allowlistedRoutePatterns": 6,
-            "deniedUriCases": len(bad_paths), "methodCases": 9, "noHostPorts": True,
+            "deniedUriCases": len(bad_paths), "methodCases": 10, "noHostPorts": True,
             "realNginxHttpExercised": True, "backendWasSyntheticFixture": True,
-            "globalMultiPeerLimitIndependentlyExercised": False}
+            "globalMultiPeerLimitIndependentlyExercised": False,
+            "failingCase": None, "observedStatus": None, "upstreamDelta": None}
 
 
 if __name__ == "__main__":
     try:
         result = run()
     except Exception:
-        result = {"passed": False, "phase": PHASE, "checks": CHECKS}
+        result = {"passed": False, "phase": PHASE, "checks": CHECKS,
+                  "failingCase": CASE, "observedStatus": OBSERVED_STATUS, "upstreamDelta": UPSTREAM_DELTA}
     print(json.dumps(result, sort_keys=True, separators=(",", ":")))
     raise SystemExit(0 if result["passed"] else 1)

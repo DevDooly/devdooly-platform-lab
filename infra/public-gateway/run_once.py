@@ -84,9 +84,10 @@ class Attempt:
         self.docker_ready = False
         self.output_owned = False
         self.http_probe = {"started": False, "resultVerified": False, "passed": None,
-                           "phase": None, "checks": None, "returnCode": None}
+                           "phase": None, "checks": None, "returnCode": None, "failingCase": None, "observedStatus": None, "upstreamDelta": None}
         self.cleanup_status = {"gateway": "NOT_ATTEMPTED", "fake": "NOT_ATTEMPTED", "network": "NOT_ATTEMPTED"}
         self.validation_checkpoint = "NOT_STARTED"
+        self.nginx_version = None
         self.last_command = {"category": None, "returnCode": None}
         self.deadline = time.monotonic() + 600
         self.docker = shutil.which("docker")
@@ -229,6 +230,12 @@ class Attempt:
         self.assert_container("gateway")
         self.validation_checkpoint = "NGINX_SYNTAX"
         self.command(["exec", self.ids[self.names["gateway"]], "nginx", "-t", "-c", "/etc/public-gateway/nginx.conf"])
+        PHASE = "NGINX_BINARY_VERSION"
+        self.validation_checkpoint = "NGINX_VERSION"
+        _, raw = self.command(["exec", self.ids[self.names["gateway"]], "/bin/sh", "-c", "nginx -v 2>&1"])
+        version = re.fullmatch(rb"nginx version: nginx/([0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3})\n", raw)
+        require(version is not None)
+        self.nginx_version = version.group(1).decode("ascii")
 
     def check_http(self):
         global PHASE
@@ -257,20 +264,30 @@ class Attempt:
         require(isinstance(result, dict) and type(result.get("passed")) is bool
                 and result.get("phase") in phases and type(result.get("checks")) is int
                 and 0 <= result["checks"] <= 4096)
+        cases = phases | {"METHOD_HEAD", "METHOD_OPTIONS", "METHOD_POST", "METHOD_PUT", "METHOD_PATCH",
+                          "METHOD_DELETE", "PARSER_TRACE", "CONNECT_ORIGIN", "CONNECT_AUTHORITY",
+                          "UPSTREAM_REDIRECT", "UPSTREAM_ERROR", "UPSTREAM_CLOSE", "UPSTREAM_SLOW"}
+        status, delta = result.get("observedStatus"), result.get("upstreamDelta")
+        require(status is None or (type(status) is int and 100 <= status <= 599))
+        require(delta is None or (type(delta) is int and -512 <= delta <= 512))
         if result["passed"]:
+            require(result.get("failingCase") is None and status is None and delta is None)
             require(set(result) == {"passed", "phase", "checks", "allowlistedRoutePatterns", "deniedUriCases",
                                     "methodCases", "noHostPorts", "realNginxHttpExercised",
-                                    "backendWasSyntheticFixture", "globalMultiPeerLimitIndependentlyExercised"}
+                                    "backendWasSyntheticFixture", "globalMultiPeerLimitIndependentlyExercised",
+                                    "failingCase", "observedStatus", "upstreamDelta"}
                     and code == 0 and result["phase"] == "COMPLETE"
                     and type(result["allowlistedRoutePatterns"]) is int and result["allowlistedRoutePatterns"] == 6
                     and type(result["deniedUriCases"]) is int and result["deniedUriCases"] == 25
-                    and type(result["methodCases"]) is int and result["methodCases"] == 9
+                    and type(result["methodCases"]) is int and result["methodCases"] == 10
                     and result["noHostPorts"] is True and result["realNginxHttpExercised"] is True
                     and result["backendWasSyntheticFixture"] is True
                     and result["globalMultiPeerLimitIndependentlyExercised"] is False)
         else:
-            require(set(result) == {"passed", "phase", "checks"} and code == 1)
-        self.http_probe.update(resultVerified=True, passed=result["passed"], phase=result["phase"], checks=result["checks"])
+            require(set(result) == {"passed", "phase", "checks", "failingCase", "observedStatus", "upstreamDelta"}
+                    and code == 1 and result["failingCase"] in cases)
+        self.http_probe.update(resultVerified=True, passed=result["passed"], phase=result["phase"], checks=result["checks"],
+                               failingCase=result["failingCase"], observedStatus=status, upstreamDelta=delta)
         require(code == 0 and result["passed"] is True)
         PHASE = "ACTUAL_LIMIT_SIGNALS"
         _, raw = self.command(["logs", "--tail", "256", self.ids[self.names["gateway"]]])
@@ -342,11 +359,11 @@ def main():
               "phase": PHASE, "realMiniPcContacted": False, "publicEndpointExposed": False,
               "dbOrKafkaStarted": False, "sparkOrJvmStarted": False, "hostPortsPublished": False,
               "ownedContainerMaximum": 2, "ownedInternalNetworkMaximum": 1,
-              "workloadPhase": PHASE, "validationCheckpoint": "NOT_STARTED",
+              "workloadPhase": PHASE, "validationCheckpoint": "NOT_STARTED", "nginxVersion": None,
               "lastWorkloadCommand": {"category": None, "returnCode": None},
               "lastCleanupCommand": {"category": None, "returnCode": None},
               "httpProbe": {"started": False, "resultVerified": False, "passed": None,
-                            "phase": None, "checks": None, "returnCode": None},
+                            "phase": None, "checks": None, "returnCode": None, "failingCase": None, "observedStatus": None, "upstreamDelta": None},
               "cleanupStatuses": {"gateway": "NOT_ATTEMPTED", "fake": "NOT_ATTEMPTED", "network": "NOT_ATTEMPTED"}}
     try:
         folder = Path(__file__).resolve().parent
@@ -362,6 +379,7 @@ def main():
         if attempt is not None:
             result["httpProbe"] = dict(attempt.http_probe)
             result["validationCheckpoint"] = attempt.validation_checkpoint
+            result["nginxVersion"] = attempt.nginx_version
             result["lastWorkloadCommand"] = dict(attempt.last_command)
             result["ownedResourcesRemoved"] = attempt.cleanup()
             result["cleanupStatuses"] = dict(attempt.cleanup_status)

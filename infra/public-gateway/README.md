@@ -6,11 +6,14 @@ API 이미지, Kubernetes, 미니 PC, 공유기, DNS, 인증서, 터널, GitHub 
 
 ## 허용 요청
 
-정확한 `GET`만 upstream으로 전달한다. Nginx가 해석한 다른 메서드는
-`405`와 `Allow: GET`으로 거부한다. `HEAD`·`OPTIONS`도 허용하지 않는다.
-소문자 `get` 등 요청 라인 해석 단계의 거부는 native 400일 수 있으며,
-이때 본문까지 고정 JSON이라고 보장하지 않는다. parser 오류를 named location으로
-돌리지 않는다. 유효한 헤더·entity 조건의 거부는 직접 고정 400 JSON을 반환한다.
+정확한 `GET`만 upstream으로 전달한다. 정책에 도달한 다른 메서드는 직접
+`405`·`Allow: GET`·고정 JSON으로 거부한다. `HEAD`·`OPTIONS`도 허용하지 않으며
+HEAD 응답은 HTTP 의미에 따라 body가 없다. TRACE는 parser의405·AllowGET·upstream0을
+별도로 검사하고 본문은 고정 JSON으로 보장하지 않는다. CONNECT의 고정
+origin-form·authority-form 두 요청은 parser에 따라400/405로 거부되고 upstream 호출0을 확인한다. 405이면
+`Allow: GET`을 확인하며 CONNECT·소문자 `get` 등의 parser 본문은 고정 JSON이라고
+보장하지 않는다. parser400/405를 named location으로 돌리지 않는다. 유효한
+헤더·entity 조건의 거부는 직접 고정400 JSON을 반환한다.
 
 | 경로 | 기존 백엔드의 조회 범위 |
 | --- | --- |
@@ -86,8 +89,11 @@ read-only root, 16MiB tmpfs를 사용한다. 공개 fixture/config만 읽기 전
 fake server와 stdlib HTTP probe는 같은 컨테이너에 있다. 다른 컨테이너의 실제
 Nginx에 요청하여 6개 경로 패턴·80자 ID, 차단 경로·메서드·헤더, upstream 고정
 헤더·body 0바이트, CORS·쿠키·redirect, rate·동시성 거부, 연결 중단·500·느린 응답의
-고정503과 실패당 upstream 1회 호출을 확인한다. `CONNECT /api/...`와 `TRACE`는
-해석 후 405, 소문자 `get`은 parser 400으로 구분해 upstream 호출 0을 검증한다.
+고정503과 실패당 upstream 1회 호출을 확인한다. HEAD를 포함한 정책 메서드6개는
+405·Allow·고정 JSON을 엄격히 검사한다(HEAD의 body 제외). parser TRACE는405·Allow·
+upstream0, CONNECT의 두 form은400/405·upstream0을 별도로 검사하며 본문은 단정하지 않는다.
+소문자 `get`의 parser400도 구분해 총10개 method case를 기록한다. 실제 소유 Nginx의 `-v`를 고정 명령으로 읽고
+검증한 숫자 version만 기록한다. 실행 전 공식 소스의 버전과 같다고 가정하지 않는다.
 요청 내용이 없는 제한된 Nginx access counter에서 rate·connection의 REJECTED도
 확인한다. 전역 zone은 실제 `nginx -t`로 해석하지만, 두 컨테이너만으로 여러 peer의
 **전역 임계값을 독립 포화시키지는 않는다**. 결과에도 그 한계를 기록한다.
@@ -112,7 +118,8 @@ readiness GET도 자신의 합성 fixture만 조회한다. 기존 `.local/public
 컨테이너와 비어 있는 소유 네트워크에만 허용한다. prune·compose down·전역 삭제·
 로컬 재귀 삭제는 없다. 결과는 유한한 phase·count만 게시하며 예외·원문 로그·호스트
 경로·mock 요청 내용을 내보내지 않는다. 실패 때 원래 workload phase와 유한한 검사
-checkpoint·HTTP probe 결과·자원별 정리 상태를 보존하며 예외 원문을 추가하지 않는다.
+checkpoint·HTTP probe 결과·자원별 정리 상태를 보존한다. 실패 case enum·관측한
+status·upstream count 차이만 추가하며 URI·헤더·body·예외 원문을 게시하지 않는다.
 runner/process 강제 종료로 finally가 실행되지
 않으면 정리가 중단될 수 있다. 정확한 소유 라벨을 확인하고 전역 정리하지 않는다.
 

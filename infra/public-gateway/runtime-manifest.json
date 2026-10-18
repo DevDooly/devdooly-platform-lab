@@ -1,9 +1,9 @@
 {
   "files": [
     {
-      "bytes": 4984,
+      "bytes": 4893,
       "path": "nginx.conf",
-      "sha256": "1a3ee527bb55be70ed93099c23ccf9ec3d842afd2c2ea2327723a2ba5706187c"
+      "sha256": "3aeff90b45791f5d075a436fbd1b7780e53b42e11438080e247114a298530638"
     },
     {
       "bytes": 1137,
@@ -16,19 +16,19 @@
       "sha256": "168d859cefa9c7f0075ab33e06f8c0a04184472da3b648b6f68ff2058895116b"
     },
     {
-      "bytes": 7908,
+      "bytes": 10115,
       "path": "verify_http.py",
-      "sha256": "af2a049cbe5594eeb75f04695b8f065c0f93a60ef316dbb088448bf423b667c3"
+      "sha256": "7fdfd86f1a39e71a5e3834064da019bab30483b817015f0d5527b40f5bc9cb87"
     },
     {
-      "bytes": 21758,
+      "bytes": 23350,
       "path": "run_once.py",
-      "sha256": "62b166a940043199674c56e2c41937e8d878ad824811429184d92598842dbb15"
+      "sha256": "42de351d5657efa2b77137c96f6139456ec2e001ad74638a3d2dbfaa4d7eff2b"
     },
     {
-      "bytes": 9270,
+      "bytes": 10043,
       "path": "README.md",
-      "sha256": "792f45aa7be78c156f1e4291193c85f88c92b74a4e78e523ba7981ae7736e844"
+      "sha256": "ee24f9a622fb01804b84fc67d7943b35b807e8ecfb019b798cb4c687062fc354"
     },
     {
       "bytes": 1110,
