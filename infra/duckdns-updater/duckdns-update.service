@@ -1,0 +1,27 @@
+[Unit]
+Description=Single-host DuckDNS IPv4 update
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStart=/usr/bin/python3 -I -B /opt/devdooly-platform-lab/duckdns-updater/duckdns_update.py
+UMask=0077
+Restart=no
+TimeoutStartSec=25s
+KillMode=control-group
+LimitCORE=0
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadOnlyPaths=/etc/devdooly-platform-lab/duckdns
+CapabilityBoundingSet=
+AmbientCapabilities=
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+StandardOutput=journal
+StandardError=null

@@ -1,0 +1,13 @@
+[Unit]
+Description=Periodic single-host DuckDNS IPv4 update
+
+[Timer]
+OnActiveSec=5min
+OnUnitActiveSec=5min
+RandomizedDelaySec=30s
+AccuracySec=30s
+Persistent=false
+Unit=duckdns-update.service
+
+[Install]
+WantedBy=timers.target
