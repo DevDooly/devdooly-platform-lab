@@ -20,6 +20,8 @@ const actual6Raw = readFileSync(new URL('./fixtures/iceberg-capture-attempt6.sum
 const actual6: Record<string, any> = JSON.parse(actual6Raw.toString('utf8'));
 const actual7Raw = readFileSync(new URL('./fixtures/iceberg-capture-attempt7.summary.json', import.meta.url));
 const actual7: Record<string, any> = JSON.parse(actual7Raw.toString('utf8'));
+const actual8Raw = readFileSync(new URL('./fixtures/iceberg-capture-attempt8.summary.json', import.meta.url));
+const actual8: Record<string, any> = JSON.parse(actual8Raw.toString('utf8'));
 
 /** Synthetic producer-shaped object only; no actual capture or public asset. */
 const fixture = (): Record<string, any> => ({
@@ -200,6 +202,42 @@ test('the exact seventh record keeps reply binding unverified and cannot promote
   const promoted = structuredClone(actual7); promoted.passed = true; promoted.status = 'DETERMINED'; promoted.failureCategory = null;
   assert.equal(parseIcebergCapture(promoted), null);
   // Keep the parent phase of attempt 6 and UNKNOWN of attempt 5 as observed history.
+  assert.ok(parseIcebergCapture(actual6)); assert.equal(actual6.diagnostic.failureCode, 'NORMALIZE_DECODER_LIFECYCLE_UNVERIFIED');
+  assert.ok(parseIcebergCapture(actual5)); assert.equal(actual5.diagnostic.failureCode, 'UNKNOWN');
+});
+test('the exact eighth record keeps JSON verification unproven without inferring a decoder exit or protocol cause', () => {
+  assert.equal(actual8Raw.length, 1791);
+  assert.equal(createHash('sha256').update(actual8Raw).digest('hex'), 'e96ca40d6bfeadfe0a8c51d73aec5c59977f418b3894470bcc4574870af2ca9e');
+  const value = parseIcebergCapture(actual8); assert.ok(value); assert.equal(value.schemaVersion, 2);
+  assert.equal(value.sourceCommit, 'e89a858d59910efc6de7ebd42baa840344c056ad');
+  assert.equal(value.runtimeManifestSha256, icebergCaptureManifestDecoderReplyPhases);
+  assert.equal(value.status, 'FAILED'); assert.equal(value.passed, false); assert.equal(value.failureCategory, 'SUMMARY_NOT_VERIFIED');
+  assert.deepEqual(value.checks, { sourceBytesVerified: true, compilerPrepVerified: true,
+    originalMainCalledOnce: true, originalMainReturnedZero: true, decoderStoppedVerified: true, decoderAttachCliReaped: true,
+    sameRunStoppedActorsAndClockVerified: false, inventoryProduced: false, allObjectsKept: false });
+  assert.ok(Object.entries(value.counts).every(([key, count]) => count === (key === 'objectCandidateCount' ? 0 : null)));
+  assert.equal(value.proofHashes.prepProofSha256, 'bf78b5558cf71e0d5239aa46c64dd7db2c078654198c3158838bdc04315d95e3');
+  assert.equal(value.proofHashes.normalizationReceiptCanonicalSha256, null); assert.deepEqual(value.decoderReasonCodes, []);
+  if (value.schemaVersion === 2) {
+    assert.equal(value.diagnostic.stageAttempted, 'NORMALIZE');
+    assert.equal(value.diagnostic.failureCode, 'NORMALIZE_DECODER_REPLY_JSON_UNVERIFIED');
+    assert.ok(parseCaptureDiagnostic(value.diagnostic, false, 'SCHEMA2_DECODER_REPLY_PHASES'));
+    assert.equal(value.diagnostic.lastPrepChild?.name, 'cold-export-absence');
+    assert.equal(value.diagnostic.lastPrepChild?.returnCode, 0);
+    assert.ok(value.diagnostic.prepCleanup && Object.values(value.diagnostic.prepCleanup).every(item => item === true));
+  }
+  for (const runtimeManifestSha256 of [icebergCaptureManifest, icebergCaptureManifestV2, icebergCaptureManifestClosedClasspath,
+    icebergCaptureManifestBoundedManifest, icebergCaptureManifestVerifiedAbsence, icebergCaptureManifestNormalizationPhases,
+    icebergCaptureManifestDecoderLifecyclePhases]) assert.equal(parseIcebergCapture({ ...actual8, runtimeManifestSha256 }), null);
+  for (const key of ['decoderExitCode', 'graph', 'underlyingCause', 'rawStdout']) {
+    assert.equal(Object.hasOwn(value, key), false);
+    assert.equal(parseIcebergCapture({ ...actual8, [key]: 'SYNTHETIC_PRIVATE_CANARY' }), null);
+  }
+  const wrongStage = structuredClone(actual8); wrongStage.diagnostic.stageAttempted = 'DECODER';
+  assert.equal(parseIcebergCapture(wrongStage), null);
+  const promoted = structuredClone(actual8); promoted.passed = true; promoted.status = 'DETERMINED'; promoted.failureCategory = null;
+  assert.equal(parseIcebergCapture(promoted), null);
+  assert.ok(parseIcebergCapture(actual7)); assert.equal(actual7.diagnostic.failureCode, 'NORMALIZE_DECODER_REPLY_BINDING_UNVERIFIED');
   assert.ok(parseIcebergCapture(actual6)); assert.equal(actual6.diagnostic.failureCode, 'NORMALIZE_DECODER_LIFECYCLE_UNVERIFIED');
   assert.ok(parseIcebergCapture(actual5)); assert.equal(actual5.diagnostic.failureCode, 'UNKNOWN');
 });

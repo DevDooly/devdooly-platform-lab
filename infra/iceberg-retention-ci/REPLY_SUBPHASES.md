@@ -1,6 +1,6 @@
 # Decoder 응답 검증의 제한된 세분화 후보
 
-**현재 검토·검증 상태(2026-10-18):** runtime `bcbd7cc6…`의 source 후보 `3af4460e…`를 검토하고 Windows 집중20개 중19개 PASS·POSIX1개 skip·실패/오류0·source 전후 동일·C 사본 바인딩·D 작업 폴더 보존을 확인했습니다. 결과 SHA-256은 `fb477c02812b5eaca78bf73bc9bd394f920a798f2f28a84340a023fbc65223a1`입니다. 웹88개·타입26개 파일·Pages 빌드도 통과했고 실제7 원문은 byte-exact 보존했습니다. 새 Linux86개·Cloud capture는 미실행이며 정확한 원인·수정 성공·graph·inventory는 미확인입니다. 아래 proposal은 준비 당시의 미실행 기록으로 원문 그대로 보존합니다.
+**현재 실제8 결과(2026-10-18):** [새 실행39082460484](../../docs/evidence/iceberg-capture/ATTEMPT_8.md)은 source `e89a858d`·runtime `bcbd7cc6…`에서 Linux86·UID0·skip0·source 전후 동일을 통과했습니다. 전체 결과는 SUMMARY_NOT_VERIFIED/NORMALIZE_DECODER_REPLY_JSON_UNVERIFIED 실패이며 strict JSON 검증 구간만 구분합니다. 정확한 원인·exit·graph·inventory·전체 KEEP은 미확인이고 관측 count·정규화 hash는 null입니다. 기존 Windows20 중19 PASS·POSIX1 skip·웹88·타입/빌드 결과를 보존하며 아래 proposal의 미실행 표시는 준비 당시 상태입니다. 다음 응답 protocol 검토의 수정 범위는 아직 미정입니다.
 
 7차 실행 `39081027632`의 source `bf044`는 Linux 85개·UID0·skip0을 통과했지만 전체 capture는 `SUMMARY_NOT_VERIFIED` / `NORMALIZE` / `NORMALIZE_DECODER_REPLY_BINDING_UNVERIFIED`로 실패했습니다. 공개 원문은 1,794 bytes / SHA-256 `70d95a4be42339d4acf231528e1e92443acfaf022867cf35d22f54c4310cdc79`, validation은 2,485 bytes / SHA-256 `9056ef2443f5d7a26431cb6dc778060a410d1b2f54b802d856a77fa2d1653d85`입니다. 정확한 원인·decoder 종료 코드·유효 graph는 미확인이며 여섯 true·세 false 검증과 관측 count·정규화 hash의 null을 유지합니다.
 

@@ -1,6 +1,6 @@
 # Iceberg capture 공개 요약 schema 2 후보
 
-**다음 runtime 후보(2026-10-18):** [응답 검증 세분화](REPLY_SUBPHASES.md)의 manifest는 `bcbd7cc6f30d211f669bdc99994e6f41d3dc942ea3123a8aead1a2af31db9671`입니다. 기존 decoder 구간7개를 포함한 정규화18개에 proof·JSON·관계 비교 구간3개를 더해21개이며, CLI 일반144개는 그대로입니다. 이 새 manifest에만 화면 profile165개를 연결하고 이전129/134/138/144/155/162개 계약을 유지합니다. 원래 검증 조건을 유지하면서 전체 proof·strict JSON 해석·입력 관계 비교를 고정 구간 3개로 구분합니다. Windows 집중20개 중 19개 통과·POSIX1개 제외, 웹88개·타입 검사·Pages 빌드를 확인했습니다. 새 Linux86개와 실제 capture는 아직 미실행이며 원인 수정·graph·inventory 성공을 뜻하지 않습니다. 이하 실제7과 앞선 기록은 해당 실행 당시 상태입니다.
+**실제8 결과(2026-10-18):** source `e89a858d`·runtime `bcbd7cc6…`의 [여덟 번째 실행](../../docs/evidence/iceberg-capture/ATTEMPT_8.md)은 Linux86·UID0·skip0·source 전후 동일을 통과했습니다. prep·원래 main 한 번/반환0·새 decoder 정지/CLI 회수는 true이나 전체 capture는 SUMMARY_NOT_VERIFIED/NORMALIZE_DECODER_REPLY_JSON_UNVERIFIED 실패입니다. strict JSON 검증 구간만 구분하며 원인·exit·graph·통합 actors/clock·inventory·전체 KEEP은 미확인, 관측 count·정규화 hash는 null입니다. 현재 profile165·기존 계약을 유지하고 다음 공개 source protocol 검토의 수정 범위는 아직 미정입니다. 이하 과거 기록은 각 실행 당시 상태로 보존합니다.
 
 **실제7 갱신:** source `bf044545`·runtime `6b362710…`의 [새 실행](../../docs/evidence/iceberg-capture/ATTEMPT_7.md)은 Linux85·UID0·skip0·source 전후 동일을 통과했고 Cloud는 SUMMARY_NOT_VERIFIED/NORMALIZE/NORMALIZE_DECODER_REPLY_BINDING_UNVERIFIED로 실패했습니다. 여섯 true 검증과 통합 actors/clock·inventory·전체 KEEP의 false, 관측 count·정규화 hash의 null을 보존합니다. 코드는 응답 증명·binding 검증 구간만 뜻하며 JSON 해석 실패·특정 hash 불일치 등 정확한 원인 또는 decoder exit·graph 성공을 단정하지 않습니다.
 
