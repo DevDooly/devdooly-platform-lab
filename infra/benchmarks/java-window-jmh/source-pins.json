@@ -1,0 +1,86 @@
+{
+  "files": [
+    {
+      "path": ".gitignore",
+      "sha256": "a0e3f21dda9ee8c605691c4d3f0339dc24e0766c6201255f75b4ebefc38b9cc9",
+      "size": 38
+    },
+    {
+      "path": "DESIGN.md",
+      "sha256": "24e46c1a15ef9527189d32a92264479f27e524f01cb62e524e12cc5a9866abd0",
+      "size": 4732
+    },
+    {
+      "path": "PROVENANCE.md",
+      "sha256": "3e9a19cc438671116ec705daeab2aed29539a2cc32c1f0091d1194e6e7ddad32",
+      "size": 1906
+    },
+    {
+      "path": "README.md",
+      "sha256": "ed32aab85c0963693d0fba77be534f70392be84383ff93d27e42865f65fda7cb",
+      "size": 5070
+    },
+    {
+      "path": "pom.xml",
+      "sha256": "e6b6fcf777e764fc512049df2c52671f6184755131ae744e4ed49ad6e6f6fe56",
+      "size": 2280
+    },
+    {
+      "path": "scripts/run_jmh.py",
+      "sha256": "0c730feaa7f8be44fe26acd9b76d135f05842c06e8663bc9ef71458f2d55a235",
+      "size": 9509
+    },
+    {
+      "path": "scripts/test_run_jmh.py",
+      "sha256": "8e6f6f34c98788f6c8888b159ec45c8b8cf726526ae7fd504504388098057741",
+      "size": 2937
+    },
+    {
+      "path": "src/main/java/io/github/devdooly/examples/window/DeliberatelyBrokenUtcNormalizer.java",
+      "sha256": "1d556666a9498f73e481f05791b079d70358d6182d1b81c323332fb62e4b8716",
+      "size": 740
+    },
+    {
+      "path": "src/main/java/io/github/devdooly/examples/window/FixtureManifest.java",
+      "sha256": "3919e970d7a719cf353673ad21ca50c9775031939228b844cdf96155ec159333",
+      "size": 1725
+    },
+    {
+      "path": "src/main/java/io/github/devdooly/examples/window/QuadraticBoundaryScan.java",
+      "sha256": "915ee3a9c9a4865df6c7f81b40bd0b62385633f234180e357c9d0e869e56a9ab",
+      "size": 1239
+    },
+    {
+      "path": "src/main/java/io/github/devdooly/examples/window/SweepLineAnalysis.java",
+      "sha256": "fbadadfb16c8cb78b9e2234b210ed94c94b1916523edd3eebdd39032ddfac861",
+      "size": 1223
+    },
+    {
+      "path": "src/main/java/io/github/devdooly/examples/window/SyntheticFixtures.java",
+      "sha256": "a18009eb471ccbca9eeeb502d464b8c2935afe744a6d4041e2f2ecf7d2776759",
+      "size": 2912
+    },
+    {
+      "path": "src/main/java/io/github/devdooly/examples/window/UtcNormalizer.java",
+      "sha256": "136d671c966484e6372308771fabb5791e5b5db0b4fbf1a06e6b7267defe6d0b",
+      "size": 2649
+    },
+    {
+      "path": "src/main/java/io/github/devdooly/examples/window/WindowAnalysis.java",
+      "sha256": "d696c3ad9b4b5a3667b87aed4baa3149895f120f9b462c506d3ab65e61426064",
+      "size": 2816
+    },
+    {
+      "path": "src/main/java/io/github/devdooly/examples/window/WindowBenchmark.java",
+      "sha256": "f9a403648962fd14e6b15b9c2037ec3387b29c19896b454e4e0195dc6a10201b",
+      "size": 2098
+    },
+    {
+      "path": "src/test/java/io/github/devdooly/examples/window/WindowAnalysisTest.java",
+      "sha256": "e667fdc5b07297568d1687f54d1776f06fc85d70c6cddc69562daee42fd817a3",
+      "size": 10655
+    }
+  ],
+  "kind": "UNCHANGED_PUBLIC_SYNTHETIC_WINDOW_SOURCE",
+  "schemaVersion": 1
+}
