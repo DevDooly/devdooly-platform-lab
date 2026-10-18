@@ -1,0 +1,571 @@
+{
+  "files": [
+    {
+      "bytes": 63093,
+      "path": "apps/api/.mvn/wrapper/maven-wrapper.jar",
+      "sha256": "4e2fbf6554bc8a4702cdfdd3bef464f423393d784ddbb037216320ce55d5e4e1"
+    },
+    {
+      "bytes": 446,
+      "path": "apps/api/.mvn/wrapper/maven-wrapper.properties",
+      "sha256": "0b5359963fea3daf57fb251cde89bf9fc0b746a3930b8baa108b622a7f0ffc7b"
+    },
+    {
+      "bytes": 4978,
+      "path": "apps/api/README.md",
+      "sha256": "b03cae02879bb62126d9355f0e8f84de956e90828a8aaa0fc44a5e883e1bcbd9"
+    },
+    {
+      "bytes": 11336,
+      "path": "apps/api/mvnw",
+      "sha256": "07e72ac35ecf8c24db67498fc6a9a8e7c64b31ab3798a7119fe73fb7cd6c0331"
+    },
+    {
+      "bytes": 7903,
+      "path": "apps/api/mvnw.cmd",
+      "sha256": "8c720db91d96ba5f67afa4083726b20eb4be399d86bb859e09eb67436bb230f5"
+    },
+    {
+      "bytes": 2404,
+      "path": "apps/api/pom.xml",
+      "sha256": "5d81050c5ecda2cb75b8a97c42ea828d9fe29297cd5cce32995ad1ab8d03262e"
+    },
+    {
+      "bytes": 621,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/PlatformLabApplication.java",
+      "sha256": "3986713208f1839b21f82b4217bac5cff3c5d1ff1ac4a02760d4ab7c9707cff7"
+    },
+    {
+      "bytes": 899,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/demo/DemoController.java",
+      "sha256": "40faf2b3082b4b9e90e666873fa682b9429a1eedc4119e6f4d53c728f86bf4e8"
+    },
+    {
+      "bytes": 1191,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/demo/DemoOutcome.java",
+      "sha256": "9195b1ed36c9359436b3bfeb3f462f54ff8b45b01237622d86a70b19f3c15cfc"
+    },
+    {
+      "bytes": 280,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/demo/DemoOutcomeRepository.java",
+      "sha256": "7ee482980954981f9c447e34acef4c2c7273381fe550de5378382b5a0948f5eb"
+    },
+    {
+      "bytes": 1470,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/demo/DemoRun.java",
+      "sha256": "fae3e1f921b61bd80e42507d65cd17230159b62feb0b3d8815e48042639cab39"
+    },
+    {
+      "bytes": 263,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/demo/DemoRunRepository.java",
+      "sha256": "5e8eacdf7551f79789967a9bf39db3c6c58d9a8006f9b3bee6e6f5a1096a3d1e"
+    },
+    {
+      "bytes": 3686,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/demo/DemoService.java",
+      "sha256": "1d4e16a5d8d3139ace6f4027791f15188a218f326c715f94da85491d65f66c5d"
+    },
+    {
+      "bytes": 548,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/demo/SampleBootstrap.java",
+      "sha256": "0b3763a3774f7f9c2e7742ddb667a2574c9e4364c1072467bc8c2bca727fcb85"
+    },
+    {
+      "bytes": 140,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/demo/SensorEvent.java",
+      "sha256": "9e656b7e03dc6b406ce543dc5f762f6132d277953f956a8bdecfaed2ca9f6e3d"
+    },
+    {
+      "bytes": 3132,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/demo/SensorProcessor.java",
+      "sha256": "d8017e9f5607e764efa6227fd682d0ac57ce96f537d363009b5c94489d3b6ae3"
+    },
+    {
+      "bytes": 4485,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/demo/SyntheticScenario.java",
+      "sha256": "4c639124f696d3fb41a9184bf72b0522913708a331306e157a05258837da7033"
+    },
+    {
+      "bytes": 5171,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/CanonicalSource.java",
+      "sha256": "ca73d49bad8c8697ef4bbb221babc88b13d1c4e7a5aa7838e742f05f5de11a6a"
+    },
+    {
+      "bytes": 1533,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/LabClientEndpoints.java",
+      "sha256": "21d15a4b3d7328b95957dffcbc17e3afc5ce050cf329a5264137feb2e21b9777"
+    },
+    {
+      "bytes": 19092,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/LabJobService.java",
+      "sha256": "92d98a0c90957129b0729ab41d99e1d4a1b3d65d628c3e2184590afd3495a89c"
+    },
+    {
+      "bytes": 266,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/RawSourceStore.java",
+      "sha256": "3861c9a7b9e538170b01894075e1260b433fe0e3f66fda87a2ffb4ede512517c"
+    },
+    {
+      "bytes": 5313,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/S3ClientFactory.java",
+      "sha256": "1a225ab7e8ca9942c2d632557ddbab4246a6769c21a16a8b93c1d82edaf67422"
+    },
+    {
+      "bytes": 7779,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/S3RawSourceStore.java",
+      "sha256": "5120643145a36da282f22e2e34f1fd30f3c17d574a288f7c6bbd7532900da5df"
+    },
+    {
+      "bytes": 1663,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/SourceStagingService.java",
+      "sha256": "a6a7c5822b96f02984b61f6cc40ce88c2fa37eaf6bb97165e3f48a27068b618a"
+    },
+    {
+      "bytes": 246,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/VerifiedSourceReader.java",
+      "sha256": "ec34014b65cd048435643b1148ba9e443f5ec4a6017b479d4a8eba1199a8db0d"
+    },
+    {
+      "bytes": 8152,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/exporting/ExportBundle.java",
+      "sha256": "292b58e0bede273c28cf86ec8dfbde45d409643733014c3c887a41ea42b278e6"
+    },
+    {
+      "bytes": 2056,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/exporting/ResultExportService.java",
+      "sha256": "9ff6628c6095ac12b02d1646150024fa5967ba26146a9bb8a93e40a3eab6d74c"
+    },
+    {
+      "bytes": 266,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/exporting/ResultExportStore.java",
+      "sha256": "953b39ebcd2c4fb6d7b7abce584bee1cb9c96ae9024b56f5159f57034c372b13"
+    },
+    {
+      "bytes": 3827,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/exporting/S3ResultExportStore.java",
+      "sha256": "16cc8b2b6e3d98bb8080c30947302d662423da8f3d95890cdf8521d1fb19fcc1"
+    },
+    {
+      "bytes": 3203,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/messaging/DispatchMessage.java",
+      "sha256": "2f3337c8c370d785754f88e1a87533fa6857c5599bdc57d0fcdba6e6b758e985"
+    },
+    {
+      "bytes": 3694,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/messaging/DispatchPublisher.java",
+      "sha256": "e70cf79859882b52b1964f97132143e29b0ab405d4af2a4215be6b757055cad4"
+    },
+    {
+      "bytes": 7614,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/messaging/DispatchWorker.java",
+      "sha256": "9730fe4e489e3f3f8711afbc18bcc41f035011851aad8dafebe9575c4b8138fc"
+    },
+    {
+      "bytes": 4470,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/messaging/KafkaClientFactory.java",
+      "sha256": "77c446c56af52996cb6a4c4f5ffc4c425ffc5ae2e8463295e29bfdf8f284d7b9"
+    },
+    {
+      "bytes": 1371,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/observation/JobObservationController.java",
+      "sha256": "46799c27ec18fabcc76ecec2e4320d098e724797d6caf8b7247978b5d8fbba3d"
+    },
+    {
+      "bytes": 14142,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/observation/JobObservationService.java",
+      "sha256": "f12898bd0383d7c3f5e2765f97359ea982670cfb5416c8479a2d095d2a555288"
+    },
+    {
+      "bytes": 2380,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/observation/KafkaObservationController.java",
+      "sha256": "fbc3dab88b4a1fd6613ff6f9f7c8948e3bb71c35a9dfcd1b1ffea4cf115c0b46"
+    },
+    {
+      "bytes": 10883,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/observation/KafkaObservationService.java",
+      "sha256": "192d227705e60e2ad9b2c74e25dda278526f1af157bcb7d8afe25d62a5051c3c"
+    },
+    {
+      "bytes": 2721,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/observation/KafkaObservationSettings.java",
+      "sha256": "277f7edf4112ec6ad79488427a12c561e3837822637d20f9b0c88bc91cc910b8"
+    },
+    {
+      "bytes": 17735,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/observation/ReadOnlyKafkaAdmin.java",
+      "sha256": "652712f2c39e39b0605fc16f09e2a1359302a268b4c69ca593e922c5e9e085c5"
+    },
+    {
+      "bytes": 7200,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/runtime/ContinuousJobRunner.java",
+      "sha256": "4fb49709e97f459bc0f52573df348270730813fb770e619585febaf884d153c7"
+    },
+    {
+      "bytes": 1930,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/runtime/FixedFixtureStager.java",
+      "sha256": "d2dd458c5385e13437a06ab75797cd4a8a57b8b29c8c93384db8040737961122"
+    },
+    {
+      "bytes": 1632,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/runtime/JobRuntimeActions.java",
+      "sha256": "e8c264b61cb3fd674995cfc431645fcfca8c1256d3584d95156684b821d6914a"
+    },
+    {
+      "bytes": 6991,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/runtime/LocalRuntimeProgress.java",
+      "sha256": "0a3e71a84251f8711ec5fe091d6982c7967b5219810cde9fb794f937bc217843"
+    },
+    {
+      "bytes": 4428,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/runtime/MariaDbRuntimeLease.java",
+      "sha256": "ba5d62a7fb1825b76f71bcd0c972d01c877c849504e62aa525b0fa38647059cb"
+    },
+    {
+      "bytes": 622,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/runtime/RuntimeLease.java",
+      "sha256": "15ec3a45fbd518fa84f0f776a845acac74f60fd9308c3065b18140d931718ecd"
+    },
+    {
+      "bytes": 10509,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/runtime/RuntimeMain.java",
+      "sha256": "de9a03030241d9c02c2b41ac76567b3233df1548f3dd81ca50b8d1bc9c1c9942"
+    },
+    {
+      "bytes": 788,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/runtime/RuntimeProgress.java",
+      "sha256": "39aea0b37f3133e4df9347175aa00623deb7c3955e868f764cc1e3b1c5d8179a"
+    },
+    {
+      "bytes": 1012,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/runtime/RuntimeResources.java",
+      "sha256": "92e00367918cd8d9f87f38981705e4845038f91595e6d6b4b7003196309f6678"
+    },
+    {
+      "bytes": 6861,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/runtime/RuntimeStateStore.java",
+      "sha256": "fe6ed1bc5ea7501079e6b3c1acebe8332d14b1042908453f88b1ed8c105cdb5e"
+    },
+    {
+      "bytes": 8561,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/jobs/runtime/health/RuntimeReadyProbe.java",
+      "sha256": "b3bdc7cacc02fc9cff3360a26d363ce682a52dcee02c402404bfff0ffba213c1"
+    },
+    {
+      "bytes": 2933,
+      "path": "apps/api/src/main/java/io/github/devdooly/platformlab/platform/PlatformController.java",
+      "sha256": "56ebfdab4ae925c9f49f2af454ede88d46818de61f26777a140663a80f21efc2"
+    },
+    {
+      "bytes": 283,
+      "path": "apps/api/src/main/resources/application-local-dev.yml",
+      "sha256": "2eb041a67e5a76bc34d542313613044045b102d1974739af9e9c3014f0dc90fe"
+    },
+    {
+      "bytes": 1200,
+      "path": "apps/api/src/main/resources/application.yml",
+      "sha256": "f87f1fd68ce09138a6ce0bd4852fda2a1fde4e1ce1f871b60608a04d7329881b"
+    },
+    {
+      "bytes": 1042,
+      "path": "apps/api/src/main/resources/db/migration/V1__create_demo_evidence.sql",
+      "sha256": "74f490dc98ac64f1a3e68ff36dd84ebd1c02e052f29dd1895497ee31ebd08cbc"
+    },
+    {
+      "bytes": 1762,
+      "path": "apps/api/src/main/resources/db/migration/V2__create_lab_job_outbox.sql",
+      "sha256": "a461ddd8fe62067e19ddc7b2fc32577aa253b0981f6f5ac5cfb50233b1b12bc0"
+    },
+    {
+      "bytes": 1290,
+      "path": "apps/api/src/main/resources/db/migration/V3__create_lab_runtime_journal.sql",
+      "sha256": "75caeb4969e6b0ad838773a95587005627f429167c4acfcac3cedc883acee495"
+    },
+    {
+      "bytes": 662,
+      "path": "apps/api/src/main/resources/db/migration/V4__create_lab_admission_policy.sql",
+      "sha256": "3aa2ca8939b871bee8fa5f5e4bbfb390cbd5cacc9f09fab3f9ebfdd54d8d0039"
+    },
+    {
+      "bytes": 4479,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/demo/ApiIntegrationTest.java",
+      "sha256": "18f053671afe14a91e78e6bb1960e7d6c6290bfed77c663f30d24d9ce881570b"
+    },
+    {
+      "bytes": 3818,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/demo/SensorProcessorTest.java",
+      "sha256": "c980851f30c68b68eb49b82e748ca44d7696405fd27b6e450d41aacb0f760d76"
+    },
+    {
+      "bytes": 17683,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/AdmissionCooldownContractTests.java",
+      "sha256": "bd977943b31d01e426397cf7f7aa99b77ff815e945c61b955471772bc747433e"
+    },
+    {
+      "bytes": 12672,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/AdmissionCooldownIT.java",
+      "sha256": "5f16492639b0a103ee089237fbece07f111d1304a064fa33b02c2aff29c16ad3"
+    },
+    {
+      "bytes": 426,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/AdmissionCooldownIntegrationTest.java",
+      "sha256": "e34261b31b36f0248ab420b5a793fcd78755eb649868f84e9b2550cf8b0ed735"
+    },
+    {
+      "bytes": 4867,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/AdmissionMigrationIntegrationTest.java",
+      "sha256": "3bb53e097673f3dd96bd859cdcc58229ae195d0fb4dde95fc017eb9ae8cbab08"
+    },
+    {
+      "bytes": 2779,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/AdmissionRestartProbe.java",
+      "sha256": "742bb6c9cb1036b9ec697e4c19c6119e1e9b869b17ef078cc3343e147f26dec1"
+    },
+    {
+      "bytes": 3260,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/AdmissionTestFixtures.java",
+      "sha256": "ed1e096f414a071ce90d0cdb2a73f7fb3c57d9a33d5e49b1d4bc25f17044b912"
+    },
+    {
+      "bytes": 7386,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/AdmissionTestFixturesTest.java",
+      "sha256": "15cbac4e009fe02b67a966e89a172d4439761c073a802bf3147c1822f493441b"
+    },
+    {
+      "bytes": 2137,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/CanonicalSourceTest.java",
+      "sha256": "f421afab05db59269412386633f5544aea9b1c58ae44011873be7d0e2e325079"
+    },
+    {
+      "bytes": 12140,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/GarageRawSourceIT.java",
+      "sha256": "79511126ce86875cc6ad8eb917f7e6a7f276b98d381e4442efaa7096ff7f1d53"
+    },
+    {
+      "bytes": 3503,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/LabClientEndpointsTest.java",
+      "sha256": "674833c647047612b148e4ddff0e977f191c61e49dd5c39088f59b411015e4fb"
+    },
+    {
+      "bytes": 21781,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/LabJobContractTests.java",
+      "sha256": "175df6a283f325a12e060598b8bc42bce9423883ec1988e9e356459bc840ab30"
+    },
+    {
+      "bytes": 388,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/LabJobIntegrationTest.java",
+      "sha256": "744d28dc2cab7f51e40875744af01f536a5aeb75a44f3fbebe3e7ef3f837d92c"
+    },
+    {
+      "bytes": 20324,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/MariaDbGarageRawSourceIT.java",
+      "sha256": "940fff011f0c5ee224932a4a1d3852a593d924c83e5b3dc45c6c16d48eb16570"
+    },
+    {
+      "bytes": 1795,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/MariaDbLabJobIT.java",
+      "sha256": "85d3011a8e52d3ba1b8a2d81b3223c22f2c7a917933fa8d646d2d9e4ff6501b4"
+    },
+    {
+      "bytes": 2585,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/MaximumS3RawSourceStoreTest.java",
+      "sha256": "d5359cf6d758797502dcd2e6ff755e1153b541d13122cfd7964596fd7373579a"
+    },
+    {
+      "bytes": 4378,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/MaximumSyntheticSourceTest.java",
+      "sha256": "dae1330f17735e2cb50c0d143f374acbad3a2d957de2c26f542eab778c1c7615"
+    },
+    {
+      "bytes": 6236,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/S3ManagedReadDeadlineTest.java",
+      "sha256": "61429a3b55e4d1c102214814254da99b7021b4edcdc649065a47d84d43603675"
+    },
+    {
+      "bytes": 13785,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/S3RawSourceStoreTest.java",
+      "sha256": "5b60178f5fea75242b81c948c64e63d336f261c10e20c106b456ea68168f990c"
+    },
+    {
+      "bytes": 1193,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/SampleBootstrapProfileTest.java",
+      "sha256": "2ca5bdb31277f51fac37836163d269b902f2167e5e20de434a20988fd9cacdc8"
+    },
+    {
+      "bytes": 12076,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/SourceStagingIntegrationTest.java",
+      "sha256": "69406e61b214c5df2d4092f55936e14aea6ff55b39a27d4f4dd05acc5088c893"
+    },
+    {
+      "bytes": 8535,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/exporting/ExportCrashProbe.java",
+      "sha256": "e54b7c11d8bee1d6bc2acfd3d590a9014d92c1bfda47ed02c1ac4eacf5f9d3e9"
+    },
+    {
+      "bytes": 14621,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/exporting/ResultExportIntegrationTest.java",
+      "sha256": "7d19e454a3d04a6781f4dbd38cc838ee92e68324f281bc722ad13b7f7b0f97d7"
+    },
+    {
+      "bytes": 12958,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/exporting/RuntimeProcessProbe.java",
+      "sha256": "51e71e330d15921fac1d5710f25893d3b03417baa0720ba7ec8b35c89f21efbf"
+    },
+    {
+      "bytes": 8194,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/exporting/S3ResultExportStoreTest.java",
+      "sha256": "e42a467a91f1da761ae60e7c66b7da35b6b8efafb2ee5207b8959c2fb6cf931f"
+    },
+    {
+      "bytes": 35309,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/exporting/VerifiedResultExportIT.java",
+      "sha256": "0c52fce975cc073e89a8ac79578ebecf5cfc3369c1cb8d414c639812709d3371"
+    },
+    {
+      "bytes": 4436,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/exporting/VersionedExportBundleTest.java",
+      "sha256": "1aa52282c445ac96560e6d6d163a89575a0e4590d76444d519e85a5e5d014005"
+    },
+    {
+      "bytes": 2985,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/messaging/DispatchMessageTest.java",
+      "sha256": "65238ab9bd57034581f92e50b1ee64c03520ae3e4459dc332e3ed622a8c38384"
+    },
+    {
+      "bytes": 9691,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/messaging/DispatchPublisherTest.java",
+      "sha256": "7d8f30fd235384ce75520afa81f377e28909dab044fe70376de968035bcf3737"
+    },
+    {
+      "bytes": 6514,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/messaging/DispatchWorkerTest.java",
+      "sha256": "c1ebe7f9d4898d92c94a897dd1010e23f59e8f5323675ffced54203145ad4d9f"
+    },
+    {
+      "bytes": 4613,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/messaging/KafkaClientFactoryTest.java",
+      "sha256": "020a9948a451f9723d4ebadced26e4dbfb977c96b1c5d714dcd6185949086609"
+    },
+    {
+      "bytes": 11136,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/messaging/KafkaCrashProbe.java",
+      "sha256": "15ca7473c2a66ae48e2e96928ed3a47f6fe07272b947b418a1d573fa00509ea7"
+    },
+    {
+      "bytes": 32327,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/messaging/KafkaRedeliveryIT.java",
+      "sha256": "bdea068394fc944c36dd17cd253454af284efd7b9902d6cd52442223f22cfb70"
+    },
+    {
+      "bytes": 14279,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/observation/JobObservationIntegrationTest.java",
+      "sha256": "7db2ee473fcc1af59048a697efecb98d7d632ff1f78844285a95573eff6c355b"
+    },
+    {
+      "bytes": 12158,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/observation/KafkaObservationControllerTest.java",
+      "sha256": "f383cf6b34e7e108124809ed43e6141ddb7175feeeb5bd51af10515474e3d890"
+    },
+    {
+      "bytes": 9572,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/observation/KafkaObservationIT.java",
+      "sha256": "012998f6dd77c216f09fa120cc2c8d145932b922cb90a5ef1aa03efbf6ec4dc8"
+    },
+    {
+      "bytes": 37500,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/observation/KafkaObservationServiceTest.java",
+      "sha256": "66f5909b79bb33dc96a9e98c8313f75c05664977258a54f10b91deb769e0cbc0"
+    },
+    {
+      "bytes": 10262,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/runtime/ContinuousJobRunnerTest.java",
+      "sha256": "96312db5e6ddce6477eafc263980262c26bbb564275ff4728fc383026e72737b"
+    },
+    {
+      "bytes": 35257,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/runtime/ContinuousRuntimeIT.java",
+      "sha256": "c07e80d54138d530d80d4018105de50433a3c0175238ec04d0d3da0fb93fc1b3"
+    },
+    {
+      "bytes": 7367,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/runtime/FixedFixtureStagerTest.java",
+      "sha256": "6039ae544bc03025189c065a2e89ddad4aa9498334568446b783cdae1cc7a9b7"
+    },
+    {
+      "bytes": 7359,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/runtime/LocalRuntimeProgressTest.java",
+      "sha256": "a6cfa6a0502cc307e3388c56927c2cefd1cc4781c5e65e4fdca496f290a4e67f"
+    },
+    {
+      "bytes": 4456,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/runtime/MariaDbRuntimeLeaseTest.java",
+      "sha256": "dfe2967d99d887742b2b33346422a65165df51390236986f611d5a1ee721a6fc"
+    },
+    {
+      "bytes": 36947,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/runtime/MaximumInputConcurrencyIT.java",
+      "sha256": "400b018c5f0874eb469a2e4e3a60e5076fce23e6a4f4c81e0110d19b75fbc501"
+    },
+    {
+      "bytes": 5369,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/runtime/RuntimeProgressRunnerTest.java",
+      "sha256": "7f33b3a64061bac4b42466dcb78de7c3443a44c9caac3b02329d259b36a503c3"
+    },
+    {
+      "bytes": 2461,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/runtime/RuntimeResourcesTest.java",
+      "sha256": "5e6f522612a8d7d14c6da3135ccff8af06760eb6b1abf209bd406209b7eff1b4"
+    },
+    {
+      "bytes": 7917,
+      "path": "apps/api/src/test/java/io/github/devdooly/platformlab/jobs/runtime/health/RuntimeReadyProbeTest.java",
+      "sha256": "0d3e2eaadb31a57a30de9a51de750124099fa1e857e38bd44a528ee7983de014"
+    },
+    {
+      "bytes": 214,
+      "path": "apps/api/src/test/resources/application-db-test.yml",
+      "sha256": "c0208e26c36861e77e042e859e69147fce2fb723b9d0bcbda2c5587778c64a9a"
+    },
+    {
+      "bytes": 220,
+      "path": "apps/api/src/test/resources/application-test.yml",
+      "sha256": "c07b83a0860d7ec265127943c954a3b654a884ad72c1c5c5b55987de04d4d3b5"
+    },
+    {
+      "bytes": 1118,
+      "path": "infra/image-lock.json",
+      "sha256": "3a0b222ca246d8353c9e07febed03f8828a6f53068fe3cf7afbd84291403db08"
+    },
+    {
+      "bytes": 22156,
+      "path": "infra/kafka-acl-ci/KafkaObservationAclIT.java",
+      "sha256": "b09f72174987fe80cb86a41beff1b6117edb5f62ae872eb04b565832f035f882"
+    },
+    {
+      "bytes": 9876,
+      "path": "infra/kafka-acl-ci/README.ko.md",
+      "sha256": "4ad19db17908b7a06b4f9b3462e6ae5cc1265a3d1b3dac1d23dcfc918bff968e"
+    },
+    {
+      "bytes": 28137,
+      "path": "infra/kafka-acl-ci/run_once.py",
+      "sha256": "c4feb99d5842a1e8a2d6ae1266b0ddda72fe5643c899dfdea14778bea6d78741"
+    },
+    {
+      "bytes": 47474,
+      "path": "infra/kafka-observation-ci/run_once.py",
+      "sha256": "a645f8c670c12854c4149d7ff8b45f2072f20fc01de960113fe7cb1fdad111f6"
+    },
+    {
+      "bytes": 23746,
+      "path": "infra/kafka-observation-ci/runtime-manifest.json",
+      "sha256": "7e86afa4cf4c4b13459040e566cf43e876390146e49565f71751d2909d02a84c"
+    },
+    {
+      "bytes": 39304,
+      "path": "infra/kafka-observation-ci/test_run_once.py",
+      "sha256": "6779c037ce90e3b7ef069db44f532c20782b595712243db1626df860b739b1bd"
+    }
+  ],
+  "schemaVersion": 1,
+  "scope": "HOSTED_LINUX_KAFKA_ACL_IT_SOURCE_ONLY"
+}
