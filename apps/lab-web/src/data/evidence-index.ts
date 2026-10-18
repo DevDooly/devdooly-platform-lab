@@ -134,4 +134,13 @@ export const evidenceItems: readonly EvidenceItem[] = [
     source: `${repo}/tree/83e141eaf2d3269920ec8599fcd49241dd8f160b/infra/kafka-acl-ci`,
     evidence: `${repo}/blob/main/docs/evidence/kafka-acl/README.md`, evidenceLabel: '허용 조회·거부 6건·보존 근거', recordLabel: '격리 ACL IT 1/1',
   },
+  {
+    id: 'cloud-iceberg-expiration', topics: ['iceberg', 'delivery'], scope: 'cloud', state: 'verified',
+    title: 'Snapshot 만료와 공유 파일 보존',
+    description: '새 합성 warehouse에서 snapshot 1개와 불필요한 data 파일 1개를 만료했습니다. tag·최근 snapshot의 공유 파일과 행, 후속 조회·소스 보존과 소유 컨테이너 정리를 확인했습니다.',
+    boundary: '새 Cloud 격리 시험입니다. 운영 KEEP는 유지하며 물리 GC·볼륨 삭제·공간 회수·SLA를 검증한 결과가 아닙니다.',
+    recordedOn: '2026-10-19',
+    source: `${repo}/tree/482d3ca4b564282feceb31f392c6a981302a7c2d/infra/cloud-lakehouse-expiration`,
+    evidence: `${repo}/blob/main/docs/evidence/cloud-iceberg-expiration/README.md`, evidenceLabel: '만료·공유 파일·행·정리 근거', recordLabel: 'snapshot 1개 만료 · 3개 보존',
+  },
 ];

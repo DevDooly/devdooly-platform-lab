@@ -21,7 +21,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 내부 게이트웨이 조회와 기존 상태 보존 검증을 마쳤고, 기존 Traefik과 설정 파일 7개를 유지했습니다([검증 범위](docs/runbooks/public-read-gateway-chart.md)). DuckDNS의 표준 TLS와 외부 runner의 조회 6개·거부 3개에 이어, 공개 화면의 작업·Kafka 실시간 조회도 확인했습니다([공개 HTTPS·화면 근거](docs/evidence/public-read-https/README.md)). 작업 8개의 export 상태와 Kafka 관측을 대조했으며, 같은 Kafka 기록의 시계 경고가 해소되는 것도 확인했습니다. 격리 Kafka와 공개 근거 카드 연결을 완료했으며([검증 근거](docs/evidence/kafka-acl/README.md)), 토큰 2개도 각 목적의 GET 응답 200을 확인했습니다(회전 미실행).
 
-다음은 새 warehouse의 snapshot 만료·공유 파일 보존 시험으로, 아직 실행하지 않았습니다. 환경 준비에 따라 약 15~30분을 예상하며 전체 hosted job의 최대 45분과 성공 workload의 600초는 구분합니다.
+새 격리 warehouse에서 snapshot 1개·data 파일 1개 만료와 tag·공유 파일·행 보존, 후속 조회·정리 검증을 마쳤습니다([실제 근거](docs/evidence/cloud-iceberg-expiration/README.md)). 다음은 실제 DB·Garage의 저장소 구성·quota를 읽기 전용으로 확인하며, 접수 gate 변경은 보류합니다.
 
 ## 로컬 실행
 
