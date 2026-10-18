@@ -1,0 +1,64 @@
+name: Measure synthetic Java window example manually
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_measurement:
+        description: Run one separate GitHub-hosted Linux JMH reproduction
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: synthetic-window-jmh-manual
+  cancel-in-progress: false
+
+jobs:
+  measure:
+    if: github.repository == 'DevDooly/devdooly-platform-lab' && inputs.confirm_measurement == true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      JMH_RESULT_DIR: ${{ runner.temp }}/window-jmh-${{ github.run_id }}-${{ github.run_attempt }}
+      JMH_PUBLIC_DIR: ${{ runner.temp }}/window-jmh-public-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Bind the exact committed source before building
+        run: |
+          python3 -I -B infra/benchmarks/java-window-jmh/prepare_public.py preflight \
+            --source-sha "$GITHUB_SHA" --result-dir "$JMH_RESULT_DIR" --public-dir "$JMH_PUBLIC_DIR"
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Verify and build only the independent Java example
+        timeout-minutes: 4
+        run: mvn -B -ntp -f examples/java-window-analysis/pom.xml verify
+      - name: Run the existing fixed JMH runner once
+        timeout-minutes: 9
+        run: |
+          cpu=$(python3 -I -c 'import os; print(min(os.sched_getaffinity(0)))')
+          env -u JAVA_TOOL_OPTIONS -u JDK_JAVA_OPTIONS -u _JAVA_OPTIONS \
+            taskset -c "$cpu" python3 -I -B examples/java-window-analysis/scripts/run_jmh.py \
+              --java "$JAVA_HOME/bin/java" --source-commit "$GITHUB_SHA" --output-dir "$JMH_RESULT_DIR"
+      - name: Produce only allowlisted public measurements
+        if: always()
+        run: |
+          python3 -I -B infra/benchmarks/java-window-jmh/prepare_public.py finalize \
+            --source-sha "$GITHUB_SHA" --result-dir "$JMH_RESULT_DIR" --public-dir "$JMH_PUBLIC_DIR"
+      - name: Upload finite public JSON and synthetic fixture manifest only
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: synthetic-window-jmh-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.JMH_PUBLIC_DIR }}/public-summary.json
+            ${{ env.JMH_PUBLIC_DIR }}/fixtures.tsv
+          if-no-files-found: error
+          retention-days: 7
