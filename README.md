@@ -19,7 +19,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 지금 완료: Kafka 관측 API·collector 연결, systemd·수동 host 실행, 원래 타이머의 자연 실행 2회·회차 간격 1개와 각 회차의 공개 3파일 대조를 확인했습니다. [자연 관측 근거](docs/evidence/kafka-observation/README.md#원래-타이머의-자연-2회와-공개-게시-대조)를 따르며, 화면은 마지막 수집 기록을 보여줍니다.
 
-내부 게이트웨이의 [조회·접근 진단과 기존 상태 보존](docs/evidence/public-read-gateway-internal/README.md)을 마쳤습니다. 기존 Traefik을 유지하는 전용 `/platform-lab/api` 경로와 외부 HTTPS 연결을 준비하고 있습니다. 공개 화면은 [전용 HTTPS base 설정과 연결 실패 시 게시 기록 표시](docs/runbooks/public-read-gateway-chart.md)를 지원하며, 실제 외부 API는 아직 연결하지 않았습니다. 다음은 내부 통신·인증서 확인 → 인터넷에서 허용·거부 경로 검증 → 공개 화면의 실시간 조회 연결 → 자격증명 회전입니다. 장기간 운영과 전체 복원·운영 객체 삭제는 별도 후속이며, [과거 검증·실패 기록](docs/progress-history.md)은 보존합니다.
+내부 게이트웨이 조회와 기존 상태 보존 검증을 마쳤습니다([검증 범위](docs/runbooks/public-read-gateway-chart.md)·[이전 기록](docs/progress-history.md)). 기존 Traefik을 유지하며 전용 `/platform-lab/api` 라우트를 게시했고 기존 설정 파일 7개를 보존했습니다. hosted 외부 검사는 TLS·네트워크 단계에서 중단돼 인증서와 실시간 공개 연결은 아직 확인하지 못했습니다. 다음은 인증서·외부 연결 확인 → hosted 허용·거부 9개 검증 → Pages 실시간 조회 연결 → 자격증명 회전입니다.
 
 ## 로컬 실행
 
