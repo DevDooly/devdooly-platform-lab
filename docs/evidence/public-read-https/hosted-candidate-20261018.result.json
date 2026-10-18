@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "kind": "public-https-smoke",
+  "status": "FAILED",
+  "errorCode": "TLS_OR_NETWORK_UNVERIFIED",
+  "validatorSourceCommit": "08a239c5e111f7a6fd0bb59c0e040478f72e7c53",
+  "captureStartedAt": "2026-10-18T12:04:03.348Z",
+  "capturedAt": "2026-10-18T12:04:04.134Z",
+  "routeOwnershipAcknowledged": true,
+  "publicIpv4Verified": true,
+  "standardTlsVerified": false,
+  "checks": {
+    "SUMMARY": {
+      "passed": false,
+      "status": null,
+      "sourceCommit": null,
+      "observedAt": null
+    },
+    "RELEASES": {
+      "passed": false,
+      "status": null,
+      "sourceCommit": null,
+      "observedAt": null
+    },
+    "RUN_LIST": {
+      "passed": false,
+      "status": null,
+      "sourceCommit": null,
+      "observedAt": null
+    },
+    "RUN_DETAIL_EXAMPLE": {
+      "passed": false,
+      "status": null,
+      "sourceCommit": null,
+      "observedAt": null
+    },
+    "JOBS": {
+      "passed": false,
+      "status": null,
+      "sourceCommit": null,
+      "observedAt": null
+    },
+    "KAFKA": {
+      "passed": false,
+      "status": null,
+      "sourceCommit": null,
+      "observedAt": null
+    },
+    "DENIED_PATH": {
+      "passed": false,
+      "status": null,
+      "sourceCommit": null,
+      "observedAt": null
+    },
+    "DENIED_ORIGIN": {
+      "passed": false,
+      "status": null,
+      "sourceCommit": null,
+      "observedAt": null
+    },
+    "DENIED_METHOD": {
+      "passed": false,
+      "status": null,
+      "sourceCommit": null,
+      "observedAt": null
+    }
+  }
+}
