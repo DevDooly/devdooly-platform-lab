@@ -23,7 +23,7 @@ domain들이 같은 backing을 공유할 수 있다. 독립 quota/배정 또는 
 
 읽기 전용 관측 한 번에서 선택 DB·Garage metadata/data 경로가 같은 filesystem을 공유함을 확인했다. 이는 독립 저장소 둘의 용량이 아니며 전체 물리 장치·다른 서비스·쓰기 예산의 검증도 아니다. Garage byte/object quota는 미선언이었고, DB hard quota·운영 계수·미반영 charge 회계는 아직 UNKNOWN이다. 실제 주소·경로·여유 수치는 이 계약에 넣지 않는다.
 
-공유 pool의 접수 판단을 향후 구현한다면 다음 입력을 한 관측·회계 범위에 묶어야 한다. `F`는 선택 pool의 신뢰된 가용 bytes 관측 **한 번**, `R`은 공통 reserve **한 번**, `U`는 승인했으나 아직 `F`에 반영되지 않은 잔여 charge, `W`는 다른 writer의 선택 범위에 배정한 allowance다. 동일 bytes·charge·reserve를 둘 이상의 항목에 중복 계상하지 않는다.
+공유 pool의 접수 판단을 향후 운영에 연결한다면 다음 입력을 한 관측·회계 범위에 묶어야 한다. `F`는 선택 pool의 신뢰된 가용 bytes 관측 **한 번**, `R`은 공통 reserve **한 번**, `U`는 승인했으나 아직 `F`에 반영되지 않은 잔여 charge, `W`는 다른 writer의 선택 범위에 배정한 allowance다. 동일 bytes·charge·reserve를 둘 이상의 항목에 중복 계상하지 않는다.
 
 ```text
 H = F - R - U - W
@@ -36,7 +36,7 @@ Bdb + Bgarage <= H
 
 Garage는 bytes와 별개로 신규 raw 1개·export 2개의 **객체 3자리**를 확인해야 한다. object quota·usage·미반영 object charge가 불명확하면 bytes가 맞아도 UNKNOWN이다. 이 계약은 실제 quota나 운영 계수를 새로 설정하는 제안이 아니다.
 
-**현재 `Coverage` enum과 `evaluateNewAdmission`에는 공유 pool 입력·합산 판정이 없다.** 위 계약은 향후 지원 조건이며 현재 함수로 공유 pool을 지원한다고 표시하지 않는다. 실제 공유 관측을 `INDEPENDENT_SELECTED_WRITE_BUDGET`으로 바꿔 넣거나 임의 분할 숫자로 FIT을 만들지 않는다. 독립 배정 또는 새 pool 계약의 신뢰 reader·회계·clock을 확보하기 전에는 UNKNOWN으로 두고 운영 연결을 보류한다.
+**기존 `ResourceAdmissionPolicy`의 `Coverage`·`evaluateNewAdmission`은 공유 pool 입력·합산 판정을 지원하지 않는다.** 별도 `SharedPoolResourceAdmissionPolicy` 순수 후보는 단일 pool의 합산 산술·객체 자리·입력 scope/accounting 선언·시각·overflow만 평가한다. scope/accounting 값은 상위 입력의 계약이며 실제 reader 출처·계수·회계·공간 예약을 검증한 결과가 아니다. 실제 공유 관측을 기존 `INDEPENDENT_SELECTED_WRITE_BUDGET`으로 바꿔 넣거나 임의 분할 숫자로 FIT을 만들지 않는다. 신뢰 reader·회계·clock/fence와 transaction 연결을 확보하기 전에는 운영 입력을 UNKNOWN으로 두고 접수 gate 연결을 보류한다.
 
 ### 접수 잠금과 관측 시각
 
@@ -67,5 +67,7 @@ maxAge·reserve·계수에 운영 기본값은 없다. synthetic test 값으로 
 ## 검증 범위
 
 2026-10-18 Windows JDK 21.0.9의 별도 standalone 모듈에서 순수 함수 검사 3개를 실행해 실패·오류·skip 0으로 통과했다. 전체 API 소스 컴파일·DB/S3 통합·실제 접수 reader/clock 연결은 검증하지 않았다. 이 결과는 RAM 산술 prototype의 검증이며 현재 서비스의 과부하 차단을 입증하지 않는다.
+
+2026-10-19(한국 시각)에는 새 standalone 모듈에서 같은 기존 3개와 공유 pool 후보의 6개, 총 9개 검사를 오프라인으로 한 번 실행했다. Maven exit 0, JDK 21.0.9, failure/error/skip 0이었고 원 소스·동결 manifest·설정·staging bytes가 전후 동일했다. 새 6개는 개별 예산은 맞지만 공유 합계는 부족한 경우, equality/1byte, 반영된 usage 재차감 없는 입력 계약, 객체 3/2자리, UNKNOWN·scope·미래/stale·합산 overflow를 손계산 기대값으로 검증한다. 실제 관측의 신뢰성·예약·다른 writer·DB lock/fence·운영 접수 효과는 검증하지 않았다.
 
 순수 Java21 함수의 세 검사는 다음 경계를 다룬다. 두 budget 독립성/정확한 reserve equality/1byte 부족, 미관측·불완전·future 1ns·stale 1ns, 음수·범위 초과·estimate/reserve overflow를 확인한다. same-ID 우회 flag가 API에 없음을 유지한다. 기존 DB/S3/동시성 통합 검사를 복제하지 않는다. 실제 reader·clock·접수 연결을 별도 검증하기 전 운영 안전·과부하 차단 완료로 표시하지 않는다.
