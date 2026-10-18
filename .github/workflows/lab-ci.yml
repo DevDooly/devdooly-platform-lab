@@ -13,6 +13,7 @@ on:
       - infra/spark-silver/**
       - infra/s3-ci/**
       - infra/kafka-observation-ci/**
+      - infra/public-gateway/**
       - infra/iceberg-lab/**
       - infra/spark-ci/**
       - infra/cloud-lakehouse-ci/**
@@ -460,5 +461,29 @@ jobs:
         with:
           name: iceberg-closed-copy-summary-${{ github.sha }}
           path: .local/iceberg-closed-copy-public/summary.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+  public-read-gateway:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout isolated public read gateway
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Validate real Nginx against synthetic HTTP fixture only
+        run: >-
+          python3 -I -B infra/public-gateway/run_once.py
+          --source-manifest-sha256 8a121723bb5f1b07375484c304eab9ed7c99928c04a276226e2fc3904996b928
+          --ack-isolated-public-gateway
+      - name: Upload finite public gateway result only
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: isolated-public-read-gateway-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .local/public-gateway-public/summary.json
           if-no-files-found: ignore
           retention-days: 7

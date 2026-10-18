@@ -1,0 +1,26 @@
+# Proposal only. Add infra/public-gateway/** to lab-ci push paths separately.
+# Keep this isolated job independent of Compose/real database/Kafka jobs.
+# Replace REVIEWED_MANIFEST_SHA256 only after the files are reviewed and frozen.
+public-read-gateway:
+  runs-on: ubuntu-24.04
+  timeout-minutes: 15
+  permissions:
+    contents: read
+  steps:
+    - name: Checkout isolated public read gateway
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        persist-credentials: false
+    - name: Validate real Nginx against synthetic HTTP fixture only
+      run: >-
+        python3 -I -B infra/public-gateway/run_once.py
+        --source-manifest-sha256 REVIEWED_MANIFEST_SHA256
+        --ack-isolated-public-gateway
+    - name: Upload finite public gateway result only
+      if: always()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: isolated-public-read-gateway-${{ github.run_id }}-${{ github.run_attempt }}
+        path: .local/public-gateway-public/summary.json
+        if-no-files-found: ignore
+        retention-days: 7

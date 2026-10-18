@@ -1,0 +1,24 @@
+{
+  "baseMain": "13447fa88987050f64e47c01684ecb9c233b34fb",
+  "baseMainGitBlobPreimagesVerifiedByRoot": true,
+  "baseMainProvidedByRoot": true,
+  "currentCheckoutRead": false,
+  "fixtureUsesPythonOnly": true,
+  "schemaVersion": 1,
+  "sourceSnapshotLocation": "Root verified both exact Git blob byte/hash/image preimages at K against the recorded C snapshots; preparation did not read D",
+  "sources": [
+    {
+      "bytes": 1118,
+      "image": "nginx:stable-alpine@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94",
+      "path": "infra/image-lock.json",
+      "sha256": "3a0b222ca246d8353c9e07febed03f8828a6f53068fe3cf7afbd84291403db08"
+    },
+    {
+      "bytes": 3072,
+      "image": "docker.io/apache/spark@sha256:0b8f5befe00d258df03b252158b3894b8654390f1958741accf98155539a662a",
+      "path": "infra/spark-ci/compose_plan.py",
+      "sha256": "fcaa911c8dcb9c6b56821ed3ff40d71c282658c8f5beb88200bff07c25336ee5"
+    }
+  ],
+  "sparkOrJvmStartedByHarness": false
+}
