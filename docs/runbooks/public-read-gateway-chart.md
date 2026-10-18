@@ -36,7 +36,13 @@ chart의 `files/public-gateway/nginx.conf`와 `proxy.inc`는 해당 정책 파�
 
 Docker 주소가 바뀌면 예전 `/32`는 새 주소를 허용하지 않습니다. 다만 주소 재사용, node 접근 예외와 NAT 때문에 이를 proxy의 영구 identity나 완전한 격리 보장으로 해석할 수 없습니다. 주소 변경 시 기존 값을 제거하고 새 identity·주소·경로를 다시 확인합니다. 과거 namespace GET의 연결 거부도 NetworkPolicy 단독 원인으로 확정하지 않았습니다. 실제 소스 주소와 정책의 적용 관계는 새 통합 검증이 필요하며, 실패하면 subnet이나 node 범위를 자동으로 넓히지 않습니다. Traefik 재시작·Docker 네트워크 변경·NodePort·추가 Ingress controller·직접 API 공개는 이 변경에 포함하지 않습니다.
 
-오프라인 검사는 기존 검사기에 빈 문자열의 enabled bytes 보존, 세 RFC1918 범위의 단일 `/32`가 NetworkPolicy 한 규칙만 추가하는지, disabled bytes 보존과 잘못된 입력 12개 거부를 추가합니다. Windows Helm 4.3.0에서 기존 경로와 새 조건을 합친 오프라인 32회 검사를 통과했고 원본 소스·도구 bytes가 유지됨을 확인했습니다. 실제 private parameter·운영 정책 적용·외부 연결은 아직 수행하지 않았습니다.
+오프라인 검사는 기존 검사기에 빈 문자열의 enabled bytes 보존, 세 RFC1918 범위의 단일 `/32`가 NetworkPolicy 한 규칙만 추가하는지, disabled bytes 보존과 잘못된 입력 12개 거부를 추가합니다. Windows Helm 4.3.0에서 기존 경로와 새 조건을 합친 오프라인 32회 검사를 통과했고 원본 소스·도구 bytes가 유지됨을 확인했습니다.
+
+실제 운영에서는 Application의 private Helm parameter 한 항목을 추가하고, 다른 매개변수와 나머지 spec을 유지한 채 NetworkPolicy에 단일 `/32 → TCP 8080` 규칙이 반영됐음을 확인했습니다. 기존 API·worker Pod와 PVC, jobs/export/Kafka의 선택 상태 여섯 구성 요소도 기준과 같았습니다. 이어 기존 Traefik의 네트워크 공간에서 고정 summary GET 한 번이 HTTP 200과 현재 API 계약을 통과했습니다. 실제 주소와 비공개 운영 증거는 Git에 게시하지 않습니다.
+
+이 결과는 NAT 경로나 NetworkPolicy의 독점 원인을 증명하지 않습니다. 이후 기존 Traefik에 전용 공개 route를 게시하고, 원 YAML 파일 7개와 provider root의 소유·identity 정보가 유지됐음을 확인했습니다. 표준 CA·SNI TLS 검증은 현재 self-signed 인증서에서 실패했으며, 인증서 발급·인터넷의 허용/거부 조회·Pages 실시간 연결은 아직 완료하지 않았습니다. TLS 우회나 live 변수 등록으로 이 실패를 통과 처리하지 않습니다.
+
+별도의 [GitHub hosted candidate 검사](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39125726243)는 전용 candidate secret만 사용해 live 설정을 바꾸지 않고 실행했습니다. 공개 IPv4 선택은 확인됐지만 표준 TLS는 통과하지 못했고 `TLS_OR_NETWORK_UNVERIFIED`로 종료됐습니다. 9개 검사 모두 HTTP status가 없어 정상 HTTP 조회·허용/거부 검증 완료의 근거가 아닙니다. 이 외부 실패를 로컬의 self-signed 인증서 관측과 같은 원인으로 단정하지 않습니다. Pages live 변수와 production URL secret은 등록하거나 변경하지 않았으며, 표준 TLS와 hosted GET6·거부3이 모두 통과한 뒤에만 실시간 화면 전환을 진행합니다.
 
 클라이언트 Pod는 만들지 않습니다. 배포 후 별도 검증을 하려면 지정한 client selector를 쓰는 격리 Job 등이 필요합니다. Docker 검증의 tmpfs `noexec/nosuid/nodev`나 PID 64 제한을 Kubernetes emptyDir·Deployment가 똑같이 제공한다고 주장하지 않습니다. Memory emptyDir는 Pod 메모리를 사용합니다.
 
