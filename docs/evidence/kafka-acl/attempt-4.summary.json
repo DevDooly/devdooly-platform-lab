@@ -1,0 +1,59 @@
+{
+  "allJvmThreadsVerified": false,
+  "allWritesBlocked": false,
+  "badPasswordAuthenticationFailureVerified": true,
+  "describeOnlyProfileVerified": true,
+  "expectedTests": 1,
+  "failureCode": null,
+  "operatingKafkaChanged": false,
+  "ownedResourcesRemoved": true,
+  "publicExecutionEnabled": false,
+  "runtimeManifestSha256": "d6689a47f77410ec057b210f54d37bc7aa281dafa4d4fc2b5cdfeb86caef6336",
+  "schemaVersion": 1,
+  "scope": "ISOLATED_KAFKA_SASL_ACL_IT",
+  "selectedAdminStatePreserved": true,
+  "selectedDeniedRpcsVerified": 5,
+  "selectedFailureKind": null,
+  "selectedRpcResults": [
+    {
+      "causeKind": "TOPIC_AUTH",
+      "outcome": "DENIED",
+      "rpc": "OTHER_TOPIC"
+    },
+    {
+      "causeKind": "GROUP_AUTH",
+      "outcome": "DENIED",
+      "rpc": "OTHER_GROUP"
+    },
+    {
+      "causeKind": "TOPIC_AUTH",
+      "outcome": "DENIED",
+      "rpc": "ALTER_CONFIG"
+    },
+    {
+      "causeKind": "GROUP_AUTH",
+      "outcome": "DENIED",
+      "rpc": "OFFSET_COMMIT"
+    },
+    {
+      "causeKind": "TOPIC_AUTH",
+      "outcome": "DENIED",
+      "rpc": "PRODUCE"
+    },
+    {
+      "causeKind": "SASL_AUTH",
+      "outcome": "DENIED",
+      "rpc": "BAD_PASSWORD"
+    }
+  ],
+  "selectedSetupCauseKind": null,
+  "selectedSetupStep": null,
+  "selectedTestPhase": "COMPLETE",
+  "sourceAndArtifactsUnchanged": true,
+  "sourceCommit": "83e141eaf2d3269920ec8599fcd49241dd8f160b",
+  "status": "PASSED",
+  "surefireXmlSha256": "3842fe5f45988f2160d80ca36ae9889b3258e6d4ed8cd17ed6115f3fb5b2b2a1",
+  "synthetic": true,
+  "tlsConfidentialityVerified": false,
+  "verifiedTests": 1
+}
