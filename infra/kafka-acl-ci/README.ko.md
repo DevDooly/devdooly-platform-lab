@@ -1,6 +1,8 @@
 # Kafka DESCRIBE 권한 격리 시험 후보
 
-격리 broker 시험 전 후보다. Windows JDK21/Maven3.10.0의 새 staging에서 offline `test-compile -DskipTests` 한 회가 통과했다. 새 IT class 생성·TEST XML0·시험방법0·source/tool/settings/cache 공개 payload 불변을 확인했다. 첫 operator는 기존 공개 cache JAR의 크기 제한에서 Java 시작 전에 거부됐고, 그 기록을 보존한 뒤 별도 operator의 해당 제한만 보정했다. Docker·Kafka·이 전용 GitHub workflow·SSH는 실행하지 않았으며 ACL 실제 통과를 주장하지 않는다. 기존 Kafka 관측 CI7, 운영 PLAINTEXT 설정과 생산 Java는 그대로 보존한다. 합성 SASL_PLAINTEXT는 ACL/인증 계약 시험이며 TLS 기밀성 검증이 아니다.
+Windows JDK21/Maven3.10.0의 새 staging에서 원 IT의 offline `test-compile -DskipTests` 한 회가 통과했다. 새 IT class 생성·TEST XML0·시험방법0·source/tool/settings/cache 공개 payload 불변을 확인했다. 이후 [첫 GitHub-hosted 실행 39136790510](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39136790510)은 준비 단계가 성공했으나 runtime이 `SETUP`·`UNEXPECTED`·`IT_FAILED`로 끝났다. 검증 완료0/예정1이며 실행 소유 자원 정리만 확인했다. 원 summary와 실행을 보존하고 원인·ACL 통과·관리자 상태 또는 소스 불변을 확인했다고 주장하지 않는다. 후속 진단의 결과는 별도 실행 기록으로 구분한다. 기존 Kafka 관측 CI7, 운영 PLAINTEXT 설정과 생산 Java는 그대로 보존한다. 합성 SASL_PLAINTEXT는 ACL/인증 계약 시험이며 TLS 기밀성 검증이 아니다.
+
+후속 변경은 고정 `SetupStep`·`SetupCause`와 실패 marker의 `setupStep`·`setupCauseKind` 두 필드 및 runner의 엄격 파싱뿐이다. SETUP에서 최초 실패의 enum만 저장하여 뒤의 close 실패가 최초 분류를 덮지 않으며, 원 예외·메시지·동적 클래스명·topic/group·자격증명은 출력하지 않는다. 공개 summary의 두 필드는 SETUP 실패에서만 유한 값이고 그 밖에는 null이다. 원 호출·권한·timeout·retries·readiness·소유 cleanup은 바꾸지 않는다. 분류는 새 실행의 첫 SETUP 실패 관측이며 과거 실행 원인의 소급 증명이 아니다.
 
 ## 실제 재사용 범위
 
@@ -8,7 +10,7 @@
 
 전용 runner는 원 `infra/kafka-observation-ci/run_once.py`를 source 검증 뒤에만 읽어 로드한다. `command/checked_command`, `artifact_snapshot/tool_snapshot/private_environment`, `OwnedDocker`, `image_identity`, 명시 class/method 인자를 받는 `verify_xml`을 그대로 호출한다. 원 `prepare/run/main/source_snapshot`은 호출하지 않으며 전역 변경도 없다. 기존 source manifest109개와 원 manifest 자체 및 신규 Java/runner/README를 합친 113개를 고정한다. 저장소 API source는 기존106개 그대로여서 원 CI7의 inventory 조건을 유지하고, 새 staged API만 기존106+격리 IT1의 정확107개를 허용한다. 기존 manifest는 변경하지 않는다.
 
-새 준비는 `test-compile -DskipTests`만 수행한다. 기존 API218·관측 CI7을 재실행하지 않는다. 현재 고정 Boot4.1.1 dependencies POM의 managed Surefire/dependency plugin 버전과 실제 하나의 JUnit platform engine 버전에서 provider/launcher를 가져와 미리 준비한다. 준비가 끝나면 JAR/POM/ZIP 및 Maven 도구를 고정하고, 소유 자원이 생긴 뒤에는 이미지·의존성을 받지 않는다. 별도 Windows offline compile-only는 확인했지만 이 hosted prepare의 의존성 prefetch 경로와 Linux 실행은 아직 확인하지 않았다.
+새 준비는 `test-compile -DskipTests`만 수행한다. 기존 API218·관측 CI7을 재실행하지 않는다. 현재 고정 Boot4.1.1 dependencies POM의 managed Surefire/dependency plugin 버전과 실제 하나의 JUnit platform engine 버전에서 provider/launcher를 가져와 미리 준비한다. 준비가 끝나면 JAR/POM/ZIP 및 Maven 도구를 고정하고, 소유 자원이 생긴 뒤에는 이미지·의존성을 받지 않는다. 첫 hosted 준비는 성공했지만 그 뒤 SETUP에서 종료되어 시험 통과 근거는 없다.
 
 ## 한 시험의 계약
 
@@ -32,9 +34,9 @@ Kafka 4.3 ACL 표의 modern group describe 권한 표기와 pinned broker4.3.1 �
 
 PASS는 정확 class/method1·fail0/error0/skip0/Linux/Java21 XML, 고정 성공 denial5+authentication1 enum marker, source/JAR/tool 불변과 소유 cleanup이 함께 확인될 때만 가능하다. 공개 summary는 source/manifest/XML hash·고정 phase/cause/Rpc enum·counts/bool뿐이다. topic/group/principal 값, JAAS/비밀번호/원 예외/원 XML·broker 로그는 올리지 않는다. 인증 설정 선언 검증은 모든 Kafka 내부 동작의 독립 증명이 아니며 실제 broker 통과는 앞으로 확인해야 한다.
 
-## 후속 workflow 제안
+## 전용 manual workflow
 
-아직 workflow는 연결하지 않았다. manual `workflow_dispatch`, 기본 opt-in=false, main·정확 checkout SHA·GitHub-hosted Linux X64·run_attempt1·repo identity를 요구하는 독립 job만 제안한다. runtime opt-in 환경은 `KAFKA_ACL_RUNTIME_OPT_IN=true`, `SOURCE_COMMIT`, `GITHUB_RUN_ID/GITHUB_RUN_ATTEMPT/GITHUB_WORKSPACE` 등 GitHub 기본 metadata 및 Java21이다. repository secrets/credentials는 전달하지 않는다. 현재 shell/Maven dependency 준비가 네트워크를 쓰므로 PR/push에서 이 실행기를 자동 호출하지 않는다.
+연결된 전용 workflow는 manual `workflow_dispatch`, 기본 opt-in=false, main·정확 checkout SHA·GitHub-hosted Linux X64·run_attempt1·repo identity를 요구하는 독립 job이다. runtime opt-in 환경은 `KAFKA_ACL_RUNTIME_OPT_IN=true`, `SOURCE_COMMIT`, `GITHUB_RUN_ID/GITHUB_RUN_ATTEMPT/GITHUB_WORKSPACE` 등 GitHub 기본 metadata 및 Java21이다. repository secrets/credentials는 전달하지 않는다. 현재 shell/Maven dependency 준비가 네트워크를 쓰므로 PR/push에서 이 실행기를 자동 호출하지 않는다.
 
 Root의 구체 source 검토 이후 다음 CLI를 같은 새 hosted 환경에서 순서대로 사용할 수 있다. manifest SHA는 최종 고정값을 workflow literal로 결합한다. 단계 실패 시 run을 반복하지 않고 owned cleanup만 수행한다. upload는 `.local/kafka-acl-ci-public/summary.json` 한 파일만, absence도 실패로 처리한다.
 

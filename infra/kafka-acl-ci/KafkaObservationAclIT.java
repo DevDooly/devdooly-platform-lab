@@ -57,6 +57,23 @@ class KafkaObservationAclIT {
     private enum FailureKind { ASSERTION, OBSERVATION, INTERRUPTED, UNEXPECTED }
     private enum Rpc { OTHER_TOPIC, OTHER_GROUP, ALTER_CONFIG, OFFSET_COMMIT, PRODUCE, BAD_PASSWORD }
     private enum CauseKind { TOPIC_AUTH, GROUP_AUTH, SASL_AUTH, TIMEOUT, OTHER, NONE }
+    private enum SetupStep { NONE, ADMIN_CREATE, DESCRIBE_CLUSTER, CREATE_TOPICS, OTHER_GROUP_OFFSETS,
+        OTHER_GROUP_DESCRIBE, CONSUMER_CONFIG, CONSUMER_CREATE, CONSUMER_JOIN, PRODUCER_CONFIG,
+        PRODUCER_CREATE, PRODUCE_RECORDS, PRODUCER_CLOSE, INITIAL_COMMIT, ACL_PROFILE, CREATE_ACLS,
+        DESCRIBE_ACLS, CONSUMER_CLOSE, DRIVER_CLOSE }
+    private enum SetupCause { NONE, ASSERTION, GROUP_NOT_FOUND, COORDINATOR, NOT_CONTROLLER,
+        AUTHORIZER_NOT_READY, AUTHORIZATION, AUTHENTICATION, CONFIGURATION, TIMEOUT, INTERRUPTED, OTHER }
+    private static final class SetupTrace {
+        private SetupStep current = SetupStep.NONE;
+        private SetupStep firstStep = SetupStep.NONE;
+        private SetupCause firstCause = SetupCause.NONE;
+        private void record(Throwable error) {
+            if (firstStep == SetupStep.NONE) {
+                firstStep = current;
+                firstCause = setupCause(error);
+            }
+        }
+    }
     private record Credentials(String admin, String observer) {}
     private record SelectedState(String cluster, Uuid topicId, Set<Integer> partitions,
             GroupType type, GroupState state, boolean simple, String member, String instance,
@@ -67,6 +84,7 @@ class KafkaObservationAclIT {
     @Timeout(180)
     void describeOnlyPrincipalObservesAndRejectsSelectedRpcs() {
         Phase phase = Phase.INPUT;
+        SetupTrace setup = new SetupTrace();
         try {
             check("true".equals(required("LAB_KAFKA_ACL_TEST_DISPOSABLE")));
             String bootstrap = required("LAB_KAFKA_ACL_TEST_BOOTSTRAP");
@@ -84,14 +102,20 @@ class KafkaObservationAclIT {
             ConfigResource config = new ConfigResource(ConfigResource.Type.TOPIC, topic);
             Map<String, Object> adminProperties = properties(bootstrap, "acl_admin", credentials.admin());
             phase = Phase.SETUP;
+            setup.current = SetupStep.ADMIN_CREATE;
             Admin driver = Admin.create(adminProperties);
             try {
+                setup.current = SetupStep.DESCRIBE_CLUSTER;
                 check(cluster.equals(driver.describeCluster().clusterId().get(10, TimeUnit.SECONDS)));
+                setup.current = SetupStep.CREATE_TOPICS;
                 driver.createTopics(List.of(new NewTopic(topic, 1, (short) 1).configs(Map.of("retention.ms", "86400000")),
                     new NewTopic(otherTopic, 1, (short) 1))).all().get(10, TimeUnit.SECONDS);
+                setup.current = SetupStep.OTHER_GROUP_OFFSETS;
                 driver.alterConsumerGroupOffsets(otherGroup, Map.of(otherPartition, new OffsetAndMetadata(0)))
                     .all().get(10, TimeUnit.SECONDS);
+                setup.current = SetupStep.OTHER_GROUP_DESCRIBE;
                 check(driver.describeConsumerGroups(Set.of(otherGroup)).all().get(10, TimeUnit.SECONDS).containsKey(otherGroup));
+                setup.current = SetupStep.CONSUMER_CONFIG;
                 Map<String, Object> consumerProperties = new LinkedHashMap<>(adminProperties);
                 consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, group);
                 consumerProperties.put(ConsumerConfig.GROUP_PROTOCOL_CONFIG, "classic");
@@ -103,8 +127,10 @@ class KafkaObservationAclIT {
                 consumerProperties.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 10000);
                 consumerProperties.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, 1000);
                 consumerProperties.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 300000);
+                setup.current = SetupStep.CONSUMER_CREATE;
                 KafkaConsumer<String, String> fixture = new KafkaConsumer<>(consumerProperties);
                 try {
+                    setup.current = SetupStep.CONSUMER_JOIN;
                     fixture.subscribe(List.of(topic));
                     long joinDeadline = System.nanoTime() + Duration.ofSeconds(30).toNanos();
                     while (fixture.assignment().isEmpty() && System.nanoTime() < joinDeadline) {
@@ -113,21 +139,35 @@ class KafkaObservationAclIT {
                     check(fixture.assignment().equals(Set.of(partition)));
                     // Foreground poll ends here. The pinned classic client's heartbeat thread remains active.
                     // max.poll.interval is longer than the whole 180-second method; drift is never retried.
+                    setup.current = SetupStep.PRODUCER_CONFIG;
                     Map<String, Object> producerProperties = producerProperties(adminProperties);
+                    setup.current = SetupStep.PRODUCER_CREATE;
                     KafkaProducer<String, String> producer = new KafkaProducer<>(producerProperties);
                     try {
+                        setup.current = SetupStep.PRODUCE_RECORDS;
                         for (int index = 0; index < 3; index++) {
                             producer.send(new ProducerRecord<>(topic, 0, "synthetic-" + index, "value-" + index))
                                 .get(10, TimeUnit.SECONDS);
                         }
-                    } finally { producer.close(Duration.ofSeconds(2)); }
+                    } catch (Throwable error) {
+                        setup.record(error);
+                        throw error;
+                    } finally {
+                        setup.current = SetupStep.PRODUCER_CLOSE;
+                        producer.close(Duration.ofSeconds(2));
+                    }
+                    setup.current = SetupStep.INITIAL_COMMIT;
                     fixture.commitSync(Map.of(partition, new OffsetAndMetadata(1)), Duration.ofSeconds(10));
+                    setup.current = SetupStep.ACL_PROFILE;
                     Set<AclBinding> profile = Set.of(
                         describe(ResourceType.CLUSTER, "kafka-cluster"),
                         describe(ResourceType.TOPIC, topic), describe(ResourceType.GROUP, group));
+                    setup.current = SetupStep.CREATE_ACLS;
                     driver.createAcls(profile).all().get(10, TimeUnit.SECONDS);
+                    setup.current = SetupStep.DESCRIBE_ACLS;
                     check(Set.copyOf(driver.describeAcls(AclBindingFilter.ANY).values().get(10, TimeUnit.SECONDS)).equals(profile));
                     phase = Phase.BASELINE;
+                    setup.current = SetupStep.NONE;
                     SelectedState before = selected(driver, cluster, topic, group, partition, config);
                     check(before.start() == 0 && before.lso() == 3 && before.end() == 3 && before.committed() == 1
                         && "86400000".equals(before.retention()));
@@ -170,19 +210,66 @@ class KafkaObservationAclIT {
                         denied(Rpc.BAD_PASSWORD, () -> unauthenticated.describeCluster().clusterId().get(10, TimeUnit.SECONDS), SaslAuthenticationException.class);
                     } finally { unauthenticated.close(Duration.ofSeconds(1)); }
                     phase = Phase.CLOSE;
-                } finally { fixture.close(Duration.ofSeconds(2)); }
-            } finally { driver.close(Duration.ofSeconds(1)); }
+                } catch (Throwable error) {
+                    if (phase == Phase.SETUP) { setup.record(error); }
+                    throw error;
+                } finally {
+                    if (phase == Phase.SETUP) { setup.current = SetupStep.CONSUMER_CLOSE; }
+                    fixture.close(Duration.ofSeconds(2));
+                }
+            } catch (Throwable error) {
+                if (phase == Phase.SETUP) { setup.record(error); }
+                throw error;
+            } finally {
+                if (phase == Phase.SETUP) { setup.current = SetupStep.DRIVER_CLOSE; }
+                driver.close(Duration.ofSeconds(1));
+            }
             phase = Phase.COMPLETE;
             System.out.println("{\"kind\":\"KAFKA_ACL_SELECTED_ASSERTIONS\",\"phase\":\"COMPLETE\",\"describeProfile\":true,\"deniedRpcs\":5,\"badPasswordRejected\":true,\"selectedStatePreserved\":true}");
         } catch (Throwable error) {
+            if (phase == Phase.SETUP) { setup.record(error); }
             FailureKind kind = error instanceof AssertionError ? FailureKind.ASSERTION
                 : error instanceof KafkaObservationService.ObservationFailure ? FailureKind.OBSERVATION
                 : error instanceof InterruptedException ? FailureKind.INTERRUPTED : FailureKind.UNEXPECTED;
             if (error instanceof InterruptedException) { Thread.currentThread().interrupt(); }
             System.out.println("{\"kind\":\"KAFKA_ACL_SELECTED_ASSERTIONS\",\"phase\":\"" + phase.name()
-                + "\",\"failureKind\":\"" + kind.name() + "\"}");
+                + "\",\"failureKind\":\"" + kind.name()
+                + "\",\"setupStep\":\"" + setup.firstStep.name()
+                + "\",\"setupCauseKind\":\"" + setup.firstCause.name() + "\"}");
             throw new AssertionError("KAFKA_ACL_FIXED_FAILURE_" + phase.name() + "_" + kind.name());
         }
+    }
+
+    private static SetupCause setupCause(Throwable error) {
+        Throwable cause = error;
+        for (int depth = 0; depth < 3; depth++) {
+            boolean wrapper = cause instanceof ExecutionException
+                || cause.getClass() == org.apache.kafka.common.KafkaException.class;
+            if (!wrapper || cause.getCause() == null) { break; }
+            cause = cause.getCause();
+        }
+        if (cause instanceof AssertionError) { return SetupCause.ASSERTION; }
+        if (cause instanceof InterruptedException) { return SetupCause.INTERRUPTED; }
+        if (cause instanceof java.util.concurrent.TimeoutException) { return SetupCause.TIMEOUT; }
+        // Class names are compared only to fixed literals; no exception name or message is exported.
+        return switch (cause.getClass().getName()) {
+            case "org.apache.kafka.common.errors.GroupIdNotFoundException" -> SetupCause.GROUP_NOT_FOUND;
+            case "org.apache.kafka.common.errors.CoordinatorNotAvailableException",
+                 "org.apache.kafka.common.errors.CoordinatorLoadInProgressException",
+                 "org.apache.kafka.common.errors.NotCoordinatorException" -> SetupCause.COORDINATOR;
+            case "org.apache.kafka.common.errors.NotControllerException" -> SetupCause.NOT_CONTROLLER;
+            case "org.apache.kafka.common.errors.AuthorizerNotReadyException" -> SetupCause.AUTHORIZER_NOT_READY;
+            case "org.apache.kafka.common.errors.TopicAuthorizationException",
+                 "org.apache.kafka.common.errors.GroupAuthorizationException",
+                 "org.apache.kafka.common.errors.ClusterAuthorizationException" -> SetupCause.AUTHORIZATION;
+            case "org.apache.kafka.common.errors.SaslAuthenticationException",
+                 "org.apache.kafka.common.errors.UnsupportedSaslMechanismException" -> SetupCause.AUTHENTICATION;
+            case "org.apache.kafka.common.config.ConfigException",
+                 "org.apache.kafka.common.errors.InvalidConfigurationException",
+                 "java.lang.IllegalArgumentException" -> SetupCause.CONFIGURATION;
+            case "org.apache.kafka.common.errors.TimeoutException" -> SetupCause.TIMEOUT;
+            default -> SetupCause.OTHER;
+        };
     }
 
     private static SelectedState selected(Admin admin, String cluster, String topic, String group,

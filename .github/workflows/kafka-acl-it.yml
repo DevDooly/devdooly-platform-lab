@@ -54,16 +54,16 @@ jobs:
 
       - name: Compile isolated sources and prepare pinned dependencies without tests
         timeout-minutes: 16
-        run: python3 -I -B infra/kafka-acl-ci/run_once.py prepare --source-manifest-sha256 a44d68b86ae03024fff74ba3d16d07b64501d1c863c3c73fdfa89402baa6325f --ack-fresh-hosted-kafka-acl-it
+        run: python3 -I -B infra/kafka-acl-ci/run_once.py prepare --source-manifest-sha256 c80c1256c958d12d69afb0e19dd47cb63e0a42dec47580390d497f5dd0ff84be --ack-fresh-hosted-kafka-acl-it
 
       - name: Pull pinned images before resources and run one owned ACL test
         timeout-minutes: 18
-        run: python3 -I -B infra/kafka-acl-ci/run_once.py run --source-manifest-sha256 a44d68b86ae03024fff74ba3d16d07b64501d1c863c3c73fdfa89402baa6325f --ack-fresh-hosted-kafka-acl-it
+        run: python3 -I -B infra/kafka-acl-ci/run_once.py run --source-manifest-sha256 c80c1256c958d12d69afb0e19dd47cb63e0a42dec47580390d497f5dd0ff84be --ack-fresh-hosted-kafka-acl-it
 
       - name: Confirm owned cleanup even after failure
         if: always()
         timeout-minutes: 2
-        run: python3 -I -B infra/kafka-acl-ci/run_once.py cleanup --source-manifest-sha256 a44d68b86ae03024fff74ba3d16d07b64501d1c863c3c73fdfa89402baa6325f --ack-fresh-hosted-kafka-acl-it
+        run: python3 -I -B infra/kafka-acl-ci/run_once.py cleanup --source-manifest-sha256 c80c1256c958d12d69afb0e19dd47cb63e0a42dec47580390d497f5dd0ff84be --ack-fresh-hosted-kafka-acl-it
 
       - name: Retain only the finite public summary
         if: always()
