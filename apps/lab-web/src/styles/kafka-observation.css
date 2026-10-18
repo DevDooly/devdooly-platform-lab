@@ -1,0 +1,26 @@
+.kafka-observation-section { border-top:1px solid var(--line); }
+.kafka-observation-heading { align-items:flex-end; gap:24px; }
+.kafka-observation-heading p { max-width:760px; }
+.kafka-observation-meta { display:flex; flex-wrap:wrap; gap:12px; margin:22px 0; }
+.kafka-offset-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px; margin:26px 0; }
+.kafka-offset-grid article { padding:28px; background:var(--surface); border:1px solid var(--line); }
+.kafka-offset-grid h3 { margin:12px 0; font-size:1.35rem; }
+.kafka-offset-grid p { font-size:1rem; line-height:1.8; }
+.kafka-offset-grid .kafka-offset-value { margin:10px 0; font-size:2.1rem; font-weight:700; overflow-wrap:anywhere; }
+.kafka-observation-details { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 24px; margin:20px 0; }
+.kafka-observation-details > div { min-width:0; padding:18px 0; border-bottom:1px solid var(--line); }
+.kafka-observation-details dt { font-size:1rem; color:var(--muted); margin-bottom:8px; }
+.kafka-observation-details dd { margin:0; font-size:1.05rem; line-height:1.8; overflow-wrap:anywhere; }
+.kafka-observation-fingerprint { padding:20px 24px; margin:24px 0; border:1px solid var(--line); }
+.kafka-observation-fingerprint summary { font-size:1.05rem; font-weight:600; cursor:pointer; }
+.kafka-observation-fingerprint code { display:block; margin-top:16px; overflow-wrap:anywhere; }
+.kafka-observation-fingerprint p, .kafka-observation-note, .kafka-observation-empty p { font-size:1rem; line-height:1.85; }
+.kafka-observation-notice { padding:18px 22px; margin:20px 0; border-left:4px solid var(--ink); background:var(--surface); font-size:1rem; line-height:1.85; }
+.kafka-observation-empty { padding:28px; margin:24px 0; border:1px solid var(--line); }
+.kafka-observation-empty h3 { font-size:1.3rem; }
+@media (max-width:760px) {
+  .kafka-observation-heading { align-items:flex-start; flex-direction:column; }
+  .kafka-offset-grid, .kafka-observation-details { grid-template-columns:1fr; }
+  .kafka-offset-grid article, .kafka-observation-empty { padding:22px; }
+  .kafka-observation-fingerprint { padding:18px; }
+}

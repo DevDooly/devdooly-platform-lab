@@ -12,6 +12,7 @@ on:
       - infra/maintenance/**
       - infra/spark-silver/**
       - infra/s3-ci/**
+      - infra/kafka-observation-ci/**
       - infra/iceberg-lab/**
       - infra/spark-ci/**
       - infra/cloud-lakehouse-ci/**
@@ -53,6 +54,12 @@ on:
         default: false
         type: boolean
 
+      run_kafka_observation_trial:
+        description: Run one fresh hosted Linux Kafka observation IT
+        required: false
+        default: false
+        type: boolean
+
 permissions:
   contents: read
 
@@ -76,6 +83,12 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Reject mixed Kafka observation dispatch
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_kafka_observation_trial == true }}
+        env:
+          OTHER_TRIAL_SELECTED: ${{ inputs.run_spark_trial == true || inputs.run_s3_trial == true || inputs.run_cloud_lakehouse_trial == true || inputs.run_iceberg_capture_trial == true }}
+        run: test "$OTHER_TRIAL_SELECTED" = 'false'
 
       - name: Validate publication decisions without credentials
         run: python3 -m unittest discover -s tests/ci -p 'test_*.py' -v
@@ -101,6 +114,27 @@ jobs:
       - name: Validate fresh Cloud lakehouse boundaries without services
         run: python3 -B -m unittest discover -s infra/cloud-lakehouse-ci -p 'test_*.py' -v
 
+      - name: Verify source-pinned Kafka harness boundaries without services
+        run: |
+          python3 -I -B - <<'PY'
+          import hashlib
+          from pathlib import Path
+          import unittest
+          pins = {
+              'infra/kafka-observation-ci/run_once.py': 'd56e3d721d441784bf0a3e11d834ae0de14621d6b0acac7ec17fb2b25e635eb1',
+              'infra/kafka-observation-ci/test_run_once.py': '305cad9f1cf922f1d20830d3ef9998f709d94c00ad0f2fec5017f47c1658645d',
+              'infra/kafka-observation-ci/runtime-manifest.json': 'fc5c9fb2a35826d2d625a95fc7c2050fc1eda1360dbef80f618c6cfa10d35646',
+          }
+          for name, expected in pins.items():
+              assert hashlib.sha256(Path(name).read_bytes()).hexdigest() == expected
+          suite = unittest.defaultTestLoader.discover('infra/kafka-observation-ci', pattern='test_*.py')
+          assert suite.countTestCases() == 24
+          result = unittest.TextTestRunner(verbosity=2).run(suite)
+          assert result.testsRun == 24 and result.wasSuccessful() and not result.skipped
+          for name, expected in pins.items():
+              assert hashlib.sha256(Path(name).read_bytes()).hexdigest() == expected
+          PY
+
       - name: Set up Java 21
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
@@ -113,9 +147,32 @@ jobs:
 
       - name: Verify API
         working-directory: apps/api
+        env:
+          KAFKA_OBSERVATION_OPT_IN: ${{ github.event_name == 'workflow_dispatch' && inputs.run_kafka_observation_trial == true }}
         run: |
           chmod +x mvnw
-          ./mvnw -B -ntp verify
+          if [ "$KAFKA_OBSERVATION_OPT_IN" = 'true' ]; then
+            python3 -I -B ../../infra/kafka-observation-ci/run_once.py prepare --source-manifest-sha256 fc5c9fb2a35826d2d625a95fc7c2050fc1eda1360dbef80f618c6cfa10d35646 --ack-fresh-hosted-kafka-it
+          else
+            ./mvnw -B -ntp verify
+          fi
+
+      - name: Run one owned Kafka observation IT
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_kafka_observation_trial == true }}
+        run: python3 -I -B infra/kafka-observation-ci/run_once.py run --source-manifest-sha256 fc5c9fb2a35826d2d625a95fc7c2050fc1eda1360dbef80f618c6cfa10d35646 --ack-fresh-hosted-kafka-it
+
+      - name: Confirm owned Kafka cleanup even after failure
+        if: ${{ always() && github.event_name == 'workflow_dispatch' && inputs.run_kafka_observation_trial == true }}
+        run: python3 -I -B infra/kafka-observation-ci/run_once.py cleanup --source-manifest-sha256 fc5c9fb2a35826d2d625a95fc7c2050fc1eda1360dbef80f618c6cfa10d35646 --ack-fresh-hosted-kafka-it
+
+      - name: Upload only Kafka observation public summary
+        if: ${{ always() && github.event_name == 'workflow_dispatch' && inputs.run_kafka_observation_trial == true }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: kafka-observation-summary-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .local/kafka-observation-ci-public/summary.json
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Verify Java example
         run: |
@@ -143,6 +200,9 @@ jobs:
           npm run check
           npm test
           npm run build
+
+      - name: Verify Linux observation contracts after Node preparation
+        run: python3 -B -m unittest discover -s tests/observation -p 'test_*.py' -v
 
       - name: Prepare isolated Compose environment
         run: |
@@ -201,7 +261,7 @@ jobs:
           retention-days: 7
 
   isolated-spark:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_spark_trial == true }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_spark_trial == true && inputs.run_kafka_observation_trial != true }}
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     permissions:
@@ -227,7 +287,7 @@ jobs:
           retention-days: 7
 
   isolated-s3:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_s3_trial == true }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_s3_trial == true && inputs.run_kafka_observation_trial != true }}
     needs: verify
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -261,7 +321,7 @@ jobs:
           retention-days: 7
 
   isolated-cloud-lakehouse:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_cloud_lakehouse_trial == true }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_cloud_lakehouse_trial == true && inputs.run_kafka_observation_trial != true }}
     needs: verify
     runs-on: ubuntu-24.04
     timeout-minutes: 45
@@ -294,7 +354,7 @@ jobs:
           retention-days: 7
 
   isolated-iceberg-capture:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_iceberg_capture_trial == true && inputs.run_spark_trial != true && inputs.run_s3_trial != true && inputs.run_cloud_lakehouse_trial != true }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_iceberg_capture_trial == true && inputs.run_spark_trial != true && inputs.run_s3_trial != true && inputs.run_cloud_lakehouse_trial != true && inputs.run_kafka_observation_trial != true }}
     needs: verify
     runs-on: ubuntu-24.04
     timeout-minutes: 45

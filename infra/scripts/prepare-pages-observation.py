@@ -22,9 +22,11 @@ import zipfile
 REPOSITORY = 'DevDooly/devdooly-platform-lab'
 MAX_BYTES = 16384
 MAX_JOB_BYTES = 32768
+MAX_KAFKA_BYTES = 8192
 MAX_WORKFLOW_RUNS = 10000
 RUN_TITLES = {'Portfolio snapshot v1 · push', 'Portfolio snapshot v1 · workflow_dispatch',
-              'Portfolio snapshots v2 · push', 'Portfolio snapshots v2 · workflow_dispatch'}
+              'Portfolio snapshots v2 · push', 'Portfolio snapshots v2 · workflow_dispatch',
+              'Portfolio snapshots v3 · push', 'Portfolio snapshots v3 · workflow_dispatch'}
 
 class ObservationError(Exception):
     pass
@@ -76,10 +78,15 @@ class GitHub:
             require(len(raw) <= 131072, 'ARTIFACT_ARCHIVE_TOO_LARGE')
             return raw
 
-def parse_record(raw, validate, max_bytes=MAX_BYTES):
+def parse_record(raw, validate, max_bytes=MAX_BYTES, *, integer_lexemes=False):
     require(len(raw) <= max_bytes, 'SNAPSHOT_TOO_LARGE')
     try:
-        result = json.loads(raw, object_pairs_hook=unique_object)
+        options={'object_pairs_hook':unique_object}
+        if integer_lexemes:
+            options.update(parse_int=kafka_integer_lexeme,
+                parse_float=lambda unused:require(False,'KAFKA_INTEGER_LEXEME_REQUIRED'),
+                parse_constant=lambda unused:require(False,'KAFKA_INTEGER_LEXEME_REQUIRED'))
+        result = json.loads(raw.decode('utf-8','strict') if integer_lexemes else raw, **options)
     except (ValueError, UnicodeError):
         raise ObservationError('INVALID_SNAPSHOT_JSON') from None
     validate(result)
@@ -139,17 +146,20 @@ def deployment_succeeded(get, metadata, attempt):
     return job.get('status') == 'completed' and job.get('conclusion') == 'success'
 
 
-def previous_snapshot(get, download, current_run, current_attempt, validate, *, jobs=False):
+def previous_snapshot(get, download, current_run, current_attempt, validate, *, jobs=False, kafka=False):
     # GitHub's workflow-runs API returns the evaluated run-name in `name`
     # as well as display_title. The workflow path and repository identify the
     # publisher; accept its fixed versioned title for the matching event.
+    require(not (jobs and kafka), 'INVALID_ARTIFACT_SCOPE')
     runs = [r for r in workflow_runs(get) if r.get('name') in RUN_TITLES | {'Publish portfolio'} and r.get('path') == '.github/workflows/pages.yml'
             and r.get('head_branch') == 'main' and r.get('event') in ('push', 'workflow_dispatch')
             and r.get('repository', {}).get('full_name', '').lower() == REPOSITORY.lower()
             and r.get('head_repository', {}).get('full_name', '').lower() == REPOSITORY.lower()
             and r.get('display_title') in {'Portfolio snapshot v1 · ' + r.get('event', ''),
-                                         'Portfolio snapshots v2 · ' + r.get('event', '')}
-            and (not jobs or r.get('display_title') == 'Portfolio snapshots v2 · ' + r.get('event', ''))]
+                                         'Portfolio snapshots v2 · ' + r.get('event', ''),
+                                         'Portfolio snapshots v3 · ' + r.get('event', '')}
+            and (not jobs or r.get('display_title') in {'Portfolio snapshots v2 · ' + r.get('event', ''), 'Portfolio snapshots v3 · ' + r.get('event', '')})
+            and (not kafka or r.get('display_title') == 'Portfolio snapshots v3 · ' + r.get('event', ''))]
     attempts = []
     for run in runs:
         latest = run.get('run_attempt', 1)
@@ -172,13 +182,14 @@ def previous_snapshot(get, download, current_run, current_attempt, validate, *, 
     chosen, attempt = published
     document = get(f"actions/runs/{chosen['id']}/artifacts?per_page=100")
     artifacts = document.get('artifacts', [])
-    artifact_prefix='job-observation' if jobs else 'platform-observation'
+    artifact_prefix='kafka-observation' if kafka else 'job-observation' if jobs else 'platform-observation'
     matches = [a for a in artifacts if a.get('name') == f"{artifact_prefix}-{chosen['id']}-a{attempt}"]
     require(len(matches) == 1 and not matches[0].get('expired')
             and matches[0].get('workflow_run', {}).get('id') == chosen['id'], 'PUBLISHED_BASELINE_ARTIFACT_UNAVAILABLE')
     archive = download(matches[0]['id'])
     with zipfile.ZipFile(io.BytesIO(archive)) as zipped:
         entries = zipped.infolist()
+        if kafka:return decode_kafka_archive(zipped,entries,validate)
         if jobs:
             return decode_job_archive(zipped,entries,validate)
         require(len(entries) == 1 and entries[0].filename == 'platform-observation.json'
@@ -207,6 +218,32 @@ def decode_job_archive(zipped, entries, validate):
     require(entry.file_size<=MAX_JOB_BYTES,'ARTIFACT_CONTENT_REJECTED')
     with zipped.open(entry) as stream:raw=stream.read(MAX_JOB_BYTES+1)
     return parse_record(raw,validate,MAX_JOB_BYTES)
+
+def kafka_integer_lexeme(value):
+    require(value!='-0','KAFKA_INTEGER_LEXEME_REQUIRED')
+    return int(value)
+
+
+def decode_kafka_archive(zipped,entries,validate):
+    names=[entry.filename for entry in entries]
+    require(len(names)==len(set(names)) and set(names) in ({'publication.json'}, {'publication.json','kafka.latest.json'}),'ARTIFACT_CONTENT_REJECTED')
+    entry=next(entry for entry in entries if entry.filename=='publication.json')
+    require(entry.file_size<=512,'ARTIFACT_CONTENT_REJECTED')
+    with zipped.open(entry) as stream:
+        raw=stream.read(513)
+        require(len(raw)<=512,'ARTIFACT_CONTENT_REJECTED')
+        try:manifest=json.loads(raw.decode('utf-8','strict'),object_pairs_hook=unique_object)
+        except (ValueError,UnicodeError):raise ObservationError('ARTIFACT_CONTENT_REJECTED') from None
+    require(isinstance(manifest,dict) and set(manifest)=={'schemaVersion','kind','recordPresent'}
+        and type(manifest['schemaVersion']) is int and manifest['schemaVersion']==1
+        and manifest['kind']=='kafka-observation-publication' and type(manifest['recordPresent']) is bool
+        and manifest['recordPresent']==('kafka.latest.json' in names),'ARTIFACT_CONTENT_REJECTED')
+    if not manifest['recordPresent']:return None
+    entry=next(entry for entry in entries if entry.filename=='kafka.latest.json')
+    require(entry.file_size<=MAX_KAFKA_BYTES,'ARTIFACT_CONTENT_REJECTED')
+    with zipped.open(entry) as stream:raw=stream.read(MAX_KAFKA_BYTES+1)
+    return parse_record(raw,validate,MAX_KAFKA_BYTES,integer_lexemes=True)
+
 
 def instant(value):
     """Calendar-valid UTC epoch nanoseconds, without floats or precision loss."""
@@ -245,6 +282,15 @@ def merge_job_records(baseline,incoming):
     before,after=instant(baseline['capturedAt']),instant(incoming['capturedAt'])
     if before==after:require(baseline==incoming,'CONFLICTING_JOB_SNAPSHOT')
     return copy.deepcopy(incoming if after>before else baseline)
+
+def merge_kafka_records(baseline,incoming):
+    if baseline is None:return copy.deepcopy(incoming)
+    if incoming is None:return copy.deepcopy(baseline)
+    require(baseline['targetFingerprint']==incoming['targetFingerprint'],'KAFKA_TARGET_CHANGE_REQUIRES_BASELINE_REVIEW')
+    before,after=instant(baseline['capturedAt']),instant(incoming['capturedAt'])
+    if before==after:require(baseline==incoming,'CONFLICTING_KAFKA_SNAPSHOT')
+    return copy.deepcopy(incoming if after>before else baseline)
+
 
 def validator(repository):
     source = (repository / 'apps/lab-web/src/lib/platform-observation.ts').as_uri()
@@ -292,6 +338,47 @@ def prepare_job_output(baseline,incoming,output_directory,artifact_directory,val
     (artifact_directory/'publication.json').write_text(json.dumps(manifest)+'\n',encoding='utf-8',newline='\n')
     return result
 
+def kafka_validator(repository):
+    source=(repository/'apps/lab-web/src/lib/kafka-observation.ts').as_uri()
+    script=("import fs from 'node:fs';import {parseKafkaObservation} from "+json.dumps(source)+";"
+        "try{if(!parseKafkaObservation(fs.readFileSync(0,'utf8')))process.exit(2);}catch{process.exit(2);}")
+    def validate(record):
+        result=subprocess.run(['node','--experimental-strip-types','--input-type=module','-e',script],
+            input=json.dumps(record),text=True,capture_output=True,timeout=20)
+        require(result.returncode==0,'KAFKA_SNAPSHOT_CONTRACT_REJECTED')
+        require(record['environment']=='MINI_PC' and record['scope']=='DEPLOYED_KAFKA'
+            and re.fullmatch('[a-f0-9]{40}',record['sourceCommit']) is not None,'DEPLOYED_KAFKA_SNAPSHOT_REQUIRED')
+        require(0<=instant(record['capturedAt'])-instant(record['captureStartedAt'])<=4_000_000_000
+            and instant(record['capturedAt'])<=time.time_ns(),'FUTURE_KAFKA_OBSERVATION_REJECTED')
+    return validate
+
+
+def select_kafka_incoming(baseline,text,validate):
+    """Bad optional input is ignored; trusted artifact integrity is handled separately."""
+    try:
+        require(isinstance(text,str),'INVALID_DISPATCH_INPUT')
+        candidate=parse_record(text.encode('utf-8'),validate,MAX_KAFKA_BYTES,integer_lexemes=True) if text else None
+        merge_kafka_records(baseline,candidate)
+        return candidate
+    except Exception:return None
+
+
+def prepare_kafka_output(baseline,incoming,output_directory,artifact_directory,validate):
+    result=merge_kafka_records(baseline,incoming)
+    output_directory.mkdir(parents=True,exist_ok=True);artifact_directory.mkdir(parents=True,exist_ok=True)
+    output=output_directory/'kafka.latest.json';artifact=artifact_directory/'kafka.latest.json'
+    if result is not None:
+        validate(result)
+        encoded=json.dumps(result,ensure_ascii=True,separators=(',',':'))+'\n'
+        require(len(encoded.encode('ascii'))<=MAX_KAFKA_BYTES,'SNAPSHOT_TOO_LARGE')
+        output.write_text(encoded,encoding='utf-8',newline='\n');artifact.write_text(encoded,encoding='utf-8',newline='\n')
+    else:
+        output.unlink(missing_ok=True);artifact.unlink(missing_ok=True)
+    manifest={'schemaVersion':1,'kind':'kafka-observation-publication','recordPresent':result is not None}
+    (artifact_directory/'publication.json').write_text(json.dumps(manifest)+'\n',encoding='utf-8',newline='\n')
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--repository', type=Path, default=Path.cwd())
@@ -300,6 +387,8 @@ def main():
     parser.add_argument('--job-output-directory',type=Path)
     parser.add_argument('--job-artifact-directory',type=Path)
     parser.add_argument('--job-seed-file',type=Path)
+    parser.add_argument('--kafka-output-directory',type=Path)
+    parser.add_argument('--kafka-artifact-directory',type=Path)
     args = parser.parse_args()
     try:
         require(os.environ.get('GITHUB_REPOSITORY', '').lower() == REPOSITORY.lower()
@@ -332,9 +421,21 @@ def main():
             require(isinstance(incoming_jobs_text,str),'INVALID_DISPATCH_INPUT')
             incoming_jobs=parse_record(incoming_jobs_text.encode('utf-8'),validate_jobs,MAX_JOB_BYTES) if incoming_jobs_text else None
             job_result=prepare_job_output(job_baseline,incoming_jobs,args.job_output_directory,args.job_artifact_directory,validate_jobs)
+        kafka_result=None
+        if args.kafka_output_directory is not None:
+            require(args.kafka_artifact_directory is not None,'KAFKA_ARTIFACT_DIRECTORY_REQUIRED')
+            validate_kafka=kafka_validator(args.repository.resolve())
+            # Integrity failure of a mandatory prior v3 artifact withholds this
+            # deployment: publishing without it would erase the last-good file.
+            kafka_baseline=previous_snapshot(github.get,github.archive,int(os.environ['GITHUB_RUN_ID']),
+                int(os.environ['GITHUB_RUN_ATTEMPT']),validate_kafka,kafka=True)
+            incoming_text=event.get('inputs',{}).get('kafka_snapshot','') if os.environ.get('GITHUB_EVENT_NAME')=='workflow_dispatch' else ''
+            incoming_kafka=select_kafka_incoming(kafka_baseline,incoming_text,validate_kafka)
+            kafka_result=prepare_kafka_output(kafka_baseline,incoming_kafka,args.kafka_output_directory,args.kafka_artifact_directory,validate_kafka)
         print(json.dumps({'snapshotPrepared': True, 'attemptedAt': result['latestAttempt']['attemptedAt'],
                           'lastSuccessAt': (result.get('lastSuccess') or {}).get('capturedAt'), 'gitCommitCreated': False,
-                          'jobRecordPresent':job_result is not None,'jobCapturedAt':job_result['capturedAt'] if job_result else None}))
+                          'jobRecordPresent':job_result is not None,'jobCapturedAt':job_result['capturedAt'] if job_result else None,
+                          'kafkaRecordPresent':kafka_result is not None,'kafkaCapturedAt':kafka_result['capturedAt'] if kafka_result else None}))
         return 0
     except Exception as error:
         print('Pages observation withheld: ' + (str(error) if isinstance(error, ObservationError) else 'VALIDATION_OR_METADATA_FAILURE'), file=sys.stderr)

@@ -1,0 +1,181 @@
+{
+  "excludedExecutionScope": {
+    "counts": {
+      "miniPcObservationDeployments": 0,
+      "publicKafkaObservationPublications": 0,
+      "realKafkaIntegrationExecutions": 0
+    },
+    "scope": "THIS_KAFKA_OBSERVATION_VALIDATION_BATCH_ONLY"
+  },
+  "results": [
+    {
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "passed": 19,
+        "skipped": 0,
+        "tests": 19
+      },
+      "resultSha256": "6dba54ad10064392618adddbd7b1b263e0f7d9d11e2bb3a90bbc59882949fdce",
+      "scope": "PRIOR_SAME_SOURCE_SYNTHETIC_SERVICE_ONLY"
+    },
+    {
+      "counts": {
+        "errors": 3,
+        "failures": 1,
+        "passed": 2,
+        "skipped": 0,
+        "tests": 6
+      },
+      "resultSha256": "f9462ec7e81cd092ce179fce330e71541fec533391655b7d26ae629059452b14",
+      "scope": "FIRST_HTTP_FIXTURE_FAILURE_PRESERVED"
+    },
+    {
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "passed": 6,
+        "skipped": 0,
+        "tests": 6
+      },
+      "resultSha256": "a5614398adc05efd16a2f7c8c00bfefd8ecddc206b3b6f2871e672e41c84ec7e",
+      "scope": "NEW_LOCAL_HTTP_POLICY_WITH_STUBBED_OBSERVER_SEPARATE_EXECUTION"
+    },
+    {
+      "counts": {
+        "exitCode": 0,
+        "policyChecks": 17,
+        "schemaRejections": 6
+      },
+      "resultSha256": "6a7f07dd6708260af40b006fc4ad8f21a5ac6faec42752938d2d7af2b68b2433",
+      "scope": "PRIOR_BASE_HELM_SEPARATE_EXECUTION"
+    },
+    {
+      "counts": {
+        "exitCode": 1
+      },
+      "resultSha256": "9abed88f84c809abc6e3a9579cdbd7e93f460c3724bcc52a65fb49bc03a61f02",
+      "scope": "FIRST_RUNTIME_HELM_FIXTURE_FAILURE_PRESERVED"
+    },
+    {
+      "counts": {
+        "existingSchemaRejections": 13,
+        "exitCode": 0,
+        "kafkaSchemaRejections": 10,
+        "policyChecks": 30
+      },
+      "resultSha256": "aa3b1d1e1f1806fa8e929b68d262c2223355ac820ee9aa09c006bb257547d859",
+      "scope": "NEW_RUNTIME_HELM_SEPARATE_EXECUTION"
+    },
+    {
+      "counts": {
+        "fileFailures": 2,
+        "passed": 91,
+        "skipped": 0,
+        "tests": 93
+      },
+      "resultSha256": "ef65ec53c8697a7d3ac12aba8940fb4bacca79ae9feb99604e4567dc1b7b8bd4",
+      "scope": "PRIOR_WEB_MISSING_SCENARIO_FAILURE_PRESERVED"
+    },
+    {
+      "counts": {
+        "failures": 0,
+        "kafkaCases": 14,
+        "passed": 104,
+        "protocolCases": 1,
+        "skipped": 0,
+        "tests": 104
+      },
+      "resultSha256": "5c6fbb81d02677172f15f68c5fda021b37570b7489bca94302ed39e4cb0e6e92",
+      "scope": "CORRECTED_COMBINED_WEB_REGRESSION"
+    },
+    {
+      "counts": {
+        "errors": 0,
+        "filesChecked": 28,
+        "hints": 0,
+        "warnings": 0
+      },
+      "resultSha256": "2caf0f8b781a2075108e97d53f553f4ba53ba47ebea33bd2c0ab23c3399bb7a4",
+      "scope": "COMBINED_ASTRO_TYPE_CHECK"
+    },
+    {
+      "counts": {
+        "builtKafkaObservationAssets": 0,
+        "captureAssetBytes": 1791,
+        "exitCode": 0
+      },
+      "resultSha256": "74277009bcb91bcb5cc127657fddb2faaf06a131e593fa8ff85a31b493791b40",
+      "scope": "LOCAL_BUILD_WITH_PRESERVED_CAPTURE_EVIDENCE",
+      "sourceSha256": "e96ca40d6bfeadfe0a8c51d73aec5c59977f418b3894470bcc4574870af2ca9e"
+    },
+    {
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "jobCases": 27,
+        "kafkaCases": 21,
+        "passed": 46,
+        "posixOnlySkipped": 2,
+        "tests": 48
+      },
+      "resultSha256": "ce955faf75064fdf65d27c968cda5780b7c2268a7bd48038bf192491dc558277",
+      "scope": "SYNTHETIC_WINDOWS_HOST_KAFKA_AND_JOB_CONTRACTS"
+    },
+    {
+      "counts": {
+        "dependencyFiles": 13013,
+        "modifiedSelectedSourceFiles": 0
+      },
+      "resultSha256": "9bd369a6babfd403c0352d71a995f5ea969c24b4fb57972bc9735ec0e9f72863",
+      "scope": "WHOLE_ORIGINAL_AND_COPIED_DEPENDENCY_AFTER_CHECK"
+    }
+  ],
+  "schemaVersion": 1,
+  "scope": "LOCAL_KAFKA_OBSERVATION_CANDIDATE_VALIDATION_ONLY",
+  "sources": {
+    "backendManifestSha256": "d30e3713d5fac59ca4df356661064a43d91c49046db7339db751ec284e84d1bb",
+    "combinedOverlaySha256": "b32f3519ab1677cc9382ece32f8b401780986ae1e886b337e39ad563cf75e15a",
+    "combinedPlanSha256": "a0a2f495251b443a231eff7f10b8cf457761a67ba73f7a23457d82ec147eeb07",
+    "contractSha256": "52e6076ea11ec42703231367256ca443971f51f6975eca95c70600ba8780874f",
+    "hostManifestSha256": "cbdbf14986b33945ad8969d2fb69c1d4247a2d0fd09989f20548a1603adf619f",
+    "newHttpTestSha256": "f383cf6b34e7e108124809ed43e6141ddb7175feeeb5bd51af10515474e3d890",
+    "runtimeHelmValidatorSha256": "e84f8d857a6a2f5464edcf489494c11805ca09a5fb7926051826e3fb9e42f71d",
+    "serviceTestSha256": "cc507606480b6f13140bafd173f590790d40e6520b9ee5e1dd2c88ff69d864cb",
+    "webManifestSha256": "0718624a3a876d17e4fcf84fadd96a7f39f848b78b2c2c54cd7183f09aa4b9b1"
+  },
+  "tools": {
+    "helmSha256": "2f65add9f1d5c96fc70ad70f06f1c47b3ef21bee4a9f086d861bb138429e9c13",
+    "javaSha256": "b92ee09627964a55dbe0c17980a53ce378b2759276b98547981bb6c1f51c6394",
+    "javacSha256": "292f4241811d27bd8b86761566ce0bab0ab7270f39d3d26b946b636043fbbbac",
+    "kafkaClientJarSha256": "6a281026416938a53c105f2d91d2807fdc83d5658452abf0ad1b6d8ab8a553c8",
+    "mavenCoreJarSha256": "7b6277e9d1e23a7ca225c777c8809abd8626eabace926658df0fba3b853868eb",
+    "nodeSha256": "3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237"
+  },
+  "visuals": [
+    {
+      "counts": {
+        "clientWidth": 1265,
+        "height": 712,
+        "imageBytes": 74368,
+        "scrollWidth": 1265,
+        "width": 1265
+      },
+      "resultSha256": "50da44c83455a8b403c765f7384ed50525b972fa50fdadeea021ce3a22d50f30",
+      "scope": "LOCAL_UNCONFIGURED_KAFKA_CARD_DESKTOP",
+      "sourceSha256": "4e297174ab7e35404481d9937e778fefffc9fdc6dcb77876ba94b1033702feb7"
+    },
+    {
+      "counts": {
+        "clientWidth": 375,
+        "height": 812,
+        "imageBytes": 40238,
+        "scrollWidth": 375,
+        "width": 375
+      },
+      "resultSha256": "50da44c83455a8b403c765f7384ed50525b972fa50fdadeea021ce3a22d50f30",
+      "scope": "LOCAL_UNCONFIGURED_KAFKA_CARD_MOBILE",
+      "sourceSha256": "105324fad4585d11d4f9950bd91166d5bc723d5924e18c9429a5d9258e68ef9e"
+    }
+  ]
+}

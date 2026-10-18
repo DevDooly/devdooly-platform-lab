@@ -237,6 +237,15 @@ class JobPagesTests(unittest.TestCase):
     def v2(self,number=1):
         value=run(number,'2026-01-01T00:00:09Z');value['name']='Portfolio snapshots v2 · workflow_dispatch';value['display_title']=value['name'];return value
 
+    def test_v3_keeps_v2_job_and_platform_artifact_schemas_without_a_kafka_input(self):
+        metadata=self.v2();metadata['name']='Portfolio snapshots v3 · workflow_dispatch';metadata['display_title']=metadata['name']
+        value=job_record();get,download=self.setup_source([metadata],[self.artifact(1)],self.archive(value))
+        self.assertEqual(pages.previous_snapshot(get,download,2,1,lambda unused:None,jobs=True),value)
+        from test_pages_observation import archive
+        platform=platform_snapshot();artifact={'id':45,'name':'platform-observation-1-a1','expired':False,'workflow_run':{'id':1}}
+        get,download=self.setup_source([metadata],[artifact],archive(platform))
+        self.assertEqual(pages.previous_snapshot(get,download,2,1,lambda unused:None),platform)
+
     def test_v1_deployment_does_not_require_a_job_artifact_during_upgrade(self):
         get,download=self.setup_source([run(1,'2026-01-01T00:00:09Z')])
         self.assertIsNone(pages.previous_snapshot(get,download,2,1,lambda _:None,jobs=True))

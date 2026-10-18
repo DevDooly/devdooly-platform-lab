@@ -7,5 +7,6 @@
   "state_directory": "/var/lib/devdooly-platform-observer",
   "runtime_directory": "/run/devdooly-platform-observer",
   "pages_token_file": "/home/OPERATOR/.config/devdooly-platform-lab/github-pages.token",
-  "jobs_enabled": "true"
+  "jobs_enabled": "true",
+  "kafka_enabled": "false"
 }

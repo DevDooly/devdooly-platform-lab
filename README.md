@@ -48,11 +48,14 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 | Jenkins·Actions 게시 gate | 같은 source SHA의 두 CI 성공 후 이미지·draft GitOps PR, 실제 테스트 실패 차단 | [연결 검증](docs/evidence/cicd-gate/README.md), [CI 절차](docs/runbooks/cicd-publication.md) |
 | 플랫폼 관측 수집 | 최소 읽기 수집·실패 보존·게시 순서 교정과 timer 자동 게시 11회 성공 | [수집 검증과 남은 범위](docs/evidence/platform-observation/README.md), [공개 필드 계약](apps/lab-web/PLATFORM_OBSERVATION.md) |
 | Kafka·Garage·상시 worker | 이전 readiness 검증의 8개 EXPORTED 작업·파일 정보 16개·객체 24개·lag 0, readiness·idle 교체·같은 ID 재시도 | [readiness 검증](docs/evidence/worker-readiness/CORRECTED_IMAGE.md), [이전 재시작](docs/evidence/runtime-recovery/README.md) |
+| Kafka 관측 조회·게시 후보 | 로컬 API/Helm·웹104·host48(Windows POSIX2개 제외), 실제 broker·미니 PC·공개 기록은 미연결 | [고정 계약](docs/contracts/kafka-observation.md), [검증 범위](docs/evidence/kafka-observation/README.md) |
 | 관리자 접속 | ClusterIP 관리 화면과 SSH 접속 도우미 | [접속 방법](docs/runbooks/admin-access.md) |
 | 백업과 복구 | 외부 암호화 사본의 Kafka/Garage PVC 격리 복원·별도 물리 블록 복원, 이전 DB/재부팅 검증 | [PVC 복원](docs/evidence/runtime-pvc-restore/README.md), [기존 복구 검증](docs/evidence/recovery/README.md) |
 | 보존·자원 예산 | 삭제 없는 보존 계획기·별도 합성 PVC 정리, 실제 cgroup 설정과 작은 작업 3회 관측 | [운영 기준](docs/runbooks/retention-resource-budget.md), [실제 근거](docs/evidence/retention-resource-budget/README.md) |
 | AI를 활용한 Java 개선 | UTC 오류 회귀·동일 결과 알고리즘·독립 Windows JMH와 정적 기록 UI | [예제](examples/java-window-analysis/README.md), [측정 조건·한계](docs/evidence/ai-window-analysis/README.md) |
 | 입력·동시 접수 | 격리 최대 1,000개·동시 2/8개 접수 검증, 실제 K3s의 1,000건 처리·파일 보존 | [격리 조건](docs/evidence/input-concurrency-load/README.md), [실제 배포·게시](docs/evidence/input-v2-deployment/README.md) |
+
+새 Kafka 관측은 commit·READ_COMMITTED LSO·lag와 수집 구간을 구분하고 실패 때 마지막 유효 기록을 보존하도록 준비했습니다. 이전 Service19와 새 HTTP6, 기본 Helm17과 새 runtime30은 각각 다른 실행입니다. 로컬 미연결 화면까지 확인했으며 실제 Kafka·미니 PC 전환·공개 Pages 연결은 [후속 절차](docs/runbooks/kafka-observation-rollout.md)로 남겨두었습니다.
 
 개인 합성 [Java 시간창 예제](examples/java-window-analysis/README.md)에서 UTC offset 오류를 재현·수정하고, 같은 답을 내는 O(n²) 기준 구현과 O(n log n) sweep을 비교했습니다. Java 테스트 20개·runner 검사 3개와 Windows Java 21의 JMH 16조합·48 fork·240 interval 측정을 완료했습니다. [실제 근거](docs/evidence/ai-window-analysis/README.md)와 [포트폴리오의 코드·기록 선택 화면](https://devdooly.github.io/devdooly-platform-lab/#ai-window)을 연결합니다. 일부 sparse 측정의 오차가 크며 회사 코드·수율 공식·운영 ETL 성능을 뜻하지 않습니다. 측정 당시 미커밋 소스 해시와 사람 검토 대기 상태를 유지합니다. [CI 연결의 검증 범위](docs/evidence/ai-window-analysis/ci-validation.md)는 성능 측정과 구분합니다.
 

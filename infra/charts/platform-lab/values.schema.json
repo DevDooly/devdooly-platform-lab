@@ -19,7 +19,8 @@
         "image",
         "sourceCommit",
         "resources",
-        "environment"
+        "environment",
+        "kafkaObservation"
       ],
       "properties": {
         "replicaCount": {
@@ -114,6 +115,18 @@
             "k3s",
             "mini-pc"
           ]
+        },
+        "kafkaObservation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          }
         }
       }
     },
@@ -898,5 +911,61 @@
         }
       ]
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "api"
+        ],
+        "properties": {
+          "api": {
+            "required": [
+              "kafkaObservation"
+            ],
+            "properties": {
+              "kafkaObservation": {
+                "required": [
+                  "enabled"
+                ],
+                "properties": {
+                  "enabled": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "api": {
+            "properties": {
+              "environment": {
+                "const": "mini-pc"
+              },
+              "sourceCommit": {
+                "pattern": "^[a-f0-9]{40}$"
+              }
+            }
+          },
+          "runtime": {
+            "properties": {
+              "kafka": {
+                "properties": {
+                  "enabled": {
+                    "const": true
+                  },
+                  "existingSecret": {
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
 }
