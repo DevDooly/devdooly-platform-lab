@@ -1,0 +1,69 @@
+name: Validate optional public gateway chart
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - infra/charts/platform-lab/**
+      - infra/public-gateway/**
+      - infra/image-lock.json
+      - infra/platform/versions.lock.json
+      - gitops/bootstrap/application.yaml
+      - gitops/bootstrap/project.yaml
+      - gitops/environments/home-lab/**
+      - .github/workflows/public-gateway-chart.yml
+  push:
+    branches: [main]
+    paths:
+      - infra/charts/platform-lab/**
+      - infra/public-gateway/**
+      - infra/image-lock.json
+      - infra/platform/versions.lock.json
+      - gitops/bootstrap/application.yaml
+      - gitops/bootstrap/project.yaml
+      - gitops/environments/home-lab/**
+      - .github/workflows/public-gateway-chart.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 24.19.0
+          cache: npm
+          cache-dependency-path: apps/lab-web/package-lock.json
+      - name: Install locked YAML dependency without package scripts
+        run: npm ci --prefix apps/lab-web --ignore-scripts --no-audit --no-fund
+      - name: Prepare pinned Helm and public main K baseline
+        run: python3 infra/charts/platform-lab/ci/prepare-public-gateway-ci.py --output "$RUNNER_TEMP/public-gateway-chart-inputs"
+      - name: Validate default-disabled and opt-in renders offline
+        run: |
+          node infra/charts/platform-lab/ci/validate-public-gateway-render.mjs \
+            --helm "$RUNNER_TEMP/public-gateway-chart-inputs/helm" \
+            --helm-archive "$RUNNER_TEMP/public-gateway-chart-inputs/helm-linux-amd64.tar.gz" \
+            --baseline "$RUNNER_TEMP/public-gateway-chart-inputs/baseline.yaml" \
+            --baseline-receipt "$RUNNER_TEMP/public-gateway-chart-inputs/baseline-receipt.json" \
+            --yaml-require-from "$GITHUB_WORKSPACE/apps/lab-web/package.json" \
+            --output "$RUNNER_TEMP/public-gateway-chart-validation"
+      - name: Upload finite results only
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: public-gateway-chart-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/public-gateway-chart-inputs/preparation-public-result.json
+            ${{ runner.temp }}/public-gateway-chart-inputs/baseline-receipt.json
+            ${{ runner.temp }}/public-gateway-chart-validation/render-validation.json
+          if-no-files-found: warn
+          retention-days: 7

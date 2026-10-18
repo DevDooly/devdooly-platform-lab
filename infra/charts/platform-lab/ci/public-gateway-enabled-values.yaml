@@ -1,0 +1,3 @@
+# Offline render fixture only. Do not add this to the live Application valueFiles.
+publicReadGateway:
+  enabled: true

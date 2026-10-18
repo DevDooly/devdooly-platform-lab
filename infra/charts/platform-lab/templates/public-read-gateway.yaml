@@ -1,0 +1,166 @@
+{{- if .Values.publicReadGateway.enabled -}}
+{{- if ne .Release.Namespace "platform-lab" -}}
+{{- fail "publicReadGateway requires namespace platform-lab; its verified policy has a fixed upstream" -}}
+{{- end -}}
+{{- $name := printf "%s-public-read" (include "platform-lab.fullname" .) | trunc 63 | trimSuffix "-" -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "platform-lab.labels" . | nindent 4 }}
+    app.kubernetes.io/component: public-read-gateway
+data:
+  nginx.conf: |
+{{ .Files.Get "files/public-gateway/nginx.conf" | indent 4 }}
+  proxy.inc: |
+{{ .Files.Get "files/public-gateway/proxy.inc" | indent 4 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "platform-lab.labels" . | nindent 4 }}
+    app.kubernetes.io/component: public-read-gateway
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "platform-lab.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: public-read-gateway
+  template:
+    metadata:
+      labels:
+        {{- include "platform-lab.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: public-read-gateway
+      annotations:
+        checksum/public-read-nginx: {{ .Files.Get "files/public-gateway/nginx.conf" | sha256sum | quote }}
+        checksum/public-read-proxy: {{ .Files.Get "files/public-gateway/proxy.inc" | sha256sum | quote }}
+    spec:
+      serviceAccountName: {{ include "platform-lab.fullname" . }}
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 10
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: public-read-gateway
+          image: "nginx:stable-alpine@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94"
+          imagePullPolicy: IfNotPresent
+          command: [nginx]
+          args: [-c, /etc/public-gateway/nginx.conf, -g, "daemon off;"]
+          ports:
+            - name: http
+              containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          startupProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 12
+          livenessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+          resources:
+            requests: {cpu: 25m, memory: 32Mi, ephemeral-storage: 32Mi}
+            limits: {cpu: 250m, memory: 128Mi, ephemeral-storage: 64Mi}
+          volumeMounts:
+            - name: policy
+              mountPath: /etc/public-gateway
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: policy
+          configMap:
+            name: {{ $name }}
+            defaultMode: 292
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "platform-lab.labels" . | nindent 4 }}
+    app.kubernetes.io/component: public-read-gateway
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "platform-lab.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: public-read-gateway
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "platform-lab.labels" . | nindent 4 }}
+    app.kubernetes.io/component: public-read-gateway
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "platform-lab.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: public-read-gateway
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "platform-lab.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: public-read-client
+      ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "platform-lab.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: api
+      ports:
+        - protocol: TCP
+          port: 8080
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+{{- end }}

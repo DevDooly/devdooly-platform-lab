@@ -1,0 +1,22 @@
+{
+  "appliedToCluster": false,
+  "baselineRenderSha256": "1862ec4a796a4ec860a78e84c35bb8ebf2db483ffe432974cd62ee88a0173a32",
+  "clusterAccessRequested": false,
+  "dependencyUpdateRequested": false,
+  "downloadBytes": 20321063,
+  "downloadRequests": 1,
+  "failureCode": "NONE",
+  "helmArchiveSha256": "86584a54def73570558f66f5111cc53dfed56689637ae32c1201205d494f54fb",
+  "helmExecutableSha256": "57ce7fc4ea77b28ee6fa91ae071abcade74d3f524e80c9decff5877a5ac8eda4",
+  "helmExecutableUnchanged": true,
+  "helmTemplateInvocations": 1,
+  "passed": true,
+  "phase": "COMPLETE",
+  "rawStderrPersisted": false,
+  "returnCode": 0,
+  "schemaVersion": 1,
+  "scope": "PUBLIC_PINNED_LINUX_HELM_CI_INPUT_PREPARATION",
+  "sourceBytesUnchanged": true,
+  "sourceFilesCopied": 23,
+  "stderrBytesDiscarded": 0
+}
