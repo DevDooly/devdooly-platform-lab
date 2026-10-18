@@ -477,7 +477,7 @@ jobs:
       - name: Validate real Nginx against synthetic HTTP fixture only
         run: >-
           python3 -I -B infra/public-gateway/run_once.py
-          --source-manifest-sha256 8a121723bb5f1b07375484c304eab9ed7c99928c04a276226e2fc3904996b928
+          --source-manifest-sha256 c5809eec31cfab210b0dfcc3c4107945d2583579398bfdfb7d478d38b7c0274d
           --ack-isolated-public-gateway
       - name: Upload finite public gateway result only
         if: always()

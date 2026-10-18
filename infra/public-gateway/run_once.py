@@ -83,6 +83,11 @@ class Attempt:
         self.ids = {}
         self.docker_ready = False
         self.output_owned = False
+        self.http_probe = {"started": False, "resultVerified": False, "passed": None,
+                           "phase": None, "checks": None, "returnCode": None}
+        self.cleanup_status = {"gateway": "NOT_ATTEMPTED", "fake": "NOT_ATTEMPTED", "network": "NOT_ATTEMPTED"}
+        self.validation_checkpoint = "NOT_STARTED"
+        self.last_command = {"category": None, "returnCode": None}
         self.deadline = time.monotonic() + 600
         self.docker = shutil.which("docker")
         require(self.docker is not None)
@@ -90,11 +95,24 @@ class Attempt:
         self.kit = self.output / "fixture-input"
 
     def command(self, args, maximum_seconds=30, *, allow_failure=False, quiet=False, cleanup=False):
+        fixed_categories = {("context", "show"): "DOCKER_CONTEXT", ("info", "--format"): "DOCKER_INFO",
+                            ("container", "inspect"): "CONTAINER_INSPECT", ("container", "ls"): "CONTAINER_LIST",
+                            ("container", "create"): "CONTAINER_CREATE", ("container", "start"): "CONTAINER_START",
+                            ("container", "rm"): "CONTAINER_REMOVE", ("network", "inspect"): "NETWORK_INSPECT",
+                            ("network", "ls"): "NETWORK_LIST", ("network", "create"): "NETWORK_CREATE",
+                            ("network", "rm"): "NETWORK_REMOVE", ("image", "inspect"): "IMAGE_INSPECT"}
+        category = {"exec": "CONTAINER_EXEC", "logs": "BOUNDED_CONTAINER_LOG", "pull": "PINNED_IMAGE_PULL"}.get(args[0])
+        if category is None:
+            category = fixed_categories.get(tuple(args[:2]))
+        require(category is not None)
+        self.last_command = {"category": category, "returnCode": None}
         timeout = maximum_seconds if cleanup else min(maximum_seconds, self.deadline - time.monotonic())
         require(timeout > 0)
         result = subprocess.run([self.docker, *args], stdin=subprocess.DEVNULL,
                                 stdout=subprocess.DEVNULL if quiet else subprocess.PIPE,
                                 stderr=subprocess.DEVNULL, timeout=timeout, check=False)
+        require(type(result.returncode) is int and -255 <= result.returncode <= 255)
+        self.last_command["returnCode"] = result.returncode
         raw = b"" if quiet else result.stdout
         # Commands are fixed inspect/exec/limited-log selectors, never unrestricted service logs.
         require(len(raw) <= 262144)
@@ -106,11 +124,12 @@ class Attempt:
                                  allow_failure=optional, cleanup=cleanup)
         if code:
             # A failed inspect alone does not prove absence (the daemon could be down).
-            _, names = self.command(["container", "ls", "--all", "--filter", LABEL + "=" + self.nonce,
+            _, names = self.command(["container", "ls", "--all", "--filter", "label=" + LABEL + "=" + self.nonce,
                                      "--format", "{{.Names}}"], cleanup=cleanup)
             require(name not in names.decode("ascii").splitlines())
             return None
         value = json.loads(raw)
+        self.validation_checkpoint = "CONTAINER_IDENTITY"
         require(value["Name"] == "/" + name and value["Config"]["Labels"].get(LABEL) == self.nonce
                 and re.fullmatch("[a-f0-9]{64}", value["Id"]) is not None)
         if name in self.ids:
@@ -123,15 +142,19 @@ class Attempt:
         host = value["HostConfig"]
         uid = "185:185" if role == "fake" else "101:101"
         image = PYTHON_FIXTURE if role == "fake" else NGINX
+        self.validation_checkpoint = "CONTAINER_CONFIG"
         require(value["Config"]["User"] == uid and value["Config"]["Image"] == image)
-        require(host["NetworkMode"] == self.network and set(value["NetworkSettings"]["Networks"]) == {self.network}
-                and host["ReadonlyRootfs"] is True and host["Privileged"] is False
+        self.validation_checkpoint = "CONTAINER_NETWORK"
+        require(host["NetworkMode"] == self.network and set(value["NetworkSettings"]["Networks"]) == {self.network})
+        self.validation_checkpoint = "CONTAINER_RUNTIME_LIMITS"
+        require(host["ReadonlyRootfs"] is True and host["Privileged"] is False
                 and set(host["CapDrop"]) == {"ALL"} and host["CapAdd"] in (None, [])
                 and host["PortBindings"] in ({}, None) and host["PublishAllPorts"] is False
                 and host["PidMode"] == "" and host["IpcMode"] != "host"
                 and host["Memory"] == 134217728 and host["NanoCpus"] == 250000000
                 and host["PidsLimit"] == 64 and host["RestartPolicy"]["Name"] == "no"
                 and any(item.startswith("no-new-privileges") for item in host["SecurityOpt"]))
+        self.validation_checkpoint = "CONTAINER_MOUNTS"
         expected_mount = "/fixture" if role == "fake" else "/etc/public-gateway"
         mounts = value["Mounts"]
         binds = [item for item in mounts if item["Type"] == "bind"]
@@ -146,11 +169,12 @@ class Attempt:
         code, raw = self.command(["network", "inspect", "--format", "{{json .}}", self.network],
                                  allow_failure=optional, cleanup=cleanup)
         if code:
-            _, names = self.command(["network", "ls", "--filter", LABEL + "=" + self.nonce,
+            _, names = self.command(["network", "ls", "--filter", "label=" + LABEL + "=" + self.nonce,
                                      "--format", "{{.Name}}"], cleanup=cleanup)
             require(self.network not in names.decode("ascii").splitlines())
             return None
         value = json.loads(raw)
+        self.validation_checkpoint = "NETWORK_IDENTITY"
         require(value["Name"] == self.network and value["Internal"] is True
                 and value["Driver"] == "bridge" and value["Labels"].get(LABEL) == self.nonce
                 and re.fullmatch("[a-f0-9]{64}", value["Id"]) is not None)
@@ -158,6 +182,7 @@ class Attempt:
 
     def start(self):
         global PHASE
+        self.validation_checkpoint = "LINUX_PLATFORM"
         require(sys.platform == "linux" and platform.machine() in {"x86_64", "amd64"})
         require(not any(os.environ.get(name) for name in ("DOCKER_HOST", "DOCKER_CONTEXT", "DOCKER_TLS_VERIFY", "DOCKER_CERT_PATH")))
         require(self.command(["context", "show"])[1].strip() == b"default")
@@ -202,12 +227,14 @@ class Attempt:
         require(set(self.network_info()["Containers"]) == set(self.ids.values()))
         self.assert_container("fake")
         self.assert_container("gateway")
+        self.validation_checkpoint = "NGINX_SYNTAX"
         self.command(["exec", self.ids[self.names["gateway"]], "nginx", "-t", "-c", "/etc/public-gateway/nginx.conf"])
 
     def check_http(self):
         global PHASE
         command = ["exec", self.ids[self.names["fake"]], "python3", "-I", "-B", "/fixture/verify_http.py"]
         PHASE = "HTTP_READINESS"
+        self.validation_checkpoint = "HTTP_READINESS"
         end = time.monotonic() + 30
         ready = False
         while time.monotonic() < end:
@@ -218,9 +245,33 @@ class Attempt:
             time.sleep(0.25)
         require(ready)
         PHASE = "ACTUAL_HTTP_PROBES"
+        self.http_probe["started"] = True
         code, raw = self.command(command, 180, allow_failure=True)
+        require(type(code) is int and -255 <= code <= 255)
+        self.http_probe["returnCode"] = code
+        self.validation_checkpoint = "HTTP_PROBE_RESULT"
         result = json.loads(raw, object_pairs_hook=unique)
-        require(code == 0 and result.get("passed") is True and result.get("phase") == "COMPLETE")
+        phases = {"START", "READY", "ALLOWED_GET", "DENIED_URI", "DENIED_METHOD",
+                  "PARSER_METHOD_REJECTION", "DENIED_INPUT", "RATE", "CONNECTION",
+                  "FAILURE_FALLBACK", "COMPLETE"}
+        require(isinstance(result, dict) and type(result.get("passed")) is bool
+                and result.get("phase") in phases and type(result.get("checks")) is int
+                and 0 <= result["checks"] <= 4096)
+        if result["passed"]:
+            require(set(result) == {"passed", "phase", "checks", "allowlistedRoutePatterns", "deniedUriCases",
+                                    "methodCases", "noHostPorts", "realNginxHttpExercised",
+                                    "backendWasSyntheticFixture", "globalMultiPeerLimitIndependentlyExercised"}
+                    and code == 0 and result["phase"] == "COMPLETE"
+                    and type(result["allowlistedRoutePatterns"]) is int and result["allowlistedRoutePatterns"] == 6
+                    and type(result["deniedUriCases"]) is int and result["deniedUriCases"] == 25
+                    and type(result["methodCases"]) is int and result["methodCases"] == 9
+                    and result["noHostPorts"] is True and result["realNginxHttpExercised"] is True
+                    and result["backendWasSyntheticFixture"] is True
+                    and result["globalMultiPeerLimitIndependentlyExercised"] is False)
+        else:
+            require(set(result) == {"passed", "phase", "checks"} and code == 1)
+        self.http_probe.update(resultVerified=True, passed=result["passed"], phase=result["phase"], checks=result["checks"])
+        require(code == 0 and result["passed"] is True)
         PHASE = "ACTUAL_LIMIT_SIGNALS"
         _, raw = self.command(["logs", "--tail", "256", self.ids[self.names["gateway"]]])
         lines = raw.decode("ascii").splitlines()
@@ -240,23 +291,41 @@ class Attempt:
 
     def cleanup(self):
         # Exact nonce names + labels + recorded IDs. No prune/down/global listing or filesystem deletion.
+        self.last_command = {"category": None, "returnCode": None}
         if not self.docker_ready:
+            self.cleanup_status = {role: "SKIPPED_DOCKER_NOT_READY" for role in self.cleanup_status}
             return True
         okay = True
         for role in ("gateway", "fake"):
+            self.cleanup_status[role] = "INSPECT_UNVERIFIED"
             try:
                 value = self.inspect_container(self.names[role], optional=True, cleanup=True)
-                if value is not None:
-                    self.command(["container", "rm", "--force", "--volumes", value["Id"]], 15, cleanup=True)
-                    require(self.inspect_container(self.names[role], optional=True, cleanup=True) is None)
+                if value is None:
+                    self.cleanup_status[role] = "ABSENT_VERIFIED"
+                    continue
+                self.cleanup_status[role] = "REMOVE_UNVERIFIED"
+                self.command(["container", "rm", "--force", "--volumes", value["Id"]], 15, cleanup=True)
+                self.cleanup_status[role] = "ABSENCE_UNVERIFIED"
+                require(self.inspect_container(self.names[role], optional=True, cleanup=True) is None)
+                self.cleanup_status[role] = "REMOVED_VERIFIED"
             except Exception:
                 okay = False
+        self.cleanup_status["network"] = "INSPECT_UNVERIFIED"
         try:
             value = self.network_info(optional=True, cleanup=True)
-            if value is not None:
-                require(value["Containers"] == {})  # Never remove a network containing a foreign endpoint.
+            if value is None:
+                self.cleanup_status["network"] = "ABSENT_VERIFIED"
+            else:
+                self.cleanup_status["network"] = "EMPTY_CHECK_UNVERIFIED"
+                require(isinstance(value.get("Containers"), dict))
+                if value["Containers"]:
+                    self.cleanup_status["network"] = "NONEMPTY_NOT_REMOVED"
+                    require(False)  # Never remove a network containing a foreign endpoint.
+                self.cleanup_status["network"] = "REMOVE_UNVERIFIED"
                 self.command(["network", "rm", value["Id"]], 15, cleanup=True)
+                self.cleanup_status["network"] = "ABSENCE_UNVERIFIED"
                 require(self.network_info(optional=True, cleanup=True) is None)
+                self.cleanup_status["network"] = "REMOVED_VERIFIED"
         except Exception:
             okay = False
         return okay
@@ -272,7 +341,13 @@ def main():
     result = {"schemaVersion": 1, "scope": "ISOLATED_PUBLIC_READ_GATEWAY_PROTOTYPE", "passed": False,
               "phase": PHASE, "realMiniPcContacted": False, "publicEndpointExposed": False,
               "dbOrKafkaStarted": False, "sparkOrJvmStarted": False, "hostPortsPublished": False,
-              "ownedContainerMaximum": 2, "ownedInternalNetworkMaximum": 1}
+              "ownedContainerMaximum": 2, "ownedInternalNetworkMaximum": 1,
+              "workloadPhase": PHASE, "validationCheckpoint": "NOT_STARTED",
+              "lastWorkloadCommand": {"category": None, "returnCode": None},
+              "lastCleanupCommand": {"category": None, "returnCode": None},
+              "httpProbe": {"started": False, "resultVerified": False, "passed": None,
+                            "phase": None, "checks": None, "returnCode": None},
+              "cleanupStatuses": {"gateway": "NOT_ATTEMPTED", "fake": "NOT_ATTEMPTED", "network": "NOT_ATTEMPTED"}}
     try:
         folder = Path(__file__).resolve().parent
         sources = source_gate(folder, args.source_manifest_sha256)
@@ -280,12 +355,17 @@ def main():
         attempt.start()
         result.update(attempt.check_http())
         require(source_gate(folder, args.source_manifest_sha256) == sources)
-        result.update(passed=True, phase="COMPLETE", sourceManifestSha256=args.source_manifest_sha256)
+        result.update(passed=True, phase="COMPLETE", workloadPhase="COMPLETE", sourceManifestSha256=args.source_manifest_sha256)
     except Exception:
-        result.update(passed=False, phase=PHASE)
+        result.update(passed=False, phase=PHASE, workloadPhase=PHASE)
     finally:
         if attempt is not None:
+            result["httpProbe"] = dict(attempt.http_probe)
+            result["validationCheckpoint"] = attempt.validation_checkpoint
+            result["lastWorkloadCommand"] = dict(attempt.last_command)
             result["ownedResourcesRemoved"] = attempt.cleanup()
+            result["cleanupStatuses"] = dict(attempt.cleanup_status)
+            result["lastCleanupCommand"] = dict(attempt.last_command)
             result["passed"] = result["passed"] and result["ownedResourcesRemoved"]
             if not result["ownedResourcesRemoved"]:
                 result["phase"] = "CLEANUP"

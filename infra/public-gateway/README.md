@@ -60,11 +60,12 @@ upstream redirect·연결 중단·읽기 idle timeout·500/502/503/504는 고정
 처리하고 404·429는 구분한다. parser의 이른 거부와 정책의 고정 JSON 거부는 구분한다.
 현재 `/api/` 웹 프록시 전체를 공개하거나 쓰기·실행 경로를 추가하지 않는다.
 
-후속 프런트엔드 연동에는 단순 GET·`Accept: application/json`, 명시적인
-`credentials: 'omit'`, `redirect: 'error'`, live 조회 8초 취소가 필요하다.
-현재 `api.ts`에 omit/error가 이미 구현됐다는 뜻은 아니다. 이 조건이면 preflight
-없이 조회할 수 있다. 기존 **최근 관측 기록 → 합성 샘플** fallback을 유지하고
-자동 재시도는 추가하지 않는다. 프런트엔드 변경은 이 후보에 포함하지 않았다.
+같이 준비한 공개 조회 어댑터 `getJson` 변경에는 `credentials: 'omit'`와
+`redirect: 'error'`를 명시했다. 단순 GET·`Accept: application/json`, 기존 live 조회
+8초 취소와 **최근 관측 기록 → 합성 샘플** fallback은 유지하고 자동 재시도는
+추가하지 않는다. 로컬 302 응답에서 redirect 목적지 요청이 없음을 확인하는 테스트도
+추가했다. 실제 외부 TLS·공개 API base 설정·브라우저 cookie/CORS 동작을 검증한
+결과는 아니며, 새 커밋의 전체 Linux 검증도 별도로 필요하다.
 
 ## 격리된 실제 Nginx 검증
 
@@ -110,7 +111,9 @@ readiness GET도 자신의 합성 fixture만 조회한다. 기존 `.local/public
 있으면 거부하여 이전 결과를 덮어쓰지 않는다. 정리는 정확한 nonce 라벨·ID가 일치하는
 컨테이너와 비어 있는 소유 네트워크에만 허용한다. prune·compose down·전역 삭제·
 로컬 재귀 삭제는 없다. 결과는 유한한 phase·count만 게시하며 예외·원문 로그·호스트
-경로·mock 요청 내용을 내보내지 않는다. runner/process 강제 종료로 finally가 실행되지
+경로·mock 요청 내용을 내보내지 않는다. 실패 때 원래 workload phase와 유한한 검사
+checkpoint·HTTP probe 결과·자원별 정리 상태를 보존하며 예외 원문을 추가하지 않는다.
+runner/process 강제 종료로 finally가 실행되지
 않으면 정리가 중단될 수 있다. 정확한 소유 라벨을 확인하고 전역 정리하지 않는다.
 
 ## 아직 선택·배포하지 않은 부분
