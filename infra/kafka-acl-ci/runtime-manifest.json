@@ -538,12 +538,12 @@
     {
       "bytes": 27374,
       "path": "infra/kafka-acl-ci/KafkaObservationAclIT.java",
-      "sha256": "84adf64c6f27e1cb81495d0f0137608be5759527d943c8685d1c1e8a3361faaf"
+      "sha256": "2bcda44036ea6f825ae271c01ad6ea017aee7d17833421c0ebfc3304fe8ae240"
     },
     {
-      "bytes": 11798,
+      "bytes": 13111,
       "path": "infra/kafka-acl-ci/README.ko.md",
-      "sha256": "72b9189c67ce309af0d9b2e43d6636814b5924d35250219093c89ce1d6972f51"
+      "sha256": "f8f1f9737226846d248fbbd06ab688a24d1f1a1ee59ea597114d5e1ab7c2865d"
     },
     {
       "bytes": 29524,

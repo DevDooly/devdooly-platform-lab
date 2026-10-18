@@ -307,7 +307,7 @@ class KafkaObservationAclIT {
         value.put("bootstrap.servers", bootstrap);
         value.put("security.protocol", "SASL_PLAINTEXT"); value.put("sasl.mechanism", "PLAIN");
         value.put("sasl.jaas.config", jaas(user, password));
-        value.put("request.timeout.ms", 3000); value.put("default.api.timeout.ms", 10000); value.put("retries", 0);
+        value.put("request.timeout.ms", 3000); value.put("default.api.timeout.ms", 10000); value.put("retries", 1);
         value.put("enable.metrics.push", false); value.put("metric.reporters", List.of());
         return value;
     }
