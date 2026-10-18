@@ -2,11 +2,11 @@
 api:
   image:
     repository: ghcr.io/devdooly/devdooly-platform-lab-api
-    digest: sha256:9e81facc7365161fbc6a2e5a4b92f76f3787bc91c73bda7e6c51b5f1a90a2395
-  sourceCommit: 245d61a5749760a20918ab091d9410ce6735b1c0
+    digest: sha256:b9bb704beada402bcfe090850fa8349e9799a0459f85e01e22afbfc67ea105ed
+  sourceCommit: 772d14973ac2ecf647efb496863d6f0f10cb700c
 web:
   image:
     repository: ghcr.io/devdooly/devdooly-platform-lab-web
-    digest: sha256:029c07bfcf9f872315ecf8307d8aec22425b23d9467492c62bb810420395e376
+    digest: sha256:66f5b7f096f0bdc8494615b3ad538cd5ddf59f7c816e7a8970cb1d89b66350e0
 database:
   existingSecret: platform-lab-db
