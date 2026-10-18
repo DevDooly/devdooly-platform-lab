@@ -272,7 +272,13 @@ def selected_diagnostics(base, staged):
     expected = {'OTHER_TOPIC': 'TOPIC_AUTH', 'OTHER_GROUP': 'GROUP_AUTH', 'ALTER_CONFIG': 'TOPIC_AUTH',
                 'OFFSET_COMMIT': 'GROUP_AUTH', 'PRODUCE': 'TOPIC_AUTH', 'BAD_PASSWORD': 'SASL_AUTH'}
     phases = {'INPUT', 'SETUP', 'BASELINE', 'OBSERVER', 'DENIED_RPCS', 'PRESERVATION', 'BAD_PASSWORD', 'CLOSE', 'COMPLETE'}
-    result = {'phase': None, 'failureKind': None, 'rpcResults': []}
+    setup_steps = {'ADMIN_CREATE', 'DESCRIBE_CLUSTER', 'CREATE_TOPICS', 'OTHER_GROUP_OFFSETS',
+        'OTHER_GROUP_DESCRIBE', 'CONSUMER_CONFIG', 'CONSUMER_CREATE', 'CONSUMER_JOIN', 'PRODUCER_CONFIG',
+        'PRODUCER_CREATE', 'PRODUCE_RECORDS', 'PRODUCER_CLOSE', 'INITIAL_COMMIT', 'ACL_PROFILE',
+        'CREATE_ACLS', 'DESCRIBE_ACLS', 'CONSUMER_CLOSE', 'DRIVER_CLOSE'}
+    setup_causes = {'ASSERTION', 'GROUP_NOT_FOUND', 'COORDINATOR', 'NOT_CONTROLLER', 'AUTHORIZER_NOT_READY',
+        'AUTHORIZATION', 'AUTHENTICATION', 'CONFIGURATION', 'TIMEOUT', 'INTERRUPTED', 'OTHER'}
+    result = {'phase': None, 'failureKind': None, 'setupStep': None, 'setupCauseKind': None, 'rpcResults': []}
     reports = list((staged / 'target/surefire-reports').glob('TEST-*.xml'))
     if len(reports) != 1:
         return result
@@ -302,8 +308,15 @@ def selected_diagnostics(base, staged):
                         'describeProfile': True, 'deniedRpcs': 5, 'badPasswordRejected': True,
                         'selectedStatePreserved': True}, 'XML_UNVERIFIED')
                 else:
-                    base.require(set(value) == {'kind', 'phase', 'failureKind'}
+                    base.require(set(value) == {'kind', 'phase', 'failureKind', 'setupStep', 'setupCauseKind'}
                         and value['failureKind'] in {'ASSERTION', 'OBSERVATION', 'INTERRUPTED', 'UNEXPECTED'}, 'XML_UNVERIFIED')
+                    if value['phase'] == 'SETUP':
+                        base.require(type(value['setupStep']) is str and value['setupStep'] in setup_steps
+                            and type(value['setupCauseKind']) is str and value['setupCauseKind'] in setup_causes, 'XML_UNVERIFIED')
+                        result['setupStep'] = value['setupStep']
+                        result['setupCauseKind'] = value['setupCauseKind']
+                    else:
+                        base.require(value['setupStep'] == 'NONE' and value['setupCauseKind'] == 'NONE', 'XML_UNVERIFIED')
                     result['failureKind'] = value['failureKind']
                 result['phase'] = value['phase']
             else:
@@ -321,7 +334,7 @@ def run(base, repo, rows, expected, environment):
         and state['manifestSha256'] == expected and re.fullmatch('[a-f0-9]{32}', state['nonce']))
     owned = base.OwnedDocker(task, state, time.monotonic() + 600)
     code, xml_hash, unchanged, cleaned = None, None, False, False
-    diagnostics = {'phase': None, 'failureKind': None, 'rpcResults': []}
+    diagnostics = {'phase': None, 'failureKind': None, 'setupStep': None, 'setupCauseKind': None, 'rpcResults': []}
     try:
         base.require(os.getuid() > 0 and os.getgid() > 0)
         state.update(phase='RUN_INTENT', runtimeUser=str(os.getuid()) + ':' + str(os.getgid()))
@@ -432,6 +445,7 @@ def run(base, repo, rows, expected, environment):
             'describeOnlyProfileVerified': code is None, 'selectedDeniedRpcsVerified': 5 if code is None else None,
             'badPasswordAuthenticationFailureVerified': code is None,
             'selectedTestPhase': diagnostics['phase'], 'selectedFailureKind': diagnostics['failureKind'],
+            'selectedSetupStep': diagnostics['setupStep'], 'selectedSetupCauseKind': diagnostics['setupCauseKind'],
             'selectedRpcResults': diagnostics['rpcResults'],
             'selectedAdminStatePreserved': code is None, 'allWritesBlocked': False,
             'tlsConfidentialityVerified': False, 'allJvmThreadsVerified': False, 'operatingKafkaChanged': False,
