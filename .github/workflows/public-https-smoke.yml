@@ -34,6 +34,11 @@ on:
         required: true
         type: boolean
         default: false
+      use_candidate_endpoint:
+        description: Verify a dedicated candidate secret without changing live Pages configuration
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -77,10 +82,26 @@ jobs:
         with:
           node-version: 24.19.0
       - name: Read the owned public HTTPS API once
+        if: inputs.use_candidate_endpoint != true
         env:
           # Secret mirror prevents the runner's env display from exposing the vars value.
           LAB_PUBLIC_API_URL: ${{ secrets.LAB_PUBLIC_API_URL }}
           SMOKE_VARIABLE_MATCH: ${{ vars.LAB_PUBLIC_API_URL != '' && vars.LAB_PUBLIC_API_URL == secrets.LAB_PUBLIC_API_URL }}
+          SMOKE_CONFIRM: ${{ inputs.confirm_smoke }}
+          SMOKE_ROUTE_OWNERSHIP: ${{ inputs.confirm_route_ownership }}
+        run: |
+          env -u NODE_OPTIONS -u NODE_EXTRA_CA_CERTS -u NODE_TLS_REJECT_UNAUTHORIZED \
+            -u NODE_DEBUG -u NODE_DEBUG_NATIVE -u SSL_CERT_FILE -u SSL_CERT_DIR -u SSLKEYLOGFILE \
+            -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u NO_PROXY \
+            -u http_proxy -u https_proxy -u all_proxy -u no_proxy -u NODE_USE_ENV_PROXY \
+            timeout 160s node --experimental-strip-types infra/public-https-smoke/smoke.ts \
+            "$RUNNER_TEMP/public-https-smoke-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT.json"
+      - name: Read the owned candidate HTTPS API once
+        if: inputs.use_candidate_endpoint == true
+        env:
+          # Secret-only candidate URL is masked; no live variable is read.
+          LAB_PUBLIC_API_URL: ${{ secrets.LAB_PUBLIC_API_CANDIDATE_URL }}
+          SMOKE_VARIABLE_MATCH: ${{ secrets.LAB_PUBLIC_API_CANDIDATE_URL != '' }}
           SMOKE_CONFIRM: ${{ inputs.confirm_smoke }}
           SMOKE_ROUTE_OWNERSHIP: ${{ inputs.confirm_route_ownership }}
         run: |

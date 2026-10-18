@@ -2,9 +2,11 @@
 
 GitHub hosted Linux에서 Lab 공개 API의 표준 HTTPS와 고정 6 GET, 거부 3개를 한 번 확인하기 위한 수동 실행기다. Windows Node 24.19.0에서 합성 offline 테스트 15개가 통과했으며 실제 외부 접속·TLS·라우트 완성은 아직 검증하지 않았다. 기존 웹 DTO 검증 소스를 직접 사용하며 npm 설치·API 작업 생성·배포는 하지 않는다.
 
-실행 전 기존 Traefik을 유지하는 Lab 전용 라우트의 소유와 거부 경로를 확인해야 한다. 특히 POST가 기존 catchall로 전달되지 않는다는 metadata를 먼저 검토한다. 표준 CA 인증서·SNI와 외부 접속 준비가 끝나기 전에는 실행하지 않는다.
+모든 모드에서 기존 Traefik을 유지하는 Lab 전용 라우트의 소유와 거부 경로를 먼저 확인한다. 특히 POST가 기존 catchall로 전달되지 않는다는 metadata를 검토한다. candidate 모드는 TLS 준비 여부가 아직 불명확해도 표준 CA·SNI 검증을 강제한 채 시험할 수 있다. TLS가 실패하면 해당 요청에서 중단하고 이후 GET·POST나 live 변수 등록을 하지 않는다. 운영 설정으로의 전환은 표준 TLS와 hosted GET6·거부3 통과 뒤에만 진행한다.
 
-기본 설정은 저장소 변수 `LAB_PUBLIC_API_URL`의 명시적 HTTPS `/platform-lab/api` 또는 `/api` base다. Actions는 vars 값을 env에 표시할 수 있으므로, 이 실행기에만 동명 저장소 secret을 같은 값으로 등록해 자동 마스킹을 적용한다. workflow에는 secret 값과 vars·secret 일치 boolean만 전달된다. 미설정·불일치·확인 입력 누락이면 DNS·HTTP 0회로 실패한다. secret·variable 등록은 이 소스 준비에 포함하지 않았다.
+기본 설정은 저장소 변수 `LAB_PUBLIC_API_URL`의 명시적 HTTPS `/platform-lab/api` 또는 `/api` base다. 선택적 candidate 검사는 이 live 설정을 등록하거나 바꾸지 않고 별도 secret만 사용할 수 있다. Actions는 vars 값을 env에 표시할 수 있으므로, 이 실행기에만 동명 저장소 secret을 같은 값으로 등록해 자동 마스킹을 적용한다. workflow에는 secret 값과 vars·secret 일치 boolean만 전달된다. 미설정·불일치·확인 입력 누락이면 DNS·HTTP 0회로 실패한다. secret·variable 등록은 이 소스 준비에 포함하지 않았다.
+
+수동 입력 `use_candidate_endpoint`는 기본 false다. false일 때는 기존 `LAB_PUBLIC_API_URL` 변수와 동명 secret의 일치 검사를 그대로 사용한다. true이면 전용 저장소 secret `LAB_PUBLIC_API_CANDIDATE_URL`만 URL로 전달하고, secret이 비어 있지 않다는 boolean을 확인한다. URL은 workflow input이나 로그에 넣지 않는다. 두 단계는 명시적 조건으로 한쪽만 실행하므로 빈 candidate secret이 production endpoint로 fallback하지 않는다. candidate도 같은 main/manual/저장소/ACK2/offline 조건과 고정 GET6·거부3·CA/SNI·한도를 따른다. candidate 성공은 Pages live 설정 완료를 뜻하지 않으며, hosted GET6+거부3이 모두 통과한 뒤에만 live 변수·secret 등록과 Pages 연결을 별도로 결정한다.
 
 수동 외부 검증은 offline job 성공 뒤, 이 저장소의 main과 확인 입력 2개가 모두 참일 때만 실행된다. Source commit은 정확한 checkout SHA에 바인딩된다. 출력은 검사별 boolean·HTTP status·검증된 공개 sourceCommit·UTC 시각과 고정 실패 enum뿐이다. 주소·응답 본문·예외문·인증서 상세·토큰·header 원문은 로그나 artifact에 남기지 않는다.
 

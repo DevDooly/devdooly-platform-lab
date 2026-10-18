@@ -140,7 +140,10 @@ export async function loadKafkaObservation(options: { url: string; previousRecor
     if (code && (response.status === 503 || response.status === 400 && code === 'INVALID_CONFIGURATION')) return failed(code);
     return failed('HTTP_ERROR');
   }
-  const record = parseKafkaObservation(text, options.nowMs ?? Date.now());
+  const nowMs = options.nowMs ?? Date.now();
+  if (!Number.isSafeInteger(nowMs) || nowMs > Number.MAX_SAFE_INTEGER - 5000) return failed('INVALID_RECORD');
+  // Browser ingress tolerance only; original timestamps and clock-check view stay strict.
+  const record = parseKafkaObservation(text, nowMs + 5000);
   if (!record) return failed('INVALID_RECORD');
   if (!options.allowIsolated && record.environment !== 'MINI_PC') return failed('ENVIRONMENT_MISMATCH');
   if (previous && record.targetFingerprint !== previous.targetFingerprint) return failed('TARGET_CHANGED');
