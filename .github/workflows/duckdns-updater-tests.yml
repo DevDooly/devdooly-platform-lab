@@ -1,0 +1,68 @@
+name: Verify synthetic DuckDNS updater boundaries
+
+on:
+  pull_request:
+    paths:
+      - 'infra/duckdns-updater/**'
+      - '.github/workflows/duckdns-updater-tests.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'infra/duckdns-updater/**'
+      - '.github/workflows/duckdns-updater-tests.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: duckdns-updater-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  synthetic-boundaries:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Verify only fake fd, stat and child boundaries
+        run: |
+          timeout --kill-after=5s 60s python3 -I -B -X utf8 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          import unittest
+
+          source = Path('infra/duckdns-updater').resolve()
+          names = ('duckdns_update.py', 'test_duckdns_update.py',
+                   'duckdns-update.service', 'duckdns-update.timer')
+          def snapshot():
+              return {name: hashlib.sha256((source / name).read_bytes()).hexdigest() for name in names}
+
+          before = snapshot()
+          result = unittest.TestResult()
+          completed = False
+          try:
+              suite = unittest.defaultTestLoader.discover(str(source), pattern='test_duckdns_update.py')
+              suite.run(result)
+              completed = True
+          except Exception:
+              pass
+          finally:
+              try:
+                  unchanged = snapshot() == before
+              except Exception:
+                  unchanged = False
+          passed = completed and unchanged and result.testsRun == 4 and result.wasSuccessful()
+          passed = passed and not (result.failures or result.errors or result.skipped
+                                   or result.expectedFailures or result.unexpectedSuccesses)
+          print(json.dumps({'scope': 'SYNTHETIC_DUCKDNS_UNIT_ONLY', 'passed': passed,
+                            'tests': result.testsRun, 'failures': len(result.failures),
+                            'errors': len(result.errors), 'skipped': len(result.skipped),
+                            'sourceFourBeforeAfterSame': unchanged,
+                            'actualCurlDnsSystemdVerified': False}))
+          raise SystemExit(0 if passed else 1)
+          PY
