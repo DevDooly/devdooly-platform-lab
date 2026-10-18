@@ -7,6 +7,7 @@ import WorkerReadinessProof from '../components/WorkerReadinessProof.astro';
 import IcebergDataflowCard from '../components/IcebergDataflowCard';
 import SparkTrialCard from '../components/SparkTrialCard';
 import CloudLakehouseCard from '../components/CloudLakehouseCard';
+import IcebergCaptureCard from '../components/IcebergCaptureCard';
 import CurrentDbRestoreCard from '../components/CurrentDbRestoreCard.astro';
 import S3TransportCard from '../components/S3TransportCard';
 import '../styles/global.css';
@@ -68,6 +69,7 @@ const steps = [
       <IcebergDataflowCard client:load observationUrl={`${assetBase}observations/iceberg.latest.json`}/>
       <SparkTrialCard client:load observationUrl={`${assetBase}observations/spark.latest.json`}/>
       <CloudLakehouseCard client:load observationUrl={`${assetBase}observations/cloud-lakehouse.latest.json`}/>
+      <IcebergCaptureCard client:load observationUrl={`${assetBase}evidence/iceberg-capture/summary.json`}/>
       <CurrentDbRestoreCard />
       <S3TransportCard client:load observationUrl={`${assetBase}observations/s3.latest.json`}/>
       <section id="progress" class="section progress-section" aria-labelledby="progress-title"><div class="progress-intro"><span class="eyebrow">04 / BUILD IN THE OPEN</span><h2 id="progress-title">구축 과정도<br/>기록합니다.</h2><p>이곳은 개인 Lab의 첫 버전입니다.<br/>실무 경험과 새로 구축하는 환경을 구분하고,<br/>검증한 결과만 기록합니다.</p><a class="text-link" href={`${github}/blob/main/docs/ROADMAP.md`} target="_blank" rel="noreferrer">전체 진행 목록 ↗</a></div><div class="progress-list">{steps.map(step => <article class="progress-step"><span class="step-number">{step.number}</span><div><h3>{step.title}</h3><p>{step.text}</p></div><span class={`step-state ${step.tone}`}>{step.state}</span></article>)}</div></section>

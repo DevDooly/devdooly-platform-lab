@@ -1,0 +1,13 @@
+{
+  "automaticRetry": false,
+  "errors": 0,
+  "failureCode": null,
+  "failures": 0,
+  "javaCalled": false,
+  "networkCalled": false,
+  "otherTestsCalled": false,
+  "passed": true,
+  "scope": "EXACTLY_ONE_JAVA_STDOUT_SOURCE_STATIC_TEST",
+  "skips": 0,
+  "testsRun": 1
+}

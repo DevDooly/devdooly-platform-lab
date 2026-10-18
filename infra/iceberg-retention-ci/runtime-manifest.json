@@ -1,0 +1,89 @@
+{
+  "files": [
+    {
+      "bytes": 33733,
+      "path": "archive_classes.py",
+      "sha256": "cafc02e4c55779e7b7062108c64cc4aaf33c452e03a1b9b04144e271c01e3f68"
+    },
+    {
+      "bytes": 11535,
+      "path": "bounded_process.py",
+      "sha256": "87ec98e6f4df8de69a413eeb01ccff30135e4d72b02675d9be6627564fe1ddc6"
+    },
+    {
+      "bytes": 9334,
+      "path": "composite_entry.py",
+      "sha256": "0ef5ca6758ae37d43c27cddf7fa4fe344c2a8020ab88885c60d9349fa4047a4b"
+    },
+    {
+      "bytes": 31662,
+      "path": "copy_loader.py",
+      "sha256": "7e894d29204271d75dd086d1901f9893e983a56f598599c5b37ca768b55c87c0"
+    },
+    {
+      "bytes": 19399,
+      "path": "decoder_lifecycle.py",
+      "sha256": "4b6a2e061d1b92d828520d0b99fb81a63f102d68ca953ee7186f6141cb553d96"
+    },
+    {
+      "bytes": 14431,
+      "path": "lifecycle.py",
+      "sha256": "0186c34faaaa516f2935ba4bf5ff578277c005950ac2e5dc7de3d6ae82836a36"
+    },
+    {
+      "bytes": 12044,
+      "path": "named_observer.py",
+      "sha256": "39c4330db7b5b0ce78deb7bf1607aa540e3d3fa94c3a78e70bb8fcbd5bbf9840"
+    },
+    {
+      "bytes": 24058,
+      "path": "normalize_graph.py",
+      "sha256": "eff4000a00875e42554f67d4572b2b408cfa08ed97b919aedcb50ee9646bfce8"
+    },
+    {
+      "bytes": 19005,
+      "path": "prep_decoder.py",
+      "sha256": "f4eba5fdfb31020da9e4a68a64be8961abfea955c97f941eac7bdae8c20bd61a"
+    },
+    {
+      "bytes": 40412,
+      "path": "run_capture.py",
+      "sha256": "5d583ebf1fef4aeabace71c1071a9d054ea59c679c761285063f5fcd97396857"
+    },
+    {
+      "bytes": 39087,
+      "path": "src/org/apache/iceberg/ClosedCopyDecoder.java",
+      "sha256": "21556d45310fcdacf63707eccfff51600a98c61f0f03bf4df911242c9f9f107a"
+    }
+  ],
+  "immutableInputs": [
+    {
+      "bytes": 3114,
+      "path": "docs/evidence/cloud-lakehouse/full-success.summary.json",
+      "sha256": "1271685e34712c96b7dacaf7e84e5f32ac52fb925875e262843002ee6ef3b78f"
+    },
+    {
+      "bytes": 46112,
+      "path": "infra/cloud-lakehouse-ci/run_trial9.py",
+      "sha256": "73e2293210aba3d9522013d923f8d97bd292baa4623736239d55cc21d9321fe2"
+    },
+    {
+      "bytes": 2125,
+      "path": "infra/cloud-lakehouse-ci/runtime-manifest.json",
+      "sha256": "c63aded0a891bb66cb1fb2de591d67e237467681eb4a4e5a337b9d1d1b02d5e8"
+    },
+    {
+      "bytes": 11527,
+      "path": "infra/maintenance/iceberg_retention_plan.py",
+      "sha256": "ec1ff5dc06d9da666d9ef1d32557937e36e0a63bc124f08ad6ed39edbf0224ae"
+    },
+    {
+      "bytes": 2629,
+      "path": "infra/spark-silver/artifact-lock.downloaded.json",
+      "sha256": "6ca247b283025189ecf36c67ae03fe9101b25a53fe7b62593725e076276e33e3"
+    }
+  ],
+  "schemaVersion": 1,
+  "scope": "FRESH_CLOUD_ICEBERG_CLOSED_COPY_CAPTURE",
+  "status": "SOURCE_ONLY_NOT_RUN"
+}

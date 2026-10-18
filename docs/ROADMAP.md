@@ -167,6 +167,16 @@
 - [x] Trino에서 원본 0→6→12행·초기 빈 snapshot 1개와 데이터 append 2개·세 시점 조회 검증: [실제 기록](evidence/iceberg-jdbc/summary.json)
 - [x] 독립 Cloud Spark 시험 8의 Bronze 6+6행·snapshot 2개, Silver 성공 7·실패 3·중복 2와 같은 application의 순차 replay write 0회 검증: [근거](evidence/spark-silver/README.md)
 - [x] 새 Cloud warehouse의 Spark→Trino 연결·6→12→12행·현재 파일 2→1 compaction·자기 컨테이너 종료: [실제 근거](evidence/cloud-lakehouse/FULL_SUCCESS.md)
+- [x] 삭제 없는 순수 Iceberg retention planner 공개와 maintenance 검사 59개 통과. current/ref/pin의 모든 ancestor와 모든 객체 KEEP, apply 비활성: [범위](runbooks/iceberg-retention-dry-run.md)
+- [x] 첫 closed-copy 실행의 저장소 검증·Linux 56개 통과와 `PREP_NOT_VERIFIED` 실패 원문 보존: [시도 1 근거](evidence/iceberg-capture/ATTEMPT_1.md). 준비 실패 원인·컨테이너 정리 성공은 미확인
+- [x] Schema 2의 실제 Linux 62개·skip 0 통과와 새 prep 실패의 `JAR_MANIFEST_CLASSPATH_EXPANSION_REJECTED`·준비용 컨테이너 제거·부재 확인: [시도 2 근거](evidence/iceberg-capture/ATTEMPT_2.md). 첫 실패 원인으로 소급하지 않음
+- [x] 세 번째 새 소스의 Linux 67개·skip 0 통과와 `JAR_MANIFEST_BYTES_BOUND` 실패·준비용 컨테이너 제거·부재 확인: [시도 3 근거](evidence/iceberg-capture/ATTEMPT_3.md). 구체적 manifest 실패 분기와 실제 Class-Path closure는 미확인
+- [x] 네 번째 새 소스의 Linux 73개·skip 0 통과와 `JAR_MANIFEST_CLASSPATH_TARGET_MISSING` 실패·준비용 컨테이너 제거·부재 확인: [시도 4 근거](evidence/iceberg-capture/ATTEMPT_4.md). 정확한 JAR·token·경로와 전체 Class-Path closure·compile 성공은 미확인
+- [x] 다섯 번째 새 소스의 Linux 80개·skip 0, compiler prep와 원래 main 한 번·반환 0, 새 decoder 컨테이너 정지·CLI 회수 확인: [시도 5 근거](evidence/iceberg-capture/ATTEMPT_5.md). 전체 결과는 `NORMALIZE`의 `SUMMARY_NOT_VERIFIED`·`UNKNOWN` 실패이며 정확한 원인·decoder exit 0·유효 graph는 미확인
+- [x] 여섯 번째 새 소스의 Linux84·skip0과 prep·원래 main 한 번/반환0·새 decoder 정지/CLI 회수 확인: [시도6 근거](evidence/iceberg-capture/ATTEMPT_6.md). 전체 결과는 SUMMARY_NOT_VERIFIED 실패이며 NORMALIZE_DECODER_LIFECYCLE_UNVERIFIED는 시도한 검증 구간만 뜻함. 내부 원인·종료 코드·graph 성공은 미확인
+- [x] 일곱 번째 새 실행의 Linux85·UID0·skip0·source 전후 동일과 prep·원래 main 한 번/반환0·새 decoder 정지/CLI 회수 확인: [시도7 근거](evidence/iceberg-capture/ATTEMPT_7.md). 전체 결과는 SUMMARY_NOT_VERIFIED 실패이며 NORMALIZE_DECODER_REPLY_BINDING_UNVERIFIED는 시도한 응답 binding 검증 구간만 뜻함. 정확한 원인·특정 hash 불일치·decoder 종료 코드·graph 성공은 미확인
+- [x] 여덟 번째 새 실행의 Linux86·UID0·skip0·source 전후 동일과 prep·원래 main 한 번/반환0·새 decoder 정지/CLI 회수 확인: [시도8](evidence/iceberg-capture/ATTEMPT_8.md). 전체 capture는 SUMMARY_NOT_VERIFIED 실패이며 strict JSON 검증 구간만 미확인으로 구분; 정확한 원인·exit·graph 성공은 미확인
+- [x] 9차 새 source `5862ba0c`의 Linux87·UID0·skip0·source 전후 동일과 같은 실행의 stopped actors·clock → 독립 graph closure·normalization → 완전 inventory → 순수 planner 입력 연결: [실제9](evidence/iceberg-capture/ATTEMPT_9.md). 필수 검증9개 true·DETERMINED·passed true; 스냅샷3·참조1·보호 항목1·객체20, 스냅샷 제안·객체 삭제 후보0개·전체 KEEP. 이전1–8의 실패와 null은 보존하고 삭제·만료·Parquet 해석·live 독립 검증은 미실행
 - [ ] snapshot 보존·만료 정책과 운영 규모 compaction 검증
 - [x] Trino만 정상 재시작한 뒤 같은 행·metadata pointer·warehouse 전체 bytes 조회 검증. PostgreSQL은 같은 프로세스를 유지했으며 재시작은 검증하지 않음: [범위](evidence/iceberg-jdbc/README.md)
 - [x] 시험 PostgreSQL·Trino workload 0·Retain PVC 2개·warehouse 보관과 원래 8개 작업·객체 24개 보존: [종료·보존](evidence/iceberg-jdbc/README.md)
