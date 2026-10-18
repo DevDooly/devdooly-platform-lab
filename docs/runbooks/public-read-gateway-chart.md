@@ -1,6 +1,6 @@
 # 선택적 조회 gateway의 Helm 선언
 
-이 선언은 검증한 조회 정책을 K3s에 올리기 위한 준비입니다. 기본값 `publicReadGateway.enabled: false`이며, 실제 home-lab 값과 Application은 그대로 유지합니다. Windows 오프라인 검사와 소스 `501e127`의 실제 Linux CI에서 기본값·명시적 false의 기존 렌더 보존과 true의 4개 resource 추가를 확인했습니다. [실제 결과와 첫 실패](../evidence/public-read-gateway-chart/README.md)를 구분해 남깁니다. 클러스터 배포·외부 HTTPS는 아직 검증하지 않았습니다.
+이 선언은 검증한 조회 정책을 K3s에 올리기 위한 준비입니다. chart 기본값은 `publicReadGateway.enabled: false`이며, 내부 활성화 후보는 `home-lab/runtime.yaml`에 true를 선언합니다. 실제 AppProject 권한 적용과 runtime 활성화는 아래 순서로 별도 진행해야 합니다. Windows 오프라인 검사와 소스 `501e127`의 실제 Linux CI에서 기본값·명시적 false의 기존 렌더 보존과 true의 4개 resource 추가를 확인했습니다. [실제 결과와 첫 실패](../evidence/public-read-gateway-chart/README.md)를 구분해 남깁니다. 내부 활성화 후보의 Windows 오프라인 K fixture 검사 1회(Helm 15호출)와 현재 N 값의 별도 렌더 1회는 통과했습니다. [K fixture 결과](../evidence/public-read-gateway-internal/activation-render.k-fixture.json)와 [현재 값 결과](../evidence/public-read-gateway-internal/activation-render.current-values.json)를 구분합니다. 새 활성화 소스의 Linux CI·클러스터 배포·외부 HTTPS는 아직 실행하지 않았습니다.
 
 ## 구현과 기존 검증의 경계
 
@@ -28,9 +28,9 @@ chart의 `files/public-gateway/nginx.conf`와 `proxy.inc`는 해당 정책 파�
 
 ## 활성화 전에 남은 조건
 
-현재 AppProject의 namespace resource whitelist에는 NetworkPolicy가 없습니다. 이 chart 준비에서는 AppProject를 바꾸지 않습니다. 활성화 시에는 권한 변경 범위를 별도로 검토해야 하며, 허용이 추가되기 전 Argo CD에 이 fixture를 연결하면 안 됩니다. 오프라인 검사기도 현재 공개 AppProject에 이 권한이 없다는 조건을 확인합니다. 향후 승인된 활성화 단계에서 NetworkPolicy 권한을 추가하면 해당 검사 조건과 근거를 함께 갱신해야 합니다.
+2026-10-18 08:34:31 UTC의 실제 AppProject 관측에는 NetworkPolicy 권한이 없었습니다. 내부 활성화 후보의 소스 선언은 기존 6종에 `networking.k8s.io/NetworkPolicy` 1종만 추가합니다. 오프라인 검사기는 정확한 7종·전용 namespace 목적지·빈 cluster whitelist를 확인하며 실제 권한을 적용하지 않습니다. 실제 AppProject에 이 권한을 먼저 추가하고 기존 조건 보존을 확인한 뒤 runtime의 활성화 값을 반영해야 합니다. 권한 적용 전 runtime enabled true를 main에 병합하면 Argo CD의 자동 sync가 먼저 시도될 수 있으므로 두 실행 순서를 분리합니다. [내부 활성화 계획](../plans/public-gateway-internal-enable.md)을 따릅니다.
 
-2026-10-18 08:07:23 UTC의 읽기 전용 preflight는 대상 namespace에서 ResourceQuota·LimitRange·NetworkPolicy가 각각 0개이고 API label이 예상과 일치하며, 나열한 정책에 의한 API ingress 격리는 없음을 확인했습니다. DNS Pod 1개와 고정 kube-dns label은 관측했지만 namespace identity는 확인하지 않았습니다. 따라서 후보 DNS egress의 적합성은 UNKNOWN이며 DNS·네트워크 연결·scheduler admission·배포 통과를 확인한 결과가 아닙니다. 활성화 전에 kube-system namespace의 `kubernetes.io/metadata.name` label과 실제 DNS/API 연결을 따로 확인해야 합니다.
+2026-10-18 08:07:23 UTC의 읽기 전용 preflight는 대상 namespace에서 ResourceQuota·LimitRange·NetworkPolicy가 각각 0개이고 API label이 예상과 일치하며, 나열한 정책에 의한 API ingress 격리는 없음을 확인했습니다. DNS Pod 1개와 고정 kube-dns label은 관측했지만 namespace identity는 확인하지 않았습니다. 따라서 후보 DNS egress의 적합성은 UNKNOWN이며 DNS·네트워크 연결·scheduler admission·배포 통과를 확인한 결과가 아닙니다. 후속 08:34:31 UTC 관측에서는 kube-system namespace identity·해당 label과 API instance label의 일치를 확인했습니다. 실제 DNS/API 연결·NetworkPolicy 강제·scheduler admission은 아직 확인하지 않았습니다.
 
 외부 연결은 기존 HTTPS proxy의 identity·provider·route·인증서·도달 경로와 클라이언트 식별을 확인한 뒤 별도 결정합니다. 현재 chart의 제한은 기본 Nginx peer 기준이며 여러 외부 peer가 있는 전역 제한의 독립 검증은 기존 CI에서 수행하지 않았습니다.
 
@@ -40,7 +40,7 @@ chart의 `files/public-gateway/nginx.conf`와 `proxy.inc`는 해당 정책 파�
 
 검사 조건은 기본값/명시적 false의 렌더가 고정한 기존 main K의 12개 resource·전체 bytes와 같고, true는 기존 12개를 보존하며 4개만 추가하는 것입니다. 정책 ConfigMap의 두 파일 bytes, 이미지 pin, security/resource/volume/probe/NetworkPolicy의 고정 범위, 다른 namespace 활성화 거부와 enabled 타입·추가 속성 거부도 확인합니다. 실패한 Helm 입력은 실패로 남기며 자동 재시도하지 않습니다.
 
-별도 `public-gateway-chart.yml`은 읽기 전용 권한으로 기존 Linux Helm 4.3.0 archive pin을 사용하고, 정확한 main K 공개 Git blob에서 기준 chart와 값을 만듭니다. 원 chart의 새 기준 렌더와 후보 chart를 같은 main K 값으로 비교합니다. Linux archive의 전체 SHA와 그 안의 단일 `linux-amd64/helm` bytes도 실제 CI에서 확인했습니다. 다운로드·고정 npm 의존성 준비 단계와 클러스터에 접근하지 않는 Helm 렌더 단계를 구분합니다. API·web 전체 테스트와 HTTP 컨테이너 검증은 이 workflow에서 반복하지 않습니다. 기존 image-only `validate-gitops.yml`은 유지합니다.
+별도 `public-gateway-chart.yml`은 읽기 전용 권한으로 기존 Linux Helm 4.3.0 archive pin을 사용하고, 정확한 main K 공개 Git blob에서 기준 chart와 값을 만듭니다. 원 chart의 새 기준 렌더와 후보 chart를 같은 main K 값으로 비교합니다. Windows도 immutable baseline workspace의 K 값을 사용하며, 실제 현재 home-lab 값의 렌더 검사는 별도 단계로 구분합니다. Linux archive의 전체 SHA와 그 안의 단일 `linux-amd64/helm` bytes도 실제 CI에서 확인했습니다. 다운로드·고정 npm 의존성 준비 단계와 클러스터에 접근하지 않는 Helm 렌더 단계를 구분합니다. API·web 전체 테스트와 HTTP 컨테이너 검증은 이 workflow에서 반복하지 않습니다. 기존 image-only `validate-gitops.yml`은 유지합니다.
 
 실제 검토 후 실행할 때는 Node 24.19.0과 승인된 Helm 4.3.0을 명시합니다. 아래 인수는 공개 fixture·검증 도구·새 출력 폴더의 로컬 경로이며 비밀값이 아닙니다.
 
