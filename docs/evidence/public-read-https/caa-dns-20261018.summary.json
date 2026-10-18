@@ -1,0 +1,80 @@
+{
+  "actualAcmeAccountMatchVerified": false,
+  "authoritativeDnsIndependentlyVerified": false,
+  "automaticRetryRequested": false,
+  "capturedAtUTC": "2026-10-18T12:43:02.973359Z",
+  "certificateIssuanceVerified": false,
+  "currentNonWildcardIssuerAuthorization": "NONE",
+  "currentWildcardIssuerAuthorization": "NONE",
+  "dnsOrServerSettingsChanged": false,
+  "dnssecIndependentlyVerified": false,
+  "earlierTlsFailureCauseEstablished": false,
+  "historicalCaaPolicyVerified": false,
+  "observationState": "NEAREST_NONEMPTY_RRSET_OBSERVED",
+  "ownedHostTlsRequested": false,
+  "projection": {
+    "criticalUnknownPropertyCount": 0,
+    "iodefIgnored": 0,
+    "issue": {
+      "issuerCounts": {
+        "EMPTY": 1,
+        "LETS_ENCRYPT": 0,
+        "OTHER": 0
+      },
+      "leAccountConstraintRecords": 0,
+      "leDuplicateConstraintRecords": 0,
+      "leMalformedParameterRecords": 0,
+      "leMethodCounts": {
+        "dns-01": 0,
+        "http-01": 0,
+        "tls-alpn-01": 0
+      },
+      "leOtherParameterRecords": 0,
+      "leUnknownMethodRecords": 0,
+      "leValidationConstraintRecords": 0,
+      "records": 1
+    },
+    "issuewild": {
+      "issuerCounts": {
+        "EMPTY": 1,
+        "LETS_ENCRYPT": 0,
+        "OTHER": 0
+      },
+      "leAccountConstraintRecords": 0,
+      "leDuplicateConstraintRecords": 0,
+      "leMalformedParameterRecords": 0,
+      "leMethodCounts": {
+        "dns-01": 0,
+        "http-01": 0,
+        "tls-alpn-01": 0
+      },
+      "leOtherParameterRecords": 0,
+      "leUnknownMethodRecords": 0,
+      "leValidationConstraintRecords": 0,
+      "records": 1
+    },
+    "otherPropertyCount": 0
+  },
+  "queries": [
+    {
+      "aliasOrOwnerMismatch": false,
+      "caaRecords": 0,
+      "dnsStatus": 0,
+      "level": "HOST",
+      "resolverAuthenticatedDataFlag": false,
+      "truncated": false
+    },
+    {
+      "aliasOrOwnerMismatch": false,
+      "caaRecords": 2,
+      "dnsStatus": 0,
+      "level": "PARENT",
+      "resolverAuthenticatedDataFlag": false,
+      "truncated": false
+    }
+  ],
+  "rawValuesExported": false,
+  "schemaVersion": 1,
+  "scope": "PUBLIC_ANONYMIZED_CAA_DNS_SUMMARY",
+  "selectedLevel": "PARENT"
+}
