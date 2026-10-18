@@ -4,6 +4,7 @@ import { loadLabSources } from '../lib/observation';
 import type { ObservationRecord, SourceMode } from '../lib/observation';
 import type { LabData, Point, OutcomeStatus } from '../lib/api';
 import snapshot from '../data/snapshot.json';
+import '../styles/api-connection-scope.css';
 
 const initial = snapshot as LabData;
 const evidenceBase = 'https://github.com/DevDooly/devdooly-platform-lab/blob/main/docs/evidence';
@@ -16,7 +17,7 @@ const componentLabel: Record<string, string> = { API: 'Spring Boot API', DATABAS
 const formatTime = (value: string | null | undefined) => value && !Number.isNaN(Date.parse(value)) ? new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'medium', timeZone: 'Asia/Seoul' }).format(new Date(value)) + ' KST' : '아직 관측 전';
 function componentStatus(status: string) {
   if (status === 'RUNNING') return '관측됨';
-  if (status === 'PLANNED') return '확장 예정';
+  if (status === 'PLANNED') return 'API 수집 대기';
   if (status === 'UNAVAILABLE') return '연결 확인 필요';
   if (status === 'NOT_CONFIGURED') return '관측 연결 전';
   return '아직 연결 전';
@@ -87,6 +88,9 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
     catch { if (mounted.current && controller.current === request) setError('선택한 결과를 불러오지 못했습니다. 이전 결과를 표시합니다.'); }
     finally { clearTimeout(timer); if (mounted.current && controller.current === request) setLoading(false); }
   }
+  const platformSourceMode = mode === 'live' ? '실시간 조회 API' : mode === 'recorded' ? '게시된 마지막 수집 기록' : '합성 샘플';
+  const platformTimeLabel = mode === 'live' ? 'API 관측 시각' : mode === 'recorded' ? '기록 수집 시각' : '샘플 파일 생성 시각';
+  const platformSourceTime = mode === 'live' ? data.summary.observedAt : mode === 'recorded' ? observation?.capturedAt : initial.capturedAt;
   const detail = data.detail;
   const outcomes = detail.outcomes.filter(row => filter === 'ALL' || row.status === filter);
   const counts: [string, number, string][] = [['성공', detail.successCount, 'success'], ['실패', detail.failureCount, 'failed'], ['중복', detail.duplicateCount, 'duplicate'], ['대기', detail.pendingCount, 'pending']];
@@ -110,10 +114,16 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
     </section>
     <section id="platform" className="section platform-section" aria-labelledby="platform-title"><div className="section-heading"><div><span className="eyebrow">03 / FROM SOURCE TO SERVICE</span><h2 id="platform-title">배포도 설명할 수 있도록.</h2><p>미니 PC의 검증 기록과 조회 API의 관측 상태를 함께 확인합니다.</p></div><span className="section-mark">[ OBSERVABILITY ]</span></div>
       <div className="deployment-flow" aria-label="빌드·이미지 게시·배포 도구의 역할"><span><b>01</b> Git commit</span><i>→</i><span><b>02</b> CI · Jenkins / Actions</span><i>→</i><span><b>03</b> GHCR image digest</span><i>→</i><span><b>04</b> GitOps + Helm</span><i>→</i><span><b>05</b> Argo CD / K3s</span></div>
-      <div className="platform-evidence"><div><span className="eyebrow">VERIFICATION RECORDS</span><h3>설치와 실행은 기록으로 확인합니다.</h3><p>Jenkins는 테스트·패키징, GitHub Actions는 이미지 게시, Argo CD는 Helm 배포를 담당합니다. 각 단계를 연결하는 CI 연계는 확장 중입니다.</p></div><div className="evidence-links"><a href={`${evidenceBase}/mini-pc/README.md`} target="_blank" rel="noreferrer">미니 PC 배포 검증 기록 <span aria-hidden="true">↗</span></a><a href={`${evidenceBase}/jenkins-ci/README.md`} target="_blank" rel="noreferrer">Jenkins 실제 빌드 기록 <span aria-hidden="true">↗</span></a></div></div>
-      <p className="platform-observation-note">아래 상태는 공개 조회 API의 관측 연결 기준입니다. Jenkins·Argo CD·Kubernetes의 설치·실행 근거는 위 기록에서 확인하며, 상태 수집이 연결되기 전에는 ‘관측 연결 전’으로 표시합니다.</p>
-      <div className="platform-grid">{data.summary.components.map(component => <article className="platform-item" key={component.name}><div><span className={`component-dot ${component.status === 'RUNNING' ? 'running' : ''}`}/><h3>{componentLabel[component.name] || component.name}</h3><span className="platform-status">{mode === 'recorded' && component.status === 'RUNNING' ? '수집 당시 관측' : componentStatus(component.status)}</span></div><p>{component.detail}</p></article>)}</div>
+      <div className="platform-evidence"><div><span className="eyebrow">VERIFICATION RECORDS</span><h3>설치와 실행은 기록으로 확인합니다.</h3><p>같은 소스 SHA의 Jenkins 테스트·패키징과 Actions 통합 검증을 통과한 이미지를 게시하고, 검토한 GitOps 선언을 Argo CD가 배포합니다.</p></div><div className="evidence-links"><a href="#platform-record">게시된 배포·Pod 기록 보기 <span aria-hidden="true">↓</span></a><a href={`${evidenceBase}/cicd-gate/README.md`} target="_blank" rel="noreferrer">같은 SHA의 CI·게시 gate 검증 <span aria-hidden="true">↗</span></a><a href={`${evidenceBase}/mini-pc/README.md`} target="_blank" rel="noreferrer">미니 PC 배포 검증 기록 <span aria-hidden="true">↗</span></a><a href={`${evidenceBase}/jenkins-ci/README.md`} target="_blank" rel="noreferrer">Jenkins 실제 빌드 기록 <span aria-hidden="true">↗</span></a></div></div>
+      <details className="api-connection-scope">
+        <summary>조회 API의 상세 연결 범위</summary>
+        <div className="api-scope-body">
+          <dl className="api-scope-meta"><div><dt>표시 모드</dt><dd>{platformSourceMode}</dd></div><div><dt>{platformTimeLabel}</dt><dd>{formatTime(platformSourceTime)}</dd></div></dl>
+          <p className="platform-observation-note">아래는 이 조회 API가 수집한 항목과 런타임 정보입니다. ‘API 수집 대기’와 ‘관측 연결 전’은 이 API의 수집 범위를 뜻합니다. 게시된 배포·Pod 기록은 위 링크에서 따로 확인할 수 있습니다.</p>
+      <div className="platform-grid">{data.summary.components.map(component => <article className="platform-item" key={component.name}><div><span className={`component-dot ${component.status === 'RUNNING' ? 'running' : ''}`}/><h3>{componentLabel[component.name] || component.name}</h3><span className="platform-status">{mode === 'recorded' && component.status === 'RUNNING' ? '수집 당시 관측' : componentStatus(component.status)}</span></div><p>{component.status === 'PLANNED' ? '이 조회 API의 수집 대상에 아직 포함되지 않았습니다.' : component.detail}</p></article>)}</div>
       <div className="release-strip"><div><span className="eyebrow">RUNTIME INFORMATION</span><strong>{data.releases.length ? mode === 'recorded' ? '수집 당시 API 런타임' : '현재 API 런타임' : '자동 관측 이력 연결 전'}</strong></div>{data.releases.length ? data.releases.map((release, index) => <div key={`${release.service}-${index}`} className="release-meta"><span>{release.service} / v{release.version}</span><code>{release.sourceCommit === 'unknown' ? '소스 commit 미주입' : release.sourceCommit.slice(0, 12)}</code><small>{release.deploymentStatus === 'LOCAL_RUNTIME' ? '로컬 실행 정보 · CI/CD 이력 연결 전' : release.deploymentStatus === 'RUNTIME_ONLY' ? 'API 런타임 정보 · CI/CD 이력 연결 전' : release.deploymentStatus}</small><small>{release.imageDigest ? `이미지 ${release.imageDigest}` : '이미지 digest 미관측'}</small></div>) : <p>실제 설치·빌드 기록은 위 문서에서 확인할 수 있습니다. 이 영역에는 API가 수집한 런타임 정보를 표시합니다.</p>}<span className="tag">공개 실행 비활성</span></div>
+        </div>
+      </details>
     </section>
   </>;
 }

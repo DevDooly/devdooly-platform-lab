@@ -1,0 +1,137 @@
+/* This scope is the read-only query API, separate from published deployment proof. */
+.api-connection-scope {
+  margin-top: 24px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: var(--font-body);
+  line-height: 1.8;
+  min-width: 0;
+}
+
+.api-connection-scope > summary {
+  min-height: 48px;
+  padding: 14px 20px;
+  cursor: pointer;
+  font-size: var(--font-body);
+  font-weight: 600;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.api-connection-scope > summary::marker {
+  color: var(--green);
+}
+
+.api-connection-scope > summary:focus-visible,
+.platform-section .platform-evidence .evidence-links a:focus-visible {
+  outline: 3px solid var(--green);
+  outline-offset: 4px;
+}
+
+.api-connection-scope[open] > summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.api-scope-body {
+  padding: 20px;
+  min-width: 0;
+}
+
+.api-scope-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 24px;
+  margin: 0;
+  font-size: var(--font-body);
+}
+
+.api-scope-meta > div {
+  min-width: 0;
+}
+
+.api-scope-meta dt {
+  color: var(--muted);
+  font-size: var(--font-body);
+}
+
+.api-scope-meta dd {
+  margin: 4px 0 0;
+  font-size: var(--font-body);
+  overflow-wrap: anywhere;
+}
+
+.api-connection-scope .platform-observation-note,
+.api-connection-scope .platform-item p,
+.api-connection-scope .platform-status,
+.api-connection-scope .release-strip > p,
+.api-connection-scope .release-meta,
+.api-connection-scope .release-meta small,
+.api-connection-scope .release-meta code,
+.api-connection-scope .release-strip .eyebrow,
+.api-connection-scope .release-strip .tag {
+  font-size: var(--font-body);
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.api-connection-scope .platform-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.api-connection-scope .platform-item,
+.api-connection-scope .release-strip > div {
+  min-width: 0;
+}
+
+.api-connection-scope .platform-item h3 {
+  font-size: var(--font-body);
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.api-connection-scope .release-strip {
+  align-items: flex-start;
+  gap: 16px 24px;
+}
+
+.api-connection-scope .release-meta {
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+
+.platform-section .platform-evidence .evidence-links {
+  min-width: 0;
+  max-width: 100%;
+  gap: 8px;
+}
+
+.platform-section .platform-evidence .evidence-links a {
+  min-height: 48px;
+  font-size: var(--font-body);
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+@media (max-width: 680px) {
+  .api-scope-body {
+    padding: 18px 16px;
+  }
+
+  .api-scope-meta,
+  .api-connection-scope .platform-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .api-connection-scope .platform-status {
+    margin-left: 0;
+  }
+
+  .platform-section .platform-evidence .evidence-links {
+    width: 100%;
+  }
+
+  .platform-section .platform-evidence .evidence-links a {
+    gap: 12px;
+  }
+}
