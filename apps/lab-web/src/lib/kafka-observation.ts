@@ -1,3 +1,4 @@
+import { publicReadUrl } from './public-api-base.ts';
 /** Kafka public v1: bounded source reader before parsing, no private identities or controls. */
 export const MAX_KAFKA_OBSERVATION_BYTES = 8 * 1024;
 export const KAFKA_STALE_AFTER_MS = 2 * 60 * 60 * 1000;
@@ -101,7 +102,8 @@ export function parseKafkaObservationError(text: unknown): KafkaErrorCode | null
   return value && exact(value, ['schemaVersion', 'kind', 'code']) && value.schemaVersion === 1 && value.kind === 'kafka-observation-error'
     && typeof value.code === 'string' && (KAFKA_ERROR_CODES as readonly string[]).includes(value.code) ? value.code as KafkaErrorCode : null;
 }
-export function safeKafkaObservationUrl(value: string): boolean {
+export function safeKafkaObservationUrl(value: string, apiBase?: string): boolean {
+  if (apiBase !== undefined) return publicReadUrl(apiBase, '/kafka/observation') === value;
   return value === '/api/kafka/observation' || /^\/(?:[A-Za-z0-9_-]+\/)*observations\/kafka\.latest\.json$/.test(value);
 }
 async function boundedText(response: Response): Promise<string> {
@@ -121,13 +123,13 @@ async function boundedText(response: Response): Promise<string> {
 }
 export interface KafkaObservationLoad { record: KafkaObservation | null; browserError: KafkaBrowserError | null; retainedPrevious: boolean; }
 export async function loadKafkaObservation(options: { url: string; previousRecord?: KafkaObservation | null; allowIsolated?: boolean;
-  nowMs?: number; signal?: AbortSignal; fetcher?: typeof fetch }): Promise<KafkaObservationLoad> {
+  nowMs?: number; signal?: AbortSignal; fetcher?: typeof fetch; apiBase?: string; rejectRedirects?: boolean }): Promise<KafkaObservationLoad> {
   // A previous validated record survives a later browser-clock regression; it is then shown as clock-check.
   const previous = validateKafkaObservation(options.previousRecord, Number.MAX_SAFE_INTEGER) ? options.previousRecord : null;
   const failed = (browserError: KafkaBrowserError): KafkaObservationLoad => ({ record: previous, browserError, retainedPrevious: previous !== null });
-  if (!safeKafkaObservationUrl(options.url)) return failed('INVALID_URL');
+  if (!safeKafkaObservationUrl(options.url, options.apiBase)) return failed('INVALID_URL');
   let response: Response;
-  try { response = await (options.fetcher || fetch)(options.url, { headers: { Accept: 'application/json' }, signal: options.signal, cache: 'no-store', credentials: 'omit' }); }
+  try { response = await (options.fetcher || fetch)(options.url, { headers: { Accept: 'application/json' }, signal: options.signal, cache: 'no-store', credentials: 'omit', ...(options.rejectRedirects ? { redirect: 'error' as const } : {}) }); }
   catch { return failed(options.signal?.aborted ? 'ABORTED' : 'NETWORK_ERROR'); }
   if (response.status === 404) return failed('NOT_CONFIGURED');
   let text: string;

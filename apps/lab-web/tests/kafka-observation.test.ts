@@ -212,6 +212,8 @@ test('readout renders absent, zero, missing commit, stale and fixed unverified m
   code = code.replace(/from (['"])react\1/g, `from ${JSON.stringify(import.meta.resolve('react'))}`)
     .replace(/from (['"])react\/jsx-runtime\1/g, `from ${JSON.stringify(import.meta.resolve('react/jsx-runtime'))}`)
     .replace(/from (['"])\.\.\/lib\/kafka-observation\1/g, `from ${JSON.stringify(new URL('../src/lib/kafka-observation.ts', import.meta.url).href)}`)
+    .replace(/from (['"])\.\.\/lib\/public-api-base\1/g, `from ${JSON.stringify(new URL('../src/lib/public-api-base.ts', import.meta.url).href)}`)
+    .replace(/from (['"])\.\.\/lib\/public-observation-source\1/g, `from ${JSON.stringify(new URL('../src/lib/public-observation-source.ts', import.meta.url).href)}`)
     .replace(/import (['"])\.\.\/styles\/kafka-observation\.css\1;?/g, '');
   const { KafkaObservationReadout } = await import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`);
   const render = (record: KafkaObservation | null, clock = now, error: string | null = null) => renderToStaticMarkup(createElement(KafkaObservationReadout, { record, nowMs: clock, error, retained: record !== null }));

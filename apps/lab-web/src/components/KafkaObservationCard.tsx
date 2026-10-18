@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { kafkaObservationView, kafkaUtcNs, loadKafkaObservation } from '../lib/kafka-observation';
 import type { KafkaBrowserError, KafkaObservation } from '../lib/kafka-observation';
 import '../styles/kafka-observation.css';
+import { publicReadUrl } from '../lib/public-api-base';
+import { loadLiveWithRecordedFallback } from '../lib/public-observation-source';
 
 const repository = 'https://github.com/DevDooly/devdooly-platform-lab';
 const errorNames: Record<KafkaBrowserError, string> = {
@@ -38,27 +40,41 @@ export function KafkaObservationReadout({ record, nowMs, error, retained }: { re
   </>;
 }
 
-export default function KafkaObservationCard({ observationUrl, mode }: { observationUrl: string; mode: 'api' | 'recorded' }) {
+export default function KafkaObservationCard({ apiBase = '/api', observationUrl, mode, preferLive = false }: { apiBase?: string; observationUrl: string; mode: 'api' | 'recorded'; preferLive?: boolean }) {
   const [record, setRecord] = useState<KafkaObservation | null>(null);
   const [error, setError] = useState<KafkaBrowserError | null>(null);
   const [retained, setRetained] = useState(false); const [loading, setLoading] = useState(true); const [now, setNow] = useState(0);
   const previous = useRef<KafkaObservation | null>(null); const active = useRef<AbortController | null>(null);
-  const url = mode === 'api' ? '/api/kafka/observation' : observationUrl;
+  const previousLive = useRef<KafkaObservation | null>(null); const previousRecorded = useRef<KafkaObservation | null>(null);
+  const [sourceMode, setSourceMode] = useState(mode); const [fallbackUsed, setFallbackUsed] = useState(false);
+  const [fallbackError, setFallbackError] = useState<KafkaBrowserError | null>(null);
+  const url = mode === 'api' ? publicReadUrl(apiBase, '/kafka/observation') || '' : observationUrl;
   async function refresh() {
     active.current?.abort(); const controller = new AbortController(); active.current = controller; setLoading(true);
     const timeout = window.setTimeout(() => controller.abort(), 8000);
-    const result = await loadKafkaObservation({ url, previousRecord: previous.current, signal: controller.signal, allowIsolated: mode === 'api' });
+    const result = preferLive
+      ? await loadLiveWithRecordedFallback<KafkaObservation, KafkaBrowserError>({
+          liveUrl: url, recordedUrl: observationUrl, previousLive: previousLive.current,
+          previousRecorded: previousRecorded.current, signal: controller.signal, invalidLiveError: 'INVALID_RECORD',
+          load: (target, previousRecord, signal, source) => loadKafkaObservation({ url: target, previousRecord, signal,
+            allowIsolated: false, apiBase: source === 'api' ? apiBase : undefined, rejectRedirects: true }),
+        })
+      : { ...(await loadKafkaObservation({ url, previousRecord: previous.current, signal: controller.signal, allowIsolated: mode === 'api' })),
+          sourceMode: mode, fallbackUsed: false, fallbackBrowserError: null, lastLive: null, lastRecorded: null };
     window.clearTimeout(timeout); if (active.current !== controller) return;
-    previous.current = result.record; setRecord(result.record); setError(result.browserError); setRetained(result.retainedPrevious); setNow(Date.now()); setLoading(false);
+    previous.current = result.record; previousLive.current = result.lastLive; previousRecorded.current = result.lastRecorded;
+    setSourceMode(result.sourceMode); setFallbackUsed(result.fallbackUsed); setFallbackError(result.fallbackBrowserError);
+    setRecord(result.record); setError(result.browserError); setRetained(result.retainedPrevious); setNow(Date.now()); setLoading(false);
   }
   useEffect(() => {
-    previous.current = null; setRecord(null); setError(null); setRetained(false); void refresh();
+    previous.current = null; previousLive.current = null; previousRecorded.current = null; setSourceMode(mode); setFallbackUsed(false); setFallbackError(null); setRecord(null); setError(null); setRetained(false); void refresh();
     const clock = window.setInterval(() => setNow(Date.now()), 30_000);
     return () => { active.current?.abort(); active.current = null; window.clearInterval(clock); };
-  }, [url, mode]);
+  }, [url, mode, preferLive, observationUrl]);
   return <section id="kafka-observation" className="section kafka-observation-section" aria-labelledby="kafka-observation-title">
     <div className="section-heading kafka-observation-heading"><div><span className="eyebrow">KAFKA / BOUNDED READ</span><h2 id="kafka-observation-title">Commit과 lag, 확인한 구간만.</h2><p>설정된 대상 partition을 순차 조회한 마지막 기록입니다. 작업 상태의 DB 관측과 구분합니다.</p></div><button className="button button-small" type="button" disabled={loading} onClick={() => void refresh()}>{loading ? 'Kafka 기록 읽는 중' : 'Kafka 기록 다시 읽기'} <span aria-hidden="true">↻</span></button></div>
-    <p className="kafka-observation-note">{mode === 'recorded' ? '공개 파일의 마지막 수집 기록이며 실시간 조회가 아닙니다.' : '고정 읽기 API를 조회합니다. 대상 설정을 브라우저에서 받지 않습니다.'}</p>
+    <p className="kafka-observation-note">{sourceMode === 'recorded' ? '공개 파일의 마지막 수집 기록이며 실시간 조회가 아닙니다.' : '고정 읽기 API를 조회합니다. 대상 설정을 브라우저에서 받지 않습니다.'}</p>
+    {fallbackUsed && <p className="kafka-observation-notice" role="status">실시간 API를 읽지 못해 {record ? '게시된 마지막 기록을 표시합니다. 원래 소스와 수집 시각을 유지합니다.' : '게시본도 아직 확인하지 못했습니다.'}{fallbackError ? ' 새 게시본 조회에도 문제가 있어 이전 유효 게시본이 있으면 유지합니다.' : ''}</p>}
     <KafkaObservationReadout record={record} nowMs={now} error={error} retained={retained}/>
     <p className="kafka-observation-note">BOUNDED_SEQUENTIAL_READ는 최대 4초 구간의 순차 조회이며 broker·DB의 원자 snapshot이 아닙니다. LSO는 비격리 log-end와 다릅니다. 그룹 상태·API source는 현재 worker 생존이나 소스를 확인하지 않습니다. 읽기 코드만으로 Kafka ACL을 검증했다고 주장하지 않습니다.</p>
   </section>;
