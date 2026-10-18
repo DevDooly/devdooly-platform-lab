@@ -22,6 +22,8 @@ const actual7Raw = readFileSync(new URL('./fixtures/iceberg-capture-attempt7.sum
 const actual7: Record<string, any> = JSON.parse(actual7Raw.toString('utf8'));
 const actual8Raw = readFileSync(new URL('./fixtures/iceberg-capture-attempt8.summary.json', import.meta.url));
 const actual8: Record<string, any> = JSON.parse(actual8Raw.toString('utf8'));
+const actual9Raw = readFileSync(new URL('./fixtures/iceberg-capture-attempt9.summary.json', import.meta.url));
+const actual9: Record<string, any> = JSON.parse(actual9Raw.toString('utf8'));
 
 /** Synthetic producer-shaped object only; no actual capture or public asset. */
 const fixture = (): Record<string, any> => ({
@@ -650,4 +652,65 @@ test('stdout protocol runtime reuses the exact 165-code reply contract without i
   assert.equal(actual8.runtimeManifestSha256, icebergCaptureManifestDecoderReplyPhases);
   assert.equal(actual8.diagnostic.failureCode, 'NORMALIZE_DECODER_REPLY_JSON_UNVERIFIED');
   for (const actual of [actual3, actual4, actual5, actual6, actual7, actual8]) assert.ok(parseIcebergCapture(actual));
+});
+
+test('the exact ninth real capture binds the latest asset to its KEEP-only graph and preserves prior failures', () => {
+  assert.equal(actual9Raw.length, 1784);
+  assert.equal(createHash('sha256').update(actual9Raw).digest('hex'), '24615854f798e6b8f7ab81f9e238a85e001d01877a396a9a7026617b21091f87');
+  const publicRaw = readFileSync(new URL('../public/evidence/iceberg-capture/summary.json', import.meta.url));
+  const documentRaw = readFileSync(new URL('../../../docs/evidence/iceberg-capture/attempt-9.summary.json', import.meta.url));
+  assert.deepEqual(publicRaw, actual9Raw); assert.deepEqual(documentRaw, actual9Raw);
+  const value = parseIcebergCapture(actual9); assert.ok(value); assert.equal(value.schemaVersion, 2);
+  assert.equal(value.sourceCommit, '5862ba0c617d17d4c51382bccaa0266253974e82');
+  assert.equal(value.runtimeManifestSha256, icebergCaptureManifestStdoutProtocol);
+  assert.equal(value.passed, true); assert.equal(value.status, 'DETERMINED'); assert.equal(value.failureCategory, null);
+  assert.deepEqual(value.counts, { capturedObjectCount: 20, snapshotCount: 3, refCount: 1, validationPinCount: 1,
+    snapshotCandidateCount: 0, objectCandidateCount: 0 });
+  assert.equal(Object.keys(value.checks).length, 9); assert.ok(Object.values(value.checks).every(flag => flag === true));
+  assert.equal(value.proofHashes.prepProofSha256, '6ee2b522ee8957e9f1d11d459939d1ab3992a56985547d5e7b4adecd02f57e35');
+  assert.equal(value.proofHashes.normalizationReceiptCanonicalSha256, '3f3c8cfee2e734e09112dbecb09253bcb1139904fb0d17f99f71f45b87b3b5c3');
+  if (value.schemaVersion === 2) {
+    assert.equal(value.diagnostic.stageAttempted, 'COMPLETED'); assert.equal(value.diagnostic.failureCode, null);
+    assert.equal(value.diagnostic.lastPrepChild?.name, 'cold-export-absence');
+    assert.ok(value.diagnostic.prepCleanup && Object.values(value.diagnostic.prepCleanup).every(flag => flag === true));
+  }
+  for (const key of ['snapshotExpirationPerformed', 'objectDeletionPerformed', 'miniPcContacted',
+    'liveTableIndependentlyVerified', 'parquetContentsDecoded', 'historicalMetadataRestored',
+    'rawProofsOrCredentialsUploaded', 'automaticRetryPerformed']) {
+    assert.equal(actual9[key], false);
+    assert.equal(parseIcebergCapture({ ...actual9, [key]: true }), null);
+  }
+  for (const key of Object.keys(actual9.checks)) {
+    const partial = structuredClone(actual9); partial.checks[key] = false; assert.equal(parseIcebergCapture(partial), null);
+  }
+  for (const key of ['decoderExitCode', 'rawStdout', 'underlyingCause']) {
+    assert.equal(parseIcebergCapture({ ...actual9, [key]: 'SYNTHETIC_PRIVATE_CANARY' }), null);
+  }
+  assert.equal(createHash('sha256').update(actual8Raw).digest('hex'), 'e96ca40d6bfeadfe0a8c51d73aec5c59977f418b3894470bcc4574870af2ca9e');
+  for (const historical of [actual, actual3, actual4, actual5, actual6, actual7, actual8]) {
+    assert.ok(parseIcebergCapture(historical)); assert.equal(historical.passed, false);
+    assert.equal(historical.counts.capturedObjectCount, null); assert.equal(historical.proofHashes.normalizationReceiptCanonicalSha256, null);
+  }
+});
+
+test('the real ninth card presents observed KEEP counts with deletion and independent-live limits', async () => {
+  const raw = readFileSync(new URL('../src/components/IcebergCaptureCard.tsx', import.meta.url), 'utf8');
+  let code = ts.transpileModule(raw, { compilerOptions: { jsx: ts.JsxEmit.ReactJSX,
+    module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
+  code = code.replace(/from (['"])react\1/g, `from ${JSON.stringify(import.meta.resolve('react'))}`)
+    .replace(/from (['"])react\/jsx-runtime\1/g, `from ${JSON.stringify(import.meta.resolve('react/jsx-runtime'))}`)
+    .replace(/from (['"])\.\.\/lib\/iceberg-capture\1/g, `from ${JSON.stringify(new URL('../src/lib/iceberg-capture.ts', import.meta.url).href)}`)
+    .replace(/import (['"])\.\.\/styles\/iceberg-capture\.css\1;?/g, '');
+  const { default: Card } = await import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`);
+  const html = renderToStaticMarkup(createElement(Card, { record: actual9,
+    observationUrl: '/devdooly-platform-lab/evidence/iceberg-capture/summary.json' }));
+  assert.ok(html.includes('보존 계획 확인')); assert.ok(!html.includes('검증 미통과'));
+  assert.match(html, /전체 바이트를 캡처한 객체<\/dt><dd>20<small>개<\/small>/);
+  assert.match(html, /목록에 포함한 스냅샷<\/dt><dd>3<small>개<\/small>/);
+  assert.match(html, /검증용 보호 항목<\/dt><dd>1<small>개<\/small>/);
+  assert.ok(html.includes('모든 캡처 객체는 KEEP')); assert.ok(html.includes('삭제와 스냅샷 만료는 수행하지 않았습니다'));
+  assert.ok(html.includes('실제 삭제 결과가 아닙니다')); assert.ok(html.includes('현재 운영 서비스의 상태는 아닙니다'));
+  assert.ok(html.includes('Parquet 내용을 해석하거나 현재 운영 테이블을 독립적으로 재검증한 결과가 아닙니다'));
+  assert.ok(html.includes('공개 결과 JSON')); assert.ok(html.includes('통과 기록: 실패 코드 없음'));
+  assert.ok(!/<details[^>]*\bopen(?:\s|=|>)/.test(html));
 });

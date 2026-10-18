@@ -15,11 +15,11 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 | Spark → Trino·compaction | Cloud 격리 검증 완료 | 6→12→12행·현재 파일 2→1·Trino 10개 조회·자기 컨테이너 종료, [실제 근거](docs/evidence/cloud-lakehouse/FULL_SUCCESS.md) |
 | 현재 DB 백업·격리 복원 | 논리 복원·공개 기록 완료 | 8개 테이블 스키마·7개 비runtime 테이블 행·BLOB과 원본 DB 보존 확인. 원래 stop 실패와 정상 exit 미관측, 별도 DB 0·Pod 0·Bound/Retain 관측을 [근거](docs/evidence/current-db-restore/README.md)와 [화면](https://devdooly.github.io/devdooly-platform-lab/#db-restore)에 구분 |
 | Iceberg 보존 계획 | 순수 계획기 공개 완료 | 삭제 없는 dry-run·maintenance 테스트 59개 통과, [실행 범위](docs/runbooks/iceberg-retention-dry-run.md); 실제 snapshot 만료·객체 삭제는 미실행 |
-| Iceberg 실제 metadata capture | Linux86 통과·strict JSON 검증 구간 미확인 | [여덟 번째 실행](docs/evidence/iceberg-capture/ATTEMPT_8.md)은 prep·원래 main 반환0·새 decoder 정지/CLI 회수를 확인했지만 전체 capture는 실패. 원인·decoder exit·graph·inventory·전체 KEEP은 미확인 |
+| Iceberg 실제 metadata capture | 새 Cloud 격리 검증 완료 | [아홉 번째 실행](docs/evidence/iceberg-capture/ATTEMPT_9.md)의 Linux87·skip0과 필수 검증9개 통과. 스냅샷3·참조1·보호 항목1·객체20, 모두 KEEP인 보존 계획. 만료·삭제·미니 PC 접촉은 미실행 |
 
 **현재 진행:** [PR #61](https://github.com/DevDooly/devdooly-platform-lab/pull/61)의 DB 복원 카드·문서와 retention planner가 main에 공개됐습니다. main `4a71ed20`의 Actions와 Jenkins 52도 성공했습니다. 이는 저장소 검증·공개 상태이며 실제 배포 애플리케이션의 source나 서버 가용성이 새로 확인됐다는 뜻은 아닙니다.
 
-**다음 확인:** 소스 `e89a858d`의 [여덟 번째 실행](docs/evidence/iceberg-capture/ATTEMPT_8.md)은 기본 CI·Linux86·UID0·skip0·source 전후 동일과 prep·원래 main 한 번/반환0·새 decoder 정지/CLI 회수를 확인했습니다. 전체 capture는 SUMMARY_NOT_VERIFIED 실패이며 NORMALIZE_DECODER_REPLY_JSON_UNVERIFIED는 strict JSON 검증 구간만 뜻합니다. 정확한 원인·decoder exit·graph·통합 actors/clock·inventory·전체 KEEP은 미확인이고 관측 count·정규화 hash는 null입니다. Java 응답 전용 stdout과 지연 mapper 초기화 개선의 [공개 합성 검증](docs/evidence/iceberg-capture/STDOUT_SYNTHETIC.md)을 마쳤습니다. 원본·개선·출력 canary 개선본의 JSON이 같고 라이브러리 stdout 설정도 보존됩니다. 다음은 새 source의 Linux87·skip0 검증과 별도 fresh capture이며 실제8의 원인이나 실제 graph 성공은 아직 확인하지 않았습니다. 앞선1–7 실패와 별도 Cloud/DB 복원 기록을 보존합니다.
+**현재 도달점과 다음 단계:** 소스 `5862ba0c`의 [9차 새 실행](docs/evidence/iceberg-capture/ATTEMPT_9.md)에서 기본 CI·Linux87·UID0·skip0·source 전후 동일과 closed-copy capture를 통과했습니다. 같은 실행의 actors·clock·metadata graph·inventory를 순수 보존 계획에 연결해 객체20개를 모두 KEEP으로 남겼습니다. 다음은 이 실제 요약의 공개 화면·회귀 검사를 확인하고, 보존 정책·운영 규모 검증과 다른 장애 경계를 각각 검토하는 단계입니다. 스냅샷 만료·객체 삭제·Parquet 내용 해석·live 테이블 독립 검증은 수행하지 않았고 전체 6단계 완료로 표시하지 않습니다. 앞선1–8 실패·[별도 합성 검증](docs/evidence/iceberg-capture/STDOUT_SYNTHETIC.md)·Cloud/DB 복원 기록을 보존하며 이번 PASS로 실제8의 원인을 확정하지 않습니다.
 
 **8차 근거 반영 검증:** 웹89개·타입 검사26개 파일·Pages 빌드가 통과했고, 공개 원문은 1,791 bytes·SHA-256 `e96ca40d…`로 수집본과 같습니다. 이 로컬 결과는 실패 원인 수정이나 main 공개를 뜻하지 않습니다.
 

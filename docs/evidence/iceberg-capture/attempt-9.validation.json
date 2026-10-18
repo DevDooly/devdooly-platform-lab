@@ -1,0 +1,61 @@
+{
+  "captureConclusion": "success",
+  "conclusion": "success",
+  "createdAt": "2026-10-18T01:08:07Z",
+  "offlineLinux": {
+    "actualRuntimeCalled": false,
+    "cliSourceSha256": "5d583ebf1fef4aeabace71c1071a9d054ea59c679c761285063f5fcd97396857",
+    "effectiveUid": 0,
+    "errors": 0,
+    "failures": 0,
+    "pythonVersion": "3.12.3",
+    "runtimeManifestSha256": "3b1b5d4b0be4298d993a93fbbf39306a6ac69abaabc876b2ae78789772bded19",
+    "scope": "SOURCE_PINNED_LINUX_OFFLINE_CONTRACTS_ONLY",
+    "skips": 0,
+    "sourceBytesUnchanged": true,
+    "stdoutFixtureSupportSha256": "37f1a8f20440d3b596adba4f6f7a46e27ef3b3ed3af90b3637d536593cc1222b",
+    "testSourceSha256": {
+      "test_archive_classes.py": "c627b15ff2275cee17114bc16ebaba5af80ede1d4995c20eafac135eda5a862d",
+      "test_bounded_process.py": "83d160015798e18986c32bf3af6665373c52f3c0b8bcbaf881bd788b19434438",
+      "test_composite.py": "2f7080816959573c845281d023e1a7346ced6626593806c1e0a52c5be7e6173c",
+      "test_copy_loader.py": "fb8ad9febef1d307244d57f4944d043985d1a756a4b5559a8e442fe752423196",
+      "test_decoder_stdout_source.py": "d835cb8ebb1ed0e4a3384cf7c516f25c641569de6c33ab9b79cf5e9eeabd05b3",
+      "test_named_observer.py": "85ff4307d821dcb0c4ba8a8eb9ec4e4927ac158d887f3899df62ac9cdca8a477",
+      "test_normalize_phases.py": "4742f668e69464575c62ed15884f517d0e04118c5fb04208e3ff49a456cbe1b0",
+      "test_prep_decoder.py": "9cedbc3d9192773847a6b554be1db227632405d1b931623af324e83635c40a8b",
+      "test_run_capture.py": "03b30a4f84ebbb78f5559eeb4b3cea24b5bc9d889baca6810d33393113a74ba5"
+    },
+    "testsRun": 87
+  },
+  "privateArtifactsRead": false,
+  "publicSummaryBytes": 1784,
+  "publicSummarySha256": "24615854f798e6b8f7ab81f9e238a85e001d01877a396a9a7026617b21091f87",
+  "rawPublicLogsPersisted": false,
+  "runAttempt": 1,
+  "runId": "39085360317",
+  "sourceCommit": "5862ba0c617d17d4c51382bccaa0266253974e82",
+  "steps": [
+    {
+      "completedAt": "2026-10-18T01:10:59Z",
+      "conclusion": "success",
+      "name": "Verify pinned sources then all 87 Linux offline contracts",
+      "startedAt": "2026-10-18T01:10:58Z"
+    },
+    {
+      "completedAt": "2026-10-18T01:13:38Z",
+      "conclusion": "success",
+      "name": "Prepare decoder then run one new fresh capture",
+      "startedAt": "2026-10-18T01:10:59Z"
+    },
+    {
+      "completedAt": "2026-10-18T01:13:39Z",
+      "conclusion": "success",
+      "name": "Upload only the new safe closed-copy summary",
+      "startedAt": "2026-10-18T01:13:38Z"
+    }
+  ],
+  "updatedAt": "2026-10-18T01:13:41Z",
+  "url": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39085360317",
+  "verifyConclusion": "success",
+  "workflowRerun": false
+}

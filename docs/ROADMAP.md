@@ -176,7 +176,7 @@
 - [x] 여섯 번째 새 소스의 Linux84·skip0과 prep·원래 main 한 번/반환0·새 decoder 정지/CLI 회수 확인: [시도6 근거](evidence/iceberg-capture/ATTEMPT_6.md). 전체 결과는 SUMMARY_NOT_VERIFIED 실패이며 NORMALIZE_DECODER_LIFECYCLE_UNVERIFIED는 시도한 검증 구간만 뜻함. 내부 원인·종료 코드·graph 성공은 미확인
 - [x] 일곱 번째 새 실행의 Linux85·UID0·skip0·source 전후 동일과 prep·원래 main 한 번/반환0·새 decoder 정지/CLI 회수 확인: [시도7 근거](evidence/iceberg-capture/ATTEMPT_7.md). 전체 결과는 SUMMARY_NOT_VERIFIED 실패이며 NORMALIZE_DECODER_REPLY_BINDING_UNVERIFIED는 시도한 응답 binding 검증 구간만 뜻함. 정확한 원인·특정 hash 불일치·decoder 종료 코드·graph 성공은 미확인
 - [x] 여덟 번째 새 실행의 Linux86·UID0·skip0·source 전후 동일과 prep·원래 main 한 번/반환0·새 decoder 정지/CLI 회수 확인: [시도8](evidence/iceberg-capture/ATTEMPT_8.md). 전체 capture는 SUMMARY_NOT_VERIFIED 실패이며 strict JSON 검증 구간만 미확인으로 구분; 정확한 원인·exit·graph 성공은 미확인
-- [ ] 같은 실행의 stopped actors·clock 통합 검증 → 독립 graph closure·normalization → 완전 inventory → 순수 planner 입력 연결. 실제8의 해당 검증·전체 KEEP은 미확인이고 관측 count·정규화 hash는 null. 다음은 공개 source의 응답 protocol 검토이며 수정 범위는 아직 미정: [구간 계약](../infra/iceberg-retention-ci/REPLY_SUBPHASES.md), [절차](runbooks/iceberg-closed-copy-capture.md)
+- [x] 9차 새 source `5862ba0c`의 Linux87·UID0·skip0·source 전후 동일과 같은 실행의 stopped actors·clock → 독립 graph closure·normalization → 완전 inventory → 순수 planner 입력 연결: [실제9](evidence/iceberg-capture/ATTEMPT_9.md). 필수 검증9개 true·DETERMINED·passed true; 스냅샷3·참조1·보호 항목1·객체20, 스냅샷 제안·객체 삭제 후보0개·전체 KEEP. 이전1–8의 실패와 null은 보존하고 삭제·만료·Parquet 해석·live 독립 검증은 미실행
 - [ ] snapshot 보존·만료 정책과 운영 규모 compaction 검증
 - [x] Trino만 정상 재시작한 뒤 같은 행·metadata pointer·warehouse 전체 bytes 조회 검증. PostgreSQL은 같은 프로세스를 유지했으며 재시작은 검증하지 않음: [범위](evidence/iceberg-jdbc/README.md)
 - [x] 시험 PostgreSQL·Trino workload 0·Retain PVC 2개·warehouse 보관과 원래 8개 작업·객체 24개 보존: [종료·보존](evidence/iceberg-jdbc/README.md)

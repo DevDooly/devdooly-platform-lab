@@ -1,6 +1,6 @@
 # Platform Lab 다음 개발 계획
 
-이전 readiness 운영 검증(2026-10-15 14:54 UTC)에서 readiness 배포·idle worker 교체·같은 ID 읽기 전용 재시도와 8작업·16파일·24객체를 확인했습니다. [전체 근거와 한계](evidence/worker-readiness/CORRECTED_IMAGE.md)를 기준으로 읽습니다. 이후 [native7의 Trino 조회·재시작](evidence/iceberg-jdbc/README.md)과 별도 [Cloud Spark 시험 8의 적재·순차 replay](evidence/spark-silver/README.md)를 검증하고 정적 기록 화면에 연결했습니다. 이후 [새 Cloud 전체 시험](evidence/cloud-lakehouse/FULL_SUCCESS.md)에서 별도 fresh warehouse의 Spark→Trino 연결·현재 파일 2→1 compaction·자기 자원 종료를 확인했습니다. [현재 DB의 a7 논리 백업·격리 복원](evidence/current-db-restore/README.md)은 8개 테이블 스키마·비runtime 7개 테이블의 행·BLOB과 원본 보존을 확인했고, 기록과 카드는 PR #61로 공개했습니다. 원래 stop receipt는 실패로 유지하며 정상 exit는 UNOBSERVED이고 전체 애플리케이션 복구는 미검증입니다. 다음은 closed-copy capture의 실행 결과를 확인해 같은 실행의 actors·clock·graph·inventory·전체 KEEP 검증을 연결하는 작업입니다. Snapshot 만료·객체 삭제는 미실행이며 미니 PC native7의 중지된 시험 환경과 보관 자료는 유지합니다.
+이전 readiness 운영 검증(2026-10-15 14:54 UTC)에서 readiness 배포·idle worker 교체·같은 ID 읽기 전용 재시도와 8작업·16파일·24객체를 확인했습니다. [전체 근거와 한계](evidence/worker-readiness/CORRECTED_IMAGE.md)를 기준으로 읽습니다. 이후 [native7의 Trino 조회·재시작](evidence/iceberg-jdbc/README.md)과 별도 [Cloud Spark 시험 8의 적재·순차 replay](evidence/spark-silver/README.md)를 검증하고 정적 기록 화면에 연결했습니다. 이후 [새 Cloud 전체 시험](evidence/cloud-lakehouse/FULL_SUCCESS.md)에서 별도 fresh warehouse의 Spark→Trino 연결·현재 파일 2→1 compaction·자기 자원 종료를 확인했습니다. [현재 DB의 a7 논리 백업·격리 복원](evidence/current-db-restore/README.md)은 8개 테이블 스키마·비runtime 7개 테이블의 행·BLOB과 원본 보존을 확인했고, 기록과 카드는 PR #61로 공개했습니다. 원래 stop receipt는 실패로 유지하며 정상 exit는 UNOBSERVED이고 전체 애플리케이션 복구는 미검증입니다. [9차 새 closed-copy capture](evidence/iceberg-capture/ATTEMPT_9.md)에서 Linux87·skip0과 같은 실행의 actors·clock·metadata graph·inventory·전체 KEEP 연결을 확인했습니다. 스냅샷3·참조1·보호 항목1·객체20인 보존 계획이며, 다음은 이 실제 요약의 화면·회귀 확인과 보존 정책·운영 규모 및 다른 장애 경계의 독립 검토입니다. Snapshot 만료·객체 삭제는 미실행이며 미니 PC native7의 중지된 시험 환경과 보관 자료는 유지합니다.
 
 초기 계획: 2026년 10월 12일 · 최근 V4 운영 전환·독립 AI Java 예제 검증: 2026년 10월 15일
 
@@ -174,10 +174,10 @@ GitHub Actions를 유일한 이미지 게시자로 유지하고, 전용 Jenkins 
 - [x] 새 Cloud warehouse의 Spark 결과를 Trino 10개 조회로 대조하고 6→12→12행·동일 최종 row hash를 확인했습니다: [근거](evidence/cloud-lakehouse/FULL_SUCCESS.md)
 - [x] 현재 Bronze 파일 2개→1개의 rewrite procedure 1회와 기존 객체 14개 보존·Trino 뒤 객체 20개 전체 대조를 확인했습니다.
 - [x] 현재 DB의 a7 논리 백업·격리 복원에서 8개 테이블 스키마·비runtime 7개 테이블의 행·BLOB과 원본 보존을 확인하고 기록·카드를 PR #61로 공개했습니다: [범위와 종료 한계](evidence/current-db-restore/README.md)
-- [ ] [closed-copy capture](runbooks/iceberg-closed-copy-capture.md)의 현재 source·실행 결과를 확인하고 actors·clock 통합 검증 → graph closure → 완전 inventory → 순수 planner 입력을 연결합니다. [6차 기록](evidence/iceberg-capture/ATTEMPT_6.md)은 decoder lifecycle 검증 구간 실패이며 정확한 원인·종료 코드·graph 성공은 미확인입니다. 후속 진단 코드나 예상 검사 수를 실제 성공으로 표시하지 않습니다.
+- [x] [9차 새 closed-copy capture](evidence/iceberg-capture/ATTEMPT_9.md)의 source `5862ba0c`에서 Linux87·skip0과 actors·clock 통합 검증 → graph closure·normalization → 완전 inventory → 순수 planner 입력 연결을 확인했습니다. 스냅샷3·참조1·보호 항목1·객체20을 관측했고 모든 객체 KEEP입니다. 이전1–8의 실패·null과 합성 검증은 보존하며 삭제·만료·운영 규모 검증으로 확대하지 않습니다.
 - [ ] snapshot 보존·만료 정책과 운영 규모 compaction 검증을 이어갑니다.
 
-**완료 조건:** 같은 warehouse의 적재·조회·재시작·compaction과 재실행 방법을 연결해야 합니다. 새 Cloud의 연결·작은 compaction은 완료했지만 같은 Cloud 환경의 재시작·snapshot 보존 정책·전체 6단계는 완료하지 않았습니다. 현재 DB의 a7 논리 복원은 완료했지만 원래 stop은 실패이고 정상 exit는 UNOBSERVED입니다. 별도 읽기 진단의 DB replicas 0·Pod 0·Bound/Retain 확인과 전체 애플리케이션 복구 미검증을 구분합니다. Capture의 graph·inventory 연결도 아직 완료하지 않았으며 기존 native7 재시작 기록과 구분합니다. [실제 Cloud 범위](evidence/cloud-lakehouse/FULL_SUCCESS.md)
+**완료 조건:** 같은 warehouse의 적재·조회·재시작·compaction과 재실행 방법을 연결해야 합니다. 새 Cloud의 연결·작은 compaction은 완료했지만 같은 Cloud 환경의 재시작·snapshot 보존 정책·전체 6단계는 완료하지 않았습니다. 현재 DB의 a7 논리 복원은 완료했지만 원래 stop은 실패이고 정상 exit는 UNOBSERVED입니다. 별도 읽기 진단의 DB replicas 0·Pod 0·Bound/Retain 확인과 전체 애플리케이션 복구 미검증을 구분합니다. [9차 capture](evidence/iceberg-capture/ATTEMPT_9.md)의 graph·inventory와 KEEP 계획 연결은 완료했으며, 기존 native7 재시작 기록과는 별도 실행으로 구분합니다. 운영 규모·삭제·만료 검증을 완료한 것은 아닙니다. [실제 Cloud 범위](evidence/cloud-lakehouse/FULL_SUCCESS.md)
 
 **공개 결과:** 수집부터 저장·조회까지 한 데이터의 흐름을 따라가는 설명입니다. Airflow는 실제 스케줄링과 재시도 관리가 필요해질 때 추가합니다.
 
@@ -193,7 +193,7 @@ DB의 기본 30초 승인 간격을 실제 V4 API→worker 순서로 배포했�
 
 ## 바로 다음 작업
 
-1. **실제 metadata capture와 보존 계획 연결:** [실행 절차](runbooks/iceberg-closed-copy-capture.md)에 따라 현재 ref의 전체 SHA와 실행 결과를 먼저 확인합니다. Linux source 검증과 공개 요약의 실제 결과를 보존하고, 미확인 guard 구간을 좁힌 뒤 actors·clock·graph closure·inventory·전체 KEEP을 같은 실행의 증거로 연결합니다. 실패와 null을 성공·관측 0으로 바꾸지 않으며 snapshot 만료·객체 삭제는 실행하지 않습니다.
+1. **실제 metadata 보존 계획의 공개와 다음 검증 분리:** [9차 새 실행](evidence/iceberg-capture/ATTEMPT_9.md)의 Linux87·skip0·필수 검증9개와 객체20개 KEEP 결과를 화면·회귀 검사로 연결합니다. 앞선 실패와 null은 그대로 남깁니다. 이후 보존 정책·운영 규모 compaction과 다른 장애 경계를 독립적으로 검토하며 snapshot 만료·객체 삭제를 이번 capture의 완료 조건으로 확장하지 않습니다.
 2. **보존 운영과 객체 GC:** 전체 운영 참조21개 KEEP·후보0과 새 Garage의 합성 객체2개 자연 GC를 확인했습니다. [객체 보호 근거](evidence/object-reference-gc/README.md)의 범위를 유지하며 운영 tombstone·삭제 intent·재전달/resume·백업 의존성을 설계합니다. 운영 삭제 실행기와 metadata DB 축소는 구현하지 않았습니다.
 3. **검증 확대:** 최대 1,000개 입력·2/8개 동시 접수와 격리 Linux 3회의 관측, 한 export 경계의 worker 강제 종료 복구는 완료했습니다. 다음은 다른 장애 경계·진행 중 호스트 중단·지속 부하·과부하 거부 정책입니다. 한 슬롯 경합은 rate limiter가 아니며 작은 표본을 처리 용량·SLA로 표현하지 않습니다. 공개 실행은 열지 않습니다.
 4. **장기간 수집 운영:** 원래 timer의 자동 게시 2회·실제 간격 1개는 확인했습니다. 더 긴 반복·실패 후 이전 기록 보존·자격증명 만료/회전을 이어서 검증합니다. 초기 관리자 비밀번호 교체·K3s/Jenkins archive 전체 복원도 별도 운영 후속입니다.
