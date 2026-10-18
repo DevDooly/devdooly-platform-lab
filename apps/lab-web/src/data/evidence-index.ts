@@ -97,4 +97,13 @@ export const evidenceItems: readonly EvidenceItem[] = [
     source: `${repo}/tree/245d61a5749760a20918ab091d9410ce6735b1c0/apps/api`,
     evidence: `${repo}/blob/main/docs/evidence/kafka-observation/natural-timer.summary.json`, evidenceLabel: '자연 2회·공개 게시 근거', recordLabel: '자연 관측·파일 대조', screen: '#kafka-observation',
   },
+  {
+    id: 'public-read-gateway-internal', topics: ['kubernetes', 'delivery'], scope: 'mini-pc', state: 'verified',
+    title: '내부 게이트웨이 조회·접근 진단',
+    description: '허용된 클라이언트의 조회 6개와 잘못된 요청 3개의 제한을 확인했습니다. 다른 클라이언트의 연결 거절을 전후 정상 조회와 함께 기록하고 시험 자원 정리·기존 상태 보존을 확인했습니다.',
+    boundary: 'NetworkPolicy만의 결과인지는 확인하지 않았습니다. Node·host·NAT 경로·외부 HTTPS·공개 실시간 API는 별도입니다.',
+    recordedOn: '2026-10-18',
+    source: `${repo}/tree/1a9365fbad66fcc8e0cf5ab3cf957c1f70dc15fe/infra/charts/platform-lab`,
+    evidence: `${repo}/blob/main/docs/evidence/public-read-gateway-internal/README.md`, evidenceLabel: '조회·진단·보존 기록', recordLabel: '내부 조회·접근 진단', screen: '#platform',
+  },
 ];
