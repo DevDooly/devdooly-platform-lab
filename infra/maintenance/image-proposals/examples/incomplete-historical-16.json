@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "kind": "image-proposal-retention-input",
+  "repository": "DevDooly/devdooly-platform-lab",
+  "capturedAt": null,
+  "currentMainCommit": "6b405ab5f2f89ffa452684bafadbdea320e1ce0e",
+  "protectedSources": {
+    "complete": false,
+    "current": [
+      "245d61a5749760a20918ab091d9410ce6735b1c0",
+      "74a8e98844a8fea0653951136ede0e7de0d7ac08"
+    ],
+    "rollback": []
+  },
+  "proposals": [
+    {
+      "number": 74,
+      "observedDraft": true,
+      "observedLabels": [],
+      "proof": null
+    },
+    {
+      "number": 72,
+      "observedDraft": true,
+      "observedLabels": [],
+      "proof": null
+    },
+    {
+      "number": 69,
+      "observedDraft": true,
+      "observedLabels": [],
+      "proof": null
+    },
+    {
+      "number": 65,
+      "observedDraft": true,
+      "observedLabels": [],
+      "proof": null
+    },
+    {
+      "number": 62,
+      "observedDraft": true,
+      "observedLabels": [],
+      "proof": null
+    },
+    {
+      "number": 60,
+      "observedDraft": true,
+      "observedLabels": [],
+      "proof": null
+    },
+    {
+      "number": 58,
+      "observedDraft": true,
+      "observedLabels": [],
+      "proof": null
+    },
+    {
+      "number": 55,
+      "observedDraft": true,
+      "observedLabels": [],
+      "proof": null
+    },
+    {
+      "number": 51,
+      "observedDraft": true,
+      "observedLabels": [],
+      "proof": null
+    },
+    {
+      "number": 49,
+      "observedDraft": true,
+      "observedLabels": [],
+      "proof": null
+    },
+    {
+      "number": 42,
+      "observedDraft": true,
+      "observedLabels": [],
+      "proof": null
+    },
+    {
+      "number": 39,
+      "observedDraft": true,
+      "observedLabels": [],
+      "proof": null
+    },
+    {
+      "number": 36,
+      "observedDraft": true,
+      "observedLabels": [],
+      "proof": null
+    },
+    {
+      "number": 26,
+      "observedDraft": true,
+      "observedLabels": [],
+      "proof": null
+    },
+    {
+      "number": 24,
+      "observedDraft": true,
+      "observedLabels": [],
+      "proof": null
+    },
+    {
+      "number": 22,
+      "observedDraft": true,
+      "observedLabels": [],
+      "proof": null
+    }
+  ],
+  "captureNote": "Previously observed compact public metadata only; no new remote request; exact timestamp and author/files/reviews/history unavailable."
+}

@@ -1,0 +1,106 @@
+name: Validate image proposal retention plan
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - infra/maintenance/image-proposals/**
+      - infra/scripts/gitops_values.py
+      - infra/scripts/ci_publication_gate.py
+      - infra/scripts/validate_gitops_pr.py
+      - infra/scripts/propose_gitops_pr.py
+      - .github/workflows/image-proposal-retention.yml
+  push:
+    branches: [main]
+    paths:
+      - infra/maintenance/image-proposals/**
+      - infra/scripts/gitops_values.py
+      - infra/scripts/ci_publication_gate.py
+      - infra/scripts/validate_gitops_pr.py
+      - infra/scripts/propose_gitops_pr.py
+      - .github/workflows/image-proposal-retention.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Validate fourteen synthetic cases and one historical capture offline
+        env:
+          VALIDATION_SOURCE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python3 -I -B - <<'PY'
+          import hashlib
+          import importlib.util
+          import json
+          import os
+          from pathlib import Path
+          import platform
+          import re
+          import subprocess
+          import sys
+          import unittest
+
+          pins = {
+              'infra/maintenance/image-proposals/planner.py': '93984b1139d017e5c826ad9668fedb55fe750b14e0d1c3571044ad522c00ce1a',
+              'infra/maintenance/image-proposals/test_planner.py': '8ba545f8e4d4f3b8e68c576cc521185427539221f5b520b9bee4c3e1c9035277',
+              'infra/maintenance/image-proposals/public-rules-pins.json': '662d4a5e92f2e3f614a952c506db7be5640df3a92d119d14290935516a3b03d6',
+              'infra/maintenance/image-proposals/examples/incomplete-historical-16.json': '2e42f7f1f03859f237c6ed7e47714263f63b03ef1f5f461893966f8d86b9d44f',
+              'infra/scripts/gitops_values.py': '965ccc1c839d691819845fc64e89c8489166d3069158798fd71f7a3e9770ca2d',
+              'infra/scripts/ci_publication_gate.py': 'ee5f40c5541e38a73adbdb6222485a628e85deebf5f9445e9a59ef5841f44481',
+              'infra/scripts/validate_gitops_pr.py': 'e15ee1d4e2a797eb925095fa567f7bf6e0482c4fea5df66d2c05a927a5dc2af8',
+              'infra/scripts/propose_gitops_pr.py': '5fe03c7eeb7e04d39fb1bf564c29d6c8a1c5c6a369b1d4a97f6b5a6f20186f26',
+          }
+          before = {}
+          for name, expected in pins.items():
+              raw = Path(name).read_bytes()
+              assert hashlib.sha256(raw).hexdigest() == expected, 'REVIEWED_SOURCE_PIN_REQUIRED'
+              before[name] = raw
+          folder = Path('infra/maintenance/image-proposals').resolve()
+          specification = importlib.util.spec_from_file_location('image_proposal_retention_tests', folder / 'test_planner.py')
+          module = importlib.util.module_from_spec(specification)
+          specification.loader.exec_module(module)
+          suite = unittest.defaultTestLoader.loadTestsFromModule(module)
+          assert suite.countTestCases() == 14, 'EXACT_SYNTHETIC_TEST_COUNT_REQUIRED'
+          result = unittest.TextTestRunner(verbosity=2).run(suite)
+          assert result.testsRun == 14 and result.wasSuccessful() and not result.skipped, 'FOURTEEN_PASS_WITH_ZERO_SKIPS_REQUIRED'
+          output = Path(os.environ['RUNNER_TEMP']) / 'image-proposal-retention'
+          output.mkdir(exist_ok=False)
+          target = output / 'captured-plan.json'
+          subprocess.run([sys.executable, '-I', '-B', str(folder / 'planner.py'),
+                          '--input', str(folder / 'examples/incomplete-historical-16.json'),
+                          '--output', str(target)], stdin=subprocess.DEVNULL, timeout=30, check=True)
+          plan = json.loads(target.read_bytes())
+          assert plan['keepCount'] == 16 and plan['supersededCandidateCount'] == 0 and len(plan['rows']) == 16
+          assert plan['applyEnabled'] is False and plan['mutationOperations'] == 0
+          assert all(row['classification'] == 'KEEP' and row['reason'] == 'PROTECTION_INCOMPLETE' for row in plan['rows'])
+          assert all(Path(name).read_bytes() == raw for name, raw in before.items()), 'SOURCE_BYTES_UNCHANGED_REQUIRED'
+          source = os.environ['VALIDATION_SOURCE_COMMIT']
+          assert re.fullmatch('[a-f0-9]{40}', source)
+          summary = {'schemaVersion': 1, 'scope': 'OFFLINE_SYNTHETIC_AND_HISTORICAL_CAPTURE_ONLY',
+                     'passed': True, 'sourceCommit': source, 'pythonVersion': platform.python_version(),
+                     'testsRun': result.testsRun, 'skips': len(result.skipped),
+                     'historicalKeepCount': 16, 'historicalCandidateCount': 0,
+                     'sourceBytesUnchanged': True, 'applyEnabled': False, 'mutationOperations': 0,
+                     'githubMetadataFetched': False, 'registryContentsVerified': False,
+                     'currentCiRevalidated': False, 'deploymentVerified': False}
+          (output / 'validation-result.json').write_text(json.dumps(summary, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(summary, sort_keys=True))
+          PY
+      - name: Upload only finite plan and validation JSON
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: image-proposal-retention-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/image-proposal-retention/validation-result.json
+            ${{ runner.temp }}/image-proposal-retention/captured-plan.json
+          if-no-files-found: error
+          retention-days: 7
