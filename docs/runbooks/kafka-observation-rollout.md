@@ -1,18 +1,24 @@
 # Kafka 관측 연결 절차
 
-현재는 [로컬 검증](../evidence/kafka-observation/README.md)까지 완료한 소스 후보다. 기존 job/worker·readiness·운영 GitOps·RBAC·host timer를 이 문서만으로 바꾸지 않는다. 새 관측을 끄는 기본값을 유지한 채 아래 단계의 실제 결과를 구분해 기록한다.
+[로컬 검증](../evidence/kafka-observation/README.md) 뒤 새 source의 [격리 CI7](../evidence/kafka-observation/CI_ATTEMPT_7.md)에서 고정 IT1·skip0·source 불변·자기 자원 정리를 통과했다. 미니 PC 배포·host/Pages의 신규 Kafka 연결은 별도 gate다. 기존 job/worker·readiness·GitOps·RBAC·timer와 기본 false를 이 격리 성공만으로 바꾸지 않는다.
 
 ## 현재 실행 gate · 2026-10-18
 
-[격리 CI2](../evidence/kafka-observation/CI_ATTEMPT_2.md)는 offline24/API 준비 검증 뒤 IT·cleanup에서 실패했다. RESOURCE_IDENTITY_UNVERIFIED·XML null·검증0과 원래 실패를 보존한다. sourceBytesUnchanged/ownedResourcesRemoved false를 source 변경·자원 부재 또는 완전 정리의 증거로 해석하지 않는다. source/identity 읽기 진단과 새 검토 source의 실제 IT·cleanup 검증 전에는 main/미니 PC rollout을 진행하지 않는다.
+[격리 CI7](../evidence/kafka-observation/CI_ATTEMPT_7.md)은 전체/verify와 필수5단계가 success이며 verifiedTests1·skip0·sourceBytesUnchanged/ownedResourcesRemoved true다. Offline/API prepare source gate의 기대 수는35/218이다. [CI2](../evidence/kafka-observation/CI_ATTEMPT_2.md)·[CI3](../evidence/kafka-observation/CI_ATTEMPT_3.md)·[CI4](../evidence/kafka-observation/CI_ATTEMPT_4.md)·[CI5](../evidence/kafka-observation/CI_ATTEMPT_5.md)·[CI6](../evidence/kafka-observation/CI_ATTEMPT_6.md)의 실패와 미관측은 보존한다. 신규 미니 PC/HTTP·ACL·전체 JVM thread·자동 Pages 연결은 미검증이며 main 반영 전 현재 데이터 backup·보존 점검 gate는 유지한다.
 
 PR64의 API template은 기본 false env도 추가하며 Application은 main chart를 자동 sync한다. 이미지 제안 전이라도 API Recreate가 생길 수 있으므로 **PR64 main 반영 전에** fresh 보존 점검·현재 DB backup·정상 rollback 입력을 준비한다. 같은 main SHA의 Jenkins/Actions와 실제 이미지·draft GitOps 검증 뒤 API/web만 default false로 전환하고, 별도 config opt-in→host 수집→원래30분 자연 회차를 순서대로 확인한다. 기존 worker·DB·Kafka/Garage·PVC·offset·Docker·timer unit을 보존한다.
 
 expected cluster ID는 기존 runtime.kafka SecretKeyRef를 재사용하고 실제 값은 읽거나 Git에 넣지 않는다. sourceCommit은 게시한 API 소스, topic/group은 기존 worker 설정, namespace는 현재 platform-lab을 유지한다. api.kafkaObservation은 enabled만 지원하며 임의 expectedClusterId 값을 values에 추가하지 않는다.
 
+## Generic group 조회와 bounded retry1
+
+변경 전 [CI6](../evidence/kafka-observation/CI_ATTEMPT_6.md)의 공개 값은 DESCRIBE_GROUP/RPC_TIMEOUT, own KAFKA_UNAVAILABLE/null과 RUN642였다. 고정 client4.2.1의 [generic 조회](https://github.com/apache/kafka/blob/4.2.1/clients/src/main/java/org/apache/kafka/clients/admin/internals/DescribeConsumerGroupsHandler.java#L105)는 새 group API를 먼저 사용하며 [GROUP_ID_NOT_FOUND 처리](https://github.com/apache/kafka/blob/4.2.1/clients/src/main/java/org/apache/kafka/clients/admin/internals/DescribeConsumerGroupsHandler.java#L340)에서 CLASSIC fallback 재시도를 준비한다. [tries 검사](https://github.com/apache/kafka/blob/4.2.1/clients/src/main/java/org/apache/kafka/clients/admin/KafkaAdminClient.java#L1460)와 [enqueue 경계](https://github.com/apache/kafka/blob/4.2.1/clients/src/main/java/org/apache/kafka/clients/admin/KafkaAdminClient.java#L4711)를 근거로 retry0이 전환을 막을 수 있다는 가설을 검토했고 상한을1로 바꾼 새 source가 격리 CI7을 통과했다. 정확한 timeout 메시지·전체 원인·모든 조건의 해결까지 확인한 것은 아니다.
+
+RETRIES_CONFIG1은 CLASSIC 전용이 아니라 observer Admin client의 요청 재시도 상한이다. 실제 요청/최대 attempt 수는 미관측이며 두 번 시도했다고 채우지 않는다. generic describeConsumerGroups와 반환 GroupType·CLASSIC/단일 member/partition/target guard를 유지한다. read3초·close1초·caller4초, request/default timeout·단일 owner·poison·cleanup·offset shape·원래 성공 gate도 보존한다. 이는 시간 예산 증가나 main/backup/미니 PC gate 해제를 뜻하지 않는다.
+
 ## 1. 새 격리 broker에서 의미 확인
 
-현재 격리 CI2는 IT 단계에서 실패했으며 고정 IT1의 실행·통과 여부는 미확인이다. KafkaObservationIT는 명시적인 `lab.kafka-observation.tests=true`와 별도 시험 설정을 요구한다. 실행기부터 새 자기 broker·자원 소유권·종료와 정리 범위를 확인해야 한다. 기존 미니 PC broker를 시험 대상으로 쓰지 않는다. 이 시험의 driver는 합성 topic 생성·발행·consumer commit·transaction을 수행하므로 production 조회 API의 읽기 동작과 구분한다.
+고정 source의 격리 CI7에서 IT1·skip0과 자기 자원 정리를 확인했다. 후속 source 변경은 새 격리 실행으로 다시 검증한다. KafkaObservationIT는 명시적인 `lab.kafka-observation.tests=true`와 별도 시험 설정을 요구하며 기존 미니 PC broker를 시험 대상으로 쓰지 않는다. 시험 driver의 합성 topic 생성·발행·consumer commit·transaction은 production 조회 API의 읽기 동작과 구분한다.
 
 새 격리 환경에서 NO_COMMIT의 null, 양수 lag, 관측된0 lag, 미완료 transaction과 READ_COMMITTED LSO 차이, 대상 cluster/topic/group 검증을 확인한다. 시험 종료 후 자기 자원만 회수하고 기존 데이터·offset을 보존한다. 실제 broker 결과가 없으면 합성 Service19·HTTP6을 이 단계의 증거로 쓰지 않는다.
 

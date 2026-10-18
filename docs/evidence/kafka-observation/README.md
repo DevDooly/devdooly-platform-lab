@@ -1,6 +1,6 @@
 # Kafka 관측: 로컬 검증과 남은 연결
 
-2026-10-18. 새 Kafka 관측 조회 경로·host 게시·화면 후보를 로컬에서 검증했다. 실제 Kafka 관측, 미니 PC 배포, 공개 Pages의 Kafka 기록 연결은 아직 검증하지 않았다. 기존 worker의 과거 Kafka 처리·lag 기록과 구분한다.
+아래는 2026-10-18 로컬 검증 당시의 기록이다. 후속 [격리 CI7](CI_ATTEMPT_7.md)은 고정 IT1·skip0·source 불변·자기 자원 정리를 통과했다. 이 결과를 아래 합성/로컬 검사와 합치지 않으며 미니 PC 배포·공개 Pages의 Kafka 기록 연결은 아직 검증하지 않았다. 기존 worker의 과거 Kafka 처리·lag 기록과도 구분한다.
 
 선택한 소스 묶음은 backend `d30e3713…`, web `0718624a…`, host `cbdbf149…`이다. 결합 웹/host 검증은 checkout `a234d405`를 기준으로 한 C overlay에서 수행했다. 이후 checkout `5862ba0c`의 Java stdout 개선·별도 Cloud capture와 범위를 구분한다. Kafka 후보를 그 checkout의 실행 코드 또는 배포 소스로 표시하지 않는다. [고정 계약](../../contracts/kafka-observation.md)은 원래52e6076e 본문을 그대로 보존하며, 그 계약 문서의 준비 당시 상태와 아래 실제 로컬 결과를 구분한다.
 
