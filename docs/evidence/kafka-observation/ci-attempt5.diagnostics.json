@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "scope": "PUBLIC_SOURCE_PINNED_CONNECTOR_KAFKA_FAILURE_DIAGNOSTICS",
+  "runId": "39090066910",
+  "runAttempt": 1,
+  "verifyJobId": 117564742503,
+  "sourceCommit": "f69b420e51a60ce61f0fffa708131f25524e46e6",
+  "publicRunnerSha256": "187da24f9aa6163963522408807e6b64baf29c9dcbc0a2aa50d1032910ccc3d2",
+  "workflowSha256": "535df31a57c1fbd916663fb5c15a5af3ef7dd7cb88b681265f2b1552a53c72ce",
+  "runtimeManifestSha256": "9182bc06f021b94cf34ca52640bd99dd6984cab1447bb5a324a13bd5a240a2b9",
+  "publicSummarySha256": "50922cd2128290c0644324c6b3329eb881852d470a9c69185b1a4d3e12802ec8",
+  "metadataEvidence": "ROOT_VALIDATED_PUBLIC_CI5_RUN_AND_JOB_METADATA",
+  "selectionMethod": "FIXED_FIELDS_UNDER_EXACT_LAST_RUN_COMMAND_GROUP_UNTIL_NEXT_STEP_GROUP",
+  "transport": "PURPOSE_BUILT_GITHUB_CONNECTOR",
+  "sourcePublicStatementsValidatedByAst": true,
+  "records": [
+    {
+      "failureKind": "OBSERVER_KAFKA_UNAVAILABLE",
+      "kind": "KAFKA_IT_FAILURE_DIAGNOSTIC",
+      "testSourceLine": null
+    },
+    {
+      "assertionSourceLine": 619,
+      "kind": "KAFKA_IT_ASSERTION_DIAGNOSTIC",
+      "phase": "RUN",
+      "publicSourceStatement": "require(status == 0 and value['State']['Running'] is False and value['State']['ExitCode'] == 0, 'IT_FAILED')"
+    }
+  ],
+  "cleanupOccurrenceCounts": [],
+  "failureClassificationPublicPolicy": {
+    "classifier": "public_it_failure_diagnostic",
+    "exactOwnExceptionType": "io.github.devdooly.platformlab.jobs.observation.KafkaObservationService$ObservationFailure",
+    "exactOwnCode": "KAFKA_UNAVAILABLE",
+    "allowlistedOwnCodeCount": 12,
+    "policySourceVerifiedByAst": true
+  },
+  "ephemeralPublicJobTextRead": true,
+  "rawJobTextPersisted": false,
+  "privateArtifactsRead": false,
+  "separateProviderStderrFetched": false,
+  "exactExitValuesReadOrInferred": false,
+  "itExecutionOrSuccessInferred": false,
+  "sourceChangeInferred": false,
+  "underlyingKafkaCauseInferred": false,
+  "testSourceLineInferred": false
+}

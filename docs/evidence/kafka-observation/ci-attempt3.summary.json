@@ -1,0 +1,21 @@
+{
+  "allJvmThreadsVerified": false,
+  "expectedTests": 1,
+  "failureCode": "RESOURCE_IDENTITY_UNVERIFIED",
+  "httpOrMiniPcRuntimeVerified": false,
+  "kafkaAclVerified": false,
+  "kind": "kafka-observation-ci-result",
+  "ownedResourcesRemoved": false,
+  "publicExecutionEnabled": false,
+  "runtimeManifestSha256": "25b0441354945a0357293181258214fe21fa5f92a2fe4dba2a6f4f8fb5bc6501",
+  "schemaVersion": 1,
+  "scope": "ISOLATED_KAFKA_IT",
+  "skips": null,
+  "sourceBytesUnchanged": false,
+  "sourceCommit": "0e694af3ed0f915dad178f816f2c9d742ca9b183",
+  "status": "FAILED",
+  "surefireXmlSha256": null,
+  "synthetic": true,
+  "testSourceAssertionsVerified": false,
+  "verifiedTests": 0
+}

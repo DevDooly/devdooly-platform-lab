@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "scope": "PUBLIC_SOURCE_PINNED_CONNECTOR_KAFKA_FAILURE_DIAGNOSTICS",
+  "runId": "39090703716",
+  "runAttempt": 1,
+  "verifyJobId": 117566645261,
+  "sourceCommit": "724b1ca790f4782eb936a99423e9338b129f7fe6",
+  "publicRunnerSha256": "a645f8c670c12854c4149d7ff8b45f2072f20fc01de960113fe7cb1fdad111f6",
+  "workflowSha256": "cc9b0b03bcb9a81ce1ce9a25ba210094fff50fb6c2e73f285f62c46333cdb59d",
+  "runtimeManifestSha256": "cf00028eae7f20991ba965b1cd2c3a3dc1b86b814fe4279f4fe72db8dc85e645",
+  "publicSummarySha256": "6849a475889409a7713758604d9d2c0fee1550f4191957f22948e3eef2ef1c8c",
+  "metadataEvidence": "ROOT_VALIDATED_PUBLIC_CI6_RUN_AND_JOB_METADATA",
+  "selectionMethod": "FIXED_FIELDS_UNDER_EXACT_LAST_RUN_COMMAND_GROUP_UNTIL_NEXT_STEP_GROUP",
+  "transport": "PURPOSE_BUILT_GITHUB_CONNECTOR",
+  "sourcePublicStatementsValidatedByAst": true,
+  "records": [
+    {
+      "failureKind": "RPC_TIMEOUT",
+      "kind": "KAFKA_OBSERVER_RPC_DIAGNOSTIC",
+      "stage": "DESCRIBE_GROUP"
+    },
+    {
+      "failureKind": "OBSERVER_KAFKA_UNAVAILABLE",
+      "kind": "KAFKA_IT_FAILURE_DIAGNOSTIC",
+      "testSourceLine": null
+    },
+    {
+      "assertionSourceLine": 642,
+      "kind": "KAFKA_IT_ASSERTION_DIAGNOSTIC",
+      "phase": "RUN",
+      "publicSourceStatement": "require(status == 0 and value['State']['Running'] is False and value['State']['ExitCode'] == 0, 'IT_FAILED')"
+    }
+  ],
+  "cleanupOccurrenceCounts": [],
+  "failureClassificationPublicPolicy": {
+    "classifier": "public_it_failure_diagnostic",
+    "exactOwnExceptionType": "io.github.devdooly.platformlab.jobs.observation.KafkaObservationService$ObservationFailure",
+    "exactOwnCode": "KAFKA_UNAVAILABLE",
+    "allowlistedOwnCodeCount": 12,
+    "policySourceVerifiedByAst": true
+  },
+  "rpcClassificationPublicPolicy": {
+    "adapterSourceSha256": "b26b8ed9449b62a6cb88d5432839ebe2b9a86494dc912be5ee7d880e1f0174fe",
+    "exactTestFlagRequired": true,
+    "fixedStages": 6,
+    "fixedKinds": 12,
+    "stage": "DESCRIBE_GROUP",
+    "failureKind": "RPC_TIMEOUT",
+    "exactCauseClassFiniteMappingSourceVerified": true,
+    "rawCauseTypeOrMessageRead": false,
+    "underlyingTimeoutReasonInferred": false
+  },
+  "ephemeralPublicJobTextRead": true,
+  "rawJobTextPersisted": false,
+  "privateArtifactsRead": false,
+  "separateProviderStderrFetched": false,
+  "exactExitValuesReadOrInferred": false,
+  "itExecutionOrSuccessInferred": false,
+  "sourceChangeInferred": false,
+  "underlyingKafkaCauseInferred": false,
+  "testSourceLineInferred": false
+}

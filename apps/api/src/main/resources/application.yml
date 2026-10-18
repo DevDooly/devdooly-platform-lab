@@ -38,3 +38,9 @@ lab:
   source-commit: ${SOURCE_COMMIT:unknown}
   image-digest: ${IMAGE_DIGEST:}
   database-label: MariaDB
+  kafka-observation:
+    enabled: ${LAB_KAFKA_OBSERVATION_ENABLED:false}
+    bootstrap: ${LAB_KAFKA_OBSERVATION_BOOTSTRAP:}
+    topic: ${LAB_KAFKA_OBSERVATION_TOPIC:}
+    group: ${LAB_KAFKA_OBSERVATION_GROUP:}
+    expected-cluster-id: ${LAB_KAFKA_OBSERVATION_EXPECTED_CLUSTER_ID:}

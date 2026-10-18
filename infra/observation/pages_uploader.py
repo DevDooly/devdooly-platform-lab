@@ -13,11 +13,13 @@ import ssl
 import stat
 import sys
 import tempfile
+import time
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPRedirectHandler, HTTPSHandler, ProxyHandler, Request, build_opener
 
 from platform_contract import SAFE_INTEGER, validate_snapshot
 from job_contract import MAX_JOB_SNAPSHOT, validate_job_snapshot
+from kafka_contract import MAX_KAFKA_SNAPSHOT, parse_kafka_snapshot, validate_kafka_snapshot
 
 REPOSITORY = 'DevDooly/devdooly-platform-lab'
 ENDPOINT = 'https://api.github.com/repos/' + REPOSITORY + '/actions/workflows/pages.yml/dispatches'
@@ -146,6 +148,14 @@ def load_job_snapshot(path: Path, now: datetime) -> dict:
         raise AutomationError('JOB_SNAPSHOT_INVALID') from None
 
 
+def load_kafka_snapshot(path: Path, now: datetime) -> dict:
+    regular_private(path)
+    try:
+        with path.open('rb') as handle: data=handle.read(MAX_KAFKA_SNAPSHOT+1)
+        return parse_kafka_snapshot(data,now)
+    except Exception:raise AutomationError('KAFKA_SNAPSHOT_INVALID') from None
+
+
 def unique_object(pairs):
     result={}
     for key,value in pairs:
@@ -176,12 +186,14 @@ class NoRedirect(HTTPRedirectHandler):
     def redirect_request(self,request,fp,code,message,headers,newurl):return None
 
 
-def send_once(request: Request) -> tuple[int, bytes]:
+def send_once(request: Request, *, deadline: float | None = None) -> tuple[int, bytes]:
     opener=build_opener(ProxyHandler({}),NoRedirect(),HTTPSHandler(context=ssl.create_default_context()))
     try:
-        with opener.open(request,timeout=15) as response:
+        remaining=15 if deadline is None else min(15,deadline-time.monotonic())
+        if remaining<=0:raise AutomationError('DISPATCH_AMBIGUOUS')
+        with opener.open(request,timeout=remaining) as response:
             code=response.status;body=response.read(MAX_RESPONSE+1)
-        if len(body)>MAX_RESPONSE:raise AutomationError('DISPATCH_AMBIGUOUS')
+        if len(body)>MAX_RESPONSE or (deadline is not None and time.monotonic()>=deadline):raise AutomationError('DISPATCH_AMBIGUOUS')
         return code,body
     except HTTPError as error:
         # No HTTP error body is read, printed or persisted.
@@ -221,13 +233,16 @@ class DispatchLock:
 
 
 def dispatch(snapshot: dict, token_file: Path, journal: Path, *, sender=send_once,
-             now: datetime | None = None, job_snapshot: dict | None = None) -> dict:
+             now: datetime | None = None, job_snapshot: dict | None = None,
+             kafka_snapshot: dict | None = None, deadline: float | None = None) -> dict:
     with DispatchLock(journal.with_name(journal.name+'.lock')):
-        return _dispatch(snapshot,token_file,journal,sender=sender,now=now,job_snapshot=job_snapshot)
+        return _dispatch(snapshot,token_file,journal,sender=sender,now=now,job_snapshot=job_snapshot,
+            kafka_snapshot=kafka_snapshot,deadline=deadline)
 
 
 def _dispatch(snapshot: dict, token_file: Path, journal: Path, *, sender=send_once,
-             now: datetime | None = None, job_snapshot: dict | None = None) -> dict:
+             now: datetime | None = None, job_snapshot: dict | None = None,
+             kafka_snapshot: dict | None = None, deadline: float | None = None) -> dict:
     clock=now or datetime.now(timezone.utc)
     try:validate_snapshot(snapshot,clock)
     except Exception:raise AutomationError('SNAPSHOT_INVALID') from None
@@ -242,9 +257,22 @@ def _dispatch(snapshot: dict, token_file: Path, journal: Path, *, sender=send_on
         if len(jobs_encoded.encode('ascii'))>MAX_JOB_SNAPSHOT:raise AutomationError('JOB_SNAPSHOT_INVALID')
         inputs['jobs_snapshot']=jobs_encoded
         fingerprint_source=json.dumps(inputs,separators=(',',':'),sort_keys=True)
+    # Optional Kafka validation failure cannot discard otherwise valid platform/jobs.
+    if kafka_snapshot is not None:
+        try:
+            validate_kafka_snapshot(kafka_snapshot,clock)
+            kafka_encoded=json.dumps(kafka_snapshot,separators=(',',':'),sort_keys=True,ensure_ascii=True,allow_nan=False)
+            if len(kafka_encoded.encode('ascii'))>MAX_KAFKA_SNAPSHOT:raise ValueError
+            inputs['kafka_snapshot']=kafka_encoded
+        except Exception:pass
     payload={'ref':'main','inputs':inputs}
     payload_bytes=json.dumps(payload).encode('utf-8')
+    if len(payload_bytes)>65536 and 'kafka_snapshot' in inputs:
+        del inputs['kafka_snapshot']
+        payload_bytes=json.dumps(payload).encode('utf-8')
     if len(payload_bytes)>65536:raise AutomationError('SNAPSHOT_INVALID')
+    if len(inputs)>1:fingerprint_source=json.dumps(inputs,separators=(',',':'),sort_keys=True)
+    if deadline is not None and time.monotonic()>=deadline:raise AutomationError('CAPTURE_TIMEOUT')
     fingerprint=hashlib.sha256(fingerprint_source.encode('ascii')).hexdigest()
     if journal.exists() or journal.is_symlink():
         regular_private(journal)
@@ -267,7 +295,9 @@ def _dispatch(snapshot: dict, token_file: Path, journal: Path, *, sender=send_on
         'Content-Type':'application/json','X-GitHub-Api-Version':API_VERSION,
         'User-Agent':'devdooly-platform-observer-pages/1'})
     try:
-        code,body=sender(request)
+        if deadline is not None and time.monotonic()>=deadline:raise AutomationError('DISPATCH_AMBIGUOUS')
+        code,body=sender(request,deadline=deadline) if sender is send_once else sender(request)
+        if deadline is not None and time.monotonic()>=deadline:raise AutomationError('DISPATCH_AMBIGUOUS')
         if code!=200:raise AutomationError('DISPATCH_AMBIGUOUS')
         result=json.loads(body)
         run_id=result.get('workflow_run_id')

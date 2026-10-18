@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "scope": "PUBLIC_SOURCE_PINNED_CONNECTOR_KAFKA_FAILURE_DIAGNOSTICS",
+  "runId": "39089524581",
+  "runAttempt": 1,
+  "verifyJobId": 117563080371,
+  "sourceCommit": "ff6415a6718f40d7e5f8bebb1b7b01937bbf982e",
+  "publicRunnerSha256": "2bc99f6d94c99ddf17311fbc0751a23e3329430758fd8eb360bd27dfede5d54d",
+  "workflowSha256": "4c5b47dd47c547eed4930df10b20bc542dc1568cbfc011474881b6dea9b89841",
+  "runtimeManifestSha256": "2d13eed47ed2d5c3c06375a1ae875d83feff16a561c1d6e42479fc3bdcbf7e9e",
+  "publicSummarySha256": "bc03727edcb271385e6cb97f9792e5c0bd5da99156a12ec22ad71e09cc9dc5e2",
+  "metadataEvidence": "ROOT_VALIDATED_PUBLIC_CI4_RUN_AND_JOB_METADATA",
+  "selectionMethod": "FIXED_FIELDS_UNDER_EXACT_LAST_RUN_COMMAND_GROUP_UNTIL_NEXT_STEP_GROUP",
+  "transport": "PURPOSE_BUILT_GITHUB_CONNECTOR",
+  "sourcePublicStatementsValidatedByAst": true,
+  "records": [
+    {
+      "assertionSourceLine": 549,
+      "kind": "KAFKA_IT_ASSERTION_DIAGNOSTIC",
+      "phase": "RUN",
+      "publicSourceStatement": "require(status == 0 and value['State']['Running'] is False and value['State']['ExitCode'] == 0, 'IT_FAILED')"
+    }
+  ],
+  "cleanupOccurrenceCounts": [],
+  "ephemeralPublicJobTextRead": true,
+  "rawJobTextPersisted": false,
+  "privateArtifactsRead": false,
+  "separateProviderStderrFetched": false,
+  "exactExitValuesReadOrInferred": false,
+  "itExecutionOrSuccessInferred": false,
+  "sourceChangeInferred": false
+}

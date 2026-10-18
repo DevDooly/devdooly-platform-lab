@@ -116,6 +116,114 @@ check('Staged bootstrap can enable only the two storage services before the work
 const changedApi=parse(success(['template','lab',chart,...common,'--set','api.environment=mini-pc']));
 check('API observation environment can explicitly report mini-pc while default remains k3s',
   envValue(changedApi.find(doc=>doc.metadata.labels['app.kubernetes.io/component']==='api'&&doc.kind==='Deployment').spec.template.spec.containers[0],'LAB_ENVIRONMENT')==='mini-pc');
+// Kafka observation adds only a fixed opt-in API environment block. These are render checks,
+// not broker, worker liveness, Secret existence, deployment, or observation-success evidence.
+const observationPrefix = 'LAB_KAFKA_OBSERVATION_';
+const observationNames = ['ENABLED', 'BOOTSTRAP', 'TOPIC', 'GROUP', 'EXPECTED_CLUSTER_ID']
+  .map(suffix => observationPrefix + suffix);
+const apiManifest = list => list.find(doc => doc.kind === 'Deployment' &&
+  doc.metadata.labels?.['app.kubernetes.io/component'] === 'api');
+const firstContainer = manifest => manifest.spec.template.spec.containers[0];
+const disabledApi = apiManifest(docs), disabledApiContainer = firstContainer(disabledApi);
+const disabledObservationEnv = disabledApiContainer.env.filter(value => value.name.startsWith(observationPrefix));
+check('Disabled Kafka observation contains only its explicit false flag and no target settings',
+  JSON.stringify(disabledObservationEnv) === JSON.stringify([{name: observationNames[0], value: 'false'}]));
+const explicitDisabled = success(['template', 'lab', chart, ...runtimeCommon,
+  '--set', 'api.kafkaObservation.enabled=false']);
+check('Explicitly disabled Kafka observation preserves default rendered bytes including the API',
+  explicitDisabled === rendered);
+const observationCommon = [...runtimeCommon, '--set', 'api.environment=mini-pc',
+  '--set-string', 'api.sourceCommit=' + 'b'.repeat(40)];
+const preparedObservation = parse(success(['template', 'lab', chart, ...observationCommon]));
+const observationEnabledArgs = [...observationCommon, '--set', 'api.kafkaObservation.enabled=true'];
+const observationEnabled = parse(success(['template', 'lab', chart, ...observationEnabledArgs]));
+const preparedApi = apiManifest(preparedObservation), observationApi = apiManifest(observationEnabled);
+const observationApiContainer = firstContainer(observationApi);
+const enabledObservationEnv = observationApiContainer.env.filter(value => value.name.startsWith(observationPrefix));
+check('Opt-in observation retains the resource set and changes only the existing API Deployment',
+  observationEnabled.length === preparedObservation.length && preparedObservation.every(before =>
+    before === preparedApi || JSON.stringify(observationEnabled.find(after =>
+      after.kind === before.kind && after.metadata.name === before.metadata.name)) === JSON.stringify(before)));
+const observationStrippedApi = structuredClone(observationApi);
+firstContainer(observationStrippedApi).env = firstContainer(observationStrippedApi).env
+  .flatMap(value => value.name.startsWith(observationPrefix) ?
+    (value.name === observationNames[0] ? [{name: value.name, value: 'false'}] : []) : [value]);
+check('The complete opt-in API change is exactly the reviewed observation environment block',
+  JSON.stringify(observationStrippedApi) === JSON.stringify(preparedApi) &&
+  JSON.stringify(enabledObservationEnv.map(value => value.name)) === JSON.stringify(observationNames) &&
+  envValue(observationApiContainer, observationNames[0]) === 'true');
+const observationWorker = firstContainer(observationEnabled.find(doc =>
+  doc.kind === 'Deployment' && doc.metadata.labels?.['app.kubernetes.io/component'] === 'worker'));
+const observationKafka = firstContainer(observationEnabled.find(doc =>
+  doc.kind === 'StatefulSet' && doc.metadata.labels?.['app.kubernetes.io/component'] === 'kafka'));
+check('Observation uses the worker service DNS topic and group without a second target configuration',
+  envValue(observationApiContainer, observationNames[1]) === envValue(observationWorker, 'LAB_RUNTIME_KAFKA_BOOTSTRAP') &&
+  envValue(observationApiContainer, observationNames[2]) === envValue(observationWorker, 'LAB_RUNTIME_KAFKA_TOPIC') &&
+  envValue(observationApiContainer, observationNames[3]) === envValue(observationWorker, 'LAB_RUNTIME_KAFKA_GROUP'));
+const observationClusterRef = enabledObservationEnv.find(value => value.name === observationNames[4]);
+check('Observation cluster ID uses exactly the existing Kafka cluster ID Secret key and no literal value',
+  Object.keys(observationClusterRef).sort().join(',') === 'name,valueFrom' &&
+  Object.keys(observationClusterRef.valueFrom).join(',') === 'secretKeyRef' &&
+  JSON.stringify(observationClusterRef.valueFrom) === JSON.stringify(observationKafka.env.find(value =>
+    value.name === 'CLUSTER_ID').valueFrom));
+check('Observation adds no Secret RBAC ServiceAccount token S3 credentials or Secret volume to the API',
+  observationEnabled.every(doc => ['ServiceAccount', 'Service', 'Deployment', 'StatefulSet'].includes(doc.kind)) &&
+  observationApi.spec.template.spec.automountServiceAccountToken === false &&
+  observationApi.spec.template.spec.serviceAccountName === preparedApi.spec.template.spec.serviceAccountName &&
+  !observationApiContainer.envFrom && !observationApiContainer.env.some(value => value.name.startsWith('LAB_RUNTIME_S3_')) &&
+  enabledObservationEnv.filter(value => value.valueFrom).length === 1 &&
+  !observationApi.spec.template.spec.volumes.some(volume => volume.secret || volume.projected));
+check('Observation reuses the existing API environment and source identity without overriding the worker',
+  envValue(observationApiContainer, 'LAB_ENVIRONMENT') === 'mini-pc' &&
+  envValue(observationApiContainer, 'SOURCE_COMMIT') === 'b'.repeat(40) &&
+  envValue(observationWorker, 'SOURCE_COMMIT') === 'a'.repeat(40));
+const observationAlternate = parse(success(['template', 'lab', chart, ...observationEnabledArgs,
+  '--namespace', 'observation-dns-check',
+  '--set-string', 'runtime.worker.topic=observation-dispatch-fixture',
+  '--set-string', 'runtime.worker.group=observation-worker-fixture',
+  '--set-string', 'runtime.kafka.existingSecret=observation-kafka-do-not-install',
+  '--set-string', 'runtime.kafka.clusterIdKey=observation-cluster-id']));
+const alternateObservationApi = firstContainer(apiManifest(observationAlternate));
+const alternateObservationWorker = firstContainer(observationAlternate.find(doc =>
+  doc.kind === 'Deployment' && doc.metadata.labels?.['app.kubernetes.io/component'] === 'worker'));
+const alternateClusterRef = alternateObservationApi.env.find(value => value.name === observationNames[4]);
+check('Observation follows the release namespace and shared custom topic group and cluster ID key',
+  envValue(alternateObservationApi, observationNames[1]) === 'kafka.observation-dns-check.svc.cluster.local:9092' &&
+  envValue(alternateObservationApi, observationNames[1]) === envValue(alternateObservationWorker, 'LAB_RUNTIME_KAFKA_BOOTSTRAP') &&
+  envValue(alternateObservationApi, observationNames[2]) === 'observation-dispatch-fixture' &&
+  envValue(alternateObservationApi, observationNames[2]) === envValue(alternateObservationWorker, 'LAB_RUNTIME_KAFKA_TOPIC') &&
+  envValue(alternateObservationApi, observationNames[3]) === 'observation-worker-fixture' &&
+  envValue(alternateObservationApi, observationNames[3]) === envValue(alternateObservationWorker, 'LAB_RUNTIME_KAFKA_GROUP') &&
+  JSON.stringify(alternateClusterRef.valueFrom.secretKeyRef) === JSON.stringify({
+    name: 'observation-kafka-do-not-install', key: 'observation-cluster-id'}));
+// Do not require a running worker or Garage merely to read a historical EMPTY group.
+const observationKafkaOnlyArgs = [...common, '--set', 'api.environment=mini-pc',
+  '--set-string', 'api.sourceCommit=' + 'b'.repeat(40),
+  '--set', 'api.kafkaObservation.enabled=true', '--set', 'runtime.kafka.enabled=true',
+  '--set-string', 'runtime.kafka.existingSecret=lint-kafka-do-not-install'];
+const observationKafkaOnly = parse(success(['template', 'lab', chart, ...observationKafkaOnlyArgs]));
+check('Observation may be enabled with Kafka while worker and Garage remain disabled',
+  observationKafkaOnly.length === 9 &&
+  !observationKafkaOnly.some(doc => ['worker', 'garage'].includes(doc.metadata.labels?.['app.kubernetes.io/component'])) &&
+  envValue(firstContainer(apiManifest(observationKafkaOnly)), observationNames[0]) === 'true');
+const observationRejected = [];
+for (const [name, option, value] of [
+  ['Observation requires mini-pc API environment', '--set', 'api.environment=k3s'],
+  ['Observation rejects unknown API source', '--set-string', 'api.sourceCommit=unknown'],
+  ['Observation requires a lowercase 40-character API source', '--set-string', 'api.sourceCommit=' + 'B'.repeat(40)],
+  ['Observation requires Kafka even with the worker disabled', '--set', 'runtime.kafka.enabled=false'],
+  ['Observation requires an existing cluster ID Secret reference', '--set-string', 'runtime.kafka.existingSecret='],
+  ['Observation rejects a string in place of its boolean opt-in', '--set-string', 'api.kafkaObservation.enabled=true'],
+  ['Observation requires its enabled property', '--set', 'api.kafkaObservation.enabled=null'],
+  ['Observation requires its settings object', '--set', 'api.kafkaObservation=null'],
+  ['Observation cannot configure a second bootstrap target', '--set', 'api.kafkaObservation.bootstrap=other.invalid:9092'],
+  ['Observation cannot embed a literal cluster ID', '--set', 'api.kafkaObservation.expectedClusterId=fixture-only'],
+]) {
+  const response = helm(['template', 'lab', chart, ...observationKafkaOnlyArgs, option, value]);
+  assert.notEqual(response.status, 0, 'Expected rejection: ' + name);
+  assert.match(response.stderr, /values don't meet the specifications of the schema/);
+  observationRejected.push(name);
+}
 const rejected=[];
 for(const [name,value]of[
   ['Kafka requires private cluster ID Secret','runtime.kafka.existingSecret='],
@@ -142,6 +250,8 @@ const result={verifiedAt:new Date().toISOString(),scope:'LOCAL_RUNTIME_FIXTURE_H
   disabledResourceCount:baseline.length,enabledResourceCount:docs.length,bootstrapOnlyResourceCount:staged.length,
   policyChecksPassed:checks.length,checks,expectedSchemaRejectionsPassed:rejected.length,rejectedInputs:rejected,
   renderedFixtureSha256:crypto.createHash('sha256').update(rendered).digest('hex'),
+  kafkaObservationSchemaRejectionsPassed:observationRejected.length, kafkaObservationRejectedInputs:observationRejected,
+  kafkaObservationDefaultEnabled:false,kafkaObservationRuntimeVerified:false,
   serverDeploymentVerified:false,pvcBoundVerified:false,brokerOrS3Verified:false,runtimeJobExecutionVerified:false};
 fs.writeFileSync(path.join(chart,'ci/runtime-render-validation.json'),JSON.stringify(result,null,2)+'\n');
 console.log(JSON.stringify(result,null,2));

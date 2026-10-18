@@ -17,17 +17,17 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 | Iceberg 보존 계획 | 순수 계획기 공개 완료 | 삭제 없는 dry-run·maintenance 테스트 59개 통과, [실행 범위](docs/runbooks/iceberg-retention-dry-run.md); 실제 snapshot 만료·객체 삭제는 미실행 |
 | Iceberg 실제 metadata capture | 새 Cloud 격리 검증 완료 | [아홉 번째 실행](docs/evidence/iceberg-capture/ATTEMPT_9.md)의 Linux87·skip0과 필수 검증9개 통과. 스냅샷3·참조1·보호 항목1·객체20, 모두 KEEP인 보존 계획. 만료·삭제·미니 PC 접촉은 미실행 |
 
-**현재 진행:** [PR #61](https://github.com/DevDooly/devdooly-platform-lab/pull/61)의 DB 복원 카드·문서와 retention planner가 main에 공개됐습니다. main `4a71ed20`의 Actions와 Jenkins 52도 성공했습니다. 이는 저장소 검증·공개 상태이며 실제 배포 애플리케이션의 source나 서버 가용성이 새로 확인됐다는 뜻은 아닙니다.
+**현재 진행(2026-10-18):** [PR #63](https://github.com/DevDooly/devdooly-platform-lab/pull/63)이 main `36696e05`에 반영됐고 같은 main의 Actions·Jenkins 검증을 확인했습니다. Iceberg9 공개 원문은 HTTP200·1,784 bytes·SHA-256 `24615854…`로 수집본과 같으며 desktop1280/mobile375·Enter 펼치기도 확인했습니다. [PR #64](https://github.com/DevDooly/devdooly-platform-lab/pull/64)의 새 [Kafka CI7](docs/evidence/kafka-observation/CI_ATTEMPT_7.md)은 전체/verify success, 고정 격리 IT1·skip0·source 불변·자기 자원 정리를 통과했습니다. source gate의 기대 수35/218과 필수 step success를 연결하며 CI2–6 실패를 보존합니다. bounded retry1의 시험 결과이며 실제 attempt 수·CI6 timeout의 정확한 전체 원인은 미확정입니다. 다음은 main 반영 전 현재 데이터 backup·보존 점검이며 미니 PC/공개 Kafka 기록 연결은 아직 검증하지 않았습니다. 현재 데이터 백업 제약 보완의 Windows 합성18개 통과는 Linux 권한·실제 백업 성공과 구분합니다. source36696용 draft GitOps #65는 미병합이며 신규 Kafka 이미지 배포가 아닙니다.
 
-**현재 도달점과 다음 단계:** 소스 `5862ba0c`의 [9차 새 실행](docs/evidence/iceberg-capture/ATTEMPT_9.md)에서 기본 CI·Linux87·UID0·skip0·source 전후 동일과 closed-copy capture를 통과했습니다. 같은 실행의 actors·clock·metadata graph·inventory를 순수 보존 계획에 연결해 객체20개를 모두 KEEP으로 남겼습니다. 다음은 이 실제 요약의 공개 화면·회귀 검사를 확인하고, 보존 정책·운영 규모 검증과 다른 장애 경계를 각각 검토하는 단계입니다. 스냅샷 만료·객체 삭제·Parquet 내용 해석·live 테이블 독립 검증은 수행하지 않았고 전체 6단계 완료로 표시하지 않습니다. 앞선1–8 실패·[별도 합성 검증](docs/evidence/iceberg-capture/STDOUT_SYNTHETIC.md)·Cloud/DB 복원 기록을 보존하며 이번 PASS로 실제8의 원인을 확정하지 않습니다.
+**9차 capture 직후 기록(2026-10-18):** 소스 `5862ba0c`의 [9차 새 실행](docs/evidence/iceberg-capture/ATTEMPT_9.md)에서 기본 CI·Linux87·UID0·skip0·source 전후 동일과 closed-copy capture를 통과했습니다. 같은 실행의 actors·clock·metadata graph·inventory를 순수 보존 계획에 연결해 객체20개를 모두 KEEP으로 남겼습니다. 다음은 이 실제 요약의 공개 화면·회귀 검사를 확인하고, 보존 정책·운영 규모 검증과 다른 장애 경계를 각각 검토하는 단계입니다. 스냅샷 만료·객체 삭제·Parquet 내용 해석·live 테이블 독립 검증은 수행하지 않았고 전체 6단계 완료로 표시하지 않습니다. 앞선1–8 실패·[별도 합성 검증](docs/evidence/iceberg-capture/STDOUT_SYNTHETIC.md)·Cloud/DB 복원 기록을 보존하며 이번 PASS로 실제8의 원인을 확정하지 않습니다.
 
-**8차 근거 반영 검증:** 웹89개·타입 검사26개 파일·Pages 빌드가 통과했고, 공개 원문은 1,791 bytes·SHA-256 `e96ca40d…`로 수집본과 같습니다. 이 로컬 결과는 실패 원인 수정이나 main 공개를 뜻하지 않습니다.
+**8차 근거 반영 당시 로컬 검증(2026-10-18):** 웹89개·타입 검사26개 파일·Pages 빌드가 통과했고, 공개 원문은 1,791 bytes·SHA-256 `e96ca40d…`로 수집본과 같습니다. 이 로컬 결과는 실패 원인 수정이나 main 공개를 뜻하지 않습니다.
 
 이번 작업의 중단 기준은 **계정 잔여 한도 60%**입니다. 해당 기준에 도달하면 새 무거운 실행을 시작하지 않고, 이미 시작한 자기 자원의 종료·증거 보존을 마친 뒤 진행 상태를 남깁니다. 완료 시각은 실제 검사·CI 결과에 따라 정하며 고정 ETA를 약속하지 않습니다. Snapshot expiration·객체 GC·삭제, 미니 PC의 새 데이터 처리나 전체 6단계 완료는 이번 capture 범위에 포함하지 않습니다.
 
 **중단 기록(2026-10-16):** 계정 잔여 한도 60%에 도달해 자동 진행을 멈췄습니다. 커밋 f24ff21e의 decoder 검증 하위 단계 7개 진단은 Windows 집중 검사 19개 중 18개 통과·POSIX 전용 1개 제외, 웹 86개·타입 검사·Pages 빌드 통과까지 확인했습니다. 새 Linux 85개와 7차 capture는 시작하지 않았습니다. 재개 시 현재 ref의 전체 SHA 확인 → Linux 85개·UID0·skip0 검증 → 새 격리 capture 한 번 → 원문·화면·문서 반영 순서로 진행합니다. [PR #63](https://github.com/DevDooly/devdooly-platform-lab/pull/63)은 초안이며 main 병합·공개 Pages 반영은 미실행입니다. 6차 capture의 실패와 미관측 값은 그대로 보존하며 이 후속 작업에서 미니 PC에 접촉하지 않았습니다.
 
-**재개 기록(2026-10-18):** 사용량 초기화 후 계정 잔여 99%에서 자동 진행을 재개했으며 중단 기준은 잔여 60%로 유지합니다. 위 2026-10-16 중단 문단은 당시 상태로 보존합니다. 재개 직후 Linux85 통과와 7차 capture 실패는 [새 근거](docs/evidence/iceberg-capture/ATTEMPT_7.md)에 구분합니다. 이 후속 검증은 미니 PC에 접촉하지 않았고 PR #63은 초안입니다. 이번 근거 반영 후 웹 회귀 87개·Astro 타입 검사 26개 파일·Pages 빌드가 통과했고, 빌드된 공개 원문은 1,794 bytes·SHA-256 `70d95a4b…`로 수집본과 같습니다. 이 로컬 검증은 Cloud capture 성공이나 main 공개를 뜻하지 않습니다.
+**재개 직후 기록(2026-10-18·7차 당시):** 사용량 초기화 후 계정 잔여 99%에서 자동 진행을 재개했으며 중단 기준은 잔여 60%로 유지합니다. 위 2026-10-16 중단 문단은 당시 상태로 보존합니다. 재개 직후 Linux85 통과와 7차 capture 실패는 [새 근거](docs/evidence/iceberg-capture/ATTEMPT_7.md)에 구분합니다. 이 후속 검증은 미니 PC에 접촉하지 않았고 PR #63은 초안입니다. 이번 근거 반영 후 웹 회귀 87개·Astro 타입 검사 26개 파일·Pages 빌드가 통과했고, 빌드된 공개 원문은 1,794 bytes·SHA-256 `70d95a4b…`로 수집본과 같습니다. 이 로컬 검증은 Cloud capture 성공이나 main 공개를 뜻하지 않습니다.
 
 ## 현재 구현과 검증
 
@@ -48,11 +48,14 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 | Jenkins·Actions 게시 gate | 같은 source SHA의 두 CI 성공 후 이미지·draft GitOps PR, 실제 테스트 실패 차단 | [연결 검증](docs/evidence/cicd-gate/README.md), [CI 절차](docs/runbooks/cicd-publication.md) |
 | 플랫폼 관측 수집 | 최소 읽기 수집·실패 보존·게시 순서 교정과 timer 자동 게시 11회 성공 | [수집 검증과 남은 범위](docs/evidence/platform-observation/README.md), [공개 필드 계약](apps/lab-web/PLATFORM_OBSERVATION.md) |
 | Kafka·Garage·상시 worker | 이전 readiness 검증의 8개 EXPORTED 작업·파일 정보 16개·객체 24개·lag 0, readiness·idle 교체·같은 ID 재시도 | [readiness 검증](docs/evidence/worker-readiness/CORRECTED_IMAGE.md), [이전 재시작](docs/evidence/runtime-recovery/README.md) |
+| Kafka 관측 조회·게시 후보 | 로컬 API/Helm·웹104·host48(Windows POSIX2개 제외), 실제 broker·미니 PC·공개 기록은 미연결 | [고정 계약](docs/contracts/kafka-observation.md), [검증 범위](docs/evidence/kafka-observation/README.md) |
 | 관리자 접속 | ClusterIP 관리 화면과 SSH 접속 도우미 | [접속 방법](docs/runbooks/admin-access.md) |
 | 백업과 복구 | 외부 암호화 사본의 Kafka/Garage PVC 격리 복원·별도 물리 블록 복원, 이전 DB/재부팅 검증 | [PVC 복원](docs/evidence/runtime-pvc-restore/README.md), [기존 복구 검증](docs/evidence/recovery/README.md) |
 | 보존·자원 예산 | 삭제 없는 보존 계획기·별도 합성 PVC 정리, 실제 cgroup 설정과 작은 작업 3회 관측 | [운영 기준](docs/runbooks/retention-resource-budget.md), [실제 근거](docs/evidence/retention-resource-budget/README.md) |
 | AI를 활용한 Java 개선 | UTC 오류 회귀·동일 결과 알고리즘·독립 Windows JMH와 정적 기록 UI | [예제](examples/java-window-analysis/README.md), [측정 조건·한계](docs/evidence/ai-window-analysis/README.md) |
 | 입력·동시 접수 | 격리 최대 1,000개·동시 2/8개 접수 검증, 실제 K3s의 1,000건 처리·파일 보존 | [격리 조건](docs/evidence/input-concurrency-load/README.md), [실제 배포·게시](docs/evidence/input-v2-deployment/README.md) |
+
+새 Kafka 관측은 commit·READ_COMMITTED LSO·lag와 수집 구간을 구분하고 실패 때 마지막 유효 기록을 보존하도록 준비했습니다. 이전 Service19와 새 HTTP6, 기본 Helm17과 새 runtime30은 각각 다른 실행입니다. 로컬 미연결 화면까지 확인했으며 실제 Kafka·미니 PC 전환·공개 Pages 연결은 [후속 절차](docs/runbooks/kafka-observation-rollout.md)로 남겨두었습니다.
 
 개인 합성 [Java 시간창 예제](examples/java-window-analysis/README.md)에서 UTC offset 오류를 재현·수정하고, 같은 답을 내는 O(n²) 기준 구현과 O(n log n) sweep을 비교했습니다. Java 테스트 20개·runner 검사 3개와 Windows Java 21의 JMH 16조합·48 fork·240 interval 측정을 완료했습니다. [실제 근거](docs/evidence/ai-window-analysis/README.md)와 [포트폴리오의 코드·기록 선택 화면](https://devdooly.github.io/devdooly-platform-lab/#ai-window)을 연결합니다. 일부 sparse 측정의 오차가 크며 회사 코드·수율 공식·운영 ETL 성능을 뜻하지 않습니다. 측정 당시 미커밋 소스 해시와 사람 검토 대기 상태를 유지합니다. [CI 연결의 검증 범위](docs/evidence/ai-window-analysis/ci-validation.md)는 성능 측정과 구분합니다.
 

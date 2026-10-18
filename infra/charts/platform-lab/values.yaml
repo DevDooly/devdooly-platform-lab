@@ -7,6 +7,9 @@ api:
     digest: ""
   sourceCommit: unknown
   environment: k3s
+  # Read-only Kafka observation is opt-in; target settings reuse the runtime values.
+  kafkaObservation:
+    enabled: false
   resources:
     requests:
       cpu: 100m

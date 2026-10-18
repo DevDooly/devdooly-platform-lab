@@ -13,9 +13,10 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 from urllib.parse import urlsplit
 
-from pages_uploader import (AutomationError, atomic_private_json, dispatch, load_job_snapshot, load_snapshot, path_chain, public_report, regular_private)
+from pages_uploader import (AutomationError, atomic_private_json, dispatch, load_job_snapshot, load_kafka_snapshot, load_snapshot, path_chain, public_report, regular_private)
 from platform_contract import moment
 
 CONFIG_KEYS={'k3s_path','kubeconfig','server','ca_file','collector_path','state_directory',
@@ -45,9 +46,9 @@ def read_config(path: Path) -> dict:
     try:
         with path.open('rb') as handle:raw=handle.read(8193)
         config=json.loads(raw)
-        if len(raw)>8192 or not isinstance(config,dict) or set(config) not in (CONFIG_KEYS,CONFIG_KEYS|{'jobs_enabled'}):raise ValueError
+        if len(raw)>8192 or not isinstance(config,dict) or not CONFIG_KEYS<=set(config)<=CONFIG_KEYS|{'jobs_enabled','kafka_enabled'}:raise ValueError
         if any(not isinstance(value,str) or not value or '\n' in value for value in config.values()):raise ValueError
-        if config.get('jobs_enabled','false') not in {'true','false'}:raise ValueError
+        if any(config.get(key,'false') not in {'true','false'} for key in ('jobs_enabled','kafka_enabled')):raise ValueError
         loopback_server(config['server'])
         for key in CONFIG_KEYS-{'server'}:
             if not Path(config[key]).is_absolute():raise ValueError
@@ -56,6 +57,9 @@ def read_config(path: Path) -> dict:
         root_code(Path(config['collector_path']).with_name('platform_contract.py'))
         if config.get('jobs_enabled')=='true':
             for name in ('job_collector.py','job_contract.py','pages_uploader.py'):
+                root_code(Path(config['collector_path']).with_name(name))
+        if config.get('kafka_enabled')=='true':
+            for name in ('kafka_collector.py','kafka_contract.py','job_collector.py','job_contract.py','pages_uploader.py'):
                 root_code(Path(config['collector_path']).with_name(name))
         regular_private(Path(config['kubeconfig']),owner_root=True)
         # The public CA is still supplied explicitly; no insecure TLS fallback.
@@ -94,63 +98,116 @@ class CycleLock:
         if self.descriptor is not None:os.close(self.descriptor)
 
 
-def run_cycle(config: dict, *, runner=subprocess.run, uploader=dispatch, lock_class=CycleLock) -> dict:
+class CycleDeadline:
+    """Host-only 145s alarm backstop, independent of per-operation socket timeouts."""
+    def __init__(self,seconds):self.seconds=seconds;self.signal=None;self.previous=None
+    def __enter__(self):
+        if os.name!='posix':return self  # Offline tests; host main rejects non-POSIX.
+        import signal
+        if signal.getitimer(signal.ITIMER_REAL)!=(0.0,0.0):raise AutomationError('PRECONDITION_FAILED')
+        self.signal=signal;self.previous=signal.getsignal(signal.SIGALRM)
+        def expired(unused_signal,unused_frame):raise subprocess.TimeoutExpired('host-cycle',self.seconds)
+        signal.signal(signal.SIGALRM,expired)
+        try:signal.setitimer(signal.ITIMER_REAL,self.seconds)
+        except BaseException:
+            signal.signal(signal.SIGALRM,self.previous);self.signal=None
+            raise
+        return self
+    def __exit__(self,*unused):
+        if self.signal is not None:
+            self.signal.setitimer(self.signal.ITIMER_REAL,0)
+            self.signal.signal(self.signal.SIGALRM,self.previous)
+
+
+def run_cycle(config: dict, *, runner=subprocess.run, uploader=dispatch, lock_class=CycleLock,
+              deadline_class=CycleDeadline, monotonic=time.monotonic) -> dict:
     state=Path(config['state_directory']);runtime=Path(config['runtime_directory'])
-    private_directory(state);private_directory(runtime)
-    with lock_class(state/'cycle.lock'):
-        started=datetime.now(timezone.utc)
-        started_precise=(started.replace(microsecond=0),started.microsecond*1000)
-        token_path=None
-        try:
-            issued=runner([config['k3s_path'],'kubectl','--kubeconfig',config['kubeconfig'],
-                '-n','platform-lab','create','token','platform-public-observer','--duration=10m'],
-                stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=15,check=False,env=SAFE_ENV)
-            if issued.returncode!=0 or len(issued.stdout)>16384:
-                return public_report('SA_TOKEN_UNAVAILABLE')
-            token=issued.stdout.strip()
-            if not re.fullmatch(rb'[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+',token):
-                return public_report('SA_TOKEN_UNAVAILABLE')
-            descriptor,filename=tempfile.mkstemp(prefix='sa-',suffix='.token',dir=runtime)
-            token_path=Path(filename);os.chmod(token_path,0o600)
-            with os.fdopen(descriptor,'wb') as handle:handle.write(token);handle.flush();os.fsync(handle.fileno())
-            output=state/'platform-observation.json'
-            captured=runner([sys.executable,'-B',config['collector_path'],
-                '--server',config['server'],'--ca-file',config['ca_file'],
-                '--token-file',str(token_path),'--output',str(output),'--deadline-seconds','60'],
-                stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=80,check=False,env=SAFE_ENV)
-            if captured.returncode not in {0,1}:return public_report('CAPTURE_FAILED')
-            snapshot=load_snapshot(output,datetime.now(timezone.utc))
-            completed=moment(snapshot['latestAttempt']['attemptedAt'],datetime.now(timezone.utc))
-            if completed<started_precise:return public_report('CAPTURE_FAILED')
-            jobs=None
-            if config.get('jobs_enabled')=='true':
-                job_output=state/'jobs-observation.json'
-                code='JOB_CAPTURE_FAILED'
-                try:
-                    job_capture=runner([sys.executable,'-B',str(Path(config['collector_path']).with_name('job_collector.py')),
-                        '--server',config['server'],'--ca-file',config['ca_file'],
-                        '--token-file',str(token_path),'--output',str(job_output),'--deadline-seconds','15'],
-                        stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=20,check=False,env=SAFE_ENV)
-                    if job_capture.returncode==0:
-                        candidate=load_job_snapshot(job_output,datetime.now(timezone.utc))
-                        captured_at=moment(candidate['capturedAt'],datetime.now(timezone.utc))
-                        if captured_at>=started_precise:jobs=candidate;code='NONE'
-                except Exception:pass
-                # Failure does not rewrite the last job record or block a valid
-                # platform envelope. Missing input makes Pages retain last-good.
-                atomic_private_json(state/'jobs-capture.json',{'attemptedAt':datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),
-                    'status':'success' if jobs is not None else 'failure','errorCode':code,
-                    'capturedAt':jobs['capturedAt'] if jobs is not None else None})
-            # A valid collection-failure envelope is publishable: it preserves
-            # lastSuccess and honestly shows the most recent failed attempt.
-            if jobs is not None:
-                return uploader(snapshot,Path(config['pages_token_file']),state/'pages-dispatch.json',job_snapshot=jobs)
-            return uploader(snapshot,Path(config['pages_token_file']),state/'pages-dispatch.json')
-        except subprocess.TimeoutExpired:return public_report('CAPTURE_TIMEOUT')
-        finally:
-            if token_path is not None:
-                try:token_path.unlink()
-                except OSError:pass
+    with deadline_class(145):
+        cutoff=monotonic()+145
+        private_directory(state);private_directory(runtime)
+        with lock_class(state/'cycle.lock'):
+            def remaining(maximum,reserve=15):
+                value=cutoff-monotonic()-reserve
+                if value<=0:raise subprocess.TimeoutExpired('host-cycle',145)
+                return min(maximum,value)
+            started=datetime.now(timezone.utc)
+            started_precise=(started.replace(microsecond=0),started.microsecond*1000)
+            token_path=None
+            try:
+                issued=runner([config['k3s_path'],'kubectl','--kubeconfig',config['kubeconfig'],
+                    '-n','platform-lab','create','token','platform-public-observer','--duration=10m'],
+                    stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=remaining(15),check=False,env=SAFE_ENV)
+                if issued.returncode!=0 or len(issued.stdout)>16384:
+                    return public_report('SA_TOKEN_UNAVAILABLE')
+                token=issued.stdout.strip()
+                if not re.fullmatch(rb'[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+',token):
+                    return public_report('SA_TOKEN_UNAVAILABLE')
+                descriptor,filename=tempfile.mkstemp(prefix='sa-',suffix='.token',dir=runtime)
+                token_path=Path(filename);os.chmod(token_path,0o600)
+                with os.fdopen(descriptor,'wb') as handle:handle.write(token);handle.flush();os.fsync(handle.fileno())
+                output=state/'platform-observation.json'
+                captured=runner([sys.executable,'-B',config['collector_path'],
+                    '--server',config['server'],'--ca-file',config['ca_file'],
+                    '--token-file',str(token_path),'--output',str(output),'--deadline-seconds','60'],
+                    stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=remaining(80),check=False,env=SAFE_ENV)
+                if captured.returncode not in {0,1}:return public_report('CAPTURE_FAILED')
+                snapshot=load_snapshot(output,datetime.now(timezone.utc))
+                completed=moment(snapshot['latestAttempt']['attemptedAt'],datetime.now(timezone.utc))
+                if completed<started_precise:return public_report('CAPTURE_FAILED')
+                jobs=None
+                if config.get('jobs_enabled')=='true':
+                    job_output=state/'jobs-observation.json'
+                    code='JOB_CAPTURE_FAILED'
+                    try:
+                        job_capture=runner([sys.executable,'-B',str(Path(config['collector_path']).with_name('job_collector.py')),
+                            '--server',config['server'],'--ca-file',config['ca_file'],
+                            '--token-file',str(token_path),'--output',str(job_output),'--deadline-seconds','15'],
+                            stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=remaining(20),check=False,env=SAFE_ENV)
+                        if job_capture.returncode==0:
+                            candidate=load_job_snapshot(job_output,datetime.now(timezone.utc))
+                            captured_at=moment(candidate['capturedAt'],datetime.now(timezone.utc))
+                            if captured_at>=started_precise:jobs=candidate;code='NONE'
+                    except Exception:pass
+                    # Failure does not rewrite the last job record or block a valid
+                    # platform envelope. Missing input makes Pages retain last-good.
+                    atomic_private_json(state/'jobs-capture.json',{'attemptedAt':datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),
+                        'status':'success' if jobs is not None else 'failure','errorCode':code,
+                        'capturedAt':jobs['capturedAt'] if jobs is not None else None})
+                kafka=None
+                if config.get('kafka_enabled')=='true':
+                    kafka_output=state/'kafka-observation.json';code='KAFKA_CAPTURE_FAILED'
+                    try:
+                        # Optional work must leave the full dispatch reserve untouched.
+                        if cutoff-monotonic()>=27:
+                            captured_kafka=runner([sys.executable,'-B',str(Path(config['collector_path']).with_name('kafka_collector.py')),
+                                '--server',config['server'],'--ca-file',config['ca_file'],
+                                '--token-file',str(token_path),'--output',str(kafka_output),'--deadline-seconds','10'],
+                                stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=remaining(12),check=False,env=SAFE_ENV)
+                            if captured_kafka.returncode==0:
+                                candidate=load_kafka_snapshot(kafka_output,datetime.now(timezone.utc))
+                                if moment(candidate['captureStartedAt'],datetime.now(timezone.utc))>=started_precise:
+                                    kafka=candidate;code='NONE'
+                    except Exception:pass
+                    try:
+                        atomic_private_json(state/'kafka-capture.json',{'attemptedAt':datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),
+                            'status':'success' if kafka is not None else 'failure','errorCode':code,
+                            'capturedAt':kafka['capturedAt'] if kafka is not None else None})
+                    except Exception:pass  # Optional diagnostics cannot block the existing publication.
+                # A collection-failure envelope is publishable and retains lastSuccess.
+                remaining(15,reserve=0)
+                options={}
+                if jobs is not None:options['job_snapshot']=jobs
+                if kafka is not None:options['kafka_snapshot']=kafka
+                if uploader is dispatch:options['deadline']=cutoff
+                return uploader(snapshot,Path(config['pages_token_file']),state/'pages-dispatch.json',**options)
+            except subprocess.TimeoutExpired:return public_report('CAPTURE_TIMEOUT')
+            except AutomationError as error:
+                if str(error)=='CAPTURE_TIMEOUT':return public_report('CAPTURE_TIMEOUT')
+                raise
+            finally:
+                if token_path is not None:
+                    try:token_path.unlink()
+                    except OSError:pass
 
 
 def main(argv=None) -> int:
@@ -161,6 +218,7 @@ def main(argv=None) -> int:
         if os.name!='posix' or os.geteuid()!=0:raise AutomationError('ROOT_REQUIRED')
         config=read_config(args.config)
         report=run_cycle(config)
+    except subprocess.TimeoutExpired:report=public_report('CAPTURE_TIMEOUT')
     except AutomationError as error:
         allowed={'CYCLE_ALREADY_RUNNING','ROOT_REQUIRED','SNAPSHOT_INVALID','PAGES_CREDENTIAL_UNAVAILABLE'}
         report=public_report(str(error) if str(error) in allowed else 'PRECONDITION_FAILED')

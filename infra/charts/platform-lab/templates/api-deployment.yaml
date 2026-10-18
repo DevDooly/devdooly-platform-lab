@@ -65,6 +65,21 @@ spec:
               value: {{ .Values.api.sourceCommit | quote }}
             - name: IMAGE_DIGEST
               value: {{ .Values.api.image.digest | quote }}
+            - name: LAB_KAFKA_OBSERVATION_ENABLED
+              value: {{ .Values.api.kafkaObservation.enabled | quote }}
+            {{- if .Values.api.kafkaObservation.enabled }}
+            - name: LAB_KAFKA_OBSERVATION_BOOTSTRAP
+              value: {{ printf "kafka.%s.svc.cluster.local:9092" .Release.Namespace | quote }}
+            - name: LAB_KAFKA_OBSERVATION_TOPIC
+              value: {{ .Values.runtime.worker.topic | quote }}
+            - name: LAB_KAFKA_OBSERVATION_GROUP
+              value: {{ .Values.runtime.worker.group | quote }}
+            - name: LAB_KAFKA_OBSERVATION_EXPECTED_CLUSTER_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "runtime.kafka.existingSecret must name a pre-created Secret" .Values.runtime.kafka.existingSecret | quote }}
+                  key: {{ .Values.runtime.kafka.clusterIdKey | quote }}
+            {{- end }}
             - name: JAVA_TOOL_OPTIONS
               value: -XX:MaxRAMPercentage=70.0 -XX:+ExitOnOutOfMemoryError
           startupProbe:

@@ -102,6 +102,34 @@ def sqlite_snapshot(source_db: Path, destination_db: Path, progress) -> None:
     require_standalone_snapshot(destination_db)
 
 
+def validate_demo_counts(counts: str) -> None:
+    """Validate count query rows without assuming an initial seed dataset."""
+    message = "Demo counts must contain consistent nonnegative integer totals and per-run metrics."
+    if type(counts) is not str:
+        raise BackupError(message)
+    rows = counts.splitlines()
+    if len(rows) < 2:
+        raise BackupError(message)
+    fields = [row.split("\t") for row in rows]
+    if any(len(row) != (1 if index < 2 else 5) for index, row in enumerate(fields)):
+        raise BackupError(message)
+    if any(re.fullmatch(r"[0-9]+", field) is None for row in fields for field in row):
+        raise BackupError(message)
+    try:
+        values = [[int(field) for field in row] for row in fields]
+    except ValueError:
+        raise BackupError(message) from None
+    run_count, outcome_count = values[0][0], values[1][0]
+    metrics = values[2:]
+    if len(metrics) != run_count:
+        raise BackupError(message)
+    if any(input_count != success + failure + duplicate + pending
+           for input_count, success, failure, duplicate, pending in metrics):
+        raise BackupError(message)
+    if sum(row[0] for row in metrics) != outcome_count:
+        raise BackupError(message)
+
+
 def create_backup(args: argparse.Namespace) -> dict:
     validate_names(args)
     root = checked_path(args.data_root)
@@ -139,8 +167,7 @@ def create_backup(args: argparse.Namespace) -> dict:
         raise BackupError("Online logical backup currently supports InnoDB tables only.")
     baseline = sql(BASELINE_QUERY)
     counts = sql("SELECT COUNT(*) FROM demo_run; SELECT COUNT(*) FROM demo_outcome; SELECT input_count,success_count,failure_count,duplicate_count,pending_count FROM demo_run ORDER BY id;")
-    if counts.strip().splitlines() != ["1", "12", "12\t7\t3\t2\t0"]:
-        raise BackupError("The current recovery drill expects the canonical 1-run/12-outcome dataset.")
+    validate_demo_counts(counts)
 
     backup = backup_root / ("operations-" + dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + secrets.token_hex(3))
     backup.mkdir(mode=0o700)
