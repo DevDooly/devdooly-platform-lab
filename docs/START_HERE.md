@@ -1,6 +1,10 @@
 # 현재 상태에서 이어서 구축하기
 
-최근 배포·보존 확인(2026-10-16 갱신): 소스 `74a8e988`의 [Actions](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38814779596)와 Jenkins 45에서 API 191개 + 독립 Java 예제 20개, 총 211개를 통과했습니다. 이어 PR #52의 API·웹과 PR #53의 worker를 실제 전환했습니다. 애플리케이션 소스는 `74a8e988`, 최종 GitOps revision은 `b63fedfa`입니다. 2026-10-15 23:12:57 UTC의 배포 후 검사에서 작업 8개·export 정보 16개, 기존 객체 24개 + native7 객체 12개의 전체 GET, PV·PVC 각 13개·Docker 60개와 Kafka offset/end 8·lag 0을 확인했습니다. [S3 전송 배포·보존 근거](evidence/s3-runtime-rollout/README.md)는 해당 시점의 기록이며 실시간 가용성을 뜻하지 않습니다.
+최신 연결(2026-10-18 UTC): [공개 HTTPS·실시간 조회 근거](evidence/public-read-https/README.md)에서 외부 runner의 표준 TLS·고정 조회와 Pages의 작업 8개·Kafka live 조회 및 시계 경고 대조를 확인했습니다. 공개 실행·POST·관리 화면은 제공하지 않습니다.
+
+최신 snapshot 화면: 새 합성 warehouse의 [만료·보존 근거](evidence/cloud-iceberg-expiration/README.md)와 저장된 [만료 전후 비교 화면](https://devdooly.github.io/devdooly-platform-lab/#snapshot-expiration)을 공개했습니다. 아래 단계별 기록은 각각 당시의 조건이며, 최신 완료·보류 범위는 [다음 개발 계획](NEXT_STEPS.md)의 맨앞 안내를 따릅니다.
+
+이전 배포·보존 확인(2026-10-16 갱신): 소스 `74a8e988`의 [Actions](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38814779596)와 Jenkins 45에서 API 191개 + 독립 Java 예제 20개, 총 211개를 통과했습니다. 이어 PR #52의 API·웹과 PR #53의 worker를 실제 전환했습니다. 애플리케이션 소스는 `74a8e988`, 최종 GitOps revision은 `b63fedfa`입니다. 2026-10-15 23:12:57 UTC의 배포 후 검사에서 작업 8개·export 정보 16개, 기존 객체 24개 + native7 객체 12개의 전체 GET, PV·PVC 각 13개·Docker 60개와 Kafka offset/end 8·lag 0을 확인했습니다. [S3 전송 배포·보존 근거](evidence/s3-runtime-rollout/README.md)는 해당 시점의 기록이며 실시간 가용성을 뜻하지 않습니다.
 
 후속 별도 JVM SDK 검증에서는 실제 배포 JAR의 factory와 Apache5로 알려진 객체 3개를 전체 GET했습니다. 3회 호출·3회 시도·추가 retry 0회, client 종료·정상 exit 0과 자기 Job·ConfigMap·Secret·읽기 전용 key의 정리·폐기를 확인했습니다. factory의 maxAttempts 3은 유지했습니다. 운영 API JVM 내부의 호출·장애 주입·PUT·SLA 검증과 구분합니다. 2026-10-16 00:02:58 UTC의 별도 읽기 검사에서 전체 객체 36개와 업무 SQL·기존 리소스 보존, 임시 SDK 자원·키 부재를 확인했습니다.
 
@@ -62,7 +66,9 @@ Jenkins의 첫 빌드는 플러그인 충돌로 단계가 실행되지 않아 �
 
 ## 지금 접속하기
 
-공개 결과는 [포트폴리오](https://devdooly.github.io/devdooly-platform-lab/)에서 볼 수 있습니다. 새 작업/export 카드는 실제 배포 환경 `MINI_PC / DEPLOYED_RUNTIME`의 마지막 HTTP 관측을 표시합니다. 앞선 재시작 검증의 두 번째 원래 주기 게시에서는 고정 fixture 3개 작업의 EXPORTED·새 worker 시작 시각·저장 확인 시각과 파일 정보 6개를 확인했습니다. 공개 JSON은 실제 수집 원본과 일치하며 미니 PC 실시간 API를 브라우저에 연결한 화면은 아닙니다. 수집은 약 30분 주기로 구성했고 heartbeat 경고 기준은 5분입니다. 새 job의 원래 timer 자동 수집·게시 2회와 완료 간격 1개(1809.371239초)를 확인했습니다. [후속 검증 근거](evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다.
+공개 결과는 [포트폴리오](https://devdooly.github.io/devdooly-platform-lab/)에서 볼 수 있습니다. 후속 공개 화면에서는 미니 PC API의 작업 8개·Kafka 실시간 조회와 시계 경고 표시·해소를 확인했습니다([실제 HTTPS·화면 근거](evidence/public-read-https/README.md)). 조회 실패 시 마지막 게시본을 사용하는 경계는 유지합니다.
+
+다음은 이전 재시작·정적 게시 검증의 기록입니다. 당시 작업/export 카드는 실제 배포 환경 `MINI_PC / DEPLOYED_RUNTIME`의 마지막 HTTP 관측을 표시했습니다. 앞선 재시작 검증의 두 번째 원래 주기 게시에서는 고정 fixture 3개 작업의 EXPORTED·새 worker 시작 시각·저장 확인 시각과 파일 정보 6개를 확인했습니다. 공개 JSON은 실제 수집 원본과 일치하며 미니 PC 실시간 API를 브라우저에 연결한 화면은 아니었습니다. 당시 수집은 약 30분 주기로 구성했고 heartbeat 경고 기준은 5분입니다. 새 job의 원래 timer 자동 수집·게시 2회와 완료 간격 1개(1809.371239초)를 확인했습니다. [후속 검증 근거](evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다.
 
 기존 플랫폼 관측의 초기 공개·반복 실행 기록은 다음과 같습니다. 기존 **미니 PC에서 확인한 마지막 기록**은 정적 앱 관측본이며 실시간 상태는 아닙니다. 새 플랫폼 관측본은 공개 브라우저와 게시 순서 보존을 검증했습니다. 최초 timer 자동 수집 `2026-10-12T01:38:38.790231Z`의 전체 JSON과 브라우저 표시가 일치했습니다. 이후 서비스 실행 완료 시각 기준 01:38:40~06:45:29 UTC의 11회가 모두 Pages build·deploy success였고 약 30~31분 간격을 확인했습니다. 당시 추가 수집 `2026-10-12T07:16:23.800530Z`도 전체 공개 JSON·브라우저 재조회로 확인했습니다. timer는 enabled·active이며 장기간 운영과 자격증명 만료·회전은 후속입니다. API의 플랫폼 `NOT_CONFIGURED`는 조회 API 내부의 상태 수집이 연결되지 않았음을 뜻하며 별도 정적 collector의 결과로 이 값을 바꾸지 않습니다.
 
@@ -82,7 +88,7 @@ Kafka·Garage의 전용 PVC 3개는 외부 사본에서 새 볼륨으로 복원�
 
 ## 다음 작업
 
-**다음 작업 지점(2026-10-18):** 소스 `5862ba0c`의 [9차 새 capture](evidence/iceberg-capture/ATTEMPT_9.md)는 기본 CI·Linux87·UID0·skip0·source 전후 동일과 필수 검증9개를 통과했습니다. 같은 실행의 actors·clock·metadata graph·inventory를 순수 보존 계획에 연결했고 스냅샷3·참조1·보호 항목1·객체20을 관측했습니다. 모든 객체 KEEP이며 스냅샷 제안·객체 삭제 후보는 각각0개입니다. 다음은 실제 요약의 화면·회귀 확인 후 보존 정책·운영 규모와 다른 장애 경계를 독립 검토하는 단계입니다. 삭제·만료·미니 PC 접촉·Parquet 해석·live 독립 검증은 미실행이고 이전1–8 실패를 보존합니다. [절차](runbooks/iceberg-closed-copy-capture.md)에 따라 계정 잔여60%에서 안전하게 중단합니다.
+**이전 capture 작업 지점(2026-10-18 당시):** 소스 `5862ba0c`의 [9차 새 capture](evidence/iceberg-capture/ATTEMPT_9.md)는 기본 CI·Linux87·UID0·skip0·source 전후 동일과 필수 검증9개를 통과했습니다. 같은 실행의 actors·clock·metadata graph·inventory를 순수 보존 계획에 연결했고 스냅샷3·참조1·보호 항목1·객체20을 관측했습니다. 모든 객체 KEEP이며 스냅샷 제안·객체 삭제 후보는 각각0개입니다. 다음은 실제 요약의 화면·회귀 확인 후 보존 정책·운영 규모와 다른 장애 경계를 독립 검토하는 단계입니다. 삭제·만료·미니 PC 접촉·Parquet 해석·live 독립 검증은 미실행이고 이전1–8 실패를 보존합니다. [절차](runbooks/iceberg-closed-copy-capture.md)에 따라 계정 잔여60%에서 안전하게 중단합니다.
 
 [다음 개발 계획](NEXT_STEPS.md)에 우선순위와 단계별 결과물·완료 조건을 정리했습니다.
 
@@ -90,10 +96,10 @@ Kafka·Garage의 전용 PVC 3개는 외부 사본에서 새 볼륨으로 복원�
 2. 확보한 외부 백업의 추가 물리 장치 사본과 K3s·Jenkins archive 전체 복원 검토
 3. 전용 status credential의 만료·회전과 게시 산출물 보존 운영 정리
 4. Pages 자격증명의 실제 만료·회전과 장기간 반복 운영 검증
-5. 필요한 경우 기존 프록시·DDNS·TLS 조건을 확인한 뒤 공개 읽기 API와 외부망 검증
-6. [보존·자원 기준](runbooks/retention-resource-budget.md)을 유지하며 객체 GC·요청 빈도 제한·과부하 용량·진행 중 장애와 AI 합성 예제의 사람 검토를 이어가기. [새 Cloud 연결·작은 compaction](evidence/cloud-lakehouse/FULL_SUCCESS.md)과 [현재 DB 백업·격리 복원 공개 기록](evidence/current-db-restore/README.md)은 완료했고 [9차 closed-copy capture의 KEEP 보존 계획](evidence/iceberg-capture/ATTEMPT_9.md)도 확인했으며, 다음은 보존 정책·운영 규모와 다른 장애 경계의 독립 검토. snapshot 만료·객체 GC는 미실행이며 미니 PC native7의 중지된 시험 환경과 보관 자료는 유지하기
+5. 기존 프록시·DuckDNS·표준 TLS를 통한 [공개 읽기 API와 외부 runner·Pages 조회 검증](evidence/public-read-https/README.md)은 완료. 휴대폰 외부망 확인·인증서 자연 갱신·장기간 운영은 별도 후속
+6. [보존·자원 기준](runbooks/retention-resource-budget.md)을 유지하며 객체 GC·요청 빈도 제한·과부하 용량·진행 중 장애와 AI 합성 예제의 사람 검토를 이어가기. [새 Cloud 연결·작은 compaction](evidence/cloud-lakehouse/FULL_SUCCESS.md)과 [현재 DB 백업·격리 복원 공개 기록](evidence/current-db-restore/README.md)은 완료했고 [9차 closed-copy capture의 KEEP 보존 계획](evidence/iceberg-capture/ATTEMPT_9.md)도 확인했으며, 다음은 보존 정책·운영 규모와 다른 장애 경계의 독립 검토. 위 capture 당시 snapshot 만료·객체 GC는 미실행이었으며 미니 PC native7의 중지된 시험 환경과 보관 자료는 유지하기
 
-CI/CD의 정상 배포·실패 차단·이전 digest 복구를 확인했으며, 3단계는 제한된 실제 수집·인증 실패·회복과 수동 공개 게시·브라우저를 확인했습니다. 게시 순서 회귀 교정 후 실제 재검증도 완료했고 API·웹 중단·같은 정상 B 복원도 확인했고 정기 운영 검증을 이어가며 새로운 inbound 경로는 열지 않았습니다. 기존 서비스가 있으므로 재부팅·방화벽 변경·프록시 교체를 일괄 실행하지 않습니다. Windows 외부 사본의 무결성, 격리 DB 복원과 호스트 재부팅을 검증했습니다. K3s·Jenkins archive 전체 복원은 아직 별도 작업입니다. PV의 Delete 정책 때문에 PVC·namespace를 수동 삭제하면 데이터가 지워질 수 있습니다.
+CI/CD의 정상 배포·실패 차단·이전 digest 복구를 확인했으며, 3단계는 제한된 실제 수집·인증 실패·회복과 수동 공개 게시·브라우저를 확인했습니다. 게시 순서 회귀 교정 후 실제 재검증도 완료했고 API·웹 중단·같은 정상 B 복원도 확인했고 정기 운영 검증을 이어가며 당시 새로운 inbound 경로는 열지 않았습니다. 기존 서비스가 있으므로 재부팅·방화벽 변경·프록시 교체를 일괄 실행하지 않습니다. Windows 외부 사본의 무결성, 격리 DB 복원과 호스트 재부팅을 검증했습니다. K3s·Jenkins archive 전체 복원은 아직 별도 작업입니다. PV의 Delete 정책 때문에 PVC·namespace를 수동 삭제하면 데이터가 지워질 수 있습니다.
 
 ## 관련 자료
 

@@ -1,5 +1,18 @@
 # 단계별 작업과 완료 조건
 
+## 최신 안내 — 2026-10-18 UTC 검증 반영
+
+현재 상태는 이 안내와 연결된 최신 근거를 우선합니다. 아래 **이전 계획과 검증 기록**은 각 수집·작성 시점의 기록이며, 당시의 “미실행·미연결”과 미완료 체크를 최신 상태로 해석하지 않습니다. 한국 시각으로 10월 19일에 해당하는 후속 검증도 포함합니다.
+
+- **새 Cloud snapshot 만료:** [실행 39140688897의 근거](evidence/cloud-iceberg-expiration/README.md)에서 snapshot 1개 만료와 data·manifest·manifest list 각 1개 삭제, tag·공유 파일·current 18행·Silver 12행 보존을 확인했습니다. 미니 PC에 접속하지 않고 새 합성 warehouse만 사용했습니다.
+- **공개 HTTPS와 live 조회:** [외부 HTTPS·공개 화면 근거](evidence/public-read-https/README.md)에서 표준 TLS·허용 GET 6개·지정 거부 3개를 확인하고, Pages의 실시간 작업 8개·Kafka 조회 연결과 시계 경고 표시·해소를 대조했습니다. 공개 POST·관리 도구·실행 기능은 제공하지 않습니다.
+- **격리 Kafka ACL:** [실제 격리 시험](evidence/kafka-acl/README.md)에서 DESCRIBE 관측 profile의 조회와 선택 RPC 거부 5개·잘못된 비밀번호의 인증 실패 1개를 확인했습니다. 운영 Kafka 권한이나 TLS 기밀성 검증은 아닙니다.
+- **저장된 snapshot 관측 화면:** 저장된 만료 전 4/25·만료 후 3/23(snapshot/객체 수)의 [전후 비교 화면](https://devdooly.github.io/devdooly-platform-lab/#snapshot-expiration)을 공개하고 전후 전환을 확인했습니다([PR120](https://github.com/DevDooly/devdooly-platform-lab/pull/120), [Pages 39142668759](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39142668759)).
+
+**다음·보류:** DB와 Garage의 공유 filesystem은 읽기 전용으로 확인했지만, quota·자원 예산·실제 앱 reader·회계 연결이 미확정이므로 [PR102 접수 gate](https://github.com/DevDooly/devdooly-platform-lab/pull/102)는 미연결·보류입니다. 운영 자료의 만료/GC, 장기간 가용성·성능 SLA, 작업 진행 중 호스트 장애·HA는 미검증입니다. 휴대폰 외부망 확인·인증서 자연 갱신·자격증명 회전도 위 hosted/browser 결과와 별도 범위로 남깁니다.
+
+## 이전 계획과 검증 기록
+
 체크된 항목은 확인된 결과가 있는 작업입니다. 계획 단계의 기능에는 체크하지 않습니다. 현재 로컬·Linux runner 검증과 미니 PC의 K3s·Jenkins·Argo CD 실행을 확인했으며, 실제 근거와 남은 작업을 구분합니다. 각 항목은 실제 검증과 함께 갱신합니다. 우선순위와 구체적인 다음 결과물은 [다음 개발 계획](NEXT_STEPS.md)을 따릅니다.
 
 최근 배포·보존 확인(2026-10-16 갱신): 소스 `74a8e988`의 [Actions](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38814779596)와 Jenkins 45에서 API 191개 + 독립 Java 예제 20개, 총 211개를 통과했습니다. 이어 PR #52의 API·웹과 PR #53의 worker를 실제 전환했습니다. 애플리케이션 소스는 `74a8e988`, 최종 GitOps revision은 `b63fedfa`입니다. 2026-10-15 23:12:57 UTC의 배포 후 검사에서 작업 8개·export 정보 16개, 기존 객체 24개 + native7 객체 12개의 전체 GET, PV·PVC 각 13개·Docker 60개와 Kafka offset/end 8·lag 0을 확인했습니다. [S3 전송 배포·보존 근거](evidence/s3-runtime-rollout/README.md)는 해당 시점의 기록이며 실시간 가용성을 뜻하지 않습니다.

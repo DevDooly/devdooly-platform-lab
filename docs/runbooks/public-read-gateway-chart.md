@@ -1,8 +1,33 @@
 # 선택적 조회 gateway의 Helm 선언
 
-현재 상태(2026-10-18): [내부 조회·접근 진단과 보존 검증](../evidence/public-read-gateway-internal/README.md)을 마쳤습니다. 외부 HTTPS·공개 live GET 연결은 별도 미완료입니다. 아래 활성화 선행조건과 미실행 표시는 당시 계획·관측 기록이며 현재 내부 배포 상태와 구분합니다.
+현재 연결 근거(2026-10-19 정리): [내부 조회·접근 진단과 보존 검증](../evidence/public-read-gateway-internal/README.md)에 이어 DuckDNS 도메인의 표준 CA·SNI TLS, GitHub 외부 runner의 허용 GET 6개·지정 거부 3개와 Pages 실시간 조회를 확인했습니다. [실제 HTTPS·공개 화면·자연 DDNS timer 기록](../evidence/public-read-https/README.md)은 각각의 확인 시점과 범위를 구분합니다. 아래 초기 활성화 조건과 이전 도메인의 실패는 당시 기록으로 보존하며 현재 연결 상태를 뜻하지 않습니다.
 
-공개 live GET의 연결 준비에서는 HTTPS base의 pathname으로 `/api` 또는 `/platform-lab/api`를 허용합니다. 기존 Traefik 경로를 보존할 전용 외부 namespace는 `/platform-lab/api`를 계획으로 선택했으며, 실제 route 충돌과 적용은 metadata 검토 뒤 확인합니다. 현재 `LAB_PUBLIC_API_URL`은 미설정 상태로 유지하고 상대 `/api`·Pages 게시본의 기존 기본 동작을 보존합니다. 이 UI 설정 지원은 외부 HTTPS·라우팅·공개 API 접속 완료를 뜻하지 않습니다.
+공개 live GET은 기존 Traefik에 추가한 전용 `/platform-lab/api` 경로를 사용합니다. Pages의 `LAB_PUBLIC_API_URL` 설정과 실제 Job·Kafka 화면은 위 브라우저 근거에서 확인했습니다. 프런트엔드 설정은 HTTPS base의 `/api` 또는 `/platform-lab/api`를 허용하며, 조회 실패 시 마지막 게시본으로 전환하는 동작은 유지합니다. 설정값만으로 연결 성공을 판정하지 않습니다.
+
+## DDNS부터 조회 gateway까지
+
+| 계층 | 담당하는 일 | 다른 계층과의 경계 |
+| --- | --- | --- |
+| DuckDNS | 도메인의 IPv4 A 갱신 요청 | 포트를 열거나 방화벽·TLS를 설정하지 않음. `UPDATE_ACCEPTED`는 요청 수락이며 DNS 값 일치·전파의 별도 확인이 필요 |
+| 공유기 포트포워딩·DMZ | 외부에서 들어온 패킷을 지정 장비로 전달 | DDNS는 목적지 이름을 제공할 뿐 이 전달 설정을 대신하지 않음 |
+| 호스트 방화벽 | 장비에 도착한 트래픽에 수신 규칙 적용 | 기존 IPv4 TCP 80·443 허용 선언은 확인했지만 선언만으로 외부 경로 전체를 증명하지 않음 |
+| 기존 Traefik | HTTPS와 Host·전용 경로를 처리해 Lab gateway로 전달 | 기존 서비스·provider 파일 7개 유지. 외부 웹 연결은 기존 TCP 80·443을 사용하며 관리 포트 공개 추가는 필요하지 않음 |
+| Lab 조회 gateway | 고정 조회 경로·method·Origin 정책 적용 | 외부 runner에서 GET 6개와 지정 거부 3개 확인. 공개 POST·관리 API·작업 실행 기능을 제공하지 않음 |
+
+DDNS updater의 파일·단일 요청·timer 계약은 [구현 안내](../../infra/duckdns-updater/README.ko.md), 실제 자연 실행 한 회는 [공개 근거](../evidence/public-read-https/README.md#duckdns-timer의-자연-실행-확인)로 구분합니다. updater 안내의 미배포·검증 대기 문구는 구현 준비 시점의 기록입니다. 접수 성공만으로 모든 주기의 DNS 일치나 인증서 갱신을 완료 처리하지 않습니다.
+
+표준 TLS 검증은 연결 대상의 인증서를 확인합니다. Origin 정책은 사용자별 인증이나 요청 서명을 제공하지 않으며, 선택한 거부 3개가 임의의 모든 경로·공격·관리 접근을 검증한 것은 아닙니다. 허용 필드의 읽기 전용 공개 범위와 기존 관리 경로를 유지합니다.
+
+## 재부팅·주소 변경·인증서 갱신 점검
+
+기존 [호스트 재부팅 검증](lab-operations.md#호스트-재부팅)은 새 공개 HTTPS 경로를 추가하기 전의 별도 기록입니다. 재부팅은 다른 Docker 서비스에도 영향을 주므로 기존 운영 절차를 따르며, 이 문서는 새 재부팅·재시작을 실행한 결과가 아닙니다.
+
+1. 재부팅 이후 DDNS timer의 enabled·active·다음 예정 시각과 최근 요청 수락 기록을 확인합니다. DNS A와 현재 WAN IPv4의 일치는 별도로 대조하며, updater는 기존 AAAA를 검증하지 않습니다. 불명확한 timeout을 즉시 중복 요청으로 바꾸지 않습니다.
+2. 기존 Traefik의 identity·주소와 gateway의 private `/32` parameter가 여전히 일치하는지 확인합니다. 주소가 바뀌면 과거 값을 성공 근거로 쓰지 않으며 허용 subnet을 자동 확대하지 않습니다. `/32`는 NAT·node 예외와 주소 재사용까지 배제하는 영구 identity 증명이 아닙니다.
+3. 표준 CA·SNI TLS와 고정 조회·거부 경로를 같은 시점에 다시 확인한 기록으로 연결 상태를 판정합니다. Pages의 성공 표시나 지난 hosted 결과만으로 재부팅 후 경로를 통과 처리하지 않습니다.
+4. 인증서의 자연 갱신은 기존 Traefik resolver가 담당하며, DDNS timer와 별도입니다. 갱신 시점의 표준 TLS·인증서 유효기간과 필요한 웹 경로를 확인하는 후속 관측이 필요합니다. 새 공개 경로를 포함한 재부팅 후 복구와 인증서 자연 갱신 완료는 아직 실증하지 않았습니다.
+
+## 초기 chart 준비 기록
 
 이 선언은 검증한 조회 정책을 K3s에 올리기 위한 준비입니다. chart 기본값은 `publicReadGateway.enabled: false`이며, 내부 활성화 후보는 `home-lab/runtime.yaml`에 true를 선언합니다. 실제 AppProject 권한 적용과 runtime 활성화는 아래 순서로 별도 진행해야 합니다. Windows 오프라인 검사와 소스 `501e127`의 실제 Linux CI에서 기본값·명시적 false의 기존 렌더 보존과 true의 4개 resource 추가를 확인했습니다. [실제 결과와 첫 실패](../evidence/public-read-gateway-chart/README.md)를 구분해 남깁니다. 내부 활성화 후보의 Windows 오프라인 K fixture 검사 1회(Helm 15호출)와 현재 N 값의 별도 렌더 1회는 통과했습니다. [K fixture 결과](../evidence/public-read-gateway-internal/activation-render.k-fixture.json)와 [현재 값 결과](../evidence/public-read-gateway-internal/activation-render.current-values.json)를 구분합니다. 새 활성화 소스의 Linux CI·클러스터 배포·외부 HTTPS는 아직 실행하지 않았습니다.
 
@@ -40,15 +65,15 @@ Docker 주소가 바뀌면 예전 `/32`는 새 주소를 허용하지 않습니�
 
 실제 운영에서는 Application의 private Helm parameter 한 항목을 추가하고, 다른 매개변수와 나머지 spec을 유지한 채 NetworkPolicy에 단일 `/32 → TCP 8080` 규칙이 반영됐음을 확인했습니다. 기존 API·worker Pod와 PVC, jobs/export/Kafka의 선택 상태 여섯 구성 요소도 기준과 같았습니다. 이어 기존 Traefik의 네트워크 공간에서 고정 summary GET 한 번이 HTTP 200과 현재 API 계약을 통과했습니다. 실제 주소와 비공개 운영 증거는 Git에 게시하지 않습니다.
 
-이 결과는 NAT 경로나 NetworkPolicy의 독점 원인을 증명하지 않습니다. 이후 기존 Traefik에 전용 공개 route를 게시하고, 원 YAML 파일 7개와 provider root의 소유·identity 정보가 유지됐음을 확인했습니다. 표준 CA·SNI TLS 검증은 현재 self-signed 인증서에서 실패했으며, 인증서 발급·인터넷의 허용/거부 조회·Pages 실시간 연결은 아직 완료하지 않았습니다. TLS 우회나 live 변수 등록으로 이 실패를 통과 처리하지 않습니다.
+이 결과는 NAT 경로나 NetworkPolicy의 독점 원인을 증명하지 않습니다. 이후 기존 Traefik에 전용 공개 route를 게시하고, 원 YAML 파일 7개와 provider root의 소유·identity 정보가 유지됐음을 확인했습니다. 이전 도메인의 당시 표준 CA·SNI TLS 검증은 self-signed 인증서에서 실패했습니다. 아래 실패를 TLS 우회나 live 변수 등록으로 통과 처리하지 않았으며, 후속 DuckDNS 성공 기록과 구분합니다.
 
-별도의 [GitHub hosted candidate 검사](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39125726243)는 전용 candidate secret만 사용해 live 설정을 바꾸지 않고 실행했습니다. 공개 IPv4 선택은 확인됐지만 표준 TLS는 통과하지 못했고 `TLS_OR_NETWORK_UNVERIFIED`로 종료됐습니다. 9개 검사 모두 HTTP status가 없어 정상 HTTP 조회·허용/거부 검증 완료의 근거가 아닙니다. 이 외부 실패를 로컬의 self-signed 인증서 관측과 같은 원인으로 단정하지 않습니다. Pages live 변수와 production URL secret은 등록하거나 변경하지 않았으며, 표준 TLS와 hosted GET6·거부3이 모두 통과한 뒤에만 실시간 화면 전환을 진행합니다. 검사 시점의 [실제 유한 결과와 해석](../evidence/public-read-https/README.md)을 저장소에도 보존했습니다.
+별도의 [GitHub hosted candidate 검사](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39125726243)는 전용 candidate secret만 사용해 당시 live 설정을 바꾸지 않고 실행했습니다. 공개 IPv4 선택은 확인됐지만 표준 TLS는 통과하지 못했고 `TLS_OR_NETWORK_UNVERIFIED`로 종료됐습니다. 9개 검사 모두 HTTP status가 없어 정상 HTTP 조회·허용/거부 검증 완료의 근거가 아닙니다. 이 외부 실패를 로컬의 self-signed 인증서 관측과 같은 원인으로 단정하지 않습니다. 당시 Pages live 변수와 production URL secret은 미설정이었으며, 후속 표준 TLS·hosted GET6·거부3 통과 뒤에 실시간 화면을 연결했습니다. 검사 시점의 [실제 유한 결과와 해석](../evidence/public-read-https/README.md)을 저장소에도 보존했습니다.
 
-2026-10-18 12:43:02.973359 UTC의 [공개 CAA 조회](../evidence/public-read-https/README.md#현재-caa-관측)에서는 대상 호스트에 CAA가 없고 바로 위 도메인에 빈 발급자의 `issue`·`issuewild`가 각각 1개 있었습니다. 현재 상위 정책은 인증서 발급자를 허용하지 않지만, 이 관측을 과거 TLS·ACME 실패의 정확한 원인으로 소급하지 않습니다. UFW의 IPv4 전체 출발지 TCP 80·443 허용 선언도 확인했으므로 추가 방화벽 변경이나 반복 발급 시도보다 보유 도메인과 DNS/CAA 관리 가능 여부 확인을 먼저 진행합니다. 도메인 선택·발급 허용 정책 준비 → 표준 TLS·hosted 허용/거부 9개 검증 → Pages 실시간 조회 → 자격증명 회전 순서입니다. 이 단계에서 DNS·서버 설정을 변경하지 않았고, 인증서·공개 live 연결은 아직 완료하지 않았습니다.
+이전 도메인의 2026-10-18 12:43:02.973359 UTC [공개 CAA 조회](../evidence/public-read-https/README.md#현재-caa-관측)에서는 대상 호스트에 CAA가 없고 바로 위 도메인에 빈 발급자의 `issue`·`issuewild`가 각각 1개 있었습니다. 당시 상위 정책은 인증서 발급자를 허용하지 않았지만, 이 관측을 과거 TLS·ACME 실패의 정확한 원인이나 새 DDNS 정책으로 소급하지 않습니다. UFW의 IPv4 전체 출발지 TCP 80·443 허용 선언도 확인했고 추가 방화벽 변경 없이 사용할 도메인을 별도로 선택했습니다. 이 CAA 읽기 자체는 DNS·서버 설정을 바꾸지 않았으며, 이후 DuckDNS 표준 TLS·hosted 9개·Pages 연결과 자격증명 회전은 서로 다른 단계로 구분합니다.
 
 클라이언트 Pod는 만들지 않습니다. 배포 후 별도 검증을 하려면 지정한 client selector를 쓰는 격리 Job 등이 필요합니다. Docker 검증의 tmpfs `noexec/nosuid/nodev`나 PID 64 제한을 Kubernetes emptyDir·Deployment가 똑같이 제공한다고 주장하지 않습니다. Memory emptyDir는 Pod 메모리를 사용합니다.
 
-## 활성화 전에 남은 조건
+## 초기 활성화 전에 확인했던 조건
 
 2026-10-18 08:34:31 UTC의 실제 AppProject 관측에는 NetworkPolicy 권한이 없었습니다. 내부 활성화 후보의 소스 선언은 기존 6종에 `networking.k8s.io/NetworkPolicy` 1종만 추가합니다. 오프라인 검사기는 정확한 7종·전용 namespace 목적지·빈 cluster whitelist를 확인하며 실제 권한을 적용하지 않습니다. 실제 AppProject에 이 권한을 먼저 추가하고 기존 조건 보존을 확인한 뒤 runtime의 활성화 값을 반영해야 합니다. 권한 적용 전 runtime enabled true를 main에 병합하면 Argo CD의 자동 sync가 먼저 시도될 수 있으므로 두 실행 순서를 분리합니다. [내부 활성화 계획](../plans/public-gateway-internal-enable.md)을 따릅니다.
 
