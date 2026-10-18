@@ -17,6 +17,7 @@ const SHA = /^[a-f0-9]{40}$/;
 const REQUEST_MS = 15_000;
 const WHOLE_MS = 150_000;
 const TOTAL_BYTES = 1024 * 1024;
+const MAX_FUTURE_CLOCK_SKEW_MS = 5000;
 const ROUTES = [
   ['SUMMARY', '/platform/summary', 256 * 1024],
   ['RELEASES', '/platform/releases', 256 * 1024],
@@ -161,12 +162,14 @@ function validateLab(payloads: unknown[]): { sourceCommit: string; observedTimes
     && record(runs) && exact(runs, ['items', 'observedAt']) && Array.isArray(runs.items) && runs.items.every(isRun), 'INVALID_DTO');
   need(summary.service === 'devdooly-platform-lab-api' && summary.environment === 'mini-pc'
     && summary.status === 'UP' && SHA.test(summary.sourceCommit), 'INVALID_DTO');
-  const capturedAt = new Date().toISOString();
+  const ceilingMs = Date.now() + MAX_FUTURE_CLOCK_SKEW_MS;
+  // Ephemeral contract upper bound only; never actual capture metadata or exported output.
+  const validationCeilingAt = new Date(ceilingMs).toISOString();
   const data = { runs: runs.items, detail, summary, releases: releases.items, observedAt: summary.observedAt };
-  need(isObservationRecord({ schemaVersion: 1, kind: 'observed', capturedAt,
+  need(isObservationRecord({ schemaVersion: 1, kind: 'observed', capturedAt: validationCeilingAt,
     provenance: { environment: 'mini-pc', sourceCommit: summary.sourceCommit, collectorVersion: '1' }, data }), 'INVALID_DTO');
   const observedTimes = [summary.observedAt, releases.observedAt, runs.observedAt, detail.observedAt];
-  const ceiling = BigInt(Date.now()) * 1_000_000n;
+  const ceiling = BigInt(ceilingMs) * 1_000_000n;
   need(observedTimes.every(value => {
     const instant = kafkaUtcNs(value);
     return instant !== null && instant <= ceiling;
@@ -217,11 +220,14 @@ export async function runSmoke(environment: NodeJS.ProcessEnv): Promise<Result> 
         }
       } else if (id === 'JOBS') {
         const value = json(reply.raw);
+        const captured = record(value) ? kafkaUtcNs(value.capturedAt) : null;
         need(validateJobObservation(value) && value.environment === 'MINI_PC' && value.scope === 'DEPLOYED_RUNTIME'
-          && SHA.test(value.sourceCommit) && Date.parse(value.capturedAt) <= Date.now(), 'INVALID_DTO');
+          && SHA.test(value.sourceCommit) && captured !== null
+          && captured <= BigInt(Date.now() + MAX_FUTURE_CLOCK_SKEW_MS) * 1_000_000n, 'INVALID_DTO');
         Object.assign(result.checks[id], { passed: true, sourceCommit: value.sourceCommit, observedAt: value.capturedAt });
       } else {
-        const value = parseKafkaObservation(new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(reply.raw), Date.now());
+        const value = parseKafkaObservation(new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(reply.raw),
+          Date.now() + MAX_FUTURE_CLOCK_SKEW_MS);
         need(value && value.environment === 'MINI_PC' && value.scope === 'DEPLOYED_KAFKA', 'INVALID_DTO');
         Object.assign(result.checks[id], { passed: true, sourceCommit: value.sourceCommit, observedAt: value.capturedAt });
       }

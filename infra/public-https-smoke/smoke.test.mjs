@@ -221,3 +221,68 @@ test('missing CORS/cache and forbidden response metadata stop before a later req
     assert.equal(result.errorCode, 'HEADERS_UNVERIFIED'); assert.equal(world.calls.length, 1); privacy(result);
   }
 });
+
+const FIXED_NOW_MS = Date.parse('2030-01-01T00:00:00.123Z');
+const FUTURE_LIMIT = '2030-01-01T00:00:05.123000000Z';
+const FUTURE_OVER_LIMIT = '2030-01-01T00:00:05.123000001Z';
+function kafkaFuture(capturedAt) {
+  Object.assign(world.payloads.get('/platform-lab/api' + paths[5]), {
+    captureStartedAt: '2030-01-01T00:00:03.123000000Z', capturedAt,
+  });
+}
+
+test('exact 5000ms future ceiling accepts all Lab jobs and Kafka times without rewriting timestamps or actual capture metadata', { concurrency: false }, async context => {
+  context.mock.timers.enable({ apis: ['Date'], now: FIXED_NOW_MS });
+  fresh();
+  for (const path of paths.slice(0, 4)) world.payloads.get('/platform-lab/api' + path).observedAt = FUTURE_LIMIT;
+  world.payloads.get('/platform-lab/api' + paths[4]).capturedAt = FUTURE_LIMIT;
+  kafkaFuture(FUTURE_LIMIT);
+  const result = await runSmoke(environment());
+  assert.equal(result.status, 'PASS'); assert.equal(result.errorCode, 'NONE');
+  assert.equal(world.calls.length, 9);
+  for (const id of ['SUMMARY', 'RELEASES', 'RUN_LIST', 'RUN_DETAIL_EXAMPLE', 'JOBS', 'KAFKA']) {
+    assert.equal(result.checks[id].observedAt, FUTURE_LIMIT);
+  }
+  assert.equal(result.captureStartedAt, '2030-01-01T00:00:00.123Z');
+  assert.equal(result.capturedAt, '2030-01-01T00:00:00.123Z');
+  privacy(result);
+});
+
+test('each Lab time rejects 5000ms plus one nanosecond before later jobs or POST', { concurrency: false }, async context => {
+  context.mock.timers.enable({ apis: ['Date'], now: FIXED_NOW_MS });
+  for (const path of paths.slice(0, 4)) {
+    fresh(); world.payloads.get('/platform-lab/api' + path).observedAt = FUTURE_OVER_LIMIT;
+    const result = await runSmoke(environment());
+    assert.equal(result.errorCode, 'INVALID_DTO'); assert.equal(world.calls.length, 4);
+    assert.equal(Object.values(result.checks).every(check => check.observedAt === null), true);
+    privacy(result);
+  }
+});
+
+test('jobs rejects 5000ms plus one nanosecond using strict UTC precision with no later Kafka or POST', { concurrency: false }, async context => {
+  context.mock.timers.enable({ apis: ['Date'], now: FIXED_NOW_MS });
+  fresh(); world.payloads.get('/platform-lab/api' + paths[4]).capturedAt = FUTURE_OVER_LIMIT;
+  const result = await runSmoke(environment());
+  assert.equal(result.errorCode, 'INVALID_DTO'); assert.equal(world.calls.length, 5);
+  assert.equal(result.checks.JOBS.observedAt, null); privacy(result);
+});
+
+test('Kafka rejects 5000ms plus one nanosecond without sending negative requests', { concurrency: false }, async context => {
+  context.mock.timers.enable({ apis: ['Date'], now: FIXED_NOW_MS });
+  fresh(); kafkaFuture(FUTURE_OVER_LIMIT);
+  const result = await runSmoke(environment());
+  assert.equal(result.errorCode, 'INVALID_DTO'); assert.equal(world.calls.length, 6);
+  assert.equal(result.checks.KAFKA.observedAt, null); privacy(result);
+});
+
+test('clock tolerance keeps malformed jobs and Kafka timestamp details private', { concurrency: false }, async context => {
+  context.mock.timers.enable({ apis: ['Date'], now: FIXED_NOW_MS });
+  const malformed = ['Wed, 01 Jan 2020 00:00:00 GMT (' + PRIVATE_MARKER + ')',
+    '2020-01-01T00:00:00.' + '1'.repeat(2048) + 'Z', '2020-02-30T00:00:00Z'];
+  for (const index of [4, 5]) for (const capturedAt of malformed) {
+    fresh(); world.payloads.get('/platform-lab/api' + paths[index]).capturedAt = capturedAt;
+    const result = await runSmoke(environment());
+    assert.equal(result.errorCode, 'INVALID_DTO'); assert.equal(world.calls.length, index + 1);
+    assert.equal(result.checks[index === 4 ? 'JOBS' : 'KAFKA'].observedAt, null); privacy(result);
+  }
+});
