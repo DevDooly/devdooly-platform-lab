@@ -210,7 +210,7 @@ function main() {
   check('HOME_AND_USERPROFILE_UNCHANGED', env.HOME === process.env.HOME && env.USERPROFILE === process.env.USERPROFILE);
   const helm = parameters => {
     report.helmInvocations += 1;
-    assert.ok(report.helmInvocations <= 20, 'Helm invocation bound');
+    assert.ok(report.helmInvocations <= 32, 'Helm invocation bound');
     const result = spawnSync(args.get('--helm'), parameters, {
       cwd: root, env, windowsHide: true, timeout: 30000, maxBuffer: 2 * 1024 * 1024,
     });
@@ -327,6 +327,40 @@ function main() {
         podSelector: { matchLabels: { 'k8s-app': 'kube-dns' } } }], ports: [{ protocol: 'UDP', port: 53 }, { protocol: 'TCP', port: 53 }] },
     ],
   });
+  const explicitEmptyProxy = render('EXPLICIT_EMPTY_TRUSTED_PROXY', [
+    '--values', path.join(chart, 'ci/public-gateway-enabled-values.yaml'),
+    '--set-string', 'publicReadGateway.trustedProxyCidr=',
+  ]);
+  equal('EMPTY_TRUSTED_PROXY_PRESERVES_ENABLED_BYTES', explicitEmptyProxy.bytes, enabled.bytes);
+  const proxyExamples = ['10.23.45.67/32', '172.31.23.45/32', '192.168.23.45/32'];
+  for (const [index, cidr] of proxyExamples.entries()) {
+    const rendered = render(`TRUSTED_PROXY_PRIVATE_${index + 1}`, [
+      '--values', path.join(chart, 'ci/public-gateway-enabled-values.yaml'),
+      '--set-string', `publicReadGateway.trustedProxyCidr=${cidr}`,
+    ]);
+    const expected = structuredClone(enabled.docs);
+    expected.find(document => document.kind === 'NetworkPolicy').spec.ingress.push({
+      from: [{ ipBlock: { cidr } }], ports: [{ protocol: 'TCP', port: 8080 }],
+    });
+    equal('TRUSTED_PROXY_ADDS_ONLY_ONE_HOST_8080_INGRESS', rendered.docs, expected);
+  }
+  const disabledProxy = render('DISABLED_WITH_TRUSTED_PROXY', [
+    '--set', 'publicReadGateway.enabled=false',
+    '--set-string', 'publicReadGateway.trustedProxyCidr=10.23.45.67/32',
+  ]);
+  equal('TRUSTED_PROXY_DOES_NOT_ENABLE_GATEWAY', disabledProxy.bytes, baseline);
+  for (const [name, value] of [
+    ['WIDE_PREFIX', '10.23.45.67/24'], ['OUTSIDE_RFC1918', '203.0.113.42/32'],
+    ['BELOW_PRIVATE_172', '172.15.23.45/32'], ['ABOVE_PRIVATE_172', '172.32.23.45/32'],
+    ['LOOPBACK', '127.0.0.1/32'], ['IPV6', 'fd00::1/128'],
+    ['INVALID_OCTET', '10.256.1.2/32'], ['LEADING_ZERO', '10.01.2.3/32'],
+    ['TRAILING_NEWLINE', '10.23.45.67/32\n'], ['NULL', null],
+    ['BOOLEAN', true], ['ARRAY', ['10.23.45.67/32']],
+  ]) {
+    const fixture = path.join(output, `TRUSTED_PROXY_${name}_REJECTED.json`);
+    fs.writeFileSync(fixture, `${JSON.stringify({ publicReadGateway: { enabled: true, trustedProxyCidr: value } })}\n`);
+    render(`TRUSTED_PROXY_${name}_REJECTED`, ['--values', fixture], 'platform-lab', 'lab', true);
+  }
   const alternate = render('ALTERNATE_NAMESPACE_DISABLED', [], 'gateway-disabled-check');
   check('DISABLED_OTHER_NAMESPACE_CREATES_NO_GATEWAY', !alternate.docs.some(isGateway) && alternate.docs.length === 12);
   render('ENABLED_WRONG_NAMESPACE_REJECTED', ['--set', 'publicReadGateway.enabled=true'], 'gateway-disabled-check', 'lab', true);

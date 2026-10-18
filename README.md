@@ -15,10 +15,11 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 | 서비스·CI/CD | Java API·worker, Kafka·Garage 배포와 같은 소스의 CI·이미지 전환·자료 보존 | [실제 배포](docs/evidence/runtime-deployment/README.md), [CI/CD](docs/evidence/cicd-gate/README.md) |
 | 데이터·복구 | Cloud Spark→Trino·compaction, DB 논리 복원·Kafka/Garage PVC 격리 복원 | [Cloud](docs/evidence/cloud-lakehouse/FULL_SUCCESS.md), [DB](docs/evidence/current-db-restore/README.md), [PVC](docs/evidence/runtime-pvc-restore/README.md) |
 | 보존 계획·화면 | Iceberg 실제 metadata의 KEEP 계획, 기술별 근거 탐색·합성 정책 선택 UI의 로컬 검증 | [실측 기록](docs/evidence/iceberg-capture/ATTEMPT_9.md), [합성 예제](examples/iceberg-retention-scenarios/README.md) |
+| Java·AI 활용 | 합성 시간창 예제의 회귀 테스트와 Windows·Linux JMH 재현. 사람 검토는 대기 중 | [Java 예제](examples/java-window-analysis/PROVENANCE.md), [Linux 재현 결과](docs/evidence/ai-window-analysis/hosted-linux-20261018/README.md) |
 
 지금 완료: Kafka 관측 API·collector 연결, systemd·수동 host 실행, 원래 타이머의 자연 실행 2회·회차 간격 1개와 각 회차의 공개 3파일 대조를 확인했습니다. [자연 관측 근거](docs/evidence/kafka-observation/README.md#원래-타이머의-자연-2회와-공개-게시-대조)를 따르며, 화면은 마지막 수집 기록을 보여줍니다.
 
-내부 게이트웨이의 [조회·접근 진단과 기존 상태 보존](docs/evidence/public-read-gateway-internal/README.md)을 마쳤습니다. 다음은 외부 HTTPS 연결 → 공개 조회 화면 연결 → 자격증명 회전입니다. 공개 REST·실시간 API는 아직 연결하지 않았으며, 장기간 운영과 전체 복원·운영 객체 삭제는 별도 후속입니다. [과거 검증·실패 기록](docs/progress-history.md)은 보존합니다.
+내부 게이트웨이의 [조회·접근 진단과 기존 상태 보존](docs/evidence/public-read-gateway-internal/README.md)을 마쳤습니다. 기존 Traefik을 유지하는 전용 `/platform-lab/api` 경로와 외부 HTTPS 연결을 준비하고 있습니다. 공개 화면은 [전용 HTTPS base 설정과 연결 실패 시 게시 기록 표시](docs/runbooks/public-read-gateway-chart.md)를 지원하며, 실제 외부 API는 아직 연결하지 않았습니다. 다음은 내부 통신·인증서 확인 → 인터넷에서 허용·거부 경로 검증 → 공개 화면의 실시간 조회 연결 → 자격증명 회전입니다. 장기간 운영과 전체 복원·운영 객체 삭제는 별도 후속이며, [과거 검증·실패 기록](docs/progress-history.md)은 보존합니다.
 
 ## 로컬 실행
 
