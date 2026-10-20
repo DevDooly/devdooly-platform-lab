@@ -1,0 +1,52 @@
+.kafka-lag-recovery { border-top:1px solid var(--line); }
+.kafka-lag-heading { align-items:flex-start; gap:24px; }
+.kafka-lag-heading p { max-width:780px; }
+.kafka-lag-context, .kafka-lag-note, .kafka-lag-boundary, .kafka-lag-empty p, .kafka-lag-provenance p { font-size:var(--font-body); line-height:1.85; }
+.kafka-lag-context time { overflow-wrap:anywhere; }
+.kafka-lag-controls { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:28px 0 14px; }
+.kafka-lag-controls button { display:flex; align-items:center; justify-content:flex-start; gap:10px; padding:16px; min-height:62px; border:1px solid var(--line); color:var(--ink); background:var(--surface); font:inherit; font-weight:600; line-height:1.5; cursor:pointer; text-align:left; }
+.kafka-lag-controls button span { display:inline-grid; place-items:center; width:28px; min-width:28px; height:28px; border:1px solid currentColor; border-radius:50%; font-size:.95rem; }
+.kafka-lag-controls button[aria-pressed="true"] { color:var(--paper,#fff); background:var(--ink); border-color:var(--ink); }
+.kafka-lag-controls button:focus-visible { outline:3px solid var(--ink); outline-offset:4px; }
+.kafka-lag-chart { margin:26px 0; padding:20px; border:1px solid var(--line); background:var(--surface); overflow-x:auto; }
+.kafka-lag-chart svg { width:100%; min-width:640px; max-height:300px; display:block; overflow:visible; }
+.kafka-lag-chart figcaption { margin-top:14px; font-size:var(--font-body); line-height:1.75; color:var(--muted); }
+.kafka-lag-chart:focus-visible, .kafka-lag-table-scroll:focus-visible { outline:3px solid var(--ink); outline-offset:4px; }
+.kafka-lag-grid-line { stroke:var(--line); stroke-dasharray:4 5; }
+.kafka-lag-trace { stroke:var(--ink); stroke-width:3; stroke-linejoin:round; }
+.kafka-lag-arrow { fill:var(--ink); }
+.kafka-lag-point { fill:var(--surface); stroke:var(--ink); stroke-width:2; }
+.kafka-lag-point.is-selected { fill:var(--ink); stroke-width:3; }
+.kafka-lag-tick, .kafka-lag-axis-title { fill:var(--muted); font-size:17px; }
+.kafka-lag-value { fill:var(--ink); font-size:20px; font-weight:700; }
+.kafka-lag-selected { border-left:4px solid var(--ink); background:var(--surface); padding:24px 28px; margin:26px 0; }
+.kafka-lag-selected h3, .kafka-lag-empty h3 { font-size:1.3rem; line-height:1.55; margin:0 0 12px; }
+.kafka-lag-selected p { font-size:1.05rem; line-height:1.85; }
+.kafka-lag-selected dl { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px; margin:22px 0 0; }
+.kafka-lag-selected dt { font-size:var(--font-body); color:var(--muted); line-height:1.6; }
+.kafka-lag-selected dd { margin:8px 0 0; font-size:1.35rem; font-weight:700; overflow-wrap:anywhere; }
+.kafka-lag-table-scroll { overflow-x:auto; margin:26px 0; }
+.kafka-lag-table { width:100%; border-collapse:collapse; font-size:var(--font-body); line-height:1.7; }
+.kafka-lag-table caption { text-align:left; font-size:1.05rem; font-weight:600; padding-bottom:16px; }
+.kafka-lag-table th, .kafka-lag-table td { text-align:left; padding:15px 14px; border-bottom:1px solid var(--line); }
+.kafka-lag-table thead th { color:var(--muted); }
+.kafka-lag-table tr[aria-current="step"] { background:var(--surface); }
+.kafka-lag-boundary { border-left:3px solid var(--line); padding-left:18px; }
+.kafka-lag-links { display:flex; flex-wrap:wrap; gap:16px 24px; margin:26px 0; font-size:var(--font-body); line-height:1.8; }
+.kafka-lag-provenance { padding:20px 24px; border:1px solid var(--line); margin-top:24px; }
+.kafka-lag-provenance summary { font-size:1.05rem; font-weight:600; cursor:pointer; }
+.kafka-lag-provenance dl { margin:18px 0; }
+.kafka-lag-provenance dt { color:var(--muted); font-size:var(--font-body); line-height:1.7; }
+.kafka-lag-provenance dd { margin:6px 0 18px; font-size:var(--font-body); line-height:1.75; overflow-wrap:anywhere; }
+.kafka-lag-empty { padding:28px; margin:26px 0; border:1px solid var(--line); }
+@media (max-width:760px) {
+  .kafka-lag-heading { flex-direction:column; }
+  .kafka-lag-controls { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .kafka-lag-controls button { padding:13px; }
+  .kafka-lag-selected { padding:22px; }
+  .kafka-lag-selected dl { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .kafka-lag-chart { padding:16px 10px; }
+  .kafka-lag-table th, .kafka-lag-table td { padding:12px 10px; }
+  .kafka-lag-table { min-width:480px; }
+  .kafka-lag-provenance, .kafka-lag-empty { padding:20px; }
+}

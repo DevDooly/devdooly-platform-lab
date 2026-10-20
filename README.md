@@ -25,6 +25,8 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 2026-10-20 UTC에 선택 운영 상태·DDNS 자연 실행·표준 TLS와 외부 조회 6개·거부 3개, 공개 작업·Kafka 화면을 다시 확인했습니다([시점별 운영 근거](docs/evidence/public-read-https/ops-20261020/README.md)). 자격증명 회전과 자원 예산·접수 gate는 보류하며, 인증서 자연 갱신과 현재 공개 경로의 재부팅은 이번 검증에 포함하지 않았습니다.
 
+새 격리 Kafka에서 consumer 정상 종료 중 backlog가 8→14로 늘고, 같은 group의 새 client가 남은 14개를 실제로 읽어 lag 0에 도달하는 검증을 마쳤습니다([실제 4단계 근거](docs/evidence/kafka-lag-recovery/README.md)). 운영 worker·DB·export·broker 재시작을 검증한 결과는 아니며, 관측 화면 공개와 offset commit 유보·pause/resume은 후속 계획입니다.
+
 ## 로컬 실행
 
 Java 21과 Node 24.19.0을 사용합니다. API와 화면을 별도 터미널에서 실행합니다.
