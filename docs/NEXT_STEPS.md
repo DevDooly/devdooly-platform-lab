@@ -4,7 +4,7 @@
 
 [실제 손상 export 시험](evidence/export-integrity-runtime/README.md)을 통과했습니다. 새 worker의 실제 검증 예외가 `PAUSED_OPERATOR / EXPORT / EXPORT_FAILED`로 남았고, 일반 run 거부와 수리 없는 resume 뒤 재중지를 확인했습니다. 시험 소유 손상 객체 한 개만 명시 삭제한 뒤 별도 resume에서 파일 2개의 전체 bytes·크기·SHA, `EXPORTED`·슬롯 해제·완료 메시지 replay 1회·commit/end 1·lag 0을 확인했습니다. 직접 DB fixture와 실제 마지막 consumer replay를 구분하며 원본·업무 행과 시각·소스·소유 자원 정리도 통과했습니다.
 
-실제 기록을 단계 화면에 연결해 웹 160개 검사·타입·빌드와 로컬 1280px·390px의 선택·키보드·상세 근거·가로 넘침 부재를 확인했습니다. 공개 게시 후 확인은 대기 중입니다. 다음 작은 경계는 실제 잘못된 Kafka record 앞에서 `INVALID_MESSAGE`로 영속 중지하고, 뒤의 정상 작업을 처리·commit하지 않는 동작입니다. DLQ·skip·offset reset 정책은 추가하지 않으며 수리 없는 resume의 재중지까지 확인하는 보호 시험으로 계획합니다. 토큰 교체·예산 정책·PR102는 보류합니다.
+실제 기록을 [단계 화면](https://devdooly.github.io/devdooly-platform-lab/#export-integrity-runtime)에 연결해 웹 160개 검사·타입·빌드와 Pages·main CI를 통과했습니다. 2026-10-20 13:29–13:30 UTC에 공개 1280px·390px의 선택·키보드·상세 근거·가로 넘침 부재를 확인했습니다. 다음 작은 경계는 실제 잘못된 Kafka record 앞에서 `INVALID_MESSAGE`로 영속 중지하고, 뒤의 정상 작업을 처리·commit하지 않는 동작입니다. DLQ·skip·offset reset 정책은 추가하지 않으며 수리 없는 resume의 재중지까지 확인하는 보호 시험으로 계획합니다. 토큰 교체·예산 정책·PR102는 보류합니다.
 
 ## 최신 격리 런타임 검증 — 2026-10-20 12:44 UTC
 

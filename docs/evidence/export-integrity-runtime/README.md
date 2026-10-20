@@ -31,4 +31,6 @@ PR137의 [Linux CI 39428333375](https://github.com/DevDooly/devdooly-platform-la
 
 명시 수리는 시험 코드가 소유한 손상 fixture 한 개의 삭제입니다. 운영 자동 수리·임의 자료 삭제·host/broker 재시작·HA·모든 장애에서의 exactly-once를 검증한 결과가 아닙니다. 토큰 교체·예산 정책·PR102는 계속 보류합니다.
 
-[단계별 화면](https://devdooly.github.io/devdooly-platform-lab/#export-integrity-runtime)을 실제 source·run·manifest·완료 시각·JUnit SHA에 연결했습니다. 로컬 웹 테스트 160개·skip 0, 타입 검사 41파일의 오류·경고 0과 정적 빌드를 통과했습니다. 1280px·390px에서 단계 선택·End/방향키·기본 닫힌 상세 근거와 job/runtime 상태 표를 확인했습니다. 본문 17px, 페이지 가로 넘침 부재와 모바일 표의 내부 스크롤도 확인했습니다. 공개 Pages 게시와 게시 후 확인은 아직 대기 중입니다.
+[단계별 화면](https://devdooly.github.io/devdooly-platform-lab/#export-integrity-runtime)을 실제 source·run·manifest·완료 시각·JUnit SHA에 연결했습니다. 로컬 웹 테스트 160개·skip 0, 타입 검사 41파일의 오류·경고 0과 정적 빌드를 통과했습니다. 1280px·390px에서 단계 선택·End/방향키·기본 닫힌 상세 근거와 job/runtime 상태 표를 확인했습니다. 본문 17px, 페이지 가로 넘침 부재와 모바일 표의 내부 스크롤도 확인했습니다.
+
+[PR138](https://github.com/DevDooly/devdooly-platform-lab/pull/138)의 main `2921b265`에서 [Pages 39430556324](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39430556324)와 [main CI 39430556535](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39430556535)가 통과했습니다. 2026-10-20 13:29–13:30 UTC에 공개 주소의 1280px·390px 단계 전환·키보드·상세 출처를 대조했습니다. 기본 상세 닫힘, 본문 17px과 페이지 가로 넘침 부재, 모바일 표 내부 스크롤도 공개 환경에서 확인했습니다. 미니 PC runtime 배포는 이 화면 게시에 포함하지 않았습니다.
