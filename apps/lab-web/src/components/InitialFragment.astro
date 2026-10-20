@@ -1,0 +1,103 @@
+<script is:inline>
+  (() => {
+    if (document.readyState !== 'loading' || !location.hash) return;
+    const startedAt = performance.now();
+    const deadline = startedAt + 10_000;
+    const initialHash = location.hash;
+    let targetId;
+    try {
+      targetId = decodeURIComponent(initialHash.slice(1));
+    } catch {
+      return;
+    }
+    if (!targetId || typeof performance.getEntriesByType !== 'function'
+      || performance.getEntriesByType('navigation')[0]?.type !== 'navigate'
+      || typeof ResizeObserver !== 'function') return;
+
+    const inputEvents = ['wheel', 'touchstart', 'pointerdown', 'keydown'];
+    const endEvents = ['resize', 'hashchange', 'popstate', 'pagehide'];
+    let done = false;
+    let observer = null;
+    let frame = null;
+    let timer = null;
+    let target = null;
+    let previousDocumentY = null;
+    let corrections = 0;
+
+    function finish() {
+      if (done) return;
+      done = true;
+      observer?.disconnect();
+      if (frame !== null) cancelAnimationFrame(frame);
+      if (timer !== null) clearTimeout(timer);
+      document.removeEventListener('DOMContentLoaded', begin);
+      for (const name of inputEvents) window.removeEventListener(name, onInput, true);
+      for (const name of endEvents) window.removeEventListener(name, finish, true);
+    }
+
+    function onInput(event) {
+      if (event.isTrusted) finish();
+    }
+
+    function active() {
+      if (done) return false;
+      if (performance.now() >= deadline || location.hash !== initialHash) {
+        finish();
+        return false;
+      }
+      return true;
+    }
+
+    function measure() {
+      frame = null;
+      if (!active()) return;
+      if (!target?.isConnected || !target.getClientRects().length
+        || target.closest('[hidden]') || getComputedStyle(target).visibility !== 'visible') {
+        finish();
+        return;
+      }
+      const rect = target.getBoundingClientRect();
+      const documentY = rect.top + window.scrollY;
+      if (!Number.isFinite(documentY)) {
+        finish();
+        return;
+      }
+      // Keep the previous baseline for subpixel changes so they can accumulate.
+      if (previousDocumentY !== null && Math.abs(documentY - previousDocumentY) <= 1) return;
+      previousDocumentY = documentY;
+      const padding = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+      const margin = parseFloat(getComputedStyle(target).scrollMarginTop) || 0;
+      if (Math.abs(rect.top - padding - margin) <= 1) return;
+      if (!active() || corrections >= 4) {
+        finish();
+        return;
+      }
+      corrections += 1;
+      target.scrollIntoView({ behavior: 'instant', block: 'start', inline: 'nearest' });
+      if (corrections === 4) finish();
+    }
+
+    function schedule() {
+      if (active() && frame === null) frame = requestAnimationFrame(measure);
+    }
+
+    function begin() {
+      if (!active()) return;
+      const found = document.getElementById(targetId);
+      if (!(found instanceof HTMLElement) || !document.body) {
+        finish();
+        return;
+      }
+      target = found;
+      observer = new ResizeObserver(schedule);
+      observer.observe(document.body);
+      schedule();
+    }
+
+    // Capture intent before hydration or DOMContentLoaded without suppressing it.
+    for (const name of inputEvents) window.addEventListener(name, onInput, { capture: true, passive: true });
+    for (const name of endEvents) window.addEventListener(name, finish, { capture: true, passive: true });
+    document.addEventListener('DOMContentLoaded', begin, { once: true });
+    timer = setTimeout(finish, Math.max(0, deadline - performance.now()));
+  })();
+</script>

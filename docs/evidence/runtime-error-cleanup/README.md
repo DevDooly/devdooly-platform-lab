@@ -28,3 +28,7 @@
 - 생략11개는 기존 Linux 전용 `LocalRuntimeProgressTest`9개와 `RuntimeReadyProbeTest`2개입니다. Windows에서 Linux 파일 권한·소유자 검증까지 통과했다고 주장하지 않습니다.
 
 처음 수정 후 검증에서는 복사 시각 때문에 Maven이 재컴파일을 생략한 것을 확인해 중단했습니다. 기존 실패 보고서를 보존한 뒤 빌드 결과가 없는 새 소스 폴더에서 위 검증을 완료했습니다. 이 결과는 위 두 테스트 파일과 같은 고정 소스의 로컬 회귀 근거입니다. 운영 배포·실제 JVM 치명적 장애 복구·HA·archive 기동 복원은 검증 범위가 아닙니다.
+
+## Linux CI 확인
+
+PR159의 main `12197d5a72b50a8e56feddb50ce09d9e31bf9f14`에서 [컨테이너CI39468011021](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39468011021)의 API233개가 모두 통과·skip0이며 verify·공개 조회 gateway job도 성공했습니다. 이미지 workflow39468369830은 gate만 성공하고 publish·GitOps 제안은 생략됐습니다. 새 이미지 게시나 미니 PC 배포 결과로 해석하지 않습니다.
