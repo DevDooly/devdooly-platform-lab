@@ -39,6 +39,16 @@ const kafkaSource = 'f7b5567963f9a34a34d5f201fb2ed747bdf7652a';
 
 export const evidenceItems: readonly EvidenceItem[] = [
   {
+    id: 'kafka-lag-recovery', topics: ['java', 'kafka'], scope: 'cloud', state: 'verified',
+    title: '소비자 종료 중 쌓인 메시지 이어 읽기',
+    description: '12건 중 4건을 읽고 종료한 뒤 6건을 추가했습니다. 같은 그룹의 새 소비자가 남은 14건을 읽고 확인해 lag 14에서 0으로 돌아오는 과정을 검증했습니다.',
+    boundary: '새 격리 broker의 정상 consumer 종료·재가입 시험입니다. 운영 worker·DB/export·강제 중단·고가용성 검증은 아닙니다.',
+    recordedOn: '2026-10-20',
+    source: `${repo}/blob/5e22dbecfa4da458a563fd5fa1fc4c9c34a7ef17/infra/kafka-lag-recovery-ci/KafkaLagRecoveryIT.java`,
+    evidence: `${repo}/blob/main/docs/evidence/kafka-lag-recovery/README.md`, evidenceLabel: '실제 4단계·읽기·정리 근거',
+    recordLabel: '격리 복구 IT 1/1', screen: '#kafka-lag-recovery',
+  },
+  {
     id: 'java-runtime', topics: ['java'], scope: 'mini-pc', state: 'verified',
     title: 'Java 작업 처리와 파일 확인',
     description: 'Spring Boot 작업 처리와 export를 구현하고, 배포한 서비스의 결과 파일과 기존 데이터 보존을 확인했습니다.',

@@ -1,0 +1,42 @@
+{
+  "runUrl": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39412343874",
+  "completedAt": "2026-10-20T11:05:48Z",
+  "summary": {
+    "brokerRestartOrHighAvailabilityVerified": false,
+    "databaseOrExportRecoveryVerified": false,
+    "expectedTests": 1,
+    "failureCode": null,
+    "operatingKafkaChanged": false,
+    "ownedResourcesRemoved": true,
+    "publicExecutionEnabled": false,
+    "recoveryResult": {
+      "additionalProduced": 6,
+      "backlogCommittedOffset": 4,
+      "backlogEndOffset": 18,
+      "backlogLag": 14,
+      "emptyGroupObserved": true,
+      "finalCommittedOffset": 18,
+      "finalLag": 0,
+      "initialCommittedOffset": 4,
+      "initialEndOffset": 12,
+      "initialLag": 8,
+      "initialProcessed": 4,
+      "resumedFirstOffset": 4,
+      "resumedLastOffset": 17,
+      "resumedProcessed": 14,
+      "schemaVersion": 1,
+      "status": "PASS",
+      "targetStable": true
+    },
+    "runtimeManifestSha256": "07d084f0f8a46745f99918fbc1794c908b11c8b5224b84c6d49bbe3afc5d2236",
+    "schemaVersion": 1,
+    "scope": "ISOLATED_KAFKA_LAG_RECOVERY_IT",
+    "selectedFailure": null,
+    "sourceAndArtifactsUnchanged": true,
+    "sourceCommit": "5e22dbecfa4da458a563fd5fa1fc4c9c34a7ef17",
+    "status": "PASSED",
+    "surefireXmlSha256": "622b937f1da1a9d39ca5da53812e64a1ad9b63222ec2fe10082e0cd5a60f471d",
+    "synthetic": true,
+    "verifiedTests": 1
+  }
+}

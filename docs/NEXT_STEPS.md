@@ -1,5 +1,11 @@
 # Platform Lab 다음 개발 계획
 
+## 최신 격리 Kafka 검증 — 2026-10-20 UTC
+
+[consumer 종료 후 backlog 복구](evidence/kafka-lag-recovery/README.md)를 새 hosted broker에서 확인했습니다. 실제 4개 처리·commit 뒤 정상 close로 group EMPTY를 만들고, 중단 중 6개를 추가한 뒤 같은 group의 새 client가 남은 14개를 읽었습니다. 네 단계의 LSO/commit/lag는 12/4/8 → 12/4/8 → 18/4/14 → 18/18/0이며, observer target·읽기 전후 상태와 소유 자원 정리도 확인했습니다.
+
+저장된 단계 관측 화면의 공개·브라우저 확인과 offset commit 유보·pause/resume 경계는 후속 계획입니다. 실제 worker·DB·export 복구, 강제 종료·broker 재시작·HA·처리량 검증으로 확대하지 않습니다. 토큰 회전과 자원 예산·PR102 접수 gate는 보류합니다.
+
 ## 최신 운영 재확인 — 2026-10-20 UTC
 
 [시점별 운영 근거](evidence/public-read-https/ops-20261020/README.md)에서 선택 운영 상태·DDNS 자연 실행·표준 TLS, 외부 GET 6개와 지정 거부 3개, 공개 작업 8개·Kafka 관측을 다시 확인했습니다. 이는 수집 시점의 결과이며 장기간 가용성을 보장하지 않습니다.
