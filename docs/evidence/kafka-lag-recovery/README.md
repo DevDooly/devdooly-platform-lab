@@ -25,4 +25,8 @@
 
 운영 Kafka·실제 worker·업무 DB·export는 변경하거나 복구 시험에 사용하지 않았습니다. 정상 consumer close와 새 client 생성이며 프로세스 강제 종료·broker/호스트 재시작·정확히 한 번의 업무 처리·HA·성능 SLA를 입증하지 않습니다. 공개 실행 기능도 추가하지 않았습니다.
 
-저장된 네 단계 관측 화면의 공개·브라우저 확인은 아직 완료로 기록하지 않습니다. offset commit 유보와 pause/resume 경계는 별도 후속 계획입니다. 자격증명 회전과 자원 예산·PR102 접수 gate는 보류 상태를 유지합니다.
+저장된 [네 단계 관측 화면](https://devdooly.github.io/devdooly-platform-lab/#kafka-lag-recovery)은 [PR127](https://github.com/DevDooly/devdooly-platform-lab/pull/127)의 main `1df9b6a30450999bb0860d206ca6eb78c9ee52ed`와 [Pages 실행 39414345653](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39414345653)으로 공개했습니다. 같은 main의 [컨테이너 CI 39414345608](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39414345608)도 통과했습니다. 이 이미지 게시 결과를 미니 PC에 배포한 것은 아닙니다.
+
+2026-10-20 11:24–11:25 UTC에 공개 페이지의 1280px 데스크톱과 390px 모바일에서 단계 선택을 확인했습니다. 3단계의 EMPTY·end18·commit4·lag14, End 키의 4단계 STABLE·18·18·0과 모바일 ArrowRight의 2단계 EMPTY·12·4·8이 실제 기록과 맞았습니다. 페이지 전체의 가로 넘침은 없었고 모바일 단계 버튼은 2열로 표시됐습니다. 이는 저장된 기록의 표시·탐색 검증이며 새 메시지나 서버 작업을 실행하지 않습니다.
+
+DB commit 후 Kafka offset commit 실패와 영속 pause/resume 경계는 별도 후속 계획입니다. timeout 이후 늦은 commit이 가능하므로 commit 부재를 단정하지 않는 시험을 준비합니다. 자격증명 회전과 자원 예산·PR102 접수 gate는 보류 상태를 유지합니다.
