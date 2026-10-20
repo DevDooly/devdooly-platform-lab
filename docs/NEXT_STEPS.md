@@ -4,7 +4,7 @@
 
 [실제 연결 손실 시험](evidence/runtime-lease-loss/README.md)을 통과했습니다. 실제 empty export 뒤의 경계에서 전용 named-lock 소유 연결 하나만 종료하고, 다음 production 소유권 검사가 후속 발행·수신을 모두 차단하는지 확인했습니다. 호출은 각각 0이었고 queued 작업·원본·DISPATCH PENDING·점유 슬롯을 보존했습니다. 실제 client·lease·context와 child 프로세스가 종료한 뒤 새 실제 잠금 획득·검증·해제도 통과했습니다.
 
-DB journal은 fault 전 `RUNNING / EXPORT / failureCode null`의 전체 행과 시각이 그대로 남았습니다. 소유권을 잃어 pause 저장도 거부된 결과이며, 종료된 worker의 마지막 기록을 현재 정상 상태나 `PAUSED_OPERATOR / LEASE_LOST`로 바꾸어 표시하지 않습니다. 진행 중 I/O의 원자적 fencing·HTTP readiness·자동 복구는 시험 범위가 아닙니다. 공개 근거 목록에 연결을 준비했습니다.
+DB journal은 fault 전 `RUNNING / EXPORT / failureCode null`의 전체 행과 시각이 그대로 남았습니다. 소유권을 잃어 pause 저장도 거부된 결과이며, 종료된 worker의 마지막 기록을 현재 정상 상태나 `PAUSED_OPERATOR / LEASE_LOST`로 바꾸어 표시하지 않습니다. 진행 중 I/O의 원자적 fencing·HTTP readiness·자동 복구는 시험 범위가 아닙니다. 공개 근거 목록에 연결해 Pages·동일 main CI를 통과했고, 2026-10-20 14:11–14:12 UTC에 공개 데스크톱·모바일의 Java·Cloud 필터·실제 출처·본문 17px·가로 넘침 부재를 확인했습니다.
 
 다음은 새 격리 warehouse에서 Spark 적재·compaction을 마치고 모든 writer를 종료한 뒤, **같은 PostgreSQL 컨테이너와 볼륨의 정상 stop → start 한 번**을 검증합니다. 실제 종료·새 postmaster와 같은 cluster identity, catalog 전체 행·객체 20개, 새 Trino의 첫 조회 결과를 대조하는 설계를 검토했으며 구현을 준비합니다. 운영 DB 재시작·crash 복구·HA는 이 계획에 포함하지 않습니다. 토큰 교체·예산 정책·PR102는 계속 보류합니다.
 

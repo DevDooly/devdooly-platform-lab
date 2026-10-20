@@ -36,4 +36,4 @@ DB의 `RUNNING`은 **종료된 프로세스가 남긴 마지막 기록**입니�
 
 새 Kafka·MariaDB·Garage·JVM 4개와 내부 네트워크만 사용했습니다. 동일 source/run/nonce·full ID·image·mount·network와 CPU·메모리·PID·시간 한도를 검증한 소유 자원만 정리했습니다. 기존 API106·이전 시험/Probe/manifest·미니 PC 운영 서비스·자료·PVC는 변경하지 않았습니다. 토큰 교체·예산 정책·PR102는 보류합니다.
 
-공개 기술별 근거 목록에 연결을 준비했습니다. Pages 게시 후 실제 항목과 링크를 확인할 예정입니다.
+[PR144](https://github.com/DevDooly/devdooly-platform-lab/pull/144)의 source `5a68c709546636b24ed01aa071e57ca6ace96978`에서 [Pages 39436608451](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39436608451)·[main CI 39436608366](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39436608366)를 통과했습니다. 2026-10-20 14:11–14:12 UTC에 공개 1280px·390px의 기술별 근거 목록을 확인했습니다. 전체 17항목, Java·Cloud 필터 7항목 안의 새 항목과 실제 IT·근거 링크, 본문 17px·가로 넘침 부재를 대조했습니다. 운영 worker 배포나 장애 주입은 추가하지 않았습니다.
