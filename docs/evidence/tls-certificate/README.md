@@ -31,4 +31,12 @@ TLS 관측은 한 번만 실행했습니다. source SHA와 workflow·run·attemp
 - 새 순수 검사19개·전체 웹207개, skip0을 통과했습니다. 실제 원문1건과 메모리 합성 반례를 구분하며, 수집 후 만료시점을 지난 시계에서도 당시87일을 유지합니다.
 - 최초 타입 검사에서 Node 해시 API 타입3건이 누락됐습니다. 빌드용 `@types/node=24.19.2`와 lock의 타입 전이 의존성을 추가한 뒤46파일 오류·경고0과 루트/프로젝트 경로 빌드를 통과했습니다. 기존 실행 의존성·스크립트와 관측 실행기 원문은 유지했습니다.
 - 2026-10-20 16:09–16:11 UTC에 로컬1280px·390px의 수집 시각·87일·만료·실행/소스/원문 링크, 기본 닫힘과 Enter 토글·3px 초점, 본문17px·최소48px 조작·긴 지문 줄바꿈·가로 넘침 부재를 확인했습니다.
-- 원문 링크는 근거 커밋 `391c58bf9ede2a018b56d10c4c3ddbe92d27e8c0`에 고정했습니다. 공개 게시·같은 main CI·공개 화면 확인은 후속 단계입니다.
+- 원문 링크는 근거 커밋 `391c58bf9ede2a018b56d10c4c3ddbe92d27e8c0`에 고정했습니다.
+
+## 공개 게시와 확인
+
+[PR155](https://github.com/DevDooly/devdooly-platform-lab/pull/155)를 main `4362975cb9c6f324f65f423bd42e81ddbd6a1f71`에 병합했습니다. 같은 소스의 [Pages39455602690](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39455602690)·[컨테이너CI39455602586](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39455602586)·TLS/HTTPS 오프라인 검사를 통과했습니다. [공개 저장 관측 화면](https://devdooly.github.io/devdooly-platform-lab/#tls-certificate)에서 확인할 수 있습니다.
+
+2026-10-20 16:16–16:19 UTC에 공개1280px·390px의 수집 시각·87일·만료와 고정 원문 링크, 기본 닫힘·Enter 토글·새로고침 후 닫힘, 본문17px·summary54px·초점3px·긴 지문 줄바꿈·가로 넘침 부재를 확인했습니다. 실제 읽기 API의 카드가 로드된 뒤 모바일 증거 구도를 다시 확인했습니다. TLS 관측을 다시 실행한 결과나 실제 두 인증서의 비교가 아닙니다.
+
+이 화면 소스의 Jenkins commit status는 당시 미관측입니다. 후속 이미지 workflow는 gate 종료 뒤 publish·GitOps 제안을 생략했으며, Pages 게시와 실제 이미지 게시·운영 배포를 구분합니다.
