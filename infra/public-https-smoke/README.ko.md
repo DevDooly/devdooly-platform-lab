@@ -1,6 +1,6 @@
 # 외부 HTTPS 조회 검증 실행기
 
-GitHub hosted Linux에서 Lab 공개 API의 표준 HTTPS와 고정 6 GET, 거부 3개를 한 번 확인하기 위한 수동 실행기다. Windows Node 24.19.0에서 합성 offline 테스트 15개가 통과했으며 실제 외부 접속·TLS·라우트 완성은 아직 검증하지 않았다. 기존 웹 DTO 검증 소스를 직접 사용하며 npm 설치·API 작업 생성·배포는 하지 않는다.
+GitHub hosted Linux에서 Lab 공개 API의 표준 HTTPS와 고정 6 GET, 거부 3개를 한 번 확인하기 위한 수동 실행기다. 초기 소스 준비 시점에는 Windows Node24.19.0 합성 offline15검사까지만 확인했다. 이후 실제 외부 연결은 [10월20일 운영 근거](../../docs/evidence/public-read-https/ops-20261020/README.md), 별도 TLS1회·HTTP0회의 인증서 유효기간은 [첫 저장 관측](../../docs/evidence/tls-certificate/README.md)을 따른다. 기존 웹 DTO 검증 소스를 직접 사용하며 npm 설치·API 작업 생성·배포는 하지 않는다.
 
 모든 모드에서 기존 Traefik을 유지하는 Lab 전용 라우트의 소유와 거부 경로를 먼저 확인한다. 특히 POST가 기존 catchall로 전달되지 않는다는 metadata를 검토한다. candidate 모드는 TLS 준비 여부가 아직 불명확해도 표준 CA·SNI 검증을 강제한 채 시험할 수 있다. TLS가 실패하면 해당 요청에서 중단하고 이후 GET·POST나 live 변수 등록을 하지 않는다. 운영 설정으로의 전환은 표준 TLS와 hosted GET6·거부3 통과 뒤에만 진행한다.
 
