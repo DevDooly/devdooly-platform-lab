@@ -23,6 +23,8 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 새 격리 warehouse에서 snapshot 1개·data 파일 1개 만료와 tag·공유 파일·행 보존, 후속 조회·정리 검증을 마쳤습니다([실제 근거](docs/evidence/cloud-iceberg-expiration/README.md) · [TIL 해설](https://devdooly.github.io/TIL/Data/Iceberg_Snapshot_Expiration_Lab/)). DB·Garage의 선택 볼륨이 같은 파일시스템을 공유함을 읽기 전용으로 확인했습니다. 자원 예산 근거가 미확정이라 접수 gate는 보류하고, snapshot 만료 전후 [관측 화면](https://devdooly.github.io/devdooly-platform-lab/#snapshot-expiration)의 공개와 전후 전환을 확인했습니다.
 
+2026-10-20 UTC에 선택 운영 상태·DDNS 자연 실행·표준 TLS와 외부 조회 6개·거부 3개, 공개 작업·Kafka 화면을 다시 확인했습니다([시점별 운영 근거](docs/evidence/public-read-https/ops-20261020/README.md)). 자격증명 회전과 자원 예산·접수 gate는 보류하며, 인증서 자연 갱신과 현재 공개 경로의 재부팅은 이번 검증에 포함하지 않았습니다.
+
 ## 로컬 실행
 
 Java 21과 Node 24.19.0을 사용합니다. API와 화면을 별도 터미널에서 실행합니다.

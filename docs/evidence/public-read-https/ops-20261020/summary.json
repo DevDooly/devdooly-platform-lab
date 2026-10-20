@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "scope": "POINT_IN_TIME_PUBLIC_READ_OPERATIONS",
+  "observedOnUtc": "2026-10-20",
+  "runtime": {
+    "capturedAtUtc": "2026-10-20T08:53:47.821021+00:00",
+    "nodeReady": true,
+    "selectedLabPodCount": 7,
+    "allSelectedLabPodsRunning": true,
+    "allSelectedLabContainersReady": true,
+    "argoSync": "Synced",
+    "argoHealth": "Healthy"
+  },
+  "ddnsNaturalUpdate": {
+    "capturedAtUtc": "2026-10-20T08:59:50.324859Z",
+    "timerActiveEnabled": true,
+    "lastTriggerLinkedAcceptedCount": 1,
+    "lastTriggerLinkedUpdaterAtUtc": "2026-10-20T08:56:50.165873Z",
+    "manualUpdaterInvoked": false
+  },
+  "certificate": {
+    "capturedAtUtc": "2026-10-20T09:04:08.633Z",
+    "defaultCaVerified": true,
+    "sniUsed": true,
+    "hostnameVerified": true,
+    "protocol": "TLSv1.3",
+    "expiresAtUtc": "2027-01-16T13:10:02.000Z",
+    "daysRemainingAtCapture": 88
+  },
+  "hostedHttps": {
+    "runUrl": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39400253632",
+    "capturedAtUtc": "2026-10-20T09:23:41.190Z",
+    "status": "PASS",
+    "publicIpv4Verified": true,
+    "standardTlsVerified": true,
+    "checks": {
+      "SUMMARY": {
+        "passed": true,
+        "status": 200
+      },
+      "RELEASES": {
+        "passed": true,
+        "status": 200
+      },
+      "RUN_LIST": {
+        "passed": true,
+        "status": 200
+      },
+      "RUN_DETAIL_EXAMPLE": {
+        "passed": true,
+        "status": 200
+      },
+      "JOBS": {
+        "passed": true,
+        "status": 200
+      },
+      "KAFKA": {
+        "passed": true,
+        "status": 200
+      },
+      "DENIED_PATH": {
+        "passed": true,
+        "status": 404
+      },
+      "DENIED_ORIGIN": {
+        "passed": true,
+        "status": 403
+      },
+      "DENIED_METHOD": {
+        "passed": true,
+        "status": 405
+      }
+    }
+  },
+  "publicUi": {
+    "observedOnUtc": "2026-10-20",
+    "liveApiEnabled": true,
+    "jobs": 8,
+    "exportedJobs": 8,
+    "kafkaCommittedOffset": 8,
+    "kafkaLastStableOffset": 8,
+    "kafkaLag": 0
+  },
+  "credentialObservation": {
+    "capturedAtUtc": "2026-10-20T08:54:22Z",
+    "statusRoleGetStatus": 200,
+    "pagesRoleGetStatus": 200,
+    "expirationState": "UNKNOWN",
+    "rotation": "DEFERRED"
+  },
+  "limits": {
+    "pointInTimeOnly": true,
+    "availabilitySlaVerified": false,
+    "naturalCertificateRenewal": "UNVERIFIED",
+    "currentPublicPathReboot": "NOT_PERFORMED",
+    "resourceAdmissionGate": "HELD"
+  }
+}
