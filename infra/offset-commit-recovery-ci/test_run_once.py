@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 import run_once as runner
@@ -25,7 +26,7 @@ class RunnerTest(unittest.TestCase):
             for replays in (0, 1):
                 expected = success(state, offset, replays)
                 self.assertEqual(expected, runner.parse_result(marker(expected)))
-        failed = dict(schemaVersion=1, status='FAIL', failureCode='VALIDATION_FAILED')
+        failed = dict(schemaVersion=1, status='FAIL', failureCode='VALIDATION_FAILED', failurePhase='TEST_ENTRY')
         self.assertEqual(failed, runner.parse_result(marker(failed)))
         self.assertIsNone(runner.parse_result('ordinary library output'))
 
@@ -38,6 +39,8 @@ class RunnerTest(unittest.TestCase):
                 runner.parse_result(marker(value))
         for text in (marker(success()) + '\n' + marker(success()),
                      runner.MARKER + '{"schemaVersion":1,"schemaVersion":1}',
+                     marker(dict(schemaVersion=1, status='FAIL', failureCode='VALIDATION_FAILED', failurePhase='private')),
+                     marker(dict(schemaVersion=1, status='FAIL', failureCode='VALIDATION_FAILED')),
                      'OFFSET_COMMIT_RECOVERY_PRIVATE raw error'):
             with self.assertRaises(ValueError) as caught:
                 runner.parse_result(text)
@@ -148,6 +151,103 @@ class RunnerTest(unittest.TestCase):
             self.assertIsNone(runner.failure_diagnostic(error, private, {runner.__file__: 'runner'}))
             self.assertIsNone(runner.failure_diagnostic(error, 'GARAGE_ACL', {}))
             self.assertIsNone(runner.failure_diagnostic(error, 'GARAGE_ACL', {runner.__file__: private}))
+
+    def test_native_signatures_emit_only_fixed_observed_enums(self):
+        raw = (b'[ERROR] Cannot access https://private.invalid in offline mode; secret=value\n'
+               b'java.lang.OutOfMemoryError: not-public\n'
+               b'java.nio.file.AccessDeniedException: /private/file\n')
+        self.assertEqual(['FILE_ACCESS_DENIED', 'JVM_MEMORY_FAILURE', 'MAVEN_OFFLINE_ARTIFACT_UNAVAILABLE'],
+                         runner.native_signals(raw))
+        rendered = json.dumps(runner.native_signals(raw))
+        for private in ('private.invalid', 'secret', 'not-public', '/private/file', 'OutOfMemoryError'):
+            self.assertNotIn(private, rendered)
+        with self.assertRaises(ValueError):
+            runner.native_signals(b'x' * 1048577)
+
+    def test_java_frame_requires_known_class_file_hash_and_existing_source_line(self):
+        with tempfile.TemporaryDirectory() as directory:
+            task = Path(directory)
+            key, relative, classname = runner.JAVA_DIAGNOSTIC_SOURCES['OffsetCommitRecoveryIT.java']
+            path = task / 'it-api' / Path(relative).relative_to('apps/api')
+            path.parent.mkdir(parents=True)
+            raw = b'first\nsecond\nthird\n'; path.write_bytes(raw)
+            source = {key: hashlib.sha256(raw).hexdigest()}
+            text = (' at ' + classname + '.test(OffsetCommitRecoveryIT.java:2)\n'
+                    ' at foreign.Class.test(OffsetCommitRecoveryIT.java:2)\n'
+                    ' at ' + classname + '.test(OffsetCommitRecoveryIT.java:4)\n'
+                    ' at ' + classname + '.test(Private.java:2)\n')
+            self.assertEqual([{'sourceFile': 'OffsetCommitRecoveryIT.java', 'sourceLine': 2}],
+                             runner.java_frames(task, source, text))
+            path.write_bytes(b'changed\n')
+            self.assertEqual([], runner.java_frames(task, source, text))
+
+    def test_junit_projection_checks_exact_case_counts_and_never_exports_problem_text(self):
+        with tempfile.TemporaryDirectory() as directory:
+            task = Path(directory)
+            self.assertEqual(('ABSENT', None, ''), runner.junit_failure_projection(task))
+            path = task / 'it-api/target/surefire-reports' / ('TEST-' + runner.CLASS + '.xml')
+            path.parent.mkdir(parents=True)
+            xml = ('<testsuite name="' + runner.CLASS + '" tests="1" failures="0" errors="1" skipped="0">'
+                   '<testcase classname="' + runner.CLASS + '" name="' + runner.METHOD + '">'
+                   '<error type="private.Type" message="secret">private stack</error></testcase></testsuite>')
+            path.write_text(xml)
+            status, counts, text = runner.junit_failure_projection(task)
+            self.assertEqual('VERIFIED', status)
+            self.assertEqual({'tests': 1, 'failures': 0, 'errors': 1, 'skipped': 0}, counts)
+            self.assertEqual('private stack', text)
+            # The text is in-memory parser input only; the public projection takes counts.
+            self.assertNotIn('private', json.dumps({'junitReportStatus': status, 'junitCounts': counts}))
+            for bad in (xml.replace('errors="1"', 'errors="2"'), xml.replace(runner.METHOD, 'other'),
+                        '<!DOCTYPE testsuite>' + xml, xml.replace('<error ', '<failure ')):
+                path.write_text(bad)
+                self.assertEqual(('UNVERIFIED', None, ''), runner.junit_failure_projection(task))
+
+    def test_owned_exited_jvm_projects_exit_oom_and_fixed_failure_without_values(self):
+        failed = dict(schemaVersion=1, status='FAIL', failureCode='VALIDATION_FAILED', failurePhase='SERVICE_GUARDS')
+        class Owned:
+            deadline = time.monotonic() + 30
+            calls = []
+            def inspect(self, row):
+                return {'State': dict(Status='exited', Running=False, Paused=False, StartedAt='private-start', ExitCode=1, OOMKilled=False)}
+            def call(self, args, deadline):
+                self.calls.append(args)
+                return 0, (marker(failed) + '\nFailed to load ApplicationContext secret=value').encode(), b''
+        owned = Owned()
+        with tempfile.TemporaryDirectory() as directory:
+            result = runner.exited_jvm_diagnostic(owned, {'role': 'jvm', 'id': 'private-id'}, Path(directory), {})
+        self.assertEqual(1, result['exitCode'])
+        self.assertIs(result['oomKilled'], False)
+        self.assertEqual(['SPRING_CONTEXT_FAILED'], result['observedSignals'])
+        self.assertEqual(failed, result['javaFailure'])
+        self.assertEqual([['logs', '--tail', '200', 'private-id']], owned.calls)
+        for private in ('secret', 'private-id', 'private-start', 'ApplicationContext'):
+            self.assertNotIn(private, json.dumps(result))
+
+    def test_unverified_or_running_jvm_never_requests_logs(self):
+        class Owned:
+            deadline = time.monotonic() + 30
+            def inspect(self, row):
+                return {'State': dict(Status='running', Running=True, Paused=False, ExitCode=0, OOMKilled=False)}
+            def call(self, *args):
+                raise AssertionError('must not read logs')
+        with tempfile.TemporaryDirectory() as directory:
+            self.assertIsNone(runner.exited_jvm_diagnostic(Owned(), {'role': 'jvm'}, Path(directory), {}))
+            self.assertIsNone(runner.exited_jvm_diagnostic(Owned(), {'role': 'db'}, Path(directory), {}))
+
+    def test_log_failure_preserves_verified_exit_without_exception_message_or_raw_log(self):
+        class Owned:
+            deadline = time.monotonic() + 30
+            def inspect(self, row):
+                return {'State': dict(Status='exited', Running=False, Paused=False, StartedAt='same', ExitCode=137, OOMKilled=True)}
+            def call(self, *args):
+                raise RuntimeError('secret exception must stay private')
+        with tempfile.TemporaryDirectory() as directory:
+            result = runner.exited_jvm_diagnostic(Owned(), {'role': 'jvm', 'id': 'private'}, Path(directory), {})
+        self.assertEqual(137, result['exitCode'])
+        self.assertIs(result['oomKilled'], True)
+        self.assertEqual('UNAVAILABLE', result['nativeLogStatus'])
+        self.assertEqual([], result['observedSignals'])
+        self.assertNotIn('secret', json.dumps(result))
 
 
 if __name__ == '__main__':
