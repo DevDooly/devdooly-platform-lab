@@ -39,6 +39,16 @@ const kafkaSource = 'f7b5567963f9a34a34d5f201fb2ed747bdf7652a';
 
 export const evidenceItems: readonly EvidenceItem[] = [
   {
+    id: 'public-https-get', topics: ['delivery'], scope: 'ci', state: 'verified',
+    title: '외부 HTTPS의 고정 GET 응답 확인',
+    description: 'GitHub hosted runner에서 고정 GET 6개를 한 번씩 수동 조회해 HTTP200·공개 헤더·DTO 계약을 확인했습니다. 응답 소스와 관측 시각은 검사기 소스와 구분해 보존했습니다.',
+    boundary: '해당 시점의 읽기 응답 기록입니다. worker 프로세스 생존·POST 차단·장기 가용성·인증서 자연 갱신을 검증한 결과가 아닙니다.',
+    recordedOn: '2026-10-20',
+    source: `${repo}/blob/46d099d1792f3e93125db7f1ffb2ab3e286abc17/infra/public-https-get/probe.ts`,
+    evidence: `${repo}/blob/main/docs/evidence/public-get/README.md`, evidenceLabel: 'GET6 응답·출처·시각 원문',
+    recordLabel: '수동 외부 GET 관측',
+  },
+  {
     id: 'runtime-error-cleanup', topics: ['java'], scope: 'ci', state: 'verified',
     title: 'Error 발생 뒤 실행 중지와 자원 정리',
     description: '합성 AssertionError로 정상 종료 오기록과 부분 client 정리 누락을 재현·수정했습니다. H2·mock client 기반 관련 회귀33개와 같은 소스의 Linux API240개 검사를 통과했습니다.',
