@@ -6,6 +6,16 @@
 
 ## 먼저 확인할 조건
 
+### 현재 코드의 실행 전제
+
+현재 run/resume/stage는 API가 미리 적용한 V4 admission schema를 요구한다. [RuntimeMain](https://github.com/DevDooly/devdooly-platform-lab/blob/46d099d1792f3e93125db7f1ffb2ab3e286abc17/apps/api/src/main/java/io/github/devdooly/platformlab/jobs/runtime/RuntimeMain.java)은 Flyway·SQL 초기화를 끄고 Hibernate validate 뒤 스키마 조건을 검사한다. [RuntimeStateStore](https://github.com/DevDooly/devdooly-platform-lab/blob/46d099d1792f3e93125db7f1ffb2ab3e286abc17/apps/api/src/main/java/io/github/devdooly/platformlab/jobs/runtime/RuntimeStateStore.java)는 V3 성공 이력 한 건과 runtime singleton 조회, V4 성공 이력 한 건을 요구한다. 실행기 자체가 migration을 적용하지 않는다.
+
+실제 DB의 적용 상태·checksum·새 binary 호환 확인은 별도다. API 보고 source와 worker의 마지막 DB source, GitOps 선언을 구분한 [현재 배포 준비와 미확인 조건](../plans/runtime-rollout-readiness.md)을 먼저 읽는다.
+
+### 최초 격리 검증 당시의 조건
+
+바로 아래 V3 설명과 loopback 환경 표·실행 예시는 최초 격리 검증 당시의 조건을 보존한 기록이다. 현재 실행 전제는 위 V4 조건을 따른다.
+
 API/관리 절차가 V3 `lab_runtime` migration을 성공적으로 적용해야 한다. 실행기 자체는 Flyway·SQL 초기화·schema 수정을 실행하지 않고 Hibernate validate와 V3 확인만 수행한다. 기존 V1/V2와 완료 샘플을 유지한다. 이 격리 시험의 연결은 숫자 loopback/SSH 터널의 전용 Kafka·Garage 범위였다. 이후 운영 K3s의 전체 서비스 DNS·Secret·자원 배치는 위 별도 근거에서 검증했다.
 
 Java 21을 사용하며 비공개 환경 파일에서 아래 설정을 준비한다. 토큰·DB/S3 비밀번호·실제 host·포트를 채팅·Git·CI artifact·shell tracing에 옮기지 않는다.

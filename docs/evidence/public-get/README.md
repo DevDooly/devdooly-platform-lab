@@ -48,4 +48,4 @@ PASS는 당시 지정 HTTPS 응답과 DTO 계약 범위입니다. 현재 worker 
 
 ## 근거 목록 연결
 
-기존19개를 유지하고 수동 GET 관측 카드1개를 추가했습니다. 웹207개·생략0, 타입47파일 오류·경고·힌트0와 프로젝트 경로 두 페이지 빌드를 통과했습니다. 로컬1280px·390px에서 GET 검색·CI/CD·GitHub Linux CI 교집합1개, 원문 문서·고정 소스 링크, 본문17px·모바일 링크44px·가로 넘침 부재를 확인했습니다. 조건 초기화 뒤 전체20개 중6개·18개·20개 표시를 확인했습니다. 공개 게시와 반영 확인은 아직 예정입니다.
+기존19개를 유지하고 수동 GET 관측 카드1개를 추가했습니다. 웹207개·생략0, 타입47파일 오류·경고·힌트0와 프로젝트 경로 두 페이지 빌드를 통과했습니다. 로컬1280px·390px에서 GET 검색·CI/CD·GitHub Linux CI 교집합1개, 원문 문서·고정 소스 링크, 본문17px·모바일 링크44px·가로 넘침 부재를 확인했습니다. 조건 초기화 뒤 전체20개 중6개·18개·20개 표시를 확인했습니다. 같은 main `bd4eb39881f7ddc85e82e75264ab3b8794c27098`의 [Pages39484421012](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39484421012) build/deploy와 [CI39484421037](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39484421037)의 verify·public-read-gateway가 성공했습니다(조건부 격리4개 job은 생략). 공개1280px·390px에서도 GET·CI/CD·GitHub Linux CI 교집합1개, 원문 문서·고정 소스 링크, 본문17px·모바일 링크44px·문서 폭1265px/375px의 가로 넘침 부재를 확인했습니다. 새 GET 재실행이나 미니 PC 배포는 하지 않았습니다.

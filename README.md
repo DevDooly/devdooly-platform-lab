@@ -31,7 +31,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 - **런타임 장애:** [offset commit 실패 복구](docs/evidence/offset-commit-recovery/README.md)와 [손상 export 수리](docs/evidence/export-integrity-runtime/README.md)를 검증했습니다. [잘못된 입력](docs/evidence/invalid-message-runtime/README.md)과 [잠금 연결 손실](docs/evidence/runtime-lease-loss/README.md)은 정상 작업 보존과 실행기 종료를 확인한 결과로, 복구 완료와 구분합니다.
 - **데이터 보존:** [격리 PostgreSQL 정상 재시작](docs/evidence/cloud-catalog-restart/README.md) 뒤 catalog·조회·전체 객체 보존과 [새 합성 warehouse의 snapshot 만료](docs/evidence/cloud-iceberg-expiration/README.md)를 확인했습니다. 운영 자료의 만료·삭제 결과가 아닙니다.
-- **공개 응답:** [외부 GET 관측](docs/evidence/public-get/README.md)에서 지정6개 응답의 HTTP200·헤더·DTO·출처와 시각을 확인하고 원문·해시를 보존했습니다. 검사기 소스와 실제 API 소스를 구분하며, 현재 worker 생존·POST 차단·장기 가용성을 검증한 결과는 아닙니다.
+- **공개 응답:** [외부 GET 관측](docs/evidence/public-get/README.md)에서 지정6개 응답의 HTTP200·헤더·DTO·출처와 시각을 확인하고 원문·해시를 보존했습니다. 근거 카드의 공개 데스크톱·모바일 반영과 같은 main의 Pages·CI도 확인했습니다. 검사기 소스와 실제 API 소스를 구분하며, 현재 worker 생존·POST 차단·장기 가용성을 검증한 결과는 아닙니다.
 - **공개 조회:** [두 번의 실제 TLS 관측](docs/evidence/tls-certificate/README.md)에서 동일 대상·leaf·유효기간과 수집 당시87일을 확인했습니다. 첫 기록의 [공개 화면](https://devdooly.github.io/devdooly-platform-lab/#tls-certificate) 검증은 완료했습니다. 두 번째 원문·이력 연결은 웹207개·타입·빌드와 로컬 확인을 마쳤으며, 같은 main의 Pages·CI와 공개 데스크톱·모바일의 두 기록·출처·접기/펼치기까지 확인했습니다. 자연 갱신·HTTP API 정상 여부·현재 가용성은 이 TLS 관측의 범위가 아닙니다.
 - **공개 화면:** [근거 검색·필터·6개씩 더 보기](https://devdooly.github.io/devdooly-platform-lab/#evidence)와 [실행 잠금 사례](https://devdooly.github.io/devdooly-platform-lab/cases/runtime-ownership/)를 공개했습니다. [heartbeat 시각 표시 수정](docs/evidence/job-heartbeat-order/README.md)은 웹188개 검사·타입·프로젝트 경로 빌드와 같은 main의 Pages·CI·Jenkins, 공개 데스크톱·모바일 확인을 마쳤습니다.
 
