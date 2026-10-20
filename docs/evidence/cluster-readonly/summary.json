@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "scope": "READ_ONLY_LAB_CLUSTER_METADATA",
+  "captureStartedAt": "2026-10-20T22:25:12.733684Z",
+  "capturedAt": "2026-10-20T22:25:12.898406Z",
+  "deployments": {
+    "count": 4,
+    "allObservedGenerationsMatch": true,
+    "desiredReplicasPerDeployment": 1,
+    "readyReplicasPerDeployment": 1
+  },
+  "pods": {
+    "count": 7,
+    "runningCount": 7,
+    "readyCount": 7,
+    "containerRestartCounts": {
+      "database": 1,
+      "allOtherContainers": 0
+    }
+  },
+  "persistentVolumeClaims": {
+    "count": 4,
+    "boundCount": 4,
+    "storageClass": "local-path",
+    "accessMode": "ReadWriteOnce"
+  },
+  "declaredRuntimePins": {
+    "api": {
+      "sourceCommit": "245d61a5749760a20918ab091d9410ce6735b1c0",
+      "imageDigest": "sha256:9e81facc7365161fbc6a2e5a4b92f76f3787bc91c73bda7e6c51b5f1a90a2395"
+    },
+    "web": {
+      "imageDigest": "sha256:029c07bfcf9f872315ecf8307d8aec22425b23d9467492c62bb810420395e376"
+    },
+    "worker": {
+      "sourceCommit": "74a8e98844a8fea0653951136ede0e7de0d7ac08",
+      "imageDigest": "sha256:e128652b6a28704bc2cb0a1e8bec318948df8dd467ed660b12d22c921d720399"
+    }
+  },
+  "workerConfiguration": {
+    "strategy": "Recreate",
+    "terminationGracePeriodSeconds": 300,
+    "runtimeRunArgument": true,
+    "preStopPresent": false,
+    "readinessType": "exec",
+    "readinessPeriodSeconds": 10,
+    "readinessTimeoutSeconds": 5,
+    "readinessFailureThreshold": 3,
+    "memoryRequest": "256Mi",
+    "memoryLimit": "768Mi"
+  },
+  "workerOwnershipFollowup": {
+    "observationTimeNotRecorded": true,
+    "ownerChainVerifiedAtInspection": true,
+    "selectorMatches": true,
+    "deploymentImageMatchesExpected": true,
+    "podImageMatchesExpected": true,
+    "containerRuntimeImageMatchesExpected": true
+  },
+  "argo": {
+    "syncStatus": "Synced",
+    "healthStatus": "Healthy",
+    "syncRevision": "e0f14d3d0203b5dfe897895c78e68a24200d186e",
+    "targetRevision": "main",
+    "expectedRepositoryMatches": true,
+    "expectedChartPathMatches": true,
+    "expectedReleaseNameMatches": true,
+    "helmOverrideCount": 1
+  },
+  "helmInputsFollowup": {
+    "observationTimeNotRecorded": true,
+    "valueFilesExactOrderMatches": true,
+    "proxyCidrOverridePresent": true,
+    "imageOrSourceOverridePresent": false,
+    "overrideValuesSuppressed": true
+  },
+  "actions": {
+    "serviceExecPerformed": false,
+    "databaseQueryPerformed": false,
+    "configurationChanged": false,
+    "rolloutPerformed": false
+  },
+  "notVerified": [
+    "NEW_DATABASE_OR_BUSINESS_DATA_BASELINE",
+    "RUNTIME_IDLE_STATE_OR_LEASE_OWNERSHIP",
+    "S3_OR_KAFKA_DATA_STATE",
+    "LONG_TERM_AVAILABILITY"
+  ]
+}

@@ -28,11 +28,19 @@ API의 게시 digest는 `sha256:ee71389be27fa484284a517a324c52a9c827cd20db21f0b3
 
 게시 source6f55와 비교 기준46d의 `apps/api` 전체 Git tree는 `36c1c8af0f1492b3d34dc6514cd6b61767ccf3ec`로 같고 API Dockerfile·`.dockerignore`도 같다. 이는 비교한 소스 입력의 일치이며 재빌드한 이미지 bytes나 실제 실행 binary의 일치를 증명하지 않는다. [PR169](https://github.com/DevDooly/devdooly-platform-lab/pull/169)은 확인 당시 API·웹 values만 바꾸는 미병합 초안이며 worker pin을 갱신하지 않는다. 게시된 후보를 배포 대상으로 선정하거나 해당 PR을 병합하지 않았다.
 
+## 실제 클러스터의 읽기 전용 확인
+
+2026-10-20 22:25 UTC의 [클러스터 점검](../evidence/cluster-readonly/README.md)에서 Argo의 main revision `e0f14d3d0203b5dfe897895c78e68a24200d186e`·Synced·Healthy와 예상한 chart/release를 확인했다. 별도 후속 조회로 valueFiles 순서와 Helm parameter 이름을 대조했다. 추가 parameter 한 개는 공개 gateway의 trusted proxy 설정이며 값은 공개하지 않는다. API/worker source·image를 덮어쓰는 parameter는 없었다.
+
+Deployment4개는 각각 observed generation 일치·1개 Ready였고 Pod7개는 Running·Ready, PVC4개는 Bound였다. API245와 worker74의 Deployment·Pod 선언과 CRI imageID가 기존 pin에 일치했다. 별도 후속 조회에서 worker Pod→ReplicaSet→Deployment의 controller UID 연결과 selector 일치도 확인했다. worker는 Recreate·종료 유예300초·exec readiness를 유지했고 `preStop`은 없었다. JVM 내부 종료 hook의240초 대기는 Kubernetes `preStop`과 구분한다.
+
+이는 그때의 메타데이터와 readiness 확인이다. DB journal·schema·유휴·lease 소유, S3 파일·Kafka offset의 새 기준값이나 최근 오류 수정의 worker 반영을 증명하지 않는다. 현재 worker는74 소스이며 새 pin·배포·재시작은 수행하지 않았다.
+
 ## 아직 확인하지 않은 배포 전제
 
 - 위 게시 후보의 검증·게시·공개 index 자료는 확인했지만, 실제 배포 대상으로 쓸 source·API/worker 각각의 pin·현재 Pod와 이전 pin의 대응은 아직 확정하지 않았다. 새 OCI는 아직 선택하지 않았고 자동 GitOps 초안을 일괄 병합하지 않았다.
-- 현재 Argo의 source revision·실제 valueFiles/override·sync 상태와 Pod의 소유 관계·image ID·readiness를 읽기 전용으로 확인해야 한다. 선언 파일만으로 현재 설치 상태를 단정하지 않는다.
+- Argo의 source revision·valueFiles/override·sync 상태와 worker의 소유 관계·image ID·readiness는 위 시점에 대조했다. 실제 배포 직전에는 같은 조건과 기존 실행의 identity를 다시 확인해야 한다.
 - 실제 DB의 V3/V4 성공 이력·checksum·runtime 행과 새 binary 호환, 유휴·EXPORTED·빈 슬롯·pending outbox 0, 기존 SQL·파일·offset 보존 기준은 아직 대조하지 않았다.
-- 기존 Recreate·종료 유예300초·hook 대기240초·exec readiness를 유지하고 이전 실행의 종료·lease 해제와 새 실행의 identity·heartbeat를 구분해야 한다. `PAUSED_OPERATOR`는 재시작으로 해제되지 않고 resume도 자료를 수리하지 않는다. DB/lease 손실로 pause·stop 기록이 남지 않을 수 있으므로 RUNNING만으로 정상 종료·생존을 판정하거나 잠금을 강제 해제하지 않는다.
+- 기존 Recreate·종료 유예300초·JVM 종료 hook 대기240초·exec readiness를 유지하고 이전 실행의 종료·lease 해제와 새 실행의 identity·heartbeat를 구분해야 한다. `PAUSED_OPERATOR`는 재시작으로 해제되지 않고 resume도 자료를 수리하지 않는다. DB/lease 손실로 pause·stop 기록이 남지 않을 수 있으므로 RUNNING만으로 정상 종료·생존을 판정하거나 잠금을 강제 해제하지 않는다.
 
-SSH를 통한 현재 Argo·Pod·DB 조건 조회와 서버 변경은 아직 수행하지 않았다. 기동 복원·토큰 교체·자원 예산 정책·PR102 접수 gate의 네 보류는 유지한다. 이 문서는 새 실행 절차나 쓰기 명령을 추가하지 않는다.
+SSH를 통한 위 Kubernetes·Argo 메타데이터 조회를 마쳤다. DB 조건 조회와 서버 변경은 아직 수행하지 않았다. 기동 복원·토큰 교체·자원 예산 정책·PR102 접수 gate의 네 보류는 유지한다. 이 문서는 새 실행 절차나 쓰기 명령을 추가하지 않는다.
