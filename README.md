@@ -17,6 +17,8 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 최근 완료한 범위는 다음과 같습니다. 실행별 소스·수치·실패 이력과 한계는 연결한 실제 근거를 따릅니다.
 
+- **키보드 탐색:** [실행 결과 탭](docs/evidence/lab-keyboard/README.md)의 양끝 방향키 순환과 Home·End 이동을 수정했습니다. 로컬 브라우저8가지·웹207검사·타입·빌드를 확인했으며 공개 반영 확인은 진행 중입니다.
+
 - **런타임 장애:** [offset commit 실패 복구](docs/evidence/offset-commit-recovery/README.md)와 [손상 export 수리](docs/evidence/export-integrity-runtime/README.md)를 검증했습니다. [잘못된 입력](docs/evidence/invalid-message-runtime/README.md)과 [잠금 연결 손실](docs/evidence/runtime-lease-loss/README.md)은 정상 작업 보존과 실행기 종료를 확인한 결과로, 복구 완료와 구분합니다.
 - **데이터 보존:** [격리 PostgreSQL 정상 재시작](docs/evidence/cloud-catalog-restart/README.md) 뒤 catalog·조회·전체 객체 보존과 [새 합성 warehouse의 snapshot 만료](docs/evidence/cloud-iceberg-expiration/README.md)를 확인했습니다. 운영 자료의 만료·삭제 결과가 아닙니다.
 - **공개 조회:** [첫 TLS 인증서 관측](docs/evidence/tls-certificate/README.md)의 수집 당시87일·만료시각과 출처를 [공개 화면](https://devdooly.github.io/devdooly-platform-lab/#tls-certificate)에 연결했습니다. 웹207검사·타입·두 경로 빌드, 같은 main의 Pages·컨테이너CI와 공개 데스크톱·모바일 확인을 마쳤습니다. 자연 갱신·현재 가용성은 별도입니다.
