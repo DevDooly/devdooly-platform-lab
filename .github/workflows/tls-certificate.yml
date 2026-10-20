@@ -1,0 +1,91 @@
+name: Inspect public TLS certificate manually
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/tls-certificate.yml
+      - infra/tls-certificate/**
+      - infra/public-https-smoke/smoke.ts
+      - apps/lab-web/src/lib/**
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/tls-certificate.yml
+      - infra/tls-certificate/**
+      - infra/public-https-smoke/smoke.ts
+      - apps/lab-web/src/lib/**
+  workflow_dispatch:
+    inputs:
+      confirm_certificate_probe:
+        description: Inspect one certificate with a single TLS handshake and no HTTP requests
+        required: true
+        type: boolean
+        default: false
+      confirm_target_ownership:
+        description: The existing configured public API endpoint belongs to this Lab
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tls-certificate
+  cancel-in-progress: false
+
+jobs:
+  offline:
+    if: github.repository == 'DevDooly/devdooly-platform-lab'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 24.19.0
+      - name: Check certificate observation boundaries without network requests
+        run: |
+          env -u NODE_OPTIONS -u NODE_EXTRA_CA_CERTS -u NODE_TLS_REJECT_UNAUTHORIZED -u NODE_USE_SYSTEM_CA \
+            -u NODE_DEBUG -u NODE_DEBUG_NATIVE -u SSL_CERT_FILE -u SSL_CERT_DIR -u SSLKEYLOGFILE \
+            -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u NO_PROXY \
+            -u http_proxy -u https_proxy -u all_proxy -u no_proxy -u NODE_USE_ENV_PROXY \
+            timeout 60s node --experimental-test-module-mocks --experimental-strip-types \
+            --test infra/tls-certificate/probe.test.mjs
+  certificate:
+    needs: offline
+    if: github.repository == 'DevDooly/devdooly-platform-lab' && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && inputs.confirm_certificate_probe == true && inputs.confirm_target_ownership == true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 24.19.0
+      - name: Inspect the owned endpoint certificate once
+        env:
+          LAB_PUBLIC_API_URL: ${{ secrets.LAB_PUBLIC_API_URL }}
+          TLS_CERTIFICATE_VARIABLE_MATCH: ${{ vars.LAB_PUBLIC_API_URL != '' && vars.LAB_PUBLIC_API_URL == secrets.LAB_PUBLIC_API_URL }}
+          TLS_CERTIFICATE_CONFIRM: ${{ inputs.confirm_certificate_probe }}
+          TLS_CERTIFICATE_TARGET_OWNERSHIP: ${{ inputs.confirm_target_ownership }}
+        run: |
+          env -u NODE_OPTIONS -u NODE_EXTRA_CA_CERTS -u NODE_TLS_REJECT_UNAUTHORIZED -u NODE_USE_SYSTEM_CA \
+            -u NODE_DEBUG -u NODE_DEBUG_NATIVE -u SSL_CERT_FILE -u SSL_CERT_DIR -u SSLKEYLOGFILE \
+            -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u NO_PROXY \
+            -u http_proxy -u https_proxy -u all_proxy -u no_proxy -u NODE_USE_ENV_PROXY \
+            timeout 40s node --experimental-strip-types infra/tls-certificate/probe.ts \
+            "$RUNNER_TEMP/tls-certificate-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT.json"
+      - name: Retain the finite certificate summary only
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: tls-certificate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/tls-certificate-${{ github.run_id }}-${{ github.run_attempt }}.json
+          if-no-files-found: error
+          retention-days: 7
