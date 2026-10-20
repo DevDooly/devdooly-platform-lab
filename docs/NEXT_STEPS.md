@@ -1,10 +1,12 @@
 # Platform Lab 다음 개발 계획
 
-## 현재 작업 — 2026-10-20 15:00 UTC
+## 현재 작업 — 2026-10-20 15:07 UTC
 
 기존 [실행 잠금 손실 원문](evidence/runtime-lease-loss/README.md)을 설명하는 별도 `/cases/runtime-ownership/` 페이지를 구현했습니다. `RUNNING / EXPORT`는 종료된 프로세스의 마지막 DB 기록이며, 실제 client·context·child 종료와 구분합니다. 네 단계의 상세 내용은 native 접기/펼치기이며 세 번째를 기본으로 엽니다. `NO_COMMIT / null`과 점유 슬롯 보존, 이전 child 종료 뒤 새 잠금 확인의 범위를 유지합니다.
 
-웹186개 검사·skip0·타입 검사44파일과 루트/프로젝트 경로 빌드를 통과했습니다. 로컬1280px·390px에서 직접 진입·새로고침·목록 왕복, 기본 열림·마우스/키보드 상세 토글·표 초점, 본문17px·긴 SHA 줄바꿈·가로 넘침 부재를 확인했습니다. 다음은 Pages 게시와 공개 QA입니다. 이후에는 기존 런타임 문서의 장애별 판단표를 정리합니다. 토큰 교체·예산 정책·PR102는 계속 보류합니다.
+웹186개 검사·skip0·타입 검사44파일과 루트/프로젝트 경로 빌드를 통과했습니다. 로컬1280px·390px 확인 뒤 [PR149](https://github.com/DevDooly/devdooly-platform-lab/pull/149)를 병합했고, 같은 main `40fdf6f3`의 [Pages 39444806349](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39444806349)·[CI 39444810189](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39444810189)를 통과했습니다. 2026-10-20 15:07 UTC에 공개1280px·390px에서 기본 열림·키보드 토글·표 초점·원문 링크·목록 왕복, 본문17px·긴 SHA 줄바꿈·가로 넘침 부재를 확인했습니다.
+
+기존 런타임 문서의 [장애별 판단표](runbooks/continuous-runtime.md#실제-네-가지-장애의-판단-기준--2026-10-20-utc)에서 offset 실패·export 손상·잘못된 입력·잠금 손실의 서로 다른 저장 상태와 재개 전제를 정리했습니다. [AI 예제 소유자 검토자료](reviews/ai-window-owner-review.md)는 기존 계약·테스트·오차·주장을 읽는 질문이며 사람의 판단은 PENDING입니다. 동결된 예제16파일과 실제 원문을 유지했고 새 장애 시험·benchmark·운영 배포는 실행하지 않았습니다. 다음 운영 후속은 새 토큰 준비 뒤 실제 교체 검증, 이후 인증서 자연 갱신과 현재 공개 경로의 재부팅 검증이며 각각 필요한 입력·시점을 확인한 뒤 진행합니다. 토큰 교체·예산 정책·PR102는 계속 보류합니다.
 
 ## 최신 PostgreSQL catalog 재시작 검증 — 2026-10-20 14:32 UTC
 

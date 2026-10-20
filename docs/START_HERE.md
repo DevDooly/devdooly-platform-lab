@@ -5,7 +5,7 @@
 최신 완료·진행·보류와 다음 순서는 [다음 개발 계획의 맨앞 안내](NEXT_STEPS.md)를 따릅니다. 지난 실행의 설치·재시작 절차를 현재 할 일로 다시 실행하지 않습니다.
 
 - **완료:** [실행 잠금 손실](evidence/runtime-lease-loss/README.md) 등 실제 격리 런타임 시험과 [PostgreSQL catalog 정상 재시작](evidence/cloud-catalog-restart/README.md)을 확인했습니다. 근거 목록의 검색·두 필터·6개씩 더 보기는 웹173개 검사·타입·빌드와 같은 main의 Pages·CI, 로컬·공개 화면 확인을 마쳤습니다. 각 기록은 실행 당시의 범위이며 현재 가용성을 뜻하지 않습니다.
-- **진행 중:** 기존 잠금 손실의 stale DB 기록과 실제 종료를 설명하는 별도 사례 페이지(`/cases/runtime-ownership/`)를 준비합니다. 검증·게시 결과는 [다음 개발 계획의 최신 안내](NEXT_STEPS.md)를 따릅니다.
+- **사례·운영 문서:** 기존 잠금 손실의 stale DB 기록과 실제 종료를 설명하는 [별도 사례 페이지](https://devdooly.github.io/devdooly-platform-lab/cases/runtime-ownership/)를 공개하고 키보드·모바일 확인을 마쳤습니다. 장애별 판단표와 AI 소유자 검토자료의 세부 근거·다음 순서는 [최신 안내](NEXT_STEPS.md)를 따릅니다.
 - **보류:** 토큰 교체·회전, 자원 예산 정책, [PR102 접수 gate](https://github.com/DevDooly/devdooly-platform-lab/pull/102) 활성화는 모두 보류 상태로 유지합니다. 인증서 자연 갱신·현재 공개 경로의 재부팅도 아직 검증하지 않았습니다.
 
 ## 이전 연결·구축 기록 — 2026-10-18까지의 안내

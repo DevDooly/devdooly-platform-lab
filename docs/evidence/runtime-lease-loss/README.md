@@ -40,6 +40,6 @@ DB의 `RUNNING`은 **종료된 프로세스가 남긴 마지막 기록**입니�
 
 ## 별도 사례 페이지
 
-같은 실제 기록을 읽는 [프로세스 종료와 DB 상태 사례](https://devdooly.github.io/devdooly-platform-lab/cases/runtime-ownership/)를 준비했습니다. 원 summary와 metadata는 그대로 보존했고, 별도 JSON은 실제 실행 URL·완료 시각·summary만 묶었습니다. 페이지는 고정된 18/35필드·출처·실제 타입과 값을 모두 검증한 경우에만 저장 기록을 보여줍니다. native 상세 네 개 중 세 번째가 기본으로 열리며 중간 경과 시간이나 현재 건강 상태를 만들지 않습니다.
+같은 실제 기록을 읽는 [프로세스 종료와 DB 상태 사례](https://devdooly.github.io/devdooly-platform-lab/cases/runtime-ownership/)를 공개했습니다. 원 summary와 metadata는 그대로 보존했고, 별도 JSON은 실제 실행 URL·완료 시각·summary만 묶었습니다. 페이지는 고정된 18/35필드·출처·실제 타입과 값을 모두 검증한 경우에만 저장 기록을 보여줍니다. native 상세 네 개 중 세 번째가 기본으로 열리며 중간 경과 시간이나 현재 건강 상태를 만들지 않습니다.
 
-웹186개 검사·skip0·타입·루트/프로젝트 경로 빌드와 로컬1280px·390px의 진입/새로고침·목록 왕복·상세 키보드 토글·표 초점·17px·긴 SHA 줄바꿈·가로 넘침 부재를 확인했습니다. 처음 타입 검사에서 발견한 Astro 속성명 두 곳(`datetime`, `tabindex`)을 수정한 뒤 오류0을 확인했습니다. 공개 게시·공개 QA는 아직 다음 단계입니다. 실제 장애 시험을 재실행하거나 worker를 배포하지 않았습니다.
+웹186개 검사·skip0·타입·루트/프로젝트 경로 빌드와 로컬1280px·390px의 진입/새로고침·목록 왕복·상세 키보드 토글·표 초점·17px·긴 SHA 줄바꿈·가로 넘침 부재를 확인했습니다. 처음 타입 검사에서 발견한 Astro 속성명 두 곳(`datetime`, `tabindex`)을 수정한 뒤 오류0을 확인했습니다. [PR149](https://github.com/DevDooly/devdooly-platform-lab/pull/149)의 main `40fdf6f36bf93103af5485430c1f42ae682dda85`에서 [Pages](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39444806349)·[CI](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39444810189)를 통과했고, 2026-10-20 15:07 UTC에 공개 데스크톱·모바일의 같은 경계와 기본 열림·키보드·링크·표 초점을 확인했습니다. 실제 장애 시험을 재실행하거나 worker를 배포하지 않았습니다.
