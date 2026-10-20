@@ -1,6 +1,18 @@
 # 현재 상태에서 이어서 구축하기
 
-최신 연결(2026-10-18 UTC): [공개 HTTPS·실시간 조회 근거](evidence/public-read-https/README.md)에서 외부 runner의 표준 TLS·고정 조회와 Pages의 작업 8개·Kafka live 조회 및 시계 경고 대조를 확인했습니다. 공개 실행·POST·관리 화면은 제공하지 않습니다.
+## 현재 이어서 볼 곳 — 2026-10-20 UTC
+
+최신 완료·진행·보류와 다음 순서는 [다음 개발 계획의 맨앞 안내](NEXT_STEPS.md)를 따릅니다. 지난 실행의 설치·재시작 절차를 현재 할 일로 다시 실행하지 않습니다.
+
+- **완료:** [실행 잠금 손실](evidence/runtime-lease-loss/README.md) 등 실제 격리 런타임 시험과 [PostgreSQL catalog 정상 재시작](evidence/cloud-catalog-restart/README.md)을 확인했습니다. 근거 목록의 검색·두 필터·6개씩 더 보기는 웹173개 검사·타입·빌드와 같은 main의 Pages·CI, 로컬·공개 화면 확인을 마쳤습니다. 각 기록은 실행 당시의 범위이며 현재 가용성을 뜻하지 않습니다.
+- **진행 중:** 기존 잠금 손실의 stale DB 기록과 실제 종료를 설명하는 별도 사례 페이지(`/cases/runtime-ownership/`)를 준비합니다. 검증·게시 결과는 [다음 개발 계획의 최신 안내](NEXT_STEPS.md)를 따릅니다.
+- **보류:** 토큰 교체·회전, 자원 예산 정책, [PR102 접수 gate](https://github.com/DevDooly/devdooly-platform-lab/pull/102) 활성화는 모두 보류 상태로 유지합니다. 인증서 자연 갱신·현재 공개 경로의 재부팅도 아직 검증하지 않았습니다.
+
+## 이전 연결·구축 기록 — 2026-10-18까지의 안내
+
+아래는 당시 상태와 실행 근거를 보존한 기록입니다. 당시의 “최신”·“다음” 표현이나 미완료 후보보다 위 현재 안내와 연결된 최신 근거를 우선합니다.
+
+당시 연결(2026-10-18 UTC): [공개 HTTPS·실시간 조회 근거](evidence/public-read-https/README.md)에서 외부 runner의 표준 TLS·고정 조회와 Pages의 작업 8개·Kafka live 조회 및 시계 경고 대조를 확인했습니다. 공개 실행·POST·관리 화면은 제공하지 않습니다.
 
 최신 snapshot 화면: 새 합성 warehouse의 [만료·보존 근거](evidence/cloud-iceberg-expiration/README.md)와 저장된 [만료 전후 비교 화면](https://devdooly.github.io/devdooly-platform-lab/#snapshot-expiration)을 공개했습니다. 아래 단계별 기록은 각각 당시의 조건이며, 최신 완료·보류 범위는 [다음 개발 계획](NEXT_STEPS.md)의 맨앞 안내를 따릅니다.
 
@@ -86,9 +98,11 @@ Kafka·Garage의 전용 PVC 3개는 외부 사본에서 새 볼륨으로 복원�
 
 별도 Linux worker의 부분 export 중단·복구도 검증했습니다. 결과 파일 확인 후 실패 파일 PUT을 Garage에 전달하기 직전에 SIGKILL 1회로 중단했고 동일 JAR로 pending export만 완료했습니다. 격리 검사 12/12와 운영 보존 18/18을 통과했으며 [중단 경계와 한계](evidence/maximum-export-crash/README.md)를 따릅니다. 진행 중 호스트 재부팅과 구분합니다.
 
-## 다음 작업
+## 이전 작업 후보 — 2026-10-18 당시
 
-**이전 capture 작업 지점(2026-10-18 당시):** 소스 `5862ba0c`의 [9차 새 capture](evidence/iceberg-capture/ATTEMPT_9.md)는 기본 CI·Linux87·UID0·skip0·source 전후 동일과 필수 검증9개를 통과했습니다. 같은 실행의 actors·clock·metadata graph·inventory를 순수 보존 계획에 연결했고 스냅샷3·참조1·보호 항목1·객체20을 관측했습니다. 모든 객체 KEEP이며 스냅샷 제안·객체 삭제 후보는 각각0개입니다. 다음은 실제 요약의 화면·회귀 확인 후 보존 정책·운영 규모와 다른 장애 경계를 독립 검토하는 단계입니다. 삭제·만료·미니 PC 접촉·Parquet 해석·live 독립 검증은 미실행이고 이전1–8 실패를 보존합니다. [절차](runbooks/iceberg-closed-copy-capture.md)에 따라 계정 잔여60%에서 안전하게 중단합니다.
+아래 후보는 당시 검토 범위를 보존한 것으로 현재 실행 순서가 아닙니다. 최신 우선순위와 보류 여부는 [다음 개발 계획의 최신 안내](NEXT_STEPS.md)를 확인합니다.
+
+**이전 capture 작업 지점(2026-10-18 당시):** 소스 `5862ba0c`의 [9차 새 capture](evidence/iceberg-capture/ATTEMPT_9.md)는 기본 CI·Linux87·UID0·skip0·source 전후 동일과 필수 검증9개를 통과했습니다. 같은 실행의 actors·clock·metadata graph·inventory를 순수 보존 계획에 연결했고 스냅샷3·참조1·보호 항목1·객체20을 관측했습니다. 모든 객체 KEEP이며 스냅샷 제안·객체 삭제 후보는 각각0개입니다. 다음은 실제 요약의 화면·회귀 확인 후 보존 정책·운영 규모와 다른 장애 경계를 독립 검토하는 단계입니다. 삭제·만료·미니 PC 접촉·Parquet 해석·live 독립 검증은 미실행이고 이전1–8 실패를 보존합니다. [절차](runbooks/iceberg-closed-copy-capture.md)의 capture 검증 조건을 따릅니다.
 
 [다음 개발 계획](NEXT_STEPS.md)에 우선순위와 단계별 결과물·완료 조건을 정리했습니다.
 

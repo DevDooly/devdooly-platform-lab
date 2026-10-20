@@ -1,0 +1,102 @@
+---
+import caseRecord from '../../../data/runtime-ownership-case.generated.json';
+import { parseRuntimeOwnershipCase, runtimeOwnershipPhases, RUNTIME_OWNERSHIP_RAW_SHA256 } from '../../../lib/runtime-ownership-case';
+import '../../../styles/global.css';
+import '../../../styles/runtime-ownership-case.css';
+
+const assetBase = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const record = parseRuntimeOwnershipCase(caseRecord);
+const phases = record ? runtimeOwnershipPhases(record) : [];
+const repo = 'https://github.com/DevDooly/devdooly-platform-lab';
+const evidenceUrl = `${repo}/blob/main/docs/evidence/runtime-lease-loss/README.md`;
+const sourceUrl = record ? `${repo}/blob/${record.summary.sourceCommit}/infra/runtime-lease-loss-ci/RuntimeLeaseLossIT.java` : evidenceUrl;
+---
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f6f0" />
+    <title>프로세스 종료와 DB 상태가 달랐던 이유 — DevDooly Platform Lab</title>
+    <meta name="description" content="실행 잠금 연결을 잃은 뒤 남은 DB 기록과 실제 프로세스 종료를 구분한 개인 Lab의 저장된 검증 사례입니다." />
+    <link rel="icon" type="image/svg+xml" href={`${assetBase}favicon.svg`} />
+  </head>
+  <body>
+    <a href="#main" class="skip-link">본문으로 이동</a>
+    <header class="site-header"><div class="header-inner">
+      <a class="brand" href={assetBase} aria-label="DevDooly Platform Lab 처음으로"><svg aria-hidden="true" viewBox="0 0 36 36"><path d="M18 0v36M0 18h36M5.3 5.3l25.4 25.4M5.3 30.7 30.7 5.3" stroke="currentColor" stroke-width="6"/></svg><span>DevDooly<strong>PLATFORM LAB</strong></span></a>
+      <nav aria-label="사례 메뉴"><a href={`${assetBase}#evidence`}>검증 기록 목록</a>{record && <a href="#recorded-phases">확인한 순서</a>}</nav>
+    </div></header>
+    <main id="main" class="ownership-case">
+      <div class="ownership-intro">
+        <a class="text-link" href={`${assetBase}#evidence`}>← 기술별 근거 목록</a>
+        <p class="eyebrow">RECORDED CASE / RUNTIME OWNERSHIP</p>
+        <h1>프로세스 종료와<br />DB 상태가 달랐던 이유</h1>
+        <p class="ownership-lead">DB의 마지막 기록과 실제 종료는 서로 다른 관측입니다.</p>
+      </div>
+      {record ? <>
+        <p class="ownership-recorded">새 격리 환경의 합성 입력 시험 1회 · 완료 <time datetime={record.completedAt}>{record.completedAt.replace('T', ' ').replace('Z', ' UTC')}</time></p>
+        <section class="ownership-section" aria-labelledby="ownership-difference-title">
+          <h2 id="ownership-difference-title">RUNNING은 마지막 저장 상태였습니다.</h2>
+          <p>실행 잠금 연결을 잃어 다음 단계가 거부됐습니다. pause 저장에 필요한 소유권 검사도 거부되어, 최종 stop 기록 없이 자원과 프로세스가 종료한 뒤에도 DB journal에는 이전 기록이 남았습니다.</p>
+          <div class="ownership-comparison">
+            <article><p class="ownership-domain">DB RUNTIME JOURNAL</p><h3>마지막으로 저장된 행</h3>
+              <dl><div><dt>status / stage</dt><dd>{record.summary.leaseLossResult.journalStatus} / {record.summary.leaseLossResult.journalStage}</dd></div><div><dt>failureCode</dt><dd>null</dd></div><div><dt>행과 시각</dt><dd>fault 직전 기록 그대로 보존</dd></div></dl>
+              <p>현재 worker가 살아 있거나 정상이라는 뜻으로 읽지 않습니다.</p>
+            </article>
+            <article><p class="ownership-domain">ACTUAL TERMINATION</p><h3>시험에서 확인한 종료</h3>
+              <ul><li>실제 client·lease 닫힘</li><li>Spring context 닫힘</li><li>child 프로세스 종료 확인</li></ul>
+              <p>종료한 뒤 새 lease의 획득·검증·해제만 확인했습니다.</p>
+            </article>
+          </div>
+        </section>
+        <section id="recorded-phases" class="ownership-section" aria-labelledby="ownership-phases-title">
+          <h2 id="ownership-phases-title">소스 순서대로 읽는 네 개의 확인 지점</h2>
+          <p class="ownership-hint">제목을 선택해 상세 내용을 펼칩니다. 저장된 확인 순서이며 단계별 경과 시간이나 현재 실행 상태가 아닙니다.</p>
+          <ol class="ownership-phases">{phases.map(phase => <li>
+            <details open={phase.id === 'closed'}>
+              <summary><span class="ownership-step" aria-hidden="true">{phase.step}</span><span class="ownership-phase-heading"><span class="ownership-domain">{phase.domain}</span><span>{phase.title}</span></span></summary>
+              <div class="ownership-phase-body">
+                <p>{phase.description}</p>
+                <dl class="ownership-facts">{phase.facts.map(fact => <div><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl>
+                {phase.terminalObservations.length > 0 && <div class="ownership-terminal">
+                  <h3>실제 종료 뒤 대조한 값</h3>
+                  <div class="ownership-table-scroll" role="region" aria-label={`${phase.title}: 종료 뒤 관측값`} tabindex={0}>
+                    <table><caption>해당 실행의 최종 대조값</caption><thead><tr><th scope="col">관측 대상</th><th scope="col">기록한 값</th></tr></thead><tbody>{phase.terminalObservations.map(fact => <tr><th scope="row">{fact.label}</th><td>{fact.value}</td></tr>)}</tbody></table>
+                  </div>
+                </div>}
+                <p class="ownership-note">{phase.note}</p>
+              </div>
+            </details>
+          </li>)}</ol>
+        </section>
+        <section class="ownership-section" aria-labelledby="ownership-boundary-title">
+          <h2 id="ownership-boundary-title">이 기록에서 확인한 범위</h2>
+          <p>실제 empty-export 경계 뒤 다음 단계의 호출 차단과 종료를 확인한 격리 시험입니다. 진행 중인 I/O의 원자적 차단이나 자동 복구 결과로 확대하지 않습니다. 새 daemon의 업무 처리나 HTTP readiness를 확인한 화면도 아닙니다.</p>
+          <p>Kafka의 실제 commit은 <strong>NO_COMMIT / null</strong>입니다. commit 0이나 lag 0으로 바꾸어 표시하지 않습니다. queued 작업과 점유 슬롯은 그대로 보존했습니다.</p>
+        </section>
+        <section class="ownership-section" aria-labelledby="ownership-sources-title">
+          <h2 id="ownership-sources-title">설명 옆에, 실제 근거</h2>
+          <ul class="ownership-source-links">
+            <li><a href={record.runUrl} target="_blank" rel="noreferrer">실제 격리 실행 39435016002 <span aria-hidden="true">↗</span><span class="sr-only"> 새 창</span></a></li>
+            <li><a href={sourceUrl} target="_blank" rel="noreferrer">당시 소스의 실제 IT <span aria-hidden="true">↗</span><span class="sr-only"> 새 창</span></a></li>
+            <li><a href={evidenceUrl} target="_blank" rel="noreferrer">결과와 경계를 정리한 문서 <span aria-hidden="true">↗</span><span class="sr-only"> 새 창</span></a></li>
+            <li><a href={`${repo}/blob/main/docs/evidence/runtime-lease-loss/summary.json`} target="_blank" rel="noreferrer">원 summary 18필드·결과 35필드 <span aria-hidden="true">↗</span><span class="sr-only"> 새 창</span></a></li>
+          </ul>
+          <details class="ownership-provenance"><summary>고정 출처와 결과 지문</summary><dl>
+            <div><dt>source commit</dt><dd>{record.summary.sourceCommit}</dd></div>
+            <div><dt>runtime manifest SHA-256</dt><dd>{record.summary.runtimeManifestSha256}</dd></div>
+            <div><dt>원 summary SHA-256</dt><dd>{RUNTIME_OWNERSHIP_RAW_SHA256}</dd></div>
+            <div><dt>JUnit XML SHA-256</dt><dd>{record.summary.surefireXmlSha256}</dd></div>
+          </dl></details>
+        </section>
+      </> : <section class="ownership-section ownership-unavailable" aria-labelledby="ownership-unavailable-title">
+        <h2 id="ownership-unavailable-title">검토한 저장 기록을 표시할 수 없습니다.</h2>
+        <p>이 화면의 수치와 단계 설명을 표시하지 않았습니다. 원문 근거에서 결과를 확인할 수 있습니다.</p>
+        <a class="text-link" href={evidenceUrl} target="_blank" rel="noreferrer">원문 근거 보기 ↗<span class="sr-only"> 새 창</span></a>
+      </section>}
+      <a class="text-link ownership-back" href={`${assetBase}#evidence`}>← 기술별 근거 목록으로 돌아가기</a>
+    </main>
+    <footer class="site-footer"><div><span class="footer-name">DevDooly <span>Platform Lab</span></span><p>개인 합성 입력의 저장된 실행 기록입니다.</p></div><a href="#main">BACK TO TOP ↑</a></footer>
+  </body>
+</html>

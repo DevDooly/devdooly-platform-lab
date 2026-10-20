@@ -35,7 +35,9 @@ DB commit 후 실제 Kafka offset commit 실패와 영속 pause, 일반 run 거�
 
 실제 DB 실행 잠금 연결을 잃은 뒤 다음 단계의 발행·수신 호출이 모두 0이고 자원이 종료되는 검증도 통과했습니다([실행·종료 근거](docs/evidence/runtime-lease-loss/README.md)). queued 작업·원본·슬롯을 보존하고 이전 child 종료 뒤 새 잠금 획득을 확인했습니다. DB의 `RUNNING / EXPORT`는 종료된 프로세스의 마지막 기록으로, 현재 정상 상태와 구분합니다. 공개 근거 목록에 반영해 Pages·main CI와 공개 데스크톱·모바일의 필터·출처·가독성을 확인했습니다.
 
-새 격리 PostgreSQL을 같은 컨테이너·볼륨에서 한 번 정상 stop/start한 뒤 catalog 전체 행·DB 식별자와 fresh Trino의 조회10개·전체20객체 bytes를 보존하는 시험도 통과했습니다([실제 재시작 근거](docs/evidence/cloud-catalog-restart/README.md)). 실제 작업·정리106.252초는 이미지 준비를 제외한 당시 값이며 운영 성능이나 SLA를 뜻하지 않습니다. 이 기록을 추가한 근거 목록은 검색·기술/환경 필터·6개씩 더 보기를 제공하며 웹173개 검사·타입·빌드와 로컬 데스크톱·모바일 확인을 통과했습니다. 공개 게시를 준비하며, 토큰 교체·예산 정책·PR102는 계속 보류합니다.
+새 격리 PostgreSQL을 같은 컨테이너·볼륨에서 한 번 정상 stop/start한 뒤 catalog 전체 행·DB 식별자와 fresh Trino의 조회10개·전체20객체 bytes를 보존하는 시험도 통과했습니다([실제 재시작 근거](docs/evidence/cloud-catalog-restart/README.md)). 실제 작업·정리106.252초는 이미지 준비를 제외한 당시 값이며 운영 성능이나 SLA를 뜻하지 않습니다. 이 기록을 추가한 [공개 근거 목록](https://devdooly.github.io/devdooly-platform-lab/#evidence)은 검색·기술/환경 필터·6개씩 더 보기를 제공합니다. 웹173개 검사·타입·빌드와 동일 main의 Pages·CI를 통과했고, 2026-10-20 14:49–14:50 UTC에 공개 데스크톱·모바일의 검색·필터·6→12→18개 표시·키보드 초점·실제 출처·가로 넘침 부재를 확인했습니다. 토큰 교체·예산 정책·PR102는 계속 보류합니다.
+
+실행 잠금 손실 기록을 설명하는 [별도 사례 페이지](https://devdooly.github.io/devdooly-platform-lab/cases/runtime-ownership/)를 준비했습니다. DB의 마지막 저장 상태와 실제 종료를 나란히 보여주고, 네 개의 확인 지점과 원문 근거를 연결합니다. 웹186개 검사·타입·루트/프로젝트 경로 빌드, 로컬1280px·390px의 상세 펼치기·키보드·왕복 이동·가독성을 확인했습니다. Pages 게시와 공개 화면 확인은 다음 단계입니다.
 
 ## 로컬 실행
 

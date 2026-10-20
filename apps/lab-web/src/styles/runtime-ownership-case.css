@@ -1,0 +1,70 @@
+.ownership-case {
+  max-width:1060px;
+  margin:0 auto;
+  padding:60px 42px 80px;
+  overflow-wrap:anywhere;
+}
+.ownership-intro { max-width:820px; }
+.ownership-intro>.text-link { display:inline-flex; min-height:48px; align-items:center; margin-bottom:28px; }
+.ownership-intro .eyebrow { display:block; }
+.ownership-intro h1 { font-size:clamp(2rem,4.8vw,3.65rem); }
+.ownership-lead { margin-top:24px; max-width:55ch; font-size:1.25rem; }
+.ownership-recorded { margin-top:28px; color:var(--muted); font-size:var(--font-body); }
+.ownership-recorded time { white-space:normal; }
+.ownership-section { margin-top:44px; padding-top:36px; border-top:1px solid var(--line); min-width:0; }
+.ownership-section h2 { margin-bottom:16px; font-size:var(--font-section-title); }
+.ownership-section>p+p { margin-top:16px; }
+.ownership-section p { font-size:var(--font-body); }
+.ownership-comparison { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; margin-top:24px; }
+.ownership-comparison article { min-width:0; padding:24px; background:var(--surface); border:1px solid var(--line); }
+.ownership-domain { display:block; color:var(--green); font-family:var(--mono); font-size:.875rem !important; line-height:1.5; font-weight:600; }
+.ownership-comparison h3 { margin:10px 0 18px; font-size:1.25rem; }
+.ownership-comparison ul { padding-left:24px; margin:0 0 20px; }
+.ownership-comparison li+li { margin-top:8px; }
+.ownership-comparison article>p:last-child { margin-top:20px; color:var(--muted); }
+.ownership-case dl { margin:0; }
+.ownership-case dl>div+div { margin-top:14px; }
+.ownership-case dt { color:var(--muted); font-size:.875rem; }
+.ownership-case dd { margin:3px 0 0; font-size:var(--font-body); font-weight:600; overflow-wrap:anywhere; }
+.ownership-hint { color:var(--muted); }
+.ownership-phases { list-style:none; padding:0; margin:24px 0 0; display:grid; gap:14px; }
+.ownership-phases>li { min-width:0; }
+.ownership-phases details { border:1px solid var(--line); background:var(--surface); }
+.ownership-case summary { min-height:48px; padding:18px; font-size:var(--font-body); cursor:pointer; }
+.ownership-case summary:focus-visible { outline:3px solid var(--green); outline-offset:4px; }
+.ownership-phases summary { padding:20px; }
+.ownership-phases summary::marker { color:var(--green); }
+.ownership-step { display:inline-block; margin-right:12px; vertical-align:top; font-family:var(--mono); color:var(--green); }
+.ownership-phase-heading { display:inline-flex; max-width:calc(100% - 70px); vertical-align:top; flex-direction:column; gap:6px; font-weight:700; }
+.ownership-phase-body { padding:0 24px 24px; min-width:0; }
+.ownership-facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; margin-top:22px !important; }
+.ownership-facts>div { min-width:0; margin:0 !important; }
+.ownership-terminal { margin-top:24px; }
+.ownership-terminal h3 { font-size:1.125rem; margin-bottom:12px; }
+.ownership-table-scroll { max-width:100%; overflow-x:auto; border:1px solid var(--line); }
+.ownership-table-scroll:focus-visible { outline:3px solid var(--green); outline-offset:4px; }
+.ownership-case table { width:100%; min-width:340px; border-collapse:collapse; font-size:var(--font-body); }
+.ownership-case caption { padding:10px 14px; text-align:left; background:var(--cream); color:var(--muted); font-size:.875rem; }
+.ownership-case th,.ownership-case td { padding:12px 14px; text-align:left; vertical-align:top; border-top:1px solid var(--line); }
+.ownership-case thead th { font-weight:600; }
+.ownership-case tbody th { font-weight:500; }
+.ownership-note { margin-top:20px; color:var(--muted); }
+.ownership-source-links { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 24px; padding:0; list-style:none; margin:24px 0; }
+.ownership-source-links>li { min-width:0; }
+.ownership-source-links a { display:inline-flex; align-items:center; gap:6px; min-height:48px; text-decoration:underline; text-underline-offset:4px; font-weight:600; }
+.ownership-provenance { margin-top:20px; border:1px solid var(--line); background:var(--surface); }
+.ownership-provenance dl { padding:0 20px 22px; }
+.ownership-unavailable { padding:28px; background:var(--surface); border:1px solid var(--line); }
+.ownership-unavailable .text-link { display:inline-flex; align-items:center; min-height:48px; margin-top:18px; }
+.ownership-back { display:inline-flex; align-items:center; min-height:48px; margin-top:44px; }
+@media(max-width:680px) {
+  .ownership-case { padding:36px 20px 56px; }
+  .ownership-case .ownership-lead { font-size:var(--font-body); }
+  .ownership-comparison,.ownership-source-links { grid-template-columns:minmax(0,1fr); }
+  .ownership-comparison article { padding:20px; }
+  .ownership-section { margin-top:34px; padding-top:28px; }
+  .ownership-phases summary { padding:18px 14px; }
+  .ownership-phase-body { padding:0 18px 20px; }
+  .ownership-facts { grid-template-columns:minmax(0,1fr); gap:14px; }
+  .ownership-provenance dl { padding-left:16px; padding-right:16px; }
+}

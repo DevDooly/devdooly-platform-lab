@@ -56,7 +56,7 @@ export const evidenceItems: readonly EvidenceItem[] = [
     recordedOn: '2026-10-20',
     source: `${repo}/blob/dd9feb815ead4744bf4b6c80a466095e2a4bc6ac/infra/runtime-lease-loss-ci/RuntimeLeaseLossIT.java`,
     evidence: `${repo}/blob/main/docs/evidence/runtime-lease-loss/README.md`, evidenceLabel: '실제 연결 손실·후속 차단·자원 종료 근거',
-    recordLabel: '격리 소유권 IT 1/1',
+    recordLabel: '격리 소유권 IT 1/1', screen: 'cases/runtime-ownership/',
   },
   {
     id: 'invalid-message-runtime', topics: ['java', 'kafka'], scope: 'cloud', state: 'verified',

@@ -43,7 +43,7 @@ export default function EvidenceExplorer() {
           <ul className="evidence-links" aria-label={`${item.title} 관련 링크`}>
             <li><a href={item.source} target="_blank" rel="noreferrer">구현과 설계 <span aria-hidden="true">↗</span><span className="sr-only"> 새 창</span></a></li>
             <li><a href={item.evidence} target="_blank" rel="noreferrer">{item.evidenceLabel ?? '검증 근거'} <span aria-hidden="true">↗</span><span className="sr-only"> 새 창</span></a></li>
-            {item.screen && <li><a href={item.screen}>관련 화면 <span aria-hidden="true">↓</span></a></li>}
+            {item.screen && <li><a href={item.screen}>{item.screen.startsWith('#') ? '관련 화면' : '사례 읽기'} <span aria-hidden="true">{item.screen.startsWith('#') ? '↓' : '→'}</span></a></li>}
           </ul>
         </article>
       </li>)}</ul>}

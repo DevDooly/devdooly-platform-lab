@@ -1,12 +1,18 @@
 # Platform Lab 다음 개발 계획
 
+## 현재 작업 — 2026-10-20 15:00 UTC
+
+기존 [실행 잠금 손실 원문](evidence/runtime-lease-loss/README.md)을 설명하는 별도 `/cases/runtime-ownership/` 페이지를 구현했습니다. `RUNNING / EXPORT`는 종료된 프로세스의 마지막 DB 기록이며, 실제 client·context·child 종료와 구분합니다. 네 단계의 상세 내용은 native 접기/펼치기이며 세 번째를 기본으로 엽니다. `NO_COMMIT / null`과 점유 슬롯 보존, 이전 child 종료 뒤 새 잠금 확인의 범위를 유지합니다.
+
+웹186개 검사·skip0·타입 검사44파일과 루트/프로젝트 경로 빌드를 통과했습니다. 로컬1280px·390px에서 직접 진입·새로고침·목록 왕복, 기본 열림·마우스/키보드 상세 토글·표 초점, 본문17px·긴 SHA 줄바꿈·가로 넘침 부재를 확인했습니다. 다음은 Pages 게시와 공개 QA입니다. 이후에는 기존 런타임 문서의 장애별 판단표를 정리합니다. 토큰 교체·예산 정책·PR102는 계속 보류합니다.
+
 ## 최신 PostgreSQL catalog 재시작 검증 — 2026-10-20 14:32 UTC
 
 [새 격리 환경의 첫 실제 시험](evidence/cloud-catalog-restart/README.md)을 통과했습니다. Spark 정상 종료·writer 부재·Trino 미생성 상태에서 소유 PostgreSQL을 한 번 정상 stop/start했습니다. 실제 exit0·원 postmaster 소멸·새 postmaster와 같은 full CID/config·volume·DB system identifier, 두 catalog 테이블의 전체 logical rows와 namespace property 행6개를 확인했습니다.
 
 fresh Trino의 첫 SELECT10·시점별6/12/12·Silver12·snapshot3·현재 file1과 전체20객체 bytes·기존14객체 보존을 대조했습니다. Trino의 실제 exit143은 PG exit0과 별개로 보존했으며 source/tool 불변·자기 자원 중지를 포함한 workload106,252ms가 단일600초 조건을 통과했습니다. image 준비는 이 시간에서 제외합니다. 운영 DB 재시작·crash 복구·HA 검증은 아닙니다.
 
-실제 기록을 연결한 공개 근거 목록의 검색·6개씩 표시를 구현했습니다. 웹173개 검사·타입·build와 로컬1280px·390px에서 검색 정규화·기술/환경 교집합·6→12→18개·조건 초기화·키보드 초점·긴 입력/가로 넘침 부재를 확인했습니다. 다음은 Pages 게시와 공개 화면 확인이며, 그동안 기존 실행 잠금 손실 기록을 설명하는 별도 사례 페이지를 준비합니다. 토큰 교체·예산 정책·PR102는 계속 보류합니다.
+실제 기록을 연결한 공개 근거 목록의 검색·6개씩 표시를 구현했습니다. 웹173개 검사·타입·build와 로컬1280px·390px 확인에 이어, [Pages 39441997794](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39441997794)·[main CI 39441997832](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39441997832)가 같은 `7a20aa28`에서 통과했습니다. 2026-10-20 14:49–14:50 UTC에 공개1280px·390px에서 검색 정규화·기술/환경 교집합·6→12→18개·조건 초기화·키보드 초점·PG 출처·가로 넘침 부재를 확인했습니다. 다음은 기존 실행 잠금 손실 기록을 설명하는 별도 사례 페이지의 로컬 검증과 게시입니다. 토큰 교체·예산 정책·PR102는 계속 보류합니다.
 
 ## 최신 실행 잠금 손실 검증 — 2026-10-20 14:00 UTC
 
@@ -252,7 +258,9 @@ CKA 학습은 Lab과 연결합니다. context·RBAC·Service와 DNS·probe·requ
 
 DB의 기본 30초 승인 간격을 실제 V4 API→worker 순서로 배포했습니다. 기본 157개·격리 MariaDB/Garage 19개·복원본 이전 binary 호환 8개는 [기존 근거](evidence/admission-cooldown/README.md)에 보존합니다. source `202ab6806130cfb37e8829ce7d52c89990d8a54a`의 [실제 전환](evidence/admission-v4-deployment/README.md)은 API·웹 32/32와 worker 35/35, 기존 7작업·파일 정보 14개 보존을 확인했습니다. Kubernetes Ready와 runtime 준비는 구분하며 첫 32/35 관측·이전 exit UNOBSERVED를 남깁니다. 11:40:08.792Z의 정기 V4 수집은 [Pages 실행](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38728965840) 성공 후 공개 JSON 전체 일치를 확인했습니다: [정기 게시 후속](evidence/admission-v4-deployment/PUBLICATION.md). 후속 고정 V1 fixture 접수·charged30·슬롯 해제·자료 보존과 idle worker 교체·같은 ID 읽기 전용 재시도를 [최신 근거](evidence/worker-readiness/CORRECTED_IMAGE.md)에서 확인했습니다. 서로 다른 ID의 실제 cooldown 거부는 별도 미검증입니다. [전환·원복 절차](runbooks/admission-cooldown.md)를 따르고 구형 stage와 혼용하지 않습니다. 지속 부하·HTTP QPS 제한·처리 중 호스트 장애 복구는 별도 미검증입니다. charged cooldown 상태의 idle worker 교체는 readiness 후속 근거에서 확인했으며 이전 worker exit는 UNOBSERVED입니다.
 
-## 바로 다음 작업
+## 이전 작업 후보 — 2026-10-18 당시
+
+아래는 당시의 계획을 보존한 기록입니다. 현재 실행 순서와 보류 여부는 이 문서 맨앞의 최신 안내를 따릅니다.
 
 1. **실제 metadata 보존 계획의 공개와 다음 검증 분리:** [9차 새 실행](evidence/iceberg-capture/ATTEMPT_9.md)의 Linux87·skip0·필수 검증9개와 객체20개 KEEP 결과를 화면·회귀 검사로 연결합니다. 앞선 실패와 null은 그대로 남깁니다. 이후 보존 정책·운영 규모 compaction과 다른 장애 경계를 독립적으로 검토하며 snapshot 만료·객체 삭제를 이번 capture의 완료 조건으로 확장하지 않습니다.
 2. **보존 운영과 객체 GC:** 전체 운영 참조21개 KEEP·후보0과 새 Garage의 합성 객체2개 자연 GC를 확인했습니다. [객체 보호 근거](evidence/object-reference-gc/README.md)의 범위를 유지하며 운영 tombstone·삭제 intent·재전달/resume·백업 의존성을 설계합니다. 운영 삭제 실행기와 metadata DB 축소는 구현하지 않았습니다.

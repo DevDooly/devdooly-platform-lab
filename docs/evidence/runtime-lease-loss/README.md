@@ -37,3 +37,9 @@ DB의 `RUNNING`은 **종료된 프로세스가 남긴 마지막 기록**입니�
 새 Kafka·MariaDB·Garage·JVM 4개와 내부 네트워크만 사용했습니다. 동일 source/run/nonce·full ID·image·mount·network와 CPU·메모리·PID·시간 한도를 검증한 소유 자원만 정리했습니다. 기존 API106·이전 시험/Probe/manifest·미니 PC 운영 서비스·자료·PVC는 변경하지 않았습니다. 토큰 교체·예산 정책·PR102는 보류합니다.
 
 [PR144](https://github.com/DevDooly/devdooly-platform-lab/pull/144)의 source `5a68c709546636b24ed01aa071e57ca6ace96978`에서 [Pages 39436608451](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39436608451)·[main CI 39436608366](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39436608366)를 통과했습니다. 2026-10-20 14:11–14:12 UTC에 공개 1280px·390px의 기술별 근거 목록을 확인했습니다. 전체 17항목, Java·Cloud 필터 7항목 안의 새 항목과 실제 IT·근거 링크, 본문 17px·가로 넘침 부재를 대조했습니다. 운영 worker 배포나 장애 주입은 추가하지 않았습니다.
+
+## 별도 사례 페이지
+
+같은 실제 기록을 읽는 [프로세스 종료와 DB 상태 사례](https://devdooly.github.io/devdooly-platform-lab/cases/runtime-ownership/)를 준비했습니다. 원 summary와 metadata는 그대로 보존했고, 별도 JSON은 실제 실행 URL·완료 시각·summary만 묶었습니다. 페이지는 고정된 18/35필드·출처·실제 타입과 값을 모두 검증한 경우에만 저장 기록을 보여줍니다. native 상세 네 개 중 세 번째가 기본으로 열리며 중간 경과 시간이나 현재 건강 상태를 만들지 않습니다.
+
+웹186개 검사·skip0·타입·루트/프로젝트 경로 빌드와 로컬1280px·390px의 진입/새로고침·목록 왕복·상세 키보드 토글·표 초점·17px·긴 SHA 줄바꿈·가로 넘침 부재를 확인했습니다. 처음 타입 검사에서 발견한 Astro 속성명 두 곳(`datetime`, `tabindex`)을 수정한 뒤 오류0을 확인했습니다. 공개 게시·공개 QA는 아직 다음 단계입니다. 실제 장애 시험을 재실행하거나 worker를 배포하지 않았습니다.
