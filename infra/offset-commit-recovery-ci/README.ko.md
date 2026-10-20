@@ -60,7 +60,11 @@ private 상태·환경 파일·phase·native log·SQL·XML은 `.local/offset-com
 
 새 `jvmFailure`는 성공 시 null입니다. 실패 시 확인 가능한 exit/OOM, native log 읽기 상태, 고정된 관측 signature enum, 엄격히 하나인 해당 JUnit testcase의0/1 집계, hash가 일치하는 공개 Java 네 파일의 최대8개 source line, 고정 Java failure phase만 투영합니다. 알려지지 않은 class·파일·message·주소·credential은 포함하지 않습니다. signature는 로그에서 그 문구를 관측했다는 뜻이며 근본 원인이 확정됐다는 뜻이 아닙니다. XML 집계도 `verifiedTests`나 테스트 성공을 대신하지 않습니다. 진단 자체가 실패하거나 JVM identity/종료가 미확인이면 null을 유지합니다.
 
-Java 실패 marker는 `VALIDATION_FAILED`와19개 허용 phase 중 하나만 포함합니다. Spring context가 test method 진입 전에 실패하면 Java marker가 없을 수 있어 source line·고정 native signature·해당 JUnit error 집계로 구분합니다. 원래의 `selectedFailure`는 유지합니다. 이 변경은 진단만 보강하며 실제 실패 원인은 후속 결과에서 확인해야 합니다.
+Java 실패 marker는 정확6개 필드입니다: `schemaVersion`, `status`, `failureCode`, `failurePhase`, `failureKind`, `failureSourceLine`. `VALIDATION_FAILED`와19개 허용 phase를 유지하고, 원 Throwable에서 분류한11개 고정 kind와 원 own IT frame의 첫 source line을 추가합니다. kind는 `ASSERTION`, `INTERRUPTED`, `SQL`, `GROUP_NOT_FOUND`, `UNKNOWN_TOPIC`, `COORDINATOR_NOT_AVAILABLE`, `COORDINATOR_LOAD_IN_PROGRESS`, `NOT_COORDINATOR`, `TIMEOUT`, `KAFKA_OTHER`, `OTHER`입니다. `ExecutionException`·`CompletionException`만 최대8단계 풀며 cycle·원인 부재·한도 초과는 `OTHER`로 분류합니다. 원 exception class나 message는 출력하지 않습니다.
+
+`failureSourceLine`은 새로 던진 일반 assertion의 줄이 아니라 잡은 원 Throwable의 첫 own IT frame에서 읽습니다. 원 trace 최대64개를 보고1~10000의 실제 줄만 허용하며 해당 frame이 없으면 null입니다. runner는 정수 줄을 공개하기 전에 새 manifest에 고정한 실제 IT bytes의 SHA와 전체 줄 수를 재검증합니다. 틀린 hash·범위·타입이면 해당 Java failure 투영을 버리고 이미 확인한 exit/OOM·기존 실패 판정은 보존합니다. Spring context가 test method 진입 전에 실패하면 Java marker가 없을 수 있어 고정 native signature·해당 JUnit error 집계를 함께 확인합니다. 원래의 `selectedFailure`는 유지합니다.
+
+두 번째 실행 `39418943100`은 실제 exit1·OOM false와 해당 JUnit testcase의 failure1/error0을 확인했고 Java phase가 `KAFKA_CREATE`였습니다. 따라서 Spring·전용 schema·서비스 guard 이후 초기 cluster/topic/offset 확인 구간의 실패라는 범위까지 좁혔습니다. 일반 assertion으로 치환하면서 원 조건·kind가 사라져 정확한 원인은 아직 모릅니다. 새6필드 진단은 그 정보를 보존하기 위한 변경이며, 검증 조건·성공23필드·phase protocol·기능 동작은 바꾸지 않습니다. 앞선 두 실패 기록과 정리 확인은 보존합니다. 실제 원인 확인 전 기능 수정이나 성공 주장을 하지 않습니다.
 
 이 시험은 한 broker의 일시 정지와 명시적 재개 경계입니다. broker/host 재시작·다중 broker HA·운영 복구·부하 상한을 증명하지 않습니다.
 

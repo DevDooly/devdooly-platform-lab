@@ -20,13 +20,18 @@ def marker(value):
     return runner.MARKER + json.dumps(value)
 
 
+def failure(phase='TEST_ENTRY', kind='ASSERTION', line=None):
+    return dict(schemaVersion=1, status='FAIL', failureCode='VALIDATION_FAILED',
+                failurePhase=phase, failureKind=kind, failureSourceLine=line)
+
+
 class RunnerTest(unittest.TestCase):
     def test_actual_uncertain_commit_outcomes_and_both_observed_replay_counts(self):
         for state, offset in (('NO_COMMIT', None), ('OBSERVED', 1)):
             for replays in (0, 1):
                 expected = success(state, offset, replays)
                 self.assertEqual(expected, runner.parse_result(marker(expected)))
-        failed = dict(schemaVersion=1, status='FAIL', failureCode='VALIDATION_FAILED', failurePhase='TEST_ENTRY')
+        failed = failure()
         self.assertEqual(failed, runner.parse_result(marker(failed)))
         self.assertIsNone(runner.parse_result('ordinary library output'))
 
@@ -203,7 +208,7 @@ class RunnerTest(unittest.TestCase):
                 self.assertEqual(('UNVERIFIED', None, ''), runner.junit_failure_projection(task))
 
     def test_owned_exited_jvm_projects_exit_oom_and_fixed_failure_without_values(self):
-        failed = dict(schemaVersion=1, status='FAIL', failureCode='VALIDATION_FAILED', failurePhase='SERVICE_GUARDS')
+        failed = failure('SERVICE_GUARDS')
         class Owned:
             deadline = time.monotonic() + 30
             calls = []
@@ -248,6 +253,53 @@ class RunnerTest(unittest.TestCase):
         self.assertEqual('UNAVAILABLE', result['nativeLogStatus'])
         self.assertEqual([], result['observedSignals'])
         self.assertNotIn('secret', json.dumps(result))
+
+    def test_failure_marker_accepts_only_fixed_kinds_and_typed_original_line(self):
+        for kind in runner.JAVA_FAILURE_KINDS:
+            for line in (None, 1, 10000):
+                expected = failure('KAFKA_CREATE', kind, line)
+                self.assertEqual(expected, runner.parse_result(marker(expected)))
+        for changes in ({'failureKind': 'private.Exception'}, {'failureSourceLine': True},
+                        {'failureSourceLine': '2'}, {'failureSourceLine': 0}, {'failureSourceLine': -1},
+                        {'failureSourceLine': 10001}, {'failureSourceLine': 2.0}, {'failurePhase': 'UNKNOWN'},
+                        {'message': 'not-public'}):
+            value = failure(); value.update(changes)
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                runner.parse_result(marker(value))
+
+    def test_claimed_failure_line_requires_hash_matched_actual_it_source_and_range(self):
+        with tempfile.TemporaryDirectory() as directory:
+            task = Path(directory)
+            key, relative, _ = runner.JAVA_DIAGNOSTIC_SOURCES['OffsetCommitRecoveryIT.java']
+            path = task / 'it-api' / Path(relative).relative_to('apps/api')
+            path.parent.mkdir(parents=True)
+            raw = b'first\nsecond\nthird\n'; path.write_bytes(raw)
+            source = {key: hashlib.sha256(raw).hexdigest()}
+            value = runner.parse_result(marker(failure('KAFKA_CREATE', 'TIMEOUT', 2)))
+            self.assertEqual(value, runner.validated_java_failure(task, source, value))
+            with self.assertRaises(ValueError):
+                runner.validated_java_failure(task, source, failure('KAFKA_CREATE', 'TIMEOUT', 4))
+            with self.assertRaises(ValueError):
+                runner.validated_java_failure(task, {}, value)
+            path.write_bytes(b'changed\nsource\n')
+            with self.assertRaises(ValueError):
+                runner.validated_java_failure(task, source, value)
+            null_line = failure('KAFKA_CREATE', 'OTHER', None)
+            self.assertEqual(null_line, runner.validated_java_failure(task, {}, null_line))
+
+    def test_unverified_original_failure_line_is_not_exported_by_jvm_projection(self):
+        failed = failure('KAFKA_CREATE', 'UNKNOWN_TOPIC', 9999)
+        class Owned:
+            deadline = time.monotonic() + 30
+            def inspect(self, row):
+                return {'State': dict(Status='exited', Running=False, Paused=False, StartedAt='same', ExitCode=1, OOMKilled=False)}
+            def call(self, *args):
+                return 0, marker(failed).encode(), b''
+        with tempfile.TemporaryDirectory() as directory:
+            result = runner.exited_jvm_diagnostic(Owned(), {'role': 'jvm', 'id': 'private'}, Path(directory), {})
+        self.assertEqual(1, result['exitCode'])
+        self.assertIsNone(result['javaFailure'])
+        self.assertNotIn('9999', json.dumps(result))
 
 
 if __name__ == '__main__':

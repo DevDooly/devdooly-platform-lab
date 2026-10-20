@@ -39,6 +39,8 @@ JAVA_FAILURE_PHASES = frozenset({'TEST_ENTRY', 'SERVICE_GUARDS', 'KAFKA_CREATE',
     'START_FAULT', 'WAIT_DB_COMMIT', 'CHECK_PENDING', 'WAIT_FAULT_EXIT', 'CHECK_PERSISTED_PAUSE',
     'WAIT_UNPAUSE', 'OBSERVE_COMMIT', 'RUN_REFUSAL', 'OPERATOR_RESUME', 'START_RECOVERY',
     'VERIFY_EXPORT', 'VERIFY_FINAL_OFFSET', 'STOP_RECOVERY', 'FINAL_INVARIANTS', 'CLOSE_CLIENTS'})
+JAVA_FAILURE_KINDS = frozenset({'ASSERTION', 'INTERRUPTED', 'SQL', 'GROUP_NOT_FOUND', 'UNKNOWN_TOPIC',
+    'COORDINATOR_NOT_AVAILABLE', 'COORDINATOR_LOAD_IN_PROGRESS', 'NOT_COORDINATOR', 'TIMEOUT', 'KAFKA_OTHER', 'OTHER'})
 NATIVE_SIGNALS = {
     'MAVEN_OFFLINE_ARTIFACT_UNAVAILABLE': (b'Cannot access ', b' in offline mode'),
     'MAVEN_DEPENDENCY_RESOLUTION_FAILED': (b'Could not resolve dependencies for project',),
@@ -342,10 +344,13 @@ def parse_result(text):
         need(line.startswith(MARKER) and found is None)
         value = json.loads(line[len(MARKER):], object_pairs_hook=pairs)
         if type(value) is dict and value.get('status') == 'FAIL':
-            need(set(value) == {'schemaVersion', 'status', 'failureCode', 'failurePhase'}
+            need(set(value) == {'schemaVersion', 'status', 'failureCode', 'failurePhase', 'failureKind', 'failureSourceLine'}
                  and type(value['schemaVersion']) is int and value['schemaVersion'] == 1
                  and value['failureCode'] == 'VALIDATION_FAILED'
-                 and type(value['failurePhase']) is str and value['failurePhase'] in JAVA_FAILURE_PHASES)
+                 and type(value['failurePhase']) is str and value['failurePhase'] in JAVA_FAILURE_PHASES
+                 and type(value['failureKind']) is str and value['failureKind'] in JAVA_FAILURE_KINDS
+                 and (value['failureSourceLine'] is None or type(value['failureSourceLine']) is int
+                      and 0 < value['failureSourceLine'] <= 10000))
             found = value
             continue
         need(type(value) is dict and set(value) == set(FIXED_RESULT) | {
@@ -377,6 +382,23 @@ def native_signals(raw):
     lines = raw.splitlines()
     return sorted(name for name, parts in NATIVE_SIGNALS.items()
                   if any(all(part in line for part in parts) for line in lines))
+
+
+def validated_java_failure(task, source, value):
+    """Do not publish a claimed original IT line without its exact source bytes."""
+    need(type(value) is dict and value.get('status') == 'FAIL')
+    line = value['failureSourceLine']
+    if line is None:
+        return value
+    need(type(line) is int and 0 < line <= 10000)
+    key, relative, _ = JAVA_DIAGNOSTIC_SOURCES['OffsetCommitRecoveryIT.java']
+    expected = source.get(key)
+    need(type(expected) is str and SHA.fullmatch(expected))
+    path = task / 'it-api' / Path(relative).relative_to('apps/api')
+    need(not any(parent.is_symlink() for parent in path.parents if parent.is_relative_to(task)))
+    raw = read(path)
+    need(hashlib.sha256(raw).hexdigest() == expected and line <= len(raw.decode('utf8', 'strict').splitlines()))
+    return value
 
 
 def java_frames(task, source, text):
@@ -463,6 +485,8 @@ def exited_jvm_diagnostic(owned, row, task, source):
             try:
                 projected = parse_result(candidate)
                 need(projected is None or projected['status'] == 'FAIL')
+                if projected is not None:
+                    projected = validated_java_failure(task, source, projected)
             except Exception:
                 continue
             if projected is not None:
