@@ -39,6 +39,16 @@ const kafkaSource = 'f7b5567963f9a34a34d5f201fb2ed747bdf7652a';
 
 export const evidenceItems: readonly EvidenceItem[] = [
   {
+    id: 'cloud-catalog-restart', topics: ['iceberg'], scope: 'cloud', state: 'verified',
+    title: 'PostgreSQL 재시작 뒤 catalog·데이터 보존',
+    description: '같은 PostgreSQL 컨테이너·볼륨을 정상 stop/start한 뒤 catalog 전체 행과 DB 식별자를 대조했습니다. 새 Trino의 조회 10개와 전체 객체 20개의 bytes 보존을 확인했습니다.',
+    boundary: 'writer가 없는 새 격리 환경의 정상 재시작입니다. 운영 DB·진행 중 transaction·crash 복구·HA·현재 가용성을 검증한 결과로 확대하지 않습니다.',
+    recordedOn: '2026-10-20',
+    source: `${repo}/blob/a2a22048d47c534ae4322236dab254993c4abdfe/infra/cloud-catalog-restart/run_catalog_restart.py`,
+    evidence: `${repo}/blob/main/docs/evidence/cloud-catalog-restart/README.md`, evidenceLabel: '실제 PG 재시작·전체 행·20객체 보존 근거',
+    recordLabel: '격리 catalog 정상 재시작',
+  },
+  {
     id: 'runtime-lease-loss', topics: ['java'], scope: 'cloud', state: 'verified',
     title: '실행 잠금 연결을 잃은 뒤 작업 차단',
     description: '실제 DB 잠금 소유 연결을 종료한 뒤 다음 단계의 발행·수신 호출은 모두 0이었습니다. queued 작업·원본·슬롯을 보존하고 client·context 종료와 종료 후 새 잠금 획득을 확인했습니다.',

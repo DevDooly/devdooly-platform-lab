@@ -1,0 +1,100 @@
+{
+  "automaticRetryPerformed": false,
+  "buildAndPullExcludedFromWorkloadClock": true,
+  "capturedAt": "2026-10-20T14:32:07.151347+00:00",
+  "checks": {
+    "actualMemAvailable7Gi": true,
+    "catalogIdentityPreserved": true,
+    "catalogLogicalRowsPreserved": true,
+    "freshPhysicalVolumes": true,
+    "frozenInputs": true,
+    "internalNetwork": true,
+    "jdbcAndWholeObjectsUnchanged": true,
+    "normalSparkExit": true,
+    "normalTrinoExit": true,
+    "oneOwnedCatalogRestart": true,
+    "pinnedImages": true,
+    "pythonReaderExit": true,
+    "queryContract": true,
+    "singleClock": true,
+    "sparkStoppedAndTrinoNotStartedAtFault": true,
+    "survivingProcessesUnchanged": true,
+    "toolsUnchanged": true,
+    "vendor": true
+  },
+  "cleanup": {
+    "initializerStopped": true,
+    "ownedBoundContainersStopped": true,
+    "unboundContainerObserved": false
+  },
+  "failureCode": null,
+  "miniPcContacted": false,
+  "onlyFreshCloudResources": true,
+  "passed": true,
+  "phase": "COMPLETE",
+  "plannedSequentialPeakMemoryBytes": 5368709120,
+  "priorEvidenceModified": false,
+  "rawLogsOrCredentialsUploaded": false,
+  "requiredActualMemAvailableBytes": 7516192768,
+  "result": {
+    "catalogRestart": {
+      "actualDockerRestartCount": 0,
+      "actualExitCode": 0,
+      "catalogTables": 2,
+      "explicitStarts": 1,
+      "logicalCatalogRowsPreserved": true,
+      "namespacePropertyRows": 6,
+      "newPostmasterVerified": true,
+      "normalStopVerified": true,
+      "sameConfiguration": true,
+      "sameContainer": true,
+      "sameDataVolume": true,
+      "sameGarageProcess": true,
+      "sameSystemIdentifier": true,
+      "schemaVersion": 1,
+      "scope": "SAME_OWNED_POSTGRES_NORMAL_STOP_START",
+      "signalDeliveryDirectlyObserved": false,
+      "sparkStopped": true,
+      "stopSignalRequest": "CONFIGURED_SIGINT",
+      "trinoAbsentAtRestart": true
+    },
+    "oldWarehouseObjects": 14,
+    "read": {
+      "currentFiles": 1,
+      "queryCount": 10,
+      "rowCounts": [
+        6,
+        12,
+        12
+      ],
+      "rowFingerprints": [
+        "0c1bb2970cc6ce2e1dc2ed54693c2ac1d01387eb421f999a545f4ad422e16c9e",
+        "9ad14362736e0ada4f44de4ca32296a2e9082e2f78227884326608952116d016",
+        "9ad14362736e0ada4f44de4ca32296a2e9082e2f78227884326608952116d016"
+      ],
+      "silverRows": 12,
+      "snapshotIds": [
+        "15655732958576875",
+        "6153501109929640664",
+        "2855849852592377282"
+      ]
+    },
+    "signalDeliveryDirectlyObserved": false,
+    "trinoActualExitCode": 143,
+    "trinoStopRequested": true,
+    "wholeWarehouseObjects": 20
+  },
+  "runnerStorageIsEphemeral": true,
+  "runtimeAvailabilityOrPerformanceClaimed": false,
+  "runtimeManifestSha256": "5d0bacc9bfc68814c83f08faee091cb8d05c94798e911ba5801284a7b83134aa",
+  "schemaVersion": 1,
+  "scope": "FRESH_CLOUD_POSTGRES_CATALOG_NORMAL_RESTART",
+  "selectedFailure": null,
+  "snapshotExpirationOrObjectGcPerformed": false,
+  "sourceBeforeAfterSame": true,
+  "sourceCommit": "a2a22048d47c534ae4322236dab254993c4abdfe",
+  "toolsBeforeAfterSame": true,
+  "volumesDeleted": false,
+  "workloadBudgetSeconds": 600,
+  "workloadElapsedMillis": 106252
+}
