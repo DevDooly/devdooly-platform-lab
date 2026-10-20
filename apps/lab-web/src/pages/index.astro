@@ -33,13 +33,19 @@ const apiBase = apiConfiguration.apiBase;
 const preferLive = apiConfiguration.externalHttps;
 const jobObservationMode = apiConfiguration.invalid ? 'recorded' : (preferLive || import.meta.env.BASE_URL === '/' ? 'api' : 'recorded');
 const github = 'https://github.com/DevDooly/devdooly-platform-lab';
-const tlsHistory = buildTlsHistory(tlsCertificate.entries, [{
+const tlsReviewed = [{
   runUrl: `${github}/actions/runs/39452152238`,
   sourceCommit: '8c17642ad4c38a6f0edd3fb47dafa4ec5a431723',
   artifactSha256: '72c806703547c2fb30a1e9a7e15b1baf41cddc88cc6318ef5589f7c24c69a157',
-}], Date.now());
-// The reviewed input currently contains this one successful run only.
-const tlsRawSummaryUrl = `${github}/blob/391c58bf9ede2a018b56d10c4c3ddbe92d27e8c0/docs/evidence/tls-certificate/hosted-39452152238/summary.json`;
+  rawSummaryUrl: `${github}/blob/391c58bf9ede2a018b56d10c4c3ddbe92d27e8c0/docs/evidence/tls-certificate/hosted-39452152238/summary.json`,
+}, {
+  runUrl: `${github}/actions/runs/39477022262`,
+  sourceCommit: '6f551a16a8ed536bb126403234c41b9e9b266d43',
+  artifactSha256: '8c80681035f3e8f87d18eed2d84577f999e71cada2f6a361d2a727559c75e39f',
+  rawSummaryUrl: `${github}/blob/73f068c129cb65d65f198b094a482c421e0ffc9b/docs/evidence/tls-certificate/hosted-39477022262/summary.json`,
+}];
+const tlsHistory = buildTlsHistory(tlsCertificate.entries, tlsReviewed.map(({ runUrl, sourceCommit, artifactSha256 }) => ({ runUrl, sourceCommit, artifactSha256 })), Date.now());
+const tlsRawSummaryUrl = tlsReviewed.find(record => record.runUrl === tlsHistory.lastSuccess?.runUrl)?.rawSummaryUrl ?? null;
 const skills = [
   { index: '01', title: 'Java & Spring Boot', description: '반도체 제조 데이터 ETL 서비스를 개발하고 운영합니다. 레거시 코드의 오류와 프로젝트 구조를 꾸준히 개선해 왔습니다.', tags: ['Backend', 'ETL', 'Code quality'] },
   { index: '02', title: 'Data & Messaging', description: 'Kafka의 오류를 분석하고 버전 업그레이드를 진행했습니다. Hadoop, Tez·Trino, Iceberg 기반 데이터 처리 경험을 연결합니다.', tags: ['Kafka', 'Hadoop', 'Iceberg'] },

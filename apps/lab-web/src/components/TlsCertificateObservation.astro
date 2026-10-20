@@ -2,7 +2,7 @@
 import type { TlsHistoryView } from '../lib/tls-certificate-history';
 import '../styles/tls-certificate.css';
 
-interface Props { view: TlsHistoryView; rawSummaryUrl: string; }
+interface Props { view: TlsHistoryView; rawSummaryUrl: string | null; }
 const { view, rawSummaryUrl } = Astro.props;
 const success = view.lastSuccess;
 const repository = 'https://github.com/DevDooly/devdooly-platform-lab';
@@ -42,7 +42,7 @@ const time = (value: string) => value.replace('T', ' ').replace(/\.000Z$/, ' UTC
     <div class="tls-certificate-links">
       <a href={success.runUrl} target="_blank" rel="noreferrer">관측 실행<span class="sr-only"> GitHub, 새 창</span><span aria-hidden="true"> ↗</span></a>
       <a href={`${repository}/blob/${success.sourceCommit}/infra/tls-certificate/probe.ts`} target="_blank" rel="noreferrer">관측 코드<span class="sr-only"> GitHub, 새 창</span><span aria-hidden="true"> ↗</span></a>
-      <a href={rawSummaryUrl} target="_blank" rel="noreferrer">마지막 성공 원문<span class="sr-only"> GitHub, 새 창</span><span aria-hidden="true"> ↗</span></a>
+      {rawSummaryUrl && <a href={rawSummaryUrl} target="_blank" rel="noreferrer">마지막 성공 원문<span class="sr-only"> GitHub, 새 창</span><span aria-hidden="true"> ↗</span></a>}
     </div>
   </> : view.visibleIssue !== 'NO_VERIFIED_RECORD' && <p class="tls-certificate-empty">검증한 저장 기록이 없습니다. 확인하지 않은 기간·성공 값을 대신 넣지 않습니다.</p>}
   <details class="tls-certificate-details">
