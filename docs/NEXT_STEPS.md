@@ -2,13 +2,15 @@
 
 ## 현재 작업 — 2026-10-21(KST)
 
-[결과 탭 키보드 수정](evidence/lab-keyboard/README.md)은 로컬 브라우저8가지·웹207검사·타입·프로젝트 경로 빌드와 mainf7214bd의 Pages·컨테이너CI, 공개1280px·390px 확인을 완료했습니다. 심각한 실행 오류와 비동기 로딩 중 직접 링크 위치가 어긋나는 현상은 각각 아래의 후속으로 검증합니다. 기존 네 항목의 보류는 유지합니다.
+[결과 탭 키보드 수정](evidence/lab-keyboard/README.md)은 로컬 브라우저8가지·웹207검사·타입·프로젝트 경로 빌드와 mainf7214bd의 Pages·컨테이너CI, 공개1280px·390px 확인을 완료했습니다. 실행 오류와 직접 링크 위치 문제의 후속 결과는 아래 기록에 정리했습니다. 기존 네 항목의 보류는 유지합니다.
 
-[실행기 Error 처리](evidence/runtime-error-cleanup/README.md)는 수정 전3개 실패를 실제 재현하고, 수정 후 관련26개·전체 API 검증을 완료했습니다. 로컬 전체233개 중222개 통과·Linux 전용11개 생략에 이어 같은 main12197d5의 Linux API233개 통과·skip0도 확인했습니다. 새 토큰·VM·운영 배포는 사용하지 않았습니다. 다음은 직접 링크 보정의 공개 반영 확인과 client 부분 구성 실패의 자원 정리 검증입니다.
+[실행기 Error 처리](evidence/runtime-error-cleanup/README.md)는 수정 전3개 실패를 실제 재현하고, 수정 후 관련26개·전체 API 검증을 완료했습니다. 로컬 전체233개 중222개 통과·Linux 전용11개 생략에 이어 같은 main12197d5의 Linux API233개 통과·skip0도 확인했습니다. 새 토큰·VM·운영 배포는 사용하지 않았습니다.
 
-[초기 직접 링크 보정](evidence/initial-fragment/README.md)은 로컬390px·1280px에서 목표 제목 유지, 별도 임시 HTML에서10초·최대4회·pointer/Tab 입력 취소·hash 없음·reload 제외를 확인했습니다. 웹207개·타입47파일과 두 경로 빌드도 통과했으며 임시 HTML은 제거했습니다. 공개 반영을 확인한 뒤 부분 client 구성 오류 검증을 마무리합니다.
+[초기 직접 링크 보정](evidence/initial-fragment/README.md)은 로컬390px·1280px에서 목표 제목 유지, 별도 임시 HTML에서10초·최대4회·pointer/Tab 입력 취소·hash 없음·reload 제외를 확인했습니다. 웹207개·타입47파일과 두 경로 빌드도 통과했으며 임시 HTML은 제거했습니다.
 
-[부분 client 구성 Error](evidence/client-construction-error/README.md)는 기존 동작의 close 누락3개 실패를 재현한 뒤 수정7개·전체 API 검증을 완료했습니다. 로컬240개 중229개 통과·기존 Linux 전용11개 생략입니다. 같은 소스의 Linux CI와 앞선 직접 링크의 공개 Pages 반영을 확인합니다. 네 보류 항목은 유지합니다.
+[부분 client 구성 Error](evidence/client-construction-error/README.md)는 기존 동작의 close 누락3개 실패를 재현한 뒤 수정7개·전체 API 검증을 완료했습니다. 로컬240개 중229개 통과·기존 Linux 전용11개 생략에 이어 main64be1e8의 Linux API240개 통과·skip0를 확인했습니다. [직접 링크](evidence/initial-fragment/README.md)도 mainb23b380의 Pages·CI와 공개390px·1280px 확인을 마쳤습니다.
+
+오류 처리 사례의 근거 카드는 로컬 검색·기술/환경 필터·출처·본문17px·모바일 표시와 웹207개·타입·프로젝트 빌드를 확인했으며 공개 Pages 반영을 확인합니다. 일반 이미지 제안은 API·웹만 갱신하고 worker는 `runtime.yaml`의 별도 pin을 사용합니다. 운영 반영 전에는 실제 Argo 설정·정상 상태·유휴/슬롯/outbox·자료 보존 기준을 확인해야 하며, 이번 후속에서 SSH 조회·운영 배포는 수행하지 않았습니다. 기동 복원·토큰 교체·예산 정책·PR102의 네 보류 항목은 유지합니다.
 
 **추가 보류 결정:** 별도 VM·장비가 없어 사용자 결정에 따라 K3s·Jenkins 실제 기동 복원을 보류합니다. 기존 파일·무결성 검증 결과와 사전준비 문서는 유지하며, 실행 환경이 준비되면 대상·버전·자료와 정확한 시험 범위를 확인해 재개합니다.
 
