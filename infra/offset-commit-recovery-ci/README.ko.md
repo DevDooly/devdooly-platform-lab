@@ -66,6 +66,14 @@ Java 실패 marker는 정확6개 필드입니다: `schemaVersion`, `status`, `fa
 
 두 번째 실행 `39418943100`은 실제 exit1·OOM false와 해당 JUnit testcase의 failure1/error0을 확인했고 Java phase가 `KAFKA_CREATE`였습니다. 따라서 Spring·전용 schema·서비스 guard 이후 초기 cluster/topic/offset 확인 구간의 실패라는 범위까지 좁혔습니다. 일반 assertion으로 치환하면서 원 조건·kind가 사라져 정확한 원인은 아직 모릅니다. 새6필드 진단은 그 정보를 보존하기 위한 변경이며, 검증 조건·성공23필드·phase protocol·기능 동작은 바꾸지 않습니다. 앞선 두 실패 기록과 정리 확인은 보존합니다. 실제 원인 확인 전 기능 수정이나 성공 주장을 하지 않습니다.
 
+### 첫 group offset 관측의 준비 대기
+
+세 번째 실행 `39420607863`은 초기 `listConsumerGroupOffsets(group)`의10초 대기에서 실제 `TIMEOUT`을 확인했습니다. 아직 입력·DB commit fault에 도달하지 않았으며 소유 자원 정리는 확인됐습니다. 이는 socket이 열렸어도 첫 group coordinator 조회가 준비됐다는 근거는 아니라는 뜻입니다. broker 내부의 정확한 지연 원인을 확정한 것은 아닙니다.
+
+이 관측에 따라 fault 전의 첫 empty offset 확인 한 곳만 별도 준비 대기로 분리합니다. 단일 monotonic45초 안에서 같은 새 group에 실제 empty 응답이나 실제 `GROUP_NOT_FOUND`를 받아야 합니다. 각 RPC의 `ListConsumerGroupOffsetsOptions.timeoutMs`는 남은 시간과10초 중 작은 값이며 future도 남은 전체 시간 안에서만 기다립니다. 완료한 RPC의 `TIMEOUT`·세 coordinator transient만 최대250ms 간격으로 다시 관측합니다. Java future 대기가 전체 한도를 소진하면 즉시 실패하며, 완료되지 않은 future를 취소해 추가 관측과 겹치지 않게 합니다.
+
+nonempty offset·잘못된 partition·assertion·인증/권한·unknown topic·그 외 오류는 즉시 실패하고, interruption은 복원·전파합니다. timeout을 empty로 바꾸거나 group에 join하거나 내부 topic·offset을 만들거나 초기화하지 않습니다. 입력·fault 이후의 기존 offset 조회와 엄격한 absent/1·최종 commit/lag 조건은 그대로입니다. 성공23필드·실패6필드·phase19개·JUnit420초·실행기600초도 늘리지 않습니다. 이 변경의 실제 준비/복구 성공은 새 검토 소스의 후속 실행에서 확인해야 합니다. 앞선 세 실패 기록을 보존합니다.
+
 이 시험은 한 broker의 일시 정지와 명시적 재개 경계입니다. broker/host 재시작·다중 broker HA·운영 복구·부하 상한을 증명하지 않습니다.
 
 ## 순수 검사
