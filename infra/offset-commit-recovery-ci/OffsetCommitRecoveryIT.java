@@ -79,6 +79,13 @@ public class OffsetCommitRecoveryIT {
     private String clusterId;
     private Uuid topicId;
     private Path privateDirectory;
+    private FailurePhase failurePhase = FailurePhase.TEST_ENTRY;
+    private enum FailurePhase {
+        TEST_ENTRY, SERVICE_GUARDS, KAFKA_CREATE, STAGE_INPUT, START_FAULT, WAIT_DB_COMMIT,
+        CHECK_PENDING, WAIT_FAULT_EXIT, CHECK_PERSISTED_PAUSE, WAIT_UNPAUSE,
+        OBSERVE_COMMIT, RUN_REFUSAL, OPERATOR_RESUME, START_RECOVERY, VERIFY_EXPORT,
+        VERIFY_FINAL_OFFSET, STOP_RECOVERY, FINAL_INVARIANTS, CLOSE_CLIENTS
+    }
 
     @DynamicPropertySource static void guardBeforeFlyway(DynamicPropertyRegistry registry) {
         // Guard every destination before Spring/Flyway opens the first connection.
@@ -94,11 +101,12 @@ public class OffsetCommitRecoveryIT {
     void realBrokerPausePersistsCommitFailureAndExplicitResumeRecovers() throws Exception {
         try {
             Result result = performExperiment();
+            failurePhase = FailurePhase.CLOSE_CLIENTS;
             closeOwnedChildrenAndClients();
             emitSuccess(result.postUnpause(), result.completedReplays());
         } catch (Throwable failure) {
             if (failure instanceof InterruptedException) { Thread.currentThread().interrupt(); }
-            System.out.println("OFFSET_COMMIT_RECOVERY_RESULT {\"schemaVersion\":1,\"status\":\"FAIL\",\"failureCode\":\"VALIDATION_FAILED\"}");
+            System.out.println("OFFSET_COMMIT_RECOVERY_RESULT {\"schemaVersion\":1,\"status\":\"FAIL\",\"failureCode\":\"VALIDATION_FAILED\",\"failurePhase\":\"" + failurePhase.name() + "\"}");
             // Exception text and assertions can contain raw rows, addresses and local file names.
             throw new AssertionError("Offset commit recovery validation failed; inspect private test diagnostics");
         } finally {
@@ -108,6 +116,7 @@ public class OffsetCommitRecoveryIT {
     }
 
     private Result performExperiment() throws Exception {
+        failurePhase = FailurePhase.SERVICE_GUARDS;
         requireEmptyDedicatedSchema();
         sourceCommit = ContinuousRuntimeIT.guardedSourceCommit(); bucket = ContinuousRuntimeIT.guardedBucket();
         privateDirectory = OffsetCommitRecoveryProbe.controlDirectory();
@@ -116,6 +125,7 @@ public class OffsetCommitRecoveryIT {
             AwsBasicCredentials.create(ContinuousRuntimeIT.required("LAB_S3_TEST_ACCESS_KEY"),
                 ContinuousRuntimeIT.required("LAB_S3_TEST_SECRET_KEY"))));
         kafka = ContinuousRuntimeIT.admin(); ContinuousRuntimeIT.requireExpectedCluster(kafka);
+        failurePhase = FailurePhase.KAFKA_CREATE;
         clusterId = kafka.describeCluster().clusterId().get(10, TimeUnit.SECONDS);
         assertThat(clusterId).isEqualTo(ContinuousRuntimeIT.required("LAB_KAFKA_TEST_CLUSTER_ID"));
         String identity = UUID.randomUUID().toString();
@@ -127,6 +137,7 @@ public class OffsetCommitRecoveryIT {
         assertThat(actualTopic.partitions()).hasSize(1); assertThat(actualTopic.partitions().getFirst().replicas()).hasSize(1);
         topicId = actualTopic.topicId(); assertThat(topicId).isNotEqualTo(Uuid.ZERO_UUID);
         assertThat(readCommittedEnd()).isZero(); assertThat(committedOffset()).isEmpty();
+        failurePhase = FailurePhase.STAGE_INPUT;
         AdmissionTestFixtures.makeEligible(jdbc);
         String run = "runtime-it-" + UUID.randomUUID(); ContinuousRuntimeIT.requireOwnedRun(run);
         var admitted = new SourceStagingService(jobs, new S3RawSourceStore(s3, bucket)).stage(run, SyntheticScenario.NAME, source);
@@ -134,8 +145,11 @@ public class OffsetCommitRecoveryIT {
         assertThat(admitted.exportStatus()).isEqualTo(LabJobService.ExportStatus.NOT_REQUESTED);
         assertSourceUnchanged(run); assertThat(remoteKeys(run)).isEmpty();
 
+        failurePhase = FailurePhase.START_FAULT;
         Child fault = startProbe("fault", run);
+        failurePhase = FailurePhase.WAIT_DB_COMMIT;
         OffsetCommitRecoveryProbe.awaitControl("post-db-commit-ready.json", "POST_DB_COMMIT_READY", deadline(90));
+        failurePhase = FailurePhase.CHECK_PENDING;
         assertThat(fault.process().isAlive()).isTrue();
         assertCompletedPending(run); assertCounts(run);
         var business = businessSnapshot();
@@ -144,19 +158,24 @@ public class OffsetCommitRecoveryIT {
         assertThat(remoteKeys(run)).isEmpty(); assertSourceUnchanged(run);
 
         // The external owner pauses only its broker after POST_DB_COMMIT_READY. No Kafka calls until its unpause ACK.
+        failurePhase = FailurePhase.WAIT_FAULT_EXIT;
         awaitExited(fault, false, 90);
+        failurePhase = FailurePhase.CHECK_PERSISTED_PAUSE;
         var faultExit = readExit("fault-exit.json", "FAULT_CHILD_EXITED", "PAUSED_OPERATOR", "CONSUME", "OFFSET_COMMIT_FAILED");
         assertThat(faultExit.get("completedReplays").asInt()).isZero();
         assertPaused(); assertCompletedPending(run); assertCounts(run);
         assertThat(businessSnapshot()).isEqualTo(business); assertBundleUnchanged(run, expected); assertSourceUnchanged(run);
         assertLeaseAvailable();
         OffsetCommitRecoveryProbe.writeControl("paused-observed.json", "PAUSED_OBSERVED");
+        failurePhase = FailurePhase.WAIT_UNPAUSE;
         OffsetCommitRecoveryProbe.awaitControl("broker-unpaused-ack.json", "BROKER_UNPAUSED", deadline(90));
+        failurePhase = FailurePhase.OBSERVE_COMMIT;
         Optional<Long> postUnpause = committedOffset();
         if (postUnpause.isPresent()) { assertThat(postUnpause.orElseThrow()).isEqualTo(1L); }
         assertThat(readCommittedEnd()).isEqualTo(1L);
         assertPaused();
 
+        failurePhase = FailurePhase.RUN_REFUSAL;
         var paused = journalSnapshot();
         Child refused = startOriginalCli("cli-run"); awaitExited(refused, true, 45);
         assertThat(Files.readString(refused.log(), StandardCharsets.UTF_8))
@@ -164,6 +183,7 @@ public class OffsetCommitRecoveryIT {
         assertThat(Files.exists(refused.checkpoint(), LinkOption.NOFOLLOW_LINKS)).isFalse();
         assertThat(journalSnapshot()).isEqualTo(paused); assertThat(businessSnapshot()).isEqualTo(business);
         assertCompletedPending(run); assertSourceUnchanged(run); assertLeaseAvailable();
+        failurePhase = FailurePhase.OPERATOR_RESUME;
         Child resume = startOriginalCli("resume"); awaitExited(resume, false, 45);
         assertJournal("STOPPED", "STOPPED", null); assertLeaseAvailable();
         var resumed = journalSnapshot();
@@ -174,12 +194,16 @@ public class OffsetCommitRecoveryIT {
         assertThat(resumed.get("heartbeat_at")).isEqualTo(resumed.get("stopped_at"));
         assertThat(businessSnapshot()).isEqualTo(business); assertCompletedPending(run); assertSourceUnchanged(run);
 
+        failurePhase = FailurePhase.START_RECOVERY;
         Child recovery = startProbe("recover", run);
+        failurePhase = FailurePhase.VERIFY_EXPORT;
         await(() -> jobs.get(run).exportStatus() == LabJobService.ExportStatus.EXPORTED,
             "verified export after explicit resume", Duration.ofSeconds(90));
         assertThat(recovery.process().isAlive()).isTrue();
         assertExported(run, expected); assertThat(businessSnapshot()).isEqualTo(business); assertSourceUnchanged(run);
+        failurePhase = FailurePhase.VERIFY_FINAL_OFFSET;
         awaitFinalOffset(recovery);
+        failurePhase = FailurePhase.STOP_RECOVERY;
         Path stopFile = privateDirectory.resolve("recovery-stop.request");
         Path pendingStop = privateDirectory.resolve("recovery-stop.pending-" + UUID.randomUUID());
         assertThat(Files.exists(stopFile, LinkOption.NOFOLLOW_LINKS)).isFalse();
@@ -195,6 +219,7 @@ public class OffsetCommitRecoveryIT {
         awaitExited(recovery, false, 45);
         var recoveredExit = readExit("recovery-exit.json", "RECOVERY_CHILD_EXITED", "STOPPED", "STOPPED", null);
         int replays = recoveredExit.get("completedReplays").asInt(); assertThat(replays).isBetween(0, 1);
+        failurePhase = FailurePhase.FINAL_INVARIANTS;
         assertJournal("STOPPED", "STOPPED", null); assertLeaseAvailable();
         assertExported(run, expected); assertThat(businessSnapshot()).isEqualTo(business); assertSourceUnchanged(run);
         assertThat(committedOffset()).contains(1L); assertThat(readCommittedEnd()).isEqualTo(1L);

@@ -35,6 +35,33 @@ METHOD = 'realBrokerPausePersistsCommitFailureAndExplicitResumeRecovers'
 PHASES = {'POST_DB_COMMIT_READY': 'post-db-commit-ready.json', 'BROKER_PAUSED': 'broker-paused-ack.json',
           'PAUSED_OBSERVED': 'paused-observed.json', 'BROKER_UNPAUSED': 'broker-unpaused-ack.json'}
 MARKER = 'OFFSET_COMMIT_RECOVERY_RESULT '
+JAVA_FAILURE_PHASES = frozenset({'TEST_ENTRY', 'SERVICE_GUARDS', 'KAFKA_CREATE', 'STAGE_INPUT',
+    'START_FAULT', 'WAIT_DB_COMMIT', 'CHECK_PENDING', 'WAIT_FAULT_EXIT', 'CHECK_PERSISTED_PAUSE',
+    'WAIT_UNPAUSE', 'OBSERVE_COMMIT', 'RUN_REFUSAL', 'OPERATOR_RESUME', 'START_RECOVERY',
+    'VERIFY_EXPORT', 'VERIFY_FINAL_OFFSET', 'STOP_RECOVERY', 'FINAL_INVARIANTS', 'CLOSE_CLIENTS'})
+NATIVE_SIGNALS = {
+    'MAVEN_OFFLINE_ARTIFACT_UNAVAILABLE': (b'Cannot access ', b' in offline mode'),
+    'MAVEN_DEPENDENCY_RESOLUTION_FAILED': (b'Could not resolve dependencies for project',),
+    'MAVEN_PLUGIN_RESOLUTION_FAILED': (b'Plugin ', b' could not be resolved'),
+    'MAVEN_SUREFIRE_FORK_FAILED': (b'The forked VM terminated without properly saying goodbye',),
+    'MAVEN_TEST_FAILURE': (b'There are test failures',),
+    'MAVEN_NO_MATCHING_TEST': (b'No tests matching pattern',),
+    'SPRING_CONTEXT_FAILED': (b'Failed to load ApplicationContext',),
+    'JVM_MEMORY_FAILURE': (b'java.lang.OutOfMemoryError',),
+    'JAVA_CLASS_UNAVAILABLE': (b'java.lang.NoClassDefFoundError',),
+    'FILE_ACCESS_DENIED': (b'java.nio.file.AccessDeniedException',),
+}
+JAVA_DIAGNOSTIC_SOURCES = {
+    'OffsetCommitRecoveryIT.java': (DIR + 'OffsetCommitRecoveryIT.java', JAVA[DIR + 'OffsetCommitRecoveryIT.java'], CLASS),
+    'OffsetCommitRecoveryProbe.java': (DIR + 'OffsetCommitRecoveryProbe.java', JAVA[DIR + 'OffsetCommitRecoveryProbe.java'],
+        'io.github.devdooly.platformlab.jobs.messaging.OffsetCommitRecoveryProbe'),
+    'ContinuousRuntimeIT.java': ('apps/api/src/test/java/io/github/devdooly/platformlab/jobs/runtime/ContinuousRuntimeIT.java',
+        'apps/api/src/test/java/io/github/devdooly/platformlab/jobs/runtime/ContinuousRuntimeIT.java',
+        'io.github.devdooly.platformlab.jobs.runtime.ContinuousRuntimeIT'),
+    'RuntimeProcessProbe.java': ('apps/api/src/test/java/io/github/devdooly/platformlab/jobs/exporting/RuntimeProcessProbe.java',
+        'apps/api/src/test/java/io/github/devdooly/platformlab/jobs/exporting/RuntimeProcessProbe.java',
+        'io.github.devdooly.platformlab.jobs.exporting.RuntimeProcessProbe'),
+}
 FIXED_RESULT = {'schemaVersion': 1, 'status': 'PASS', 'fixtureInput': 12, 'successCount': 7,
     'failureCount': 3, 'duplicateCount': 2, 'pendingCount': 0, 'dbCommitBeforeFault': True,
     'pausePersisted': True, 'pauseCode': 'OFFSET_COMMIT_FAILED', 'runRefusedUnchanged': True,
@@ -314,8 +341,11 @@ def parse_result(text):
             continue
         need(line.startswith(MARKER) and found is None)
         value = json.loads(line[len(MARKER):], object_pairs_hook=pairs)
-        if value == {'schemaVersion': 1, 'status': 'FAIL', 'failureCode': 'VALIDATION_FAILED'}:
-            need(type(value['schemaVersion']) is int)
+        if type(value) is dict and value.get('status') == 'FAIL':
+            need(set(value) == {'schemaVersion', 'status', 'failureCode', 'failurePhase'}
+                 and type(value['schemaVersion']) is int and value['schemaVersion'] == 1
+                 and value['failureCode'] == 'VALIDATION_FAILED'
+                 and type(value['failurePhase']) is str and value['failurePhase'] in JAVA_FAILURE_PHASES)
             found = value
             continue
         need(type(value) is dict and set(value) == set(FIXED_RESULT) | {
@@ -341,6 +371,113 @@ def selected_result(base, task):
     return reports[0], result
 
 
+def native_signals(raw):
+    """Classify observed text signatures, never declare them a proven root cause."""
+    need(type(raw) is bytes and len(raw) <= 1048576)
+    lines = raw.splitlines()
+    return sorted(name for name, parts in NATIVE_SIGNALS.items()
+                  if any(all(part in line for part in parts) for line in lines))
+
+
+def java_frames(task, source, text):
+    """Only line references into the hash-matched four known public Java files."""
+    need(type(text) is str and len(text.encode('utf8')) <= 2097152)
+    found = set()
+    for name, (key, relative, classname) in JAVA_DIAGNOSTIC_SOURCES.items():
+        expected = source.get(key)
+        if type(expected) is not str or not SHA.fullmatch(expected):
+            continue
+        path = task / 'it-api' / Path(relative).relative_to('apps/api')
+        try:
+            need(not any(parent.is_symlink() for parent in path.parents if parent.is_relative_to(task)))
+            raw = read(path)
+            need(hashlib.sha256(raw).hexdigest() == expected)
+            total = len(raw.decode('utf8', 'strict').splitlines())
+        except Exception:
+            continue
+        pattern = re.compile(r'^[ \t]*at ' + re.escape(classname)
+            + r'(?:\$[A-Za-z0-9_$]+)?\.[A-Za-z0-9_$<>]{1,128}\('
+            + re.escape(name) + r':([1-9][0-9]{0,3})\)[ \t]*$')
+        for line in text.splitlines():
+            match = pattern.fullmatch(line)
+            if match and int(match.group(1)) <= total:
+                found.add((name, int(match.group(1))))
+    return [{'sourceFile': name, 'sourceLine': line} for name, line in sorted(found)][:8]
+
+
+def junit_failure_projection(task):
+    """Private report text stays in memory; selected counts never mean test PASS."""
+    reports = task / 'it-api/target/surefire-reports'
+    path = reports / ('TEST-' + CLASS + '.xml')
+    if not os.path.lexists(path):
+        return 'ABSENT', None, ''
+    try:
+        need(not any(parent.is_symlink() for parent in (task / 'it-api', reports.parent, reports)))
+        need(list(reports.glob('TEST-*.xml')) == [path])
+        raw = read(path, 1048576)
+        need(b'<!DOCTYPE' not in raw and b'<!ENTITY' not in raw)
+        root = ET.fromstring(raw); cases = root.findall('testcase')
+        need(root.tag == 'testsuite' and root.get('name') == CLASS and len(cases) == 1
+             and cases[0].get('classname') == CLASS and cases[0].get('name') == METHOD)
+        keys = ('tests', 'failures', 'errors', 'skipped')
+        need(all(root.get(key) in ('0', '1') for key in keys) and root.get('tests') == '1')
+        counts = {key: int(root.get(key)) for key in keys}
+        need(sum(counts[key] for key in keys[1:]) <= 1)
+        problems = [node for node in cases[0] if node.tag in ('failure', 'error', 'skipped')]
+        need(len(problems) == sum(counts[key] for key in keys[1:])
+             and all(counts[{'failure': 'failures', 'error': 'errors', 'skipped': 'skipped'}[node.tag]] == 1 for node in problems))
+        selected = [*problems, *root.findall('system-out'), *cases[0].findall('system-out')]
+        text = '\n'.join(node.text or '' for node in selected)
+        need(len(text.encode('utf8')) <= 1048576)
+        return 'VERIFIED', counts, text
+    except Exception:
+        return 'UNVERIFIED', None, ''
+
+
+def exited_jvm_diagnostic(owned, row, task, source):
+    """Best-effort bounded observation of this exact already-exited owned JVM."""
+    try:
+        need(type(row) is dict and row.get('role') == 'jvm')
+        value = owned.inspect(row); state = value['State']
+        need(state['Status'] == 'exited' and state['Running'] is False and state['Paused'] is False
+             and type(state['ExitCode']) is int and 0 <= state['ExitCode'] <= 255
+             and type(state['OOMKilled']) is bool)
+        raw, log_status = b'', 'UNAVAILABLE'
+        try:
+            status, stdout, stderr = owned.call(['logs', '--tail', '200', row['id']],
+                min(owned.deadline, time.monotonic() + 5))
+            need(status == 0 and type(stdout) is bytes and type(stderr) is bytes
+                 and len(stdout) + len(stderr) <= 1048576)
+            raw, log_status = stdout + b'\n' + stderr, 'READ'
+            need(len(raw) <= 1048576)
+        except Exception:
+            raw, log_status = b'', 'UNAVAILABLE'
+        after = owned.inspect(row)['State']
+        need(all(after[key] == state[key] and type(after[key]) is type(state[key])
+                 for key in ('Status', 'Running', 'Paused', 'StartedAt', 'ExitCode', 'OOMKilled')))
+        report_status, counts, report_text = junit_failure_projection(task)
+        text = raw.decode('utf8', 'replace') + '\n' + report_text
+        need(len(text.encode('utf8')) <= 2097152)
+        selected = None
+        for candidate in (report_text, raw.decode('utf8', 'replace')):
+            try:
+                projected = parse_result(candidate)
+                need(projected is None or projected['status'] == 'FAIL')
+            except Exception:
+                continue
+            if projected is not None:
+                if selected is not None and selected != projected:
+                    selected = None
+                    break
+                selected = projected
+        return {'schemaVersion': 1, 'status': 'OWNED_JVM_EXITED', 'exitCode': state['ExitCode'],
+            'oomKilled': state['OOMKilled'], 'nativeLogStatus': log_status, 'observedSignals': native_signals(raw),
+            'junitReportStatus': report_status, 'junitCounts': counts,
+            'javaFrames': java_frames(task, source, text), 'javaFailure': selected}
+    except BaseException:
+        return None
+
+
 def run(base, helper, owner, repo, rows, expected, environment):
     hosted(base, repo, environment)
     task = repo / PRIVATE
@@ -348,7 +485,7 @@ def run(base, helper, owner, repo, rows, expected, environment):
     need(state['phase'] == 'PREPARED' and state['prepared'] is True and not state['resources'])
     owned = owner.OwnedDocker(base, task, state, time.monotonic() + 30)
     code, result, xml_hash, unchanged, cleaned = None, None, None, False, False
-    stage, diagnostic = 'PREFLIGHT', None
+    stage, diagnostic, jvm, jvm_diagnostic = 'PREFLIGHT', None, None, None
     diagnostic_sources = {__file__: 'runner', str(repo / OWNER): 'owner', str(repo / BASE): 'base'}
     try:
         stage = 'SOURCE_CHECK'
@@ -475,6 +612,8 @@ def run(base, helper, owner, repo, rows, expected, environment):
     except BaseException as error:
         code = 'RECOVERY_UNVERIFIED'
         diagnostic = failure_diagnostic(error, stage, diagnostic_sources)
+        if jvm is not None:
+            jvm_diagnostic = exited_jvm_diagnostic(owned, jvm, task, state['sourceSnapshot'])
     finally:
         owned.deadline = time.monotonic() + 180
         try:
@@ -498,6 +637,7 @@ def run(base, helper, owner, repo, rows, expected, environment):
             'synthetic': True, 'sourceCommit': state['sourceCommit'], 'runtimeManifestSha256': expected,
             'status': 'PASSED' if code is None else 'FAILED', 'failureCode': code, 'expectedTests': 1,
             'selectedFailure': diagnostic,
+            'jvmFailure': jvm_diagnostic,
             'verifiedTests': 1 if xml_hash else 0, 'surefireXmlSha256': xml_hash,
             'recoveryResult': result if code is None else None, 'ownedResourcesRemoved': cleaned,
             'sourceAndArtifactsUnchanged': unchanged, 'operatingServicesChanged': False,

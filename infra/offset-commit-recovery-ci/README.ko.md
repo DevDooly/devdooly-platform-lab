@@ -52,6 +52,16 @@ private 상태·환경 파일·phase·native log·SQL·XML은 `.local/offset-com
 
 공개 결과에는 고정 상태·합성 집계·검증 bool·source/manifest/XML hash와 실제 commit/replay 관측만 남깁니다. 실패 진단은 고정 stage, `runner|owner|base`, 실제 source line만 투영하며 일반 guard의 raise 줄은 건너뜁니다. 예외 종류·본문·경로·환경·credential·실제 컨테이너 ID는 출력하지 않습니다. 준비 실패는 같은 유한 진단을 workflow stdout에 남기며 실제 복구 결과 JSON을 만들어내지 않습니다.
 
+### JVM 조기 종료 진단
+
+첫 실제 실행 `39417413600`은 `POST_DB_WAIT`에서 실패했습니다. 준비·고정 이미지 네 개 pull과 DB/Garage 초기화·layout·key 권한 확인은 마쳤지만, 첫 DB commit checkpoint 전에 JVM이 종료했습니다. 테스트 검증 수는0이고 원인 분류 근거가 부족하므로 이 기록을 복구 성공으로 해석하거나 원인을 추정해 기능을 수정하지 않습니다. 해당 실행의 소유 자원 정리는 확인됐습니다.
+
+다음 진단 변경은 이미 종료한 동일 소유 JVM의 identity를 다시 확인한 뒤 exit code·OOM 여부를 기록합니다. `docker logs --tail 200`을 최대5초·합계1MiB 안에서 메모리로만 읽고 재차 같은 종료 상태를 확인합니다. 원문을 파일·artifact·stdout에 저장하지 않으며 기존 cleanup 순서를 바꾸지 않습니다.
+
+새 `jvmFailure`는 성공 시 null입니다. 실패 시 확인 가능한 exit/OOM, native log 읽기 상태, 고정된 관측 signature enum, 엄격히 하나인 해당 JUnit testcase의0/1 집계, hash가 일치하는 공개 Java 네 파일의 최대8개 source line, 고정 Java failure phase만 투영합니다. 알려지지 않은 class·파일·message·주소·credential은 포함하지 않습니다. signature는 로그에서 그 문구를 관측했다는 뜻이며 근본 원인이 확정됐다는 뜻이 아닙니다. XML 집계도 `verifiedTests`나 테스트 성공을 대신하지 않습니다. 진단 자체가 실패하거나 JVM identity/종료가 미확인이면 null을 유지합니다.
+
+Java 실패 marker는 `VALIDATION_FAILED`와19개 허용 phase 중 하나만 포함합니다. Spring context가 test method 진입 전에 실패하면 Java marker가 없을 수 있어 source line·고정 native signature·해당 JUnit error 집계로 구분합니다. 원래의 `selectedFailure`는 유지합니다. 이 변경은 진단만 보강하며 실제 실패 원인은 후속 결과에서 확인해야 합니다.
+
 이 시험은 한 broker의 일시 정지와 명시적 재개 경계입니다. broker/host 재시작·다중 broker HA·운영 복구·부하 상한을 증명하지 않습니다.
 
 ## 순수 검사

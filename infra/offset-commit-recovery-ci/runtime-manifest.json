@@ -556,9 +556,9 @@
       "sha256": "6779c037ce90e3b7ef069db44f532c20782b595712243db1626df860b739b1bd"
     },
     {
-      "bytes": 30090,
+      "bytes": 31511,
       "path": "infra/offset-commit-recovery-ci/OffsetCommitRecoveryIT.java",
-      "sha256": "2cfbedcb29ccc5018baf098bda262aa715f5b5159f29fd37eab581b7c6a52c10"
+      "sha256": "5cb8fc033b6a98c24addc4241ab1af2727c772a25221caa296813886dd040c99"
     },
     {
       "bytes": 20819,
@@ -566,14 +566,14 @@
       "sha256": "a5a12c4f87609702cda491e22ae012b36225bf7bde9045dbe288e898ac44383f"
     },
     {
-      "bytes": 7495,
+      "bytes": 9514,
       "path": "infra/offset-commit-recovery-ci/README.ko.md",
-      "sha256": "daa2512e6a46f44f268d8bb69ea9b5cf2b2e73c5e83e5335c01afd5922f6cf4a"
+      "sha256": "9fd2a6155f7840c02fd8ba7c20613d905a85bb170aafebf6d1a50d93c7bc08b0"
     },
     {
-      "bytes": 30795,
+      "bytes": 39019,
       "path": "infra/offset-commit-recovery-ci/run_once.py",
-      "sha256": "87ec0ac4b8802d912084203db8ffd73c78eb23d1479b6ed966c0656370eb8bc5"
+      "sha256": "6860c931995208c1f77305a0e373cda0b0253b9902ba7ca5cb23308a1416e826"
     },
     {
       "bytes": 17142,
@@ -581,9 +581,9 @@
       "sha256": "e880c0e53f3a4dc942a61ee67ae7435c6432498a9b97786f0d44ef57acff278a"
     },
     {
-      "bytes": 8711,
+      "bytes": 15264,
       "path": "infra/offset-commit-recovery-ci/test_run_once.py",
-      "sha256": "9cdac24f5ae07215797aac9a952af04aab4f2efcdb2cd85ece7bba48d969f58f"
+      "sha256": "529a52d8edad3d861ede325d083b9e5385cb5371e671c46d130d4da88156bb69"
     },
     {
       "bytes": 10497,
