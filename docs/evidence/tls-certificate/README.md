@@ -19,11 +19,11 @@
 
 고정 run/source/repository/main·수동·attempt1, certificate job과 결론, 단일 artifact의 결합을 확인했습니다. ZIP을 추출하지 않고 정확한 JSON entry1개·4KiB 이하·22필드·수집/완료 시각·기간 산술을 검증한 뒤 원 bytes와6필드 metadata를 새 파일로 보존했습니다. 기존 원문·마지막 성공을 수정하거나 관측을 재실행하지 않았습니다. 원문에 주소·DER·토큰은 포함하지 않습니다.
 
-공개 화면은 아직 첫 기록을 표시합니다. 로컬 후보에는 첫 entry의 UTF-8 원문과 metadata를 그대로 보존한 채 두 번째 실제 기록을 추가했습니다. 두 번째 원문 링크는 [근거 커밋73f068c](https://github.com/DevDooly/devdooly-platform-lab/blob/73f068c129cb65d65f198b094a482c421e0ffc9b/docs/evidence/tls-certificate/hosted-39477022262/summary.json)에 고정했습니다. 검토한 run/source/hash로 이력을 검사하고 마지막 성공과 같은 run의 원문 링크만 선택하므로, 새 입력이 실패하거나 격리되면 이전 마지막 성공과 해당 원문 링크를 유지합니다.
+두 실제 기록을 공개 이력에 연결했습니다. 첫 entry의 UTF-8 원문과 metadata를 그대로 보존한 채 두 번째 실제 기록을 추가했습니다. 두 번째 원문 링크는 [근거 커밋73f068c](https://github.com/DevDooly/devdooly-platform-lab/blob/73f068c129cb65d65f198b094a482c421e0ffc9b/docs/evidence/tls-certificate/hosted-39477022262/summary.json)에 고정했습니다. 검토한 run/source/hash로 이력을 검사하고 마지막 성공과 같은 run의 원문 링크만 선택하므로, 새 입력이 실패하거나 격리되면 이전 마지막 성공과 해당 원문 링크를 유지합니다.
 
 기존 첫 관측 검증을 유지하고 같은 actual-case에 두 번째 원문 bytes/hash와 두 기록의 `UNCHANGED_CERTIFICATE` 기대를 반영했습니다. 전체 웹207개·skip0, 타입47파일 오류·경고·힌트0와 두 페이지 빌드를 통과했습니다. 관측을 다시 실행한 결과가 아닙니다.
 
-로컬1280px·390px에서 동일 인증서 표시, 마지막 수집18:42:26.245Z·87일·만료 시각, 실행39477022262·소스6f551a1·고정 원문 링크를 확인했습니다. native details는 기본 닫힘이며 Enter로 열면 두 실제 수집 시각과 원문 SHA가 보이고 다시 Enter로 닫혔습니다. 본문17px, 문서 폭1265px·375px에서 가로 넘침이 없었고 모바일의 긴 SHA도 details335px·카드375px 안에서 줄바꿈했습니다. 공개 배포와 반영 확인은 아직 예정입니다.
+로컬1280px·390px에서 동일 인증서 표시, 마지막 수집18:42:26.245Z·87일·만료 시각, 실행39477022262·소스6f551a1·고정 원문 링크를 확인했습니다. native details는 기본 닫힘이며 Enter로 열면 두 실제 수집 시각과 원문 SHA가 보이고 다시 Enter로 닫혔습니다. 본문17px, 문서 폭1265px·375px에서 가로 넘침이 없었고 모바일의 긴 SHA도 details335px·카드375px 안에서 줄바꿈했습니다. 같은 main `462fa0e778c300688030dfea4ac795224657e175`의 [Pages39481892187](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39481892187) build/deploy와 [CI39481892169](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39481892169)의 verify·public-read-gateway가 성공했습니다(조건부 격리4개 job은 생략). 공개1280px·390px에서도 마지막 수집18:42:26.245Z·87일·같은 인증서 표시와 마지막 성공의 실행·소스·고정 원문 링크를 확인했습니다. 기본 닫힘에서 Enter로 열면 두 실제 시각·SHA가 보이고 다시 Enter로 닫혔으며, 본문17px·문서 폭1265px·375px·모바일 details335px/카드375px에서 가로 넘침이 없었습니다. 새 TLS 관측이나 운영 배포 결과가 아닙니다.
 
 ## 첫 실제 관측 — 2026-10-20 15:51 UTC
 

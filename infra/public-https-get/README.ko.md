@@ -1,6 +1,6 @@
 # 공개 GET 응답 계약의 수동 관측
 
-실제 외부 실행은 아직 하지 않았다. 이 실행기는 기존 공개 API의 지정 GET6개만 확인한다. SSH나 공유 라우트의 POST 차단 확인 없이 읽기 응답을 점검하기 위한 별도 목적이다. [기존 GET6·거부3 검사](../public-https-smoke/README.ko.md)는 그대로 유지하며, 그 검사의 route 소유·POST 격리 확인을 대신하거나 실패한 검사를 우회하지 않는다.
+[첫 실제 수동 실행39483000285](../../docs/evidence/public-get/README.md)은 지정 GET6개의200 응답과 DTO 검증을 통과했다. 이 실행기는 기존 공개 API의 지정 GET6개만 확인한다. SSH나 공유 라우트의 POST 차단 확인 없이 읽기 응답을 점검하기 위한 별도 목적이다. [기존 GET6·거부3 검사](../public-https-smoke/README.ko.md)는 그대로 유지하며, 그 검사의 route 소유·POST 격리 확인을 대신하거나 실패한 검사를 우회하지 않는다.
 
 ## 고정한 범위
 
@@ -26,6 +26,6 @@ CLI는 새 파일을 `wx/0600`으로 먼저 열고4KiB 이하 JSON만 저장한�
 
 오프라인 검사는 native DNS·HTTPS·대기를 import 전에 mock으로 대체한다. 정확 GET6·POST0, 사전 guard의 IO0, 오류 후 후속 요청 중단, DNS/HTTP 기한과 timer보다 늦게 관측한 반환, DTO 출처·시각·offset 계약, 비공개 canary 배제를 확인한다. 기존 full9 원문은 고정한 SHA와 export-only 차이로 대조하고 기존 route ACK 거부·성공9회 동작도 mock으로 확인한다. 실제 CA나 외부 연결 성공을 합성 검사 결과로 주장하지 않는다.
 
-로컬 Node24.19.0에서 새 검사16개·기존 full9 검사15개·TLS 검사20개를 함께 실행해51개 통과·실패0·생략0을 확인했다. 네트워크를 mock으로 대체한 검사이며 실제 외부 응답이나 CA 성공 기록이 아니다. Linux 실행과 실제 GET 관측은 아직 예정이다.
+로컬 Node24.19.0에서 새 검사16개·기존 full9 검사15개·TLS 검사20개를 함께 실행해51개 통과·실패0·생략0을 확인했다. 네트워크를 mock으로 대체한 검사이며 실제 외부 응답이나 CA 성공 기록이 아니다. 이후 Linux PR·main 오프라인 검사와 실제 hosted GET6 관측도 통과했으며, [실제 출처·원문·검증 범위](../../docs/evidence/public-get/README.md)에 따로 기록했다.
 
 수동 실행 입력은 `confirm_public_gets=true`, `confirm_target_ownership=true`다. 실행 응답이 불명확하면 기존 run부터 확인하고 반복 dispatch하지 않는다. attempt2·자동 주기·자동 재시도는 허용하지 않는다. 실제 결과는 source/run·artifact 원 bytes와 결합해 별도로 검토해야 한다.

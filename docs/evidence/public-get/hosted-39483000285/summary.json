@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "kind": "public-https-get-snapshot",
+  "scope": "PUBLIC_HTTPS_GET_CONTRACTS_ONLY",
+  "status": "PASS",
+  "errorCode": "NONE",
+  "validatorSourceCommit": "46d099d1792f3e93125db7f1ffb2ab3e286abc17",
+  "captureStartedAt": "2026-10-20T19:23:35.337Z",
+  "capturedAt": "2026-10-20T19:23:44.348Z",
+  "targetOwnershipAcknowledged": true,
+  "publicIpv4Verified": true,
+  "standardTlsVerified": true,
+  "deniedRequestsTested": false,
+  "operatingConfigurationChanged": false,
+  "checks": {
+    "SUMMARY": {
+      "passed": true,
+      "status": 200,
+      "sourceCommit": "245d61a5749760a20918ab091d9410ce6735b1c0",
+      "observedAt": "2026-10-20T19:23:35.998073621Z"
+    },
+    "RELEASES": {
+      "passed": true,
+      "status": 200,
+      "sourceCommit": "245d61a5749760a20918ab091d9410ce6735b1c0",
+      "observedAt": "2026-10-20T19:23:37.514304052Z"
+    },
+    "RUN_LIST": {
+      "passed": true,
+      "status": 200,
+      "sourceCommit": "245d61a5749760a20918ab091d9410ce6735b1c0",
+      "observedAt": "2026-10-20T19:23:39.105617856Z"
+    },
+    "RUN_DETAIL_EXAMPLE": {
+      "passed": true,
+      "status": 200,
+      "sourceCommit": "245d61a5749760a20918ab091d9410ce6735b1c0",
+      "observedAt": "2026-10-20T19:23:40.787019157Z"
+    },
+    "JOBS": {
+      "passed": true,
+      "status": 200,
+      "sourceCommit": "245d61a5749760a20918ab091d9410ce6735b1c0",
+      "observedAt": "2026-10-20T19:23:42.437866782Z"
+    },
+    "KAFKA": {
+      "passed": true,
+      "status": 200,
+      "sourceCommit": "245d61a5749760a20918ab091d9410ce6735b1c0",
+      "observedAt": "2026-10-20T19:23:44.280587950Z"
+    }
+  }
+}
