@@ -74,6 +74,14 @@ Java 실패 marker는 정확6개 필드입니다: `schemaVersion`, `status`, `fa
 
 nonempty offset·잘못된 partition·assertion·인증/권한·unknown topic·그 외 오류는 즉시 실패하고, interruption은 복원·전파합니다. timeout을 empty로 바꾸거나 group에 join하거나 내부 topic·offset을 만들거나 초기화하지 않습니다. 입력·fault 이후의 기존 offset 조회와 엄격한 absent/1·최종 commit/lag 조건은 그대로입니다. 성공23필드·실패6필드·phase19개·JUnit420초·실행기600초도 늘리지 않습니다. 이 변경의 실제 준비/복구 성공은 새 검토 소스의 후속 실행에서 확인해야 합니다. 앞선 세 실패 기록을 보존합니다.
 
+### 새 admission policy의 읽기 전용 확인
+
+네 번째 실행 `39421773890`은 초기 offset 준비 대기를 통과한 뒤 `STAGE_INPUT / OTHER`, 원 IT187줄의 `AdmissionTestFixtures.makeEligible(jdbc)` 호출에서 실패했습니다. 2026-10-20 12:25:04 UTC에 완료됐고 소유 자원 정리는 확인됐습니다. helper 내부의 정확한 실패 원인은 아직 모릅니다. 실제 broker pause나 복구 성공에는 도달하지 않았습니다.
+
+이 시험은 새 전용 schema에 작업 하나만 넣으므로 테스트용 admission clock reset이 필요하지 않습니다. 새 후보는 해당 import·reset 호출만 제거하고, `SELECT`로 policy 전체 행이1개이고 id1·cooldown30·last_admitted_at null·next_admission_at null인 V4 기본 상태를 확인합니다. 사용 이력이나 다른 정책이 있으면 실패하며 데이터를 지워 통과시키지 않습니다.
+
+기존 before-Flyway 목적지 guard, 실제 MariaDB/catalog 확인, 빈 업무 테이블·빈 슬롯 확인은 유지합니다. API106의 `AdmissionTestFixtures`와 metadata URL guard는 수정하지 않습니다. 이후 실제 `SourceStagingService`와 admission 판단도 그대로 수행합니다. 이는 새 fixture에 불필요한 변경을 없애고 초기 상태를 더 분명히 확인하는 조정이며, helper의 근본 원인을 고쳤거나 실제 fault 복구가 통과했다고 주장하지 않습니다. 앞선 네 실패 기록을 보존하고 새 검토 소스에서 후속 결과를 확인합니다.
+
 이 시험은 한 broker의 일시 정지와 명시적 재개 경계입니다. broker/host 재시작·다중 broker HA·운영 복구·부하 상한을 증명하지 않습니다.
 
 ## 순수 검사
