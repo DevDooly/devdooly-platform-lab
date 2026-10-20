@@ -1,0 +1,134 @@
+name: Isolated invalid message runtime
+
+on:
+  pull_request:
+    paths:
+      - infra/invalid-message-runtime-ci/**
+      - infra/kafka-observation-ci/run_once.py
+      - infra/kafka-acl-ci/run_once.py
+      - .github/workflows/invalid-message-runtime.yml
+  workflow_dispatch:
+    inputs:
+      run_invalid_message_trial:
+        description: Run one fresh isolated malformed record protection trial
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: invalid-message-runtime-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  pure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify offline source, scope, ownership and result boundaries only
+        run: python3 -I -B -m unittest discover -s infra/invalid-message-runtime-ci -p 'test_*.py' -v
+
+  compile:
+    if: ${{ github.event_name == 'pull_request' }}
+    needs: pure
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Compile only API106 plus one staged Java file without running tests
+        shell: bash
+        run: |
+          set -eu
+          umask 077
+          task="$RUNNER_TEMP/invalid-message-compile-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          test ! -e "$task"
+          export INVALID_MESSAGE_COMPILE_TASK="$task"
+          python3 -I -B - <<'PY'
+          from pathlib import Path
+          import os
+          import shutil
+          root = Path.cwd()
+          task = Path(os.environ['INVALID_MESSAGE_COMPILE_TASK'])
+          assert not task.exists()
+          task.mkdir(mode=0o700)
+          api = root / 'apps/api'
+          files = []
+          for path in api.rglob('*'):
+              assert not path.is_symlink()
+              assert path.relative_to(api).parts[0] != 'target'
+              assert path.is_dir() or path.is_file()
+              if path.is_file():
+                  files.append(path)
+          assert len(files) == 106
+          for path in files:
+              target = task / 'api' / path.relative_to(api)
+              target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+              shutil.copyfile(path, target)
+          additional = {
+              'InvalidMessageRuntimeIT.java': 'runtime/InvalidMessageRuntimeIT.java',
+          }
+          for name, destination in additional.items():
+              source = root / 'infra/invalid-message-runtime-ci' / name
+              assert source.is_file() and not source.is_symlink()
+              target = task / 'api/src/test/java/io/github/devdooly/platformlab/jobs' / destination
+              assert not target.exists()
+              shutil.copyfile(source, target)
+          assert len([path for path in (task / 'api').rglob('*') if path.is_file()]) == 107
+          (task / 'settings.xml').write_text('<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"><interactiveMode>false</interactiveMode><mirrors><mirror><id>owned-public-central-only</id><mirrorOf>*</mirrorOf><url>https://repo.maven.apache.org/maven2</url></mirror></mirrors></settings>\n', encoding='utf8')
+          PY
+          env -i PATH="$JAVA_HOME/bin:/usr/bin:/bin" JAVA_HOME="$JAVA_HOME" LANG=C.UTF-8 \
+            MAVEN_SKIP_RC=true MAVEN_OPTS="-Xmx128m -Dmaven.user.home=$task/wrapper-home -Duser.home=$task/user-home" \
+            sh "$task/api/mvnw" -B -ntp -s "$task/settings.xml" -gs "$task/settings.xml" \
+            "-Dmaven.repo.local=$task/repository" -f "$task/api/pom.xml" -DskipTests test-compile
+          test -z "$(find "$task/api/target" -name 'TEST-*.xml' -print -quit)"
+
+  trial:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && inputs.run_invalid_message_trial == true }}
+    needs: pure
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      SOURCE_COMMIT: ${{ github.sha }}
+      INVALID_MESSAGE_RUNTIME_OPT_IN: 'true'
+      INVALID_MESSAGE_MANIFEST_SHA256: 675df469740b103e8c45e46c49f3b2b02c34f2d1d73c8da3ca94321f1ec1d887
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Compile fresh staging, pull fixed images and prepare offline dependencies only
+        timeout-minutes: 16
+        run: python3 -I -B infra/invalid-message-runtime-ci/run_once.py prepare --source-manifest-sha256 "$INVALID_MESSAGE_MANIFEST_SHA256" --ack-fresh-hosted-invalid-message-it
+      - name: Run one owned malformed record persistent protection test
+        timeout-minutes: 15
+        run: python3 -I -B infra/invalid-message-runtime-ci/run_once.py run --source-manifest-sha256 "$INVALID_MESSAGE_MANIFEST_SHA256" --ack-fresh-hosted-invalid-message-it
+      - name: Remove only the same owned resources even after failure
+        if: always()
+        timeout-minutes: 4
+        run: python3 -I -B infra/invalid-message-runtime-ci/run_once.py cleanup --source-manifest-sha256 "$INVALID_MESSAGE_MANIFEST_SHA256" --ack-fresh-hosted-invalid-message-it
+      - name: Upload only the finite public summary
+        if: always()
+        timeout-minutes: 2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: invalid-message-runtime-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .local/invalid-message-runtime-ci-public/summary.json
+          if-no-files-found: error
+          retention-days: 7
