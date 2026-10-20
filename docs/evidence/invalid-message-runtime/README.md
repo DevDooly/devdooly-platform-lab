@@ -35,4 +35,4 @@ JUnit은 지정 IT 1개·실패 0·오류 0·skip 0입니다. [PR140 CI 39431817
 
 새 Kafka·MariaDB·Garage·JVM 4개와 내부 네트워크만 사용하고 CPU·메모리·PID·단일 deadline과 full-ID 정리를 유지했습니다. 기존 API106·Probe·이전 manifest·미니 PC 운영 서비스·자료·PVC는 변경하지 않았습니다. 토큰 교체·예산 정책·PR102는 보류합니다.
 
-공개 사이트의 기술별 근거 목록에 연결을 준비했습니다. Pages 게시 후 실제 항목과 링크를 확인할 예정입니다.
+[PR141](https://github.com/DevDooly/devdooly-platform-lab/pull/141)의 main `ff63c826`에서 [Pages 39433141709](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39433141709)와 [main CI 39433141653](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39433141653)가 통과했습니다. 2026-10-20 13:48–13:49 UTC에 [공개 기술별 근거 목록](https://devdooly.github.io/devdooly-platform-lab/#evidence)의 새 항목·immutable IT·근거 문서 링크와 Java/Kafka·Cloud 격리 필터 표시를 대조했습니다. 1280px·390px에서 본문 17px과 페이지 가로 넘침 부재도 확인했습니다. 별도 runtime 배포는 하지 않았습니다.

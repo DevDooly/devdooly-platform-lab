@@ -4,7 +4,7 @@
 
 [잘못된 메시지의 실제 보호 시험](evidence/invalid-message-runtime/README.md)을 통과했습니다. 실제 malformed record offset 0 뒤에 정상 작업을 offset 1로 발행했고, 두 새 worker 모두 `PAUSED_OPERATOR / CONSUME / INVALID_MESSAGE`로 중지했습니다. 두 일반 run 거부의 journal 불변과 명시 resume 뒤 재중지를 확인했습니다. 정상 작업은 `QUEUED / NOT_REQUESTED`·슬롯 점유, 업무·EXPORT 결과 0과 원본/ACK 보존 상태이며 두 committed offset은 실제 부재(null), end는 2입니다. 복구 완료나 lag 2로 표현하지 않습니다.
 
-실제 원문과 기술별 근거 목록 연결을 준비했습니다. 다음은 새 격리 DB의 실행 잠금 연결을 잃었을 때 다음 소유권 검사에서 후속 I/O가 차단되고 자원이 종료되는 경계입니다. 연결 손실 뒤에는 pause 저장도 실패할 수 있어 terminal과 DB의 마지막 기록을 구분하며, 진행 중 I/O의 원자적 fencing을 주장하지 않는 설계를 검토합니다. 토큰 교체·예산 정책·PR102는 보류합니다.
+실제 원문을 [공개 근거 목록](https://devdooly.github.io/devdooly-platform-lab/#evidence)에 연결하고 Pages·main CI를 통과했습니다. 2026-10-20 13:48–13:49 UTC에 데스크톱·모바일의 Java/Kafka·Cloud 격리 필터·실제 출처·본문 17px·가로 넘침 부재를 확인했습니다. 다음은 새 격리 DB의 실행 잠금 연결을 잃었을 때 다음 소유권 검사에서 후속 I/O가 차단되고 자원이 종료되는 경계입니다. 연결 손실 뒤에는 pause 저장도 실패할 수 있어 terminal과 DB의 마지막 기록을 구분하며, 진행 중 I/O의 원자적 fencing을 주장하지 않는 설계를 검토합니다. 토큰 교체·예산 정책·PR102는 보류합니다.
 
 ## 최신 export 손상 복구 검증 — 2026-10-20 13:16 UTC
 
