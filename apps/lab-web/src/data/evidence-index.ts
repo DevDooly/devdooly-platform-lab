@@ -39,6 +39,16 @@ const kafkaSource = 'f7b5567963f9a34a34d5f201fb2ed747bdf7652a';
 
 export const evidenceItems: readonly EvidenceItem[] = [
   {
+    id: 'runtime-lease-loss', topics: ['java'], scope: 'cloud', state: 'verified',
+    title: '실행 잠금 연결을 잃은 뒤 작업 차단',
+    description: '실제 DB 잠금 소유 연결을 종료한 뒤 다음 단계의 발행·수신 호출은 모두 0이었습니다. queued 작업·원본·슬롯을 보존하고 client·context 종료와 종료 후 새 잠금 획득을 확인했습니다.',
+    boundary: 'DB의 RUNNING은 종료한 worker의 마지막 기록입니다. 현재 정상 상태·진행 중 I/O의 원자적 차단·자동 복구를 뜻하지 않습니다.',
+    recordedOn: '2026-10-20',
+    source: `${repo}/blob/dd9feb815ead4744bf4b6c80a466095e2a4bc6ac/infra/runtime-lease-loss-ci/RuntimeLeaseLossIT.java`,
+    evidence: `${repo}/blob/main/docs/evidence/runtime-lease-loss/README.md`, evidenceLabel: '실제 연결 손실·후속 차단·자원 종료 근거',
+    recordLabel: '격리 소유권 IT 1/1',
+  },
+  {
     id: 'invalid-message-runtime', topics: ['java', 'kafka'], scope: 'cloud', state: 'verified',
     title: '잘못된 메시지 뒤의 정상 작업 보호',
     description: '실제 잘못된 JSON에서 새 worker가 INVALID_MESSAGE로 중지하고, 수리 없는 resume 뒤에도 재중지됐습니다. 정상 작업은 QUEUED·슬롯 점유 상태로 보존됐고 commit은 두 번 모두 없음(null)이었습니다.',

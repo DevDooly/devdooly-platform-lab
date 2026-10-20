@@ -1,10 +1,18 @@
 # Platform Lab 다음 개발 계획
 
+## 최신 실행 잠금 손실 검증 — 2026-10-20 14:00 UTC
+
+[실제 연결 손실 시험](evidence/runtime-lease-loss/README.md)을 통과했습니다. 실제 empty export 뒤의 경계에서 전용 named-lock 소유 연결 하나만 종료하고, 다음 production 소유권 검사가 후속 발행·수신을 모두 차단하는지 확인했습니다. 호출은 각각 0이었고 queued 작업·원본·DISPATCH PENDING·점유 슬롯을 보존했습니다. 실제 client·lease·context와 child 프로세스가 종료한 뒤 새 실제 잠금 획득·검증·해제도 통과했습니다.
+
+DB journal은 fault 전 `RUNNING / EXPORT / failureCode null`의 전체 행과 시각이 그대로 남았습니다. 소유권을 잃어 pause 저장도 거부된 결과이며, 종료된 worker의 마지막 기록을 현재 정상 상태나 `PAUSED_OPERATOR / LEASE_LOST`로 바꾸어 표시하지 않습니다. 진행 중 I/O의 원자적 fencing·HTTP readiness·자동 복구는 시험 범위가 아닙니다. 공개 근거 목록에 연결을 준비했습니다.
+
+다음은 새 격리 warehouse에서 Spark 적재·compaction을 마치고 모든 writer를 종료한 뒤, **같은 PostgreSQL 컨테이너와 볼륨의 정상 stop → start 한 번**을 검증합니다. 실제 종료·새 postmaster와 같은 cluster identity, catalog 전체 행·객체 20개, 새 Trino의 첫 조회 결과를 대조하는 설계를 검토했으며 구현을 준비합니다. 운영 DB 재시작·crash 복구·HA는 이 계획에 포함하지 않습니다. 토큰 교체·예산 정책·PR102는 계속 보류합니다.
+
 ## 최신 Kafka 입력 보호 검증 — 2026-10-20 13:40 UTC
 
 [잘못된 메시지의 실제 보호 시험](evidence/invalid-message-runtime/README.md)을 통과했습니다. 실제 malformed record offset 0 뒤에 정상 작업을 offset 1로 발행했고, 두 새 worker 모두 `PAUSED_OPERATOR / CONSUME / INVALID_MESSAGE`로 중지했습니다. 두 일반 run 거부의 journal 불변과 명시 resume 뒤 재중지를 확인했습니다. 정상 작업은 `QUEUED / NOT_REQUESTED`·슬롯 점유, 업무·EXPORT 결과 0과 원본/ACK 보존 상태이며 두 committed offset은 실제 부재(null), end는 2입니다. 복구 완료나 lag 2로 표현하지 않습니다.
 
-실제 원문을 [공개 근거 목록](https://devdooly.github.io/devdooly-platform-lab/#evidence)에 연결하고 Pages·main CI를 통과했습니다. 2026-10-20 13:48–13:49 UTC에 데스크톱·모바일의 Java/Kafka·Cloud 격리 필터·실제 출처·본문 17px·가로 넘침 부재를 확인했습니다. 다음은 새 격리 DB의 실행 잠금 연결을 잃었을 때 다음 소유권 검사에서 후속 I/O가 차단되고 자원이 종료되는 경계입니다. 연결 손실 뒤에는 pause 저장도 실패할 수 있어 terminal과 DB의 마지막 기록을 구분하며, 진행 중 I/O의 원자적 fencing을 주장하지 않는 설계를 검토합니다. 토큰 교체·예산 정책·PR102는 보류합니다.
+실제 원문을 [공개 근거 목록](https://devdooly.github.io/devdooly-platform-lab/#evidence)에 연결하고 Pages·main CI를 통과했습니다. 2026-10-20 13:48–13:49 UTC에 데스크톱·모바일의 Java/Kafka·Cloud 격리 필터·실제 출처·본문 17px·가로 넘침 부재를 확인했습니다. 당시 다음 경계였던 실행 잠금 연결 손실의 결과는 위 최신 기록을 따릅니다. 토큰 교체·예산 정책·PR102는 보류합니다.
 
 ## 최신 export 손상 복구 검증 — 2026-10-20 13:16 UTC
 

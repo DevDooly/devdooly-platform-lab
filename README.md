@@ -31,7 +31,9 @@ DB commit 후 실제 Kafka offset commit 실패와 영속 pause, 일반 run 거�
 
 손상 export를 실제 런타임이 발견해 `EXPORT_FAILED`로 중지하고, 수리 없이 resume하면 재중지되는 검증도 통과했습니다([실제 수리·복구 근거](docs/evidence/export-integrity-runtime/README.md)). 시험 소유 손상 객체를 명시 삭제한 뒤 별도 resume에서 파일 2개·슬롯 해제·실제 완료 메시지 replay 1회·lag 0을 확인했습니다. 원본·업무 행과 시각·소스 보존 및 소유 자원 정리도 통과했습니다. 실제 기록을 연결한 [단계 화면](https://devdooly.github.io/devdooly-platform-lab/#export-integrity-runtime)은 웹 160개 검사·타입·빌드와 Pages·main CI를 통과했고, 공개 데스크톱·모바일의 단계 전환·키보드·가독성을 확인했습니다. 토큰 교체·예산 정책·PR102는 계속 보류합니다.
 
-잘못된 Kafka JSON 뒤의 정상 작업을 보호하는 실제 시험도 통과했습니다([실행·보존 근거](docs/evidence/invalid-message-runtime/README.md)). 두 새 worker의 `INVALID_MESSAGE` 영속 중지, 일반 run 거부·명시 resume 후 재중지와 실제 `NO_COMMIT/null`을 확인했습니다. 정상 작업은 `QUEUED / NOT_REQUESTED`·슬롯 점유 상태로 보존됐으며 복구 완료를 뜻하지 않습니다. [공개 근거 목록](https://devdooly.github.io/devdooly-platform-lab/#evidence)에 연결해 데스크톱·모바일의 필터·출처·가독성을 확인했습니다. 다음은 실제 DB 실행 잠금 연결 손실의 후속 I/O 차단과 종료 검증입니다.
+잘못된 Kafka JSON 뒤의 정상 작업을 보호하는 실제 시험도 통과했습니다([실행·보존 근거](docs/evidence/invalid-message-runtime/README.md)). 두 새 worker의 `INVALID_MESSAGE` 영속 중지, 일반 run 거부·명시 resume 후 재중지와 실제 `NO_COMMIT/null`을 확인했습니다. 정상 작업은 `QUEUED / NOT_REQUESTED`·슬롯 점유 상태로 보존됐으며 복구 완료를 뜻하지 않습니다. [공개 근거 목록](https://devdooly.github.io/devdooly-platform-lab/#evidence)에 연결해 데스크톱·모바일의 필터·출처·가독성을 확인했습니다.
+
+실제 DB 실행 잠금 연결을 잃은 뒤 다음 단계의 발행·수신 호출이 모두 0이고 자원이 종료되는 검증도 통과했습니다([실행·종료 근거](docs/evidence/runtime-lease-loss/README.md)). queued 작업·원본·슬롯을 보존하고 이전 child 종료 뒤 새 잠금 획득을 확인했습니다. DB의 `RUNNING / EXPORT`는 종료된 프로세스의 마지막 기록으로, 현재 정상 상태와 구분합니다. 공개 근거 목록에 연결을 준비했으며, 다음은 같은 격리 PostgreSQL 컨테이너를 정상 종료·시작한 뒤 catalog와 객체를 보존하는 별도 검증입니다. 토큰 교체·예산 정책·PR102는 보류합니다.
 
 ## 로컬 실행
 
