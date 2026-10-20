@@ -49,7 +49,7 @@ public final class ContinuousJobRunner {
         Stage stage = Stage.IDLE;
         boolean started = false;
         boolean paused = false;
-        RuntimeException terminal = null;
+        var failures = new Failures();
         State finalState = null;
         try {
             requireNoTransaction();
@@ -68,31 +68,72 @@ public final class ContinuousJobRunner {
                 if (!worked) { Thread.sleep(idleDelay.toMillis()); }
             }
         } catch (Exception failure) {
-            progress.notReady();
             if (failure instanceof InterruptedException) { Thread.currentThread().interrupt(); }
+            // Invalidate local readiness before a possibly slow journal write, without skipping cleanup if a hook fails.
+            try { progress.notReady(); }
+            catch (RuntimeException progressFailure) { failures.ordinary("Runtime local progress could not be closed"); }
+            catch (Error progressFailure) { failures.error(progressFailure); }
             if (started) {
-                try { states.pause(lease, stage, failureCode(stage, failure)); paused = true; }
-                catch (RuntimeException journalFailure) { terminal = new IllegalStateException("Runtime stopped without a verified journal update"); }
-            } else { terminal = safeStartupFailure(failure); }
+                try { paused = pause(stage, failures.firstError == null ? failureCode(stage, failure) : FailureCode.RUNTIME_FAILED,
+                    failures, "Runtime stopped without a verified journal update"); }
+                catch (Error journalFailure) { failures.error(journalFailure); }
+            } else { failures.terminal = safeStartupFailure(failure); }
+        } catch (Error failure) {
+            failures.error(failure);
         } finally {
-            progress.notReady();
+            boolean progressFailed = false;
+            try { progress.notReady(); }
+            catch (RuntimeException progressFailure) {
+                progressFailed = true; failures.ordinary("Runtime local progress could not be closed");
+            } catch (Error progressFailure) { progressFailed = true; failures.error(progressFailure); }
+            if (started && !paused && (failures.firstError != null || progressFailed)) {
+                paused = pause(stage, FailureCode.RUNTIME_FAILED, failures, "Runtime stopped without a verified journal update");
+            }
             try { resources.close(); }
             catch (Exception closeFailure) {
                 if (started && !paused) {
-                    try { states.pause(lease, Stage.STOPPED, FailureCode.RESOURCE_CLOSE_FAILED); paused = true; }
-                    catch (RuntimeException journalFailure) { terminal = new IllegalStateException("Runtime resource close and journal update failed"); }
-                } else if (terminal == null && !paused) { terminal = new IllegalStateException("Runtime resources could not be closed"); }
+                    paused = pause(Stage.STOPPED, FailureCode.RESOURCE_CLOSE_FAILED, failures, "Runtime resource close and journal update failed");
+                } else if (!paused) { failures.ordinary("Runtime resources could not be closed"); }
+            } catch (Error closeFailure) {
+                failures.error(closeFailure);
+                if (started && !paused) {
+                    paused = pause(Stage.STOPPED, FailureCode.RESOURCE_CLOSE_FAILED, failures, "Runtime resource close and journal update failed");
+                }
             }
-            try { if (started && !paused && terminal == null) { states.stop(lease); } }
-            catch (RuntimeException journalFailure) { terminal = new IllegalStateException("Runtime stopped without a verified final journal update"); }
+            try { if (started && !paused && !failures.present()) { states.stop(lease); } }
+            catch (RuntimeException journalFailure) { failures.ordinary("Runtime stopped without a verified final journal update"); }
+            catch (Error journalFailure) { failures.error(journalFailure); }
             finally {
-                try { if (terminal == null) { finalState = states.read(); } }
-                catch (RuntimeException readFailure) { terminal = new IllegalStateException("Runtime final journal could not be read"); }
-                finally { lease.close(); }
+                try { if (!failures.present()) { finalState = states.read(); } }
+                catch (RuntimeException readFailure) { failures.ordinary("Runtime final journal could not be read"); }
+                catch (Error readFailure) { failures.error(readFailure); }
+                finally {
+                    try { lease.close(); }
+                    catch (RuntimeException closeFailure) { failures.ordinary("Runtime owner could not be closed"); }
+                    catch (Error closeFailure) { failures.error(closeFailure); }
+                }
             }
         }
-        if (terminal != null) { throw terminal; }
+        if (failures.firstError != null) { throw failures.firstError; }
+        if (failures.terminal != null) { throw failures.terminal; }
         return finalState;
+    }
+
+    private boolean pause(Stage stage, FailureCode code, Failures failures, String message) {
+        if (failures.pauseAttempted) { return false; }
+        failures.pauseAttempted = true;
+        try { states.pause(lease, stage, code); return true; }
+        catch (RuntimeException journalFailure) { failures.ordinary(message); }
+        catch (Error journalFailure) { failures.error(journalFailure); }
+        return false;
+    }
+    private static final class Failures {
+        private Error firstError;
+        private RuntimeException terminal;
+        private boolean pauseAttempted;
+        void error(Error failure) { if (firstError == null) { firstError = failure; } }
+        void ordinary(String message) { if (terminal == null) { terminal = new IllegalStateException(message); } }
+        boolean present() { return firstError != null || terminal != null; }
     }
 
     private static RuntimeException safeStartupFailure(Exception failure) {
