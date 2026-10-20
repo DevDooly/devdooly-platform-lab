@@ -39,6 +39,16 @@ const kafkaSource = 'f7b5567963f9a34a34d5f201fb2ed747bdf7652a';
 
 export const evidenceItems: readonly EvidenceItem[] = [
   {
+    id: 'export-integrity-runtime', topics: ['java', 'kafka'], scope: 'cloud', state: 'verified',
+    title: '손상 결과 파일의 중지 유지와 명시 수리',
+    description: '실제 export 검증 실패와 수리 없는 resume의 재중지를 확인했습니다. 시험 소유 손상 객체 한 개를 명시 삭제한 뒤 별도 resume에서 파일 2개·슬롯 해제·완료 메시지 replay 1회·lag 0을 확인했습니다.',
+    boundary: '새 격리 환경의 시험이며, 최초 업무 완료는 직접 DB fixture입니다. 운영 자료의 자동 복구나 host 장애 복구 결과로 확대하지 않습니다.',
+    recordedOn: '2026-10-20',
+    source: `${repo}/blob/0f5c4bc2b0e5296c0c29924a5487d2c62ad1cd75/infra/export-integrity-runtime-ci/ExportIntegrityRuntimeIT.java`,
+    evidence: `${repo}/blob/main/docs/evidence/export-integrity-runtime/README.md`, evidenceLabel: '실제 손상·재중지·명시 수리 근거',
+    recordLabel: '격리 복구 IT 1/1', screen: '#export-integrity-runtime',
+  },
+  {
     id: 'offset-commit-recovery', topics: ['java', 'kafka'], scope: 'cloud', state: 'verified',
     title: 'DB 완료 뒤 Kafka commit 실패에서 복구하기',
     description: 'DB 처리 뒤 격리 broker를 멈춰 실제 offset commit 실패와 영속 pause를 확인했습니다. 명시적 resume 뒤 재전달 1회·파일 2개 검증·슬롯 해제와 lag 0을 확인했습니다.',

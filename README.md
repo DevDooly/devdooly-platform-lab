@@ -27,7 +27,9 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 새 격리 Kafka에서 consumer 정상 종료 중 backlog가 8→14로 늘고, 같은 group의 새 client가 남은 14개를 실제로 읽어 lag 0에 도달하는 검증을 마쳤습니다([실제 4단계 근거](docs/evidence/kafka-lag-recovery/README.md)). [단계별 관측 화면](https://devdooly.github.io/devdooly-platform-lab/#kafka-lag-recovery)을 공개하고 데스크톱·모바일의 단계 전환과 키보드 이동을 확인했습니다. 이 시험은 정상 consumer 종료의 범위이며, 아래 DB·export를 포함한 별도 commit 실패 시험과 구분합니다.
 
-DB commit 후 실제 Kafka offset commit 실패와 영속 pause, 일반 run 거부, 명시적 resume 뒤 재전달 1회·export 파일 2개 검증·슬롯 해제·lag 0을 새 격리 환경에서 확인했습니다([실제 실행·앞선 실패 기록](docs/evidence/offset-commit-recovery/README.md)). 업무 행·처리 시각과 소스도 보존됐습니다. [단계별 화면](https://devdooly.github.io/devdooly-platform-lab/#offset-commit-recovery)을 공개하고 2026-10-20 13:01–13:02 UTC에 데스크톱·모바일의 단계 전환·키보드 이동·상세 근거와 가로 넘침 부재를 확인했습니다. 다음은 손상 export의 영속 중지와 수리 전 재실패·명시 수리 후 복구 검증입니다. 운영 복구·host/broker 재시작·HA로 확대하지 않으며 토큰 교체·예산 정책·PR102는 계속 보류합니다.
+DB commit 후 실제 Kafka offset commit 실패와 영속 pause, 일반 run 거부, 명시적 resume 뒤 재전달 1회·export 파일 2개 검증·슬롯 해제·lag 0을 새 격리 환경에서 확인했습니다([실제 실행·앞선 실패 기록](docs/evidence/offset-commit-recovery/README.md)). 업무 행·처리 시각과 소스도 보존됐습니다. [단계별 화면](https://devdooly.github.io/devdooly-platform-lab/#offset-commit-recovery)을 공개하고 2026-10-20 13:01–13:02 UTC에 데스크톱·모바일의 단계 전환·키보드 이동·상세 근거와 가로 넘침 부재를 확인했습니다.
+
+손상 export를 실제 런타임이 발견해 `EXPORT_FAILED`로 중지하고, 수리 없이 resume하면 재중지되는 검증도 통과했습니다([실제 수리·복구 근거](docs/evidence/export-integrity-runtime/README.md)). 시험 소유 손상 객체를 명시 삭제한 뒤 별도 resume에서 파일 2개·슬롯 해제·실제 완료 메시지 replay 1회·lag 0을 확인했습니다. 원본·업무 행과 시각·소스 보존 및 소유 자원 정리도 통과했습니다. 실제 기록을 연결한 단계 화면은 웹 160개 검사·타입·빌드와 로컬 데스크톱·모바일 확인을 마쳤으며 공개 게시를 준비 중입니다. 다음은 잘못된 Kafka 메시지가 뒤의 정상 작업을 진행시키지 않는 경계입니다. 토큰 교체·예산 정책·PR102는 계속 보류합니다.
 
 ## 로컬 실행
 
