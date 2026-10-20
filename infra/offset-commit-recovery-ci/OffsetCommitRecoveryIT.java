@@ -182,7 +182,7 @@ public class OffsetCommitRecoveryIT {
         var actualTopic = kafka.describeTopics(List.of(topic)).allTopicNames().get(10, TimeUnit.SECONDS).get(topic);
         assertThat(actualTopic.partitions()).hasSize(1); assertThat(actualTopic.partitions().getFirst().replicas()).hasSize(1);
         topicId = actualTopic.topicId(); assertThat(topicId).isNotEqualTo(Uuid.ZERO_UUID);
-        assertThat(readCommittedEnd()).isZero(); assertThat(committedOffset()).isEmpty();
+        assertThat(readCommittedEnd()).isZero(); awaitInitialEmptyOffsets();
         failurePhase = FailurePhase.STAGE_INPUT;
         AdmissionTestFixtures.makeEligible(jdbc);
         String run = "runtime-it-" + UUID.randomUUID(); ContinuousRuntimeIT.requireOwnedRun(run);
@@ -439,6 +439,39 @@ public class OffsetCommitRecoveryIT {
         assertThat(actual.topicId()).isEqualTo(topicId); assertThat(actual.partitions()).hasSize(1);
         assertThat(actual.partitions().getFirst().partition()).isZero();
         assertThat(actual.partitions().getFirst().replicas()).hasSize(1);
+    }
+
+    private void awaitInitialEmptyOffsets() throws Exception {
+        // This readiness observation exists only before input/fault. Never retry a post-fault observation.
+        long bound = deadline(45);
+        while (true) {
+            long remaining = bound - System.nanoTime();
+            int rpcMillis = (int) Math.min(10000L, TimeUnit.NANOSECONDS.toMillis(remaining));
+            if (rpcMillis < 1) { throw new java.util.concurrent.TimeoutException("Initial coordinator readiness deadline exceeded"); }
+            var options = new org.apache.kafka.clients.admin.ListConsumerGroupOffsetsOptions().timeoutMs(rpcMillis);
+            var future = kafka.listConsumerGroupOffsets(group, options).partitionsToOffsetAndMetadata();
+            try {
+                remaining = bound - System.nanoTime();
+                if (remaining <= 0) { throw new java.util.concurrent.TimeoutException("Initial coordinator readiness deadline exceeded"); }
+                var value = future.get(remaining, TimeUnit.NANOSECONDS);
+                assertThat(value.keySet()).allMatch(partition -> partition.equals(new TopicPartition(topic, 0)));
+                assertThat(value.get(new TopicPartition(topic, 0))).isNull();
+                if (System.nanoTime() >= bound) { throw new java.util.concurrent.TimeoutException("Initial coordinator readiness deadline exceeded"); }
+                return;
+            } catch (Exception failure) {
+                FailureKind kind = failureKind(failure);
+                if (kind == FailureKind.INTERRUPTED) { Thread.currentThread().interrupt(); }
+                if (kind == FailureKind.GROUP_NOT_FOUND && System.nanoTime() < bound) { return; }
+                boolean startupTransient = kind == FailureKind.TIMEOUT || kind == FailureKind.COORDINATOR_NOT_AVAILABLE
+                    || kind == FailureKind.COORDINATOR_LOAD_IN_PROGRESS || kind == FailureKind.NOT_COORDINATOR;
+                if (!startupTransient || System.nanoTime() >= bound) { throw failure; }
+            } finally {
+                if (!future.isDone()) { future.cancel(false); }
+            }
+            remaining = bound - System.nanoTime();
+            if (remaining <= 0) { throw new java.util.concurrent.TimeoutException("Initial coordinator readiness deadline exceeded"); }
+            TimeUnit.NANOSECONDS.sleep(Math.min(Duration.ofMillis(250).toNanos(), remaining));
+        }
     }
 
     private Optional<Long> committedOffset() throws Exception {
