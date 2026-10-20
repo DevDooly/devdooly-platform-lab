@@ -2,7 +2,13 @@
 
 2026-10-20 12:44:26 UTC에 완료한 [여섯 번째 실행39424186853](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39424186853)이 통과했습니다. 실제 DB commit 뒤 Kafka를 일시 정지해 commit 실패와 영속 pause를 확인했고, 명시적 resume 후 완료 메시지 재전달·export·슬롯 해제까지 검증했습니다. 앞선 실패5건도 아래에 별도로 보존합니다.
 
-실제 summary를 [단계별 카드](https://devdooly.github.io/devdooly-platform-lab/#offset-commit-recovery)에 연결했습니다. 로컬 화면 검증은 아래 범위로 완료했으며 **공개 게시와 공개 화면 QA는 진행 중**입니다.
+실제 summary를 [단계별 카드](https://devdooly.github.io/devdooly-platform-lab/#offset-commit-recovery)에 공개했고 로컬·공개 화면 검증을 아래 범위로 완료했습니다.
+
+## 공개 게시와 확인
+
+[PR135](https://github.com/DevDooly/devdooly-platform-lab/pull/135)의 main `ed3f333f199c4639a2df1cfafcce58abd629cfe4`에서 [Pages39426442950](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39426442950)과 [main CI39426442955](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39426442955)가 통과했습니다. 이미지 게시와 운영 배포는 이 화면 확인의 근거로 사용하지 않습니다.
+
+2026-10-20 13:01–13:02 UTC의 공개 페이지에서 1280×1000·390×844의 실제 결과, 기본 닫힘 상세 영역과 상태 표, 2단계 선택·End로4단계·모바일 방향키로2단계 이동을 확인했습니다. source·manifest·XML과 실행 링크는 위 실제 실행에 일치했습니다. 문서 폭은1265·375px로 viewport를 넘지 않았고 모바일 표는301px 영역 안에서463px로 스크롤됐습니다. 저장 기록의 UI 검증이며 운영 API·자료에 실행 명령을 보내지 않았습니다.
 
 ## 화면 연결과 로컬 확인
 

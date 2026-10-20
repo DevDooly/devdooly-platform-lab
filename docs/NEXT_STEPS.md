@@ -4,7 +4,7 @@
 
 [DB commit 뒤 Kafka commit 실패 복구](evidence/offset-commit-recovery/README.md)의 실제 시험을 통과했습니다. 영속 `PAUSED_OPERATOR / CONSUME / OFFSET_COMMIT_FAILED`, 일반 run 거부와 명시적 resume, 실제 완료 작업 재전달 1회·export 파일 2개·슬롯 해제·commit/end 1·lag 0을 확인했습니다. 업무 행·처리 시각·소스와 소유 자원 정리도 확인했습니다. broker 재개 직후 commit은 실제 미관측(null)이었으며 offset reset은 하지 않았습니다.
 
-실제 기록을 단계별 화면에 연결하고 로컬·공개 화면 검증을 진행합니다. 다음은 손상된 PENDING export로 실제 런타임이 중지되고, 수리 없이 resume하면 다시 중지되며, 시험 소유 파일의 명시 수리 후에만 완료되는 경계입니다. 해당 후속 시험은 아직 실행하지 않았습니다. 토큰 교체·예산 정책·PR102는 보류합니다. 운영 복구·host/broker 재시작·HA·모든 장애의 exactly-once는 이번 결과의 범위가 아닙니다.
+실제 기록을 [단계별 화면](https://devdooly.github.io/devdooly-platform-lab/#offset-commit-recovery)에 공개했고, 2026-10-20 13:01–13:02 UTC에 1280px·390px의 단계 전환·키보드 이동·상세 근거와 가로 넘침 부재를 확인했습니다. 다음은 손상된 PENDING export로 실제 런타임이 중지되고, 수리 없이 resume하면 다시 중지되며, 시험 소유 파일의 명시 수리 후에만 완료되는 경계입니다. 해당 후속 시험은 아직 실행하지 않았습니다. 토큰 교체·예산 정책·PR102는 보류합니다. 운영 복구·host/broker 재시작·HA·모든 장애의 exactly-once는 이번 결과의 범위가 아닙니다.
 
 ## 앞선 Kafka backlog 검증 — 2026-10-20 11:25 UTC 기록
 
