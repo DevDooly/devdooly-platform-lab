@@ -1,6 +1,6 @@
 # 공개 TLS 인증서의 첫 저장 관측
 
-실제 첫 실행: [39452152238 통과](../../docs/evidence/tls-certificate/README.md). 수집 당시87일·만료시각과 원문을 보존했다. 인증서 자연 갱신·이력 비교·정기 실행·공개 화면은 아직 검증하지 않았다. 이 소스는 기존 승인된 공개 API 호스트의 TLS 연결 한 번에서 유효기간을 읽는 단발 관측이다. HTTP 요청은 0회이며 기존 GET6·거부3 [HTTPS 검사](../public-https-smoke/README.ko.md)와 구분한다.
+실제 첫 실행: [39452152238 통과](../../docs/evidence/tls-certificate/README.md). 수집 당시87일·만료시각과 원문을 보존했고, 첫 저장 관측의 로컬 표시와 순수 이력 검사를 통과했다. 인증서 자연 갱신·실제 두 관측의 비교·정기 실행·공개 화면은 아직 검증하지 않았다. 이 소스는 기존 승인된 공개 API 호스트의 TLS 연결 한 번에서 유효기간을 읽는 단발 관측이다. HTTP 요청은 0회이며 기존 GET6·거부3 [HTTPS 검사](../public-https-smoke/README.ko.md)와 구분한다.
 
 기존 [10월20일 운영 근거](../../docs/evidence/public-read-https/ops-20261020/README.md)의 만료시각·당시88일은 그대로 보존한다. 과거 파일을 새 관측으로 덮어쓰거나 인증서 변경·자연 갱신 완료로 소급 해석하지 않는다.
 
@@ -34,7 +34,7 @@ CLI는 새 결과 파일 경로 하나만 받는다. DNS 전에 `wx`·0600으로
 
 ## 검증의 범위
 
-단위 검사는 probe를 import하기 전에 DNS·TLS·HTTPS native entrypoint를 대체한다. 조건 불충족 IO0, 주소 혼합·미인증·재사용·다른 remote, Date/DER 거부, 초 단위30일 경계, close·시간 제한과 비공개 오류를 확인한다. 이는 실제 CA·외부 접속 성공의 증거가 아니다. 실제 수동 관측은 검토된 소스·workflow에서 별도로 수행하고 결과·source·run에 묶어 보존한다. 자동 주기와 history reducer는 추가하지 않았다.
+단위 검사는 probe를 import하기 전에 DNS·TLS·HTTPS native entrypoint를 대체한다. 조건 불충족 IO0, 주소 혼합·미인증·재사용·다른 remote, Date/DER 거부, 초 단위30일 경계, close·시간 제한과 비공개 오류를 확인한다. 이는 실제 CA·외부 접속 성공의 증거가 아니다. 실제 수동 관측은 검토된 소스·workflow에서 별도로 수행하고 결과·source·run에 묶어 보존한다. 실행기에 자동 주기나 이력 누적은 없다. 웹의 별도 순수 이력 검사는 검토한 원문·출처만 비교하며 새 TLS 연결을 수행하지 않는다.
 
 ## 다음 수동 관측을 보존하는 순서
 

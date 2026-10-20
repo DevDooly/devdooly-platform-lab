@@ -3,6 +3,9 @@ import LabExplorer from '../components/LabExplorer';
 import { publicApiConfiguration } from '../lib/public-api-base';
 import EvidenceExplorer from '../components/EvidenceExplorer';
 import PlatformObservationCard from '../components/PlatformObservationCard';
+import TlsCertificateObservation from '../components/TlsCertificateObservation.astro';
+import tlsCertificate from '../data/tls-certificate.generated.json';
+import { buildTlsHistory } from '../lib/tls-certificate-history';
 import JobObservationCard from '../components/JobObservationCard';
 import KafkaObservationCard from '../components/KafkaObservationCard';
 import KafkaLagRecoveryCard from '../components/KafkaLagRecoveryCard';
@@ -29,6 +32,13 @@ const apiBase = apiConfiguration.apiBase;
 const preferLive = apiConfiguration.externalHttps;
 const jobObservationMode = apiConfiguration.invalid ? 'recorded' : (preferLive || import.meta.env.BASE_URL === '/' ? 'api' : 'recorded');
 const github = 'https://github.com/DevDooly/devdooly-platform-lab';
+const tlsHistory = buildTlsHistory(tlsCertificate.entries, [{
+  runUrl: `${github}/actions/runs/39452152238`,
+  sourceCommit: '8c17642ad4c38a6f0edd3fb47dafa4ec5a431723',
+  artifactSha256: '72c806703547c2fb30a1e9a7e15b1baf41cddc88cc6318ef5589f7c24c69a157',
+}], Date.now());
+// The reviewed input currently contains this one successful run only.
+const tlsRawSummaryUrl = `${github}/blob/391c58bf9ede2a018b56d10c4c3ddbe92d27e8c0/docs/evidence/tls-certificate/hosted-39452152238/summary.json`;
 const skills = [
   { index: '01', title: 'Java & Spring Boot', description: '반도체 제조 데이터 ETL 서비스를 개발하고 운영합니다. 레거시 코드의 오류와 프로젝트 구조를 꾸준히 개선해 왔습니다.', tags: ['Backend', 'ETL', 'Code quality'] },
   { index: '02', title: 'Data & Messaging', description: 'Kafka의 오류를 분석하고 버전 업그레이드를 진행했습니다. Hadoop, Tez·Trino, Iceberg 기반 데이터 처리 경험을 연결합니다.', tags: ['Kafka', 'Hadoop', 'Iceberg'] },
@@ -84,6 +94,7 @@ const steps = [
       <ExportIntegrityRuntimeCard client:load record={exportIntegrityRuntime}/>
       <WorkerReadinessProof />
       <PlatformObservationCard client:load observationUrl={`${assetBase}data/platform-observation.json`}/>
+      <TlsCertificateObservation view={tlsHistory} rawSummaryUrl={tlsRawSummaryUrl}/>
       <AiWindowCase client:load observationUrl={`${assetBase}observations/ai-window.latest.json`}/>
       <IcebergDataflowCard client:load observationUrl={`${assetBase}observations/iceberg.latest.json`}/>
       <SparkTrialCard client:load observationUrl={`${assetBase}observations/spark.latest.json`}/>
