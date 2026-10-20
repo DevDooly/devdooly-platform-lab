@@ -39,6 +39,16 @@ const kafkaSource = 'f7b5567963f9a34a34d5f201fb2ed747bdf7652a';
 
 export const evidenceItems: readonly EvidenceItem[] = [
   {
+    id: 'invalid-message-runtime', topics: ['java', 'kafka'], scope: 'cloud', state: 'verified',
+    title: '잘못된 메시지 뒤의 정상 작업 보호',
+    description: '실제 잘못된 JSON에서 새 worker가 INVALID_MESSAGE로 중지하고, 수리 없는 resume 뒤에도 재중지됐습니다. 정상 작업은 QUEUED·슬롯 점유 상태로 보존됐고 commit은 두 번 모두 없음(null)이었습니다.',
+    boundary: '새 격리 시험의 보호 동작 통과입니다. 처리·export·슬롯 해제·자동 수리나 복구 완료를 뜻하지 않습니다.',
+    recordedOn: '2026-10-20',
+    source: `${repo}/blob/15def17943f89975b22d9634cdeab2ec38b113fe/infra/invalid-message-runtime-ci/InvalidMessageRuntimeIT.java`,
+    evidence: `${repo}/blob/main/docs/evidence/invalid-message-runtime/README.md`, evidenceLabel: '실제 재중지·NO_COMMIT·정상 작업 보존 근거',
+    recordLabel: '격리 보호 IT 1/1',
+  },
+  {
     id: 'export-integrity-runtime', topics: ['java', 'kafka'], scope: 'cloud', state: 'verified',
     title: '손상 결과 파일의 중지 유지와 명시 수리',
     description: '실제 export 검증 실패와 수리 없는 resume의 재중지를 확인했습니다. 시험 소유 손상 객체 한 개를 명시 삭제한 뒤 별도 resume에서 파일 2개·슬롯 해제·완료 메시지 replay 1회·lag 0을 확인했습니다.',

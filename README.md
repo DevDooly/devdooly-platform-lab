@@ -29,7 +29,9 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 DB commit 후 실제 Kafka offset commit 실패와 영속 pause, 일반 run 거부, 명시적 resume 뒤 재전달 1회·export 파일 2개 검증·슬롯 해제·lag 0을 새 격리 환경에서 확인했습니다([실제 실행·앞선 실패 기록](docs/evidence/offset-commit-recovery/README.md)). 업무 행·처리 시각과 소스도 보존됐습니다. [단계별 화면](https://devdooly.github.io/devdooly-platform-lab/#offset-commit-recovery)을 공개하고 2026-10-20 13:01–13:02 UTC에 데스크톱·모바일의 단계 전환·키보드 이동·상세 근거와 가로 넘침 부재를 확인했습니다.
 
-손상 export를 실제 런타임이 발견해 `EXPORT_FAILED`로 중지하고, 수리 없이 resume하면 재중지되는 검증도 통과했습니다([실제 수리·복구 근거](docs/evidence/export-integrity-runtime/README.md)). 시험 소유 손상 객체를 명시 삭제한 뒤 별도 resume에서 파일 2개·슬롯 해제·실제 완료 메시지 replay 1회·lag 0을 확인했습니다. 원본·업무 행과 시각·소스 보존 및 소유 자원 정리도 통과했습니다. 실제 기록을 연결한 [단계 화면](https://devdooly.github.io/devdooly-platform-lab/#export-integrity-runtime)은 웹 160개 검사·타입·빌드와 Pages·main CI를 통과했고, 공개 데스크톱·모바일의 단계 전환·키보드·가독성을 확인했습니다. 다음은 잘못된 Kafka 메시지가 뒤의 정상 작업을 진행시키지 않는 경계입니다. 토큰 교체·예산 정책·PR102는 계속 보류합니다.
+손상 export를 실제 런타임이 발견해 `EXPORT_FAILED`로 중지하고, 수리 없이 resume하면 재중지되는 검증도 통과했습니다([실제 수리·복구 근거](docs/evidence/export-integrity-runtime/README.md)). 시험 소유 손상 객체를 명시 삭제한 뒤 별도 resume에서 파일 2개·슬롯 해제·실제 완료 메시지 replay 1회·lag 0을 확인했습니다. 원본·업무 행과 시각·소스 보존 및 소유 자원 정리도 통과했습니다. 실제 기록을 연결한 [단계 화면](https://devdooly.github.io/devdooly-platform-lab/#export-integrity-runtime)은 웹 160개 검사·타입·빌드와 Pages·main CI를 통과했고, 공개 데스크톱·모바일의 단계 전환·키보드·가독성을 확인했습니다. 토큰 교체·예산 정책·PR102는 계속 보류합니다.
+
+잘못된 Kafka JSON 뒤의 정상 작업을 보호하는 실제 시험도 통과했습니다([실행·보존 근거](docs/evidence/invalid-message-runtime/README.md)). 두 새 worker의 `INVALID_MESSAGE` 영속 중지, 일반 run 거부·명시 resume 후 재중지와 실제 `NO_COMMIT/null`을 확인했습니다. 정상 작업은 `QUEUED / NOT_REQUESTED`·슬롯 점유 상태로 보존됐으며 복구 완료를 뜻하지 않습니다. 다음은 실제 DB 실행 잠금 연결 손실의 후속 I/O 차단과 종료 검증입니다.
 
 ## 로컬 실행
 
