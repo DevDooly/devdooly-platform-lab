@@ -15,7 +15,7 @@
 ## 보존과 게시 순서
 
 - root 0700 state 디렉터리의 `jobs-observation.json`은 검증된 실제 HTTP 응답만 0600 atomic write한다. 오류 때 이전 파일 bytes·확인 시각을 바꾸지 않는다.
-- `jobs-capture.json`은 root 0600의 별도 수집 시도 기록이다. 실패는 고정 `JOB_CAPTURE_FAILED` 코드로만 남기고 raw 응답·주소·예외를 기록하지 않는다.
+- `jobs-capture.json`은 root 0600의 별도 수집 시도 기록이다. 실패는 고정 `JOB_CAPTURE_FAILED` 코드로만 남기고 raw 응답·주소·예외를 기록하지 않는다. 이 선택적 진단 파일의 쓰기 실패는 유효한 플랫폼 게시를 막지 않으며, 그 회차의 진단이 없을 수 있다. 필수 dispatch intent·snapshot 검증·게시 state 저장의 오류를 무시한다는 뜻은 아니다.
 - 작업 수집 실패·timeout·새 파일 미생성은 유효한 플랫폼 envelope의 게시를 막지 않는다. 그 주기의 `jobs_snapshot` 입력을 생략하면 Pages가 이전 유효 작업 기록을 유지한다. 실패 상태를 새 작업 성공이나 빈 작업 목록으로 대체하지 않는다.
 - 공개 작업 v1은 DB snapshot 형식이다. 별도의 작업 collector 실패 envelope는 추가하지 않았다. 공개 화면에는 원래 DB 확인 시각과 오래된 기록·heartbeat 경고가 남으며, 즉시 수집 오류는 private `jobs-capture.json`에서 확인한다.
 - uploader는 고정 `pages.yml`의 `main`에 `platform_snapshot`과 선택적 `jobs_snapshot`을 한 번 전송한다. 두 입력 전체의 canonical fingerprint를 게시 intent에 먼저 기록한다. 응답이 불확실해도 같은 마지막 intent를 무조건 재전송하지 않는다. 전체 요청은 65,536 bytes 이하로 제한한다.

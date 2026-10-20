@@ -21,4 +21,6 @@
 
 ## 공개 반영
 
-이 수정의 PR·동일 main 검증·공개 첫 접속 결과는 게시 후 별도로 확인합니다. 이전 [오류 처리 카드의 공개 결과](../client-construction-error/README.md#근거-목록-연결)와 구분합니다.
+PR166의 main `2f8e0af9e65061c21a95749fac77132bddcd3a9b`에서 [Pages39475126385](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39475126385)의 build·deploy와 [CI39475126475](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39475126475)의 verify·gateway가 성공했습니다. 별도 Spark·S3·Iceberg 통합 작업은 경로 조건에 따라 생략됐습니다.
+
+공개1280px·390px에서 첫 접속 직후 별도 hydration 대기 호출 없이 native 검색·필터를 입력해 Error+Java+CI 결과1개와 준비 완료 상태를 확인했습니다. 자동화의 native 입력은 컨트롤이 활성화될 때까지 대기하므로 이것을 실제 사람의 네트워크 지연 시간 측정으로 해석하지 않습니다. 본문17px·모바일 링크44px·문서 폭375px와 근거 링크도 확인했습니다. 이전 [오류 처리 카드의 공개 결과](../client-construction-error/README.md#근거-목록-연결)와 구분합니다.

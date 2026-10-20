@@ -17,7 +17,9 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 최근 완료한 범위는 다음과 같습니다. 실행별 소스·수치·실패 이력과 한계는 연결한 실제 근거를 따릅니다.
 
-- **검색 초기 입력:** [준비 전 입력 보호](docs/evidence/evidence-input-readiness/README.md)로 이벤트 연결 전에 입력이 유실될 수 있는 구간을 막았습니다. 로컬 SSR 사본·준비 후 검색·19개 순차 표시·모바일 Tab 이동과 웹207검사·타입·빌드를 확인했습니다. 공개 반영은 후속 확인합니다.
+- **관측 자동화:** [선택적 진단 실패·DDNS 완료 시한](docs/evidence/automation-failure-boundaries/README.md)을 수정했습니다. 로컬 관측156개 통과·기존 POSIX4개 생략, DDNS5개 통과를 확인했으며 Linux CI와 미니 PC 반영은 구분합니다.
+
+- **검색 초기 입력:** [준비 전 입력 보호](docs/evidence/evidence-input-readiness/README.md)로 이벤트 연결 전에 입력이 유실될 수 있는 구간을 막았습니다. 로컬 SSR 사본·준비 후 검색·19개 순차 표시·모바일 Tab 이동과 웹207검사·타입·빌드, 같은 main의 Pages·CI·공개 첫 접속 검색을 확인했습니다.
 
 - **키보드 탐색:** [실행 결과 탭](docs/evidence/lab-keyboard/README.md)의 양끝 방향키 순환과 Home·End 이동을 수정했습니다. 로컬 브라우저8가지·웹207검사·타입·빌드와 같은 main의 Pages·CI, 공개 데스크톱·모바일 반영을 확인했습니다.
 

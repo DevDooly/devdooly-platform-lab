@@ -125,6 +125,7 @@ def run_curl(config):
             joined = True
         except subprocess.TimeoutExpired:
             raise Rejected("UPDATE_TIMEOUT_OUTCOME_UNKNOWN") from None
+        need(time.monotonic() < deadline, "UPDATE_TIMEOUT_OUTCOME_UNKNOWN")
         validate_result(returncode, bytes(raw))
     finally:
         try:
