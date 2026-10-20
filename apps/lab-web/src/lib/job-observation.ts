@@ -141,5 +141,6 @@ export function jobObservationView(record: JobObservationRecord | null, nowMs: n
   const runtime = record.runtime;
   if (runtime.status !== 'RUNNING') return { freshness, heartbeat: runtime.status === 'NOT_STARTED' ? 'unobserved' : 'not-running' };
   const heartbeatAt = Date.parse(runtime.heartbeatAt!);
-  return { freshness, heartbeat: !Number.isFinite(nowMs) || heartbeatAt > nowMs ? 'clock-check' : runtime.stale || nowMs - heartbeatAt > JOB_HEARTBEAT_STALE_AFTER_MS ? 'stale-signal' : 'recent-signal' };
+  const heartbeatAfterCapture = utcNs(runtime.heartbeatAt)! > utcNs(record.capturedAt)!;
+  return { freshness, heartbeat: heartbeatAfterCapture || !Number.isFinite(nowMs) || heartbeatAt > nowMs ? 'clock-check' : runtime.stale || nowMs - heartbeatAt > JOB_HEARTBEAT_STALE_AFTER_MS ? 'stale-signal' : 'recent-signal' };
 }

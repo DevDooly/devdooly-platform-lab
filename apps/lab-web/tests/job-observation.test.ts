@@ -88,6 +88,30 @@ test('runtime failure status is separate from stale heartbeat and rejects free-f
   assert.equal(validateJobObservation({ ...value, runtime: { ...value.runtime, heartbeatAt: '2026-10-15T09:00:00Z', stale: true } }), true);
   assert.equal(validateJobObservation({ ...value, runtime: { ...value.runtime, failureCode: 'EXPORT_FAILED' } }), false);
 });
+test('snapshot heartbeat inversion stays clock-check after browser catchup and clock regression', () => {
+  for (const heartbeatAt of ['2026-10-15T10:00:00.123456790Z', '2026-10-15T10:00:01.123456789Z']) {
+    const value = running(); value.runtime.heartbeatAt = heartbeatAt; value.runtime.stale = true;
+    assert.equal(validateJobObservation(value), true);
+    assert.equal(validateJobObservation({ ...value, runtime: { ...value.runtime, stale: false } }), false);
+    const original = JSON.stringify(value); const captured = Date.parse(value.capturedAt);
+    for (const now of [captured, captured + 2000, captured + 600_000, captured + 500, captured + 2000]) {
+      assert.equal(jobObservationView(value, now).heartbeat, 'clock-check');
+    }
+    assert.equal(JSON.stringify(value), original);
+  }
+});
+test('ordered nanosecond heartbeat signals retain equality and server stale evidence', () => {
+  for (const [heartbeatAt, stale, expected] of [
+    ['2026-10-15T10:00:00.123456789Z', false, 'recent-signal'],
+    ['2026-10-15T10:00:00.123456788Z', false, 'recent-signal'],
+    ['2026-10-15T09:55:00.123456788Z', true, 'stale-signal'],
+  ] as const) {
+    const value = running(); value.runtime.startedAt = '2026-10-15T09:54:00Z';
+    value.runtime.heartbeatAt = heartbeatAt; value.runtime.stale = stale;
+    assert.equal(validateJobObservation(value), true);
+    assert.equal(jobObservationView(value, Date.parse(value.capturedAt)).heartbeat, expected);
+  }
+});
 test('loader keeps last good fields and original capture time across HTTP/network/contract failures', async () => {
   const previous = record(); previous.jobs = [completed()];
   for (const [fetcher, expected] of [

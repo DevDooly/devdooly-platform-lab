@@ -79,7 +79,7 @@ export default function JobObservationCard({ apiBase, observationUrl, mode, pref
           {runtime.failureCode && <p className="job-observation-notice">고정 오류 코드 <code>{runtime.failureCode}</code><br/>원인 확인 후 명시적으로 재개합니다. 브라우저에는 재개 권한이 없습니다.</p>}
           <dl className="job-observation-details"><div><dt>heartbeat 기록</dt><dd>{time(runtime.heartbeatAt)}</dd></div><div><dt>실행 시작 / 종료·정지 기록</dt><dd>{time(runtime.startedAt)}<br/>{time(runtime.stoppedAt)}</dd></div><Source label="실행기 소스 SHA" sha={runtime.sourceCommit}/></dl>
           {view.heartbeat === 'stale-signal' && <p className="job-observation-notice">heartbeat 기록 후 5분 초과 · DB에 RUNNING이 남아 있어도 현재 프로세스 생존을 확인한 것은 아닙니다.</p>}
-          {view.heartbeat === 'clock-check' && <p className="job-observation-notice">heartbeat와 브라우저 시각을 확인해야 합니다.</p>}
+          {view.heartbeat === 'clock-check' && <p className="job-observation-notice">heartbeat·DB 확인·브라우저 시각의 순서를 확인해야 합니다.</p>}
           {view.heartbeat === 'recent-signal' && <p className="job-observation-note">최근 5분 이내 DB 신호입니다. 현재 프로세스 생존이나 Kafka·저장소 가용성을 직접 확인하지 않습니다.</p>}
         </article>
         <article className="job-runtime-card"><span className="code-label">ADMISSION / SINGLE SLOT</span><h3>{record.slot.occupiedRunId ? '실행 슬롯 점유 기록' : '실행 슬롯 비어 있음'}</h3><p>{record.slot.occupiedRunId ? <code>{record.slot.occupiedRunId}</code> : '마지막 DB snapshot에서 점유 작업이 없습니다.'}</p><p className="job-observation-note">DB 처리 완료만으로 슬롯을 해제하지 않습니다. 결과·실패 두 파일의 전체 내용·크기·SHA-256 검증 후 export 확인을 DB에 commit합니다. 운영자의 명시적 종료는 별도 경로입니다.</p><dl className="job-observation-details"><Source label="관측 API 소스 SHA" sha={record.sourceCommit}/></dl></article>
