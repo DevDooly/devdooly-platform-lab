@@ -84,6 +84,12 @@ nonempty offset·잘못된 partition·assertion·인증/권한·unknown topic·�
 
 이 시험은 한 broker의 일시 정지와 명시적 재개 경계입니다. broker/host 재시작·다중 broker HA·운영 복구·부하 상한을 증명하지 않습니다.
 
+### 컨테이너 생성 전 준비 실패의 고정 진단
+
+다섯 번째 실행 `39422876573`은 2026-10-20 UTC에 compile·의존성 준비 단계에서 실패했습니다. runtime 단계는 실행하지 않았고 공개 summary도 생성되지 않았습니다. 기존 고정 진단은 base의 명령 실패 줄만 가리켜 어떤 준비 명령이 실패했는지 알 수 없습니다. 이 실행에서 pristine policy나 fault 복구의 통과를 주장하지 않습니다.
+
+새 진단은 준비 명령의 다섯 단계(API_COMPILE·MAVEN_VERSION·OFFLINE_DEPENDENCIES·SUREFIRE_PROVIDER·JUNIT_LAUNCHER), 실제 exit code 또는 미확인 null, 허용된 오류 signature의 고정 enum만 남깁니다. signature는 관측된 문구이며 근본 원인 확정과 다릅니다. 원문 output·artifact 이름·다운로드 주소·환경·오류 메시지는 저장하거나 출력하지 않습니다. 같은 명령·인수·환경·전체 기한을 유지하며 자동 재시도는 추가하지 않습니다. 정상 runtime summary의18개 필드와 성공23필드도 유지합니다.
+
 ## 순수 검사
 
 Linux에서 새 모듈 두 개의 순수 fixture 검사만 실행합니다. Docker·Java·Maven·네트워크·credential 접근은 없습니다. 정상/늦은 commit 두 결과, 관측 replay0/1, 위조 marker, private phase의 소유자·mode·symlink·hardlink, manifest 경계, native 자원의 identity·mount·예상 pause 단계·정리 순서를 검사합니다.
