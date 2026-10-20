@@ -1,0 +1,66 @@
+---
+import type { TlsHistoryView } from '../lib/tls-certificate-history';
+import '../styles/tls-certificate.css';
+
+interface Props { view: TlsHistoryView; rawSummaryUrl: string; }
+const { view, rawSummaryUrl } = Astro.props;
+const success = view.lastSuccess;
+const repository = 'https://github.com/DevDooly/devdooly-platform-lab';
+const evidenceUrl = `${repository}/blob/main/docs/evidence/tls-certificate/README.md`;
+const comparisonNames: Record<TlsHistoryView['comparison']['kind'], string> = {
+  NO_VERIFIED_RECORD: '검증한 저장 기록 없음',
+  FIRST_VERIFIED: '첫 저장 관측 · 자연 갱신 미검증',
+  UNCHANGED_CERTIFICATE: '같은 인증서를 다시 관측함',
+  CERTIFICATE_CHANGED_EXTENDED: '인증서 변경 · 만료시점 연장 관측',
+  CERTIFICATE_CHANGED_SAME_EXPIRY: '인증서 변경 · 만료시점 같음',
+  CERTIFICATE_CHANGED_EARLIER_EXPIRY: '인증서 변경 · 만료시점 앞당김',
+};
+const issueNames: Record<TlsHistoryView['visibleIssue'], string> = {
+  NONE: '',
+  LATEST_ATTEMPT_FAILED: success ? '마지막 시도는 확인 실패입니다. 이전 성공의 값과 수집 시각을 유지합니다.' : '마지막 시도는 확인 실패이며 검증한 성공 기록이 없습니다.',
+  QUARANTINED_INPUT: '출처·대상·시각 순서를 확인하지 못한 입력을 이력에 편입하지 않았습니다.',
+  NO_VERIFIED_RECORD: '검증한 저장 기록이 없습니다.',
+  INVALID_CONFIGURATION: '기록의 출처 설정을 확인해야 합니다.',
+};
+const time = (value: string) => value.replace('T', ' ').replace(/\.000Z$/, ' UTC').replace(/Z$/, ' UTC');
+---
+<section id="tls-certificate" class="section tls-certificate-section" aria-labelledby="tls-certificate-title">
+  <div class="tls-certificate-header">
+    <div><span class="code-label">TLS / STORED OBSERVATION</span><h2 id="tls-certificate-title">수동 TLS 관측</h2></div>
+    <p class="tls-certificate-state">{comparisonNames[view.comparison.kind]}</p>
+  </div>
+  <p class="tls-certificate-note">수집 당시의 기록입니다. 현재 접속 상태나 인증서 자연 갱신을 확인한 결과가 아닙니다.</p>
+  {view.visibleIssue !== 'NONE' && <p class="tls-certificate-notice">{issueNames[view.visibleIssue]}{view.quarantinedCount > 0 && <> 편입하지 않은 입력 {view.quarantinedCount}개.</>}</p>}
+  {view.lastAttempt?.summary.status === 'FAILED' && <p class="tls-certificate-attempt">마지막 시도 <time datetime={view.lastAttempt.summary.capturedAt}>{time(view.lastAttempt.summary.capturedAt)}</time> · <code>{view.lastAttempt.summary.errorCode}</code> · <a href={view.lastAttempt.runUrl} target="_blank" rel="noreferrer">실패 실행<span class="sr-only"> GitHub, 새 창</span><span aria-hidden="true"> ↗</span></a></p>}
+  {success ? <>
+    <p class="tls-certificate-capture">마지막 성공 수집 <time datetime={success.summary.capturedAt}>{time(success.summary.capturedAt)}</time></p>
+    <dl class="tls-certificate-metrics">
+      <div><dt>수집 당시 남은 기간</dt><dd><strong>{success.summary.remainingFullDays}일</strong><span>초 단위 잔여값을 내림한 일수</span></dd></div>
+      <div><dt>만료 시각</dt><dd><time datetime={success.summary.notAfter}>{time(success.summary.notAfter)}</time></dd></div>
+      <div><dt>수집 당시 30일 경보</dt><dd>{success.summary.expiryAssessment === 'EXPIRING_WITHIN_30_DAYS' ? '30일 이하 · 확인 필요' : '30일 초과 · 해당 없음'}</dd></div>
+    </dl>
+    <div class="tls-certificate-links">
+      <a href={success.runUrl} target="_blank" rel="noreferrer">관측 실행<span class="sr-only"> GitHub, 새 창</span><span aria-hidden="true"> ↗</span></a>
+      <a href={`${repository}/blob/${success.sourceCommit}/infra/tls-certificate/probe.ts`} target="_blank" rel="noreferrer">관측 코드<span class="sr-only"> GitHub, 새 창</span><span aria-hidden="true"> ↗</span></a>
+      <a href={rawSummaryUrl} target="_blank" rel="noreferrer">마지막 성공 원문<span class="sr-only"> GitHub, 새 창</span><span aria-hidden="true"> ↗</span></a>
+    </div>
+  </> : view.visibleIssue !== 'NO_VERIFIED_RECORD' && <p class="tls-certificate-empty">검증한 저장 기록이 없습니다. 확인하지 않은 기간·성공 값을 대신 넣지 않습니다.</p>}
+  <details class="tls-certificate-details">
+    <summary>지문과 관측 이력 보기</summary>
+    <div class="tls-certificate-details-body">
+      <p>같은 대상의 검토된 기록만 비교합니다. 인증서 변경과 만료시점 연장을 관측해도 자연 갱신의 원인·과정이 확인된 것은 아닙니다.</p>
+      {success && <dl class="tls-certificate-fingerprints">
+        <div><dt>대상 연결 지문 · SHA-256</dt><dd><code>{success.summary.targetBindingSha256}</code></dd></div>
+        <div><dt>인증서 leaf 지문 · SHA-256</dt><dd><code>{success.summary.certificateSha256}</code></dd></div>
+      </dl>}
+      {view.records.length > 0 && <ol class="tls-certificate-history" aria-label="편입한 TLS 관측 이력">
+        {view.records.map(record => <li>
+          <p><time datetime={record.summary.capturedAt}>{time(record.summary.capturedAt)}</time> · {record.summary.status === 'PASS' ? '검증 성공' : '확인 실패'}</p>
+          <p>원문 SHA-256 <code>{record.artifactSha256}</code></p>
+          <a href={record.runUrl} target="_blank" rel="noreferrer">이 관측의 실행 근거<span class="sr-only"> GitHub, 새 창</span><span aria-hidden="true"> ↗</span></a>
+        </li>)}
+      </ol>}
+      <a href={evidenceUrl} target="_blank" rel="noreferrer">관측 범위와 근거<span class="sr-only"> GitHub, 새 창</span><span aria-hidden="true"> ↗</span></a>
+    </div>
+  </details>
+</section>

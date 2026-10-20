@@ -19,7 +19,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 - **런타임 장애:** [offset commit 실패 복구](docs/evidence/offset-commit-recovery/README.md)와 [손상 export 수리](docs/evidence/export-integrity-runtime/README.md)를 검증했습니다. [잘못된 입력](docs/evidence/invalid-message-runtime/README.md)과 [잠금 연결 손실](docs/evidence/runtime-lease-loss/README.md)은 정상 작업 보존과 실행기 종료를 확인한 결과로, 복구 완료와 구분합니다.
 - **데이터 보존:** [격리 PostgreSQL 정상 재시작](docs/evidence/cloud-catalog-restart/README.md) 뒤 catalog·조회·전체 객체 보존과 [새 합성 warehouse의 snapshot 만료](docs/evidence/cloud-iceberg-expiration/README.md)를 확인했습니다. 운영 자료의 만료·삭제 결과가 아닙니다.
-- **공개 조회:** [10월20일 운영 기록](docs/evidence/public-read-https/ops-20261020/README.md)에서 DDNS·표준 TLS·외부 조회와 작업·Kafka 화면을 확인했습니다. 수집 시점의 기록이며 장기간 가용성을 뜻하지 않습니다.
+- **공개 조회:** [10월20일 운영 기록](docs/evidence/public-read-https/ops-20261020/README.md)의 외부 조회에 이어 [첫 TLS 인증서 관측](docs/evidence/tls-certificate/README.md)을 통과했습니다. 수집 당시87일·만료시각을 보존했으며 자연 갱신·현재 가용성은 별도입니다. 저장 관측 화면은 웹207검사·타입·두 경로 빌드와 로컬 데스크톱·모바일 확인 후 공개 반영을 준비 중입니다.
 - **공개 화면:** [근거 검색·필터·6개씩 더 보기](https://devdooly.github.io/devdooly-platform-lab/#evidence)와 [실행 잠금 사례](https://devdooly.github.io/devdooly-platform-lab/cases/runtime-ownership/)를 공개했습니다. [heartbeat 시각 표시 수정](docs/evidence/job-heartbeat-order/README.md)은 웹188개 검사·타입·프로젝트 경로 빌드와 같은 main의 Pages·CI·Jenkins, 공개 데스크톱·모바일 확인을 마쳤습니다.
 
 [장애별 판단표](docs/runbooks/continuous-runtime.md#실제-네-가지-장애의-판단-기준--2026-10-20-utc)는 저장 상태·실제 종료·재개 전제를 구분합니다. [AI 예제 소유자 검토자료](docs/reviews/ai-window-owner-review.md)의 사람 판단은 **PENDING**입니다.

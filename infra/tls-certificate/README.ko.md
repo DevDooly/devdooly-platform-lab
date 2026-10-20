@@ -1,6 +1,6 @@
 # 공개 TLS 인증서의 첫 저장 관측
 
-실제 실행: **PENDING**. 인증서 자연 갱신·이력 비교·정기 실행·공개 화면은 아직 검증하지 않았다. 이 소스는 기존 승인된 공개 API 호스트의 TLS 연결 한 번에서 유효기간을 읽는 단발 관측이다. HTTP 요청은 0회이며 기존 GET6·거부3 [HTTPS 검사](../public-https-smoke/README.ko.md)와 구분한다.
+실제 첫 실행: [39452152238 통과](../../docs/evidence/tls-certificate/README.md). 수집 당시87일·만료시각과 원문을 보존했고, 첫 저장 관측의 로컬 표시와 순수 이력 검사를 통과했다. 인증서 자연 갱신·실제 두 관측의 비교·정기 실행·공개 화면은 아직 검증하지 않았다. 이 소스는 기존 승인된 공개 API 호스트의 TLS 연결 한 번에서 유효기간을 읽는 단발 관측이다. HTTP 요청은 0회이며 기존 GET6·거부3 [HTTPS 검사](../public-https-smoke/README.ko.md)와 구분한다.
 
 기존 [10월20일 운영 근거](../../docs/evidence/public-read-https/ops-20261020/README.md)의 만료시각·당시88일은 그대로 보존한다. 과거 파일을 새 관측으로 덮어쓰거나 인증서 변경·자연 갱신 완료로 소급 해석하지 않는다.
 
@@ -34,4 +34,19 @@ CLI는 새 결과 파일 경로 하나만 받는다. DNS 전에 `wx`·0600으로
 
 ## 검증의 범위
 
-단위 검사는 probe를 import하기 전에 DNS·TLS·HTTPS native entrypoint를 대체한다. 조건 불충족 IO0, 주소 혼합·미인증·재사용·다른 remote, Date/DER 거부, 초 단위30일 경계, close·시간 제한과 비공개 오류를 확인한다. 이는 실제 CA·외부 접속 성공의 증거가 아니다. 실제 수동 관측은 검토된 소스·workflow에서 별도로 수행하고 결과·source·run에 묶어 보존한다. 자동 주기와 history reducer는 추가하지 않았다.
+단위 검사는 probe를 import하기 전에 DNS·TLS·HTTPS native entrypoint를 대체한다. 조건 불충족 IO0, 주소 혼합·미인증·재사용·다른 remote, Date/DER 거부, 초 단위30일 경계, close·시간 제한과 비공개 오류를 확인한다. 이는 실제 CA·외부 접속 성공의 증거가 아니다. 실제 수동 관측은 검토된 소스·workflow에서 별도로 수행하고 결과·source·run에 묶어 보존한다. 실행기에 자동 주기나 이력 누적은 없다. 웹의 별도 순수 이력 검사는 검토한 원문·출처만 비교하며 새 TLS 연결을 수행하지 않는다.
+
+## 다음 수동 관측을 보존하는 순서
+
+새 관측이 필요할 때 검토된 main 소스와 기존 대상 설정을 확인하고 다음을 한 번 실행한다. 별도 토큰 발급이나 URL을 명령행에 넣는 과정은 없다.
+
+```sh
+gh workflow run tls-certificate.yml --repo DevDooly/devdooly-platform-lab --ref main \
+  -f confirm_certificate_probe=true -f confirm_target_ownership=true
+```
+
+1. 반환된 run URL·head SHA·첫 attempt와 두 job의 결과를 확인한다. 응답이 불명확하면 기존 실행을 먼저 찾으며 새 실행을 반복하지 않는다. `Re-run jobs`의 attempt2는 허용되지 않는다.
+2. 7일 보존 artifact의 단일 요약을 받고 원문 bytes·실행 source·run·완료시각·conclusion·SHA를 별도 폴더에 보존한다. 실패 원문도 성공으로 바꾸거나 이전 파일에 덮어쓰지 않는다.
+3. 공개 이력에는 검토한 실제 원문과 명시적인 run/source/hash 결합을 추가한다. 같은 대상·시간 순서·마지막 성공 보존과 로컬/공개 화면을 다시 확인한다. Actions 성공만으로 화면 반영이 완료된 것은 아니다.
+
+인증서가 바뀌거나 만료시점이 연장돼도 그것만으로 자연 갱신의 원인·과정·무중단을 입증하지 않는다. 이 명령은 자동 주기 등록이나 인증서 발급·강제 갱신 명령이 아니다.
