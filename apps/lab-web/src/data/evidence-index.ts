@@ -39,6 +39,16 @@ const kafkaSource = 'f7b5567963f9a34a34d5f201fb2ed747bdf7652a';
 
 export const evidenceItems: readonly EvidenceItem[] = [
   {
+    id: 'runtime-error-cleanup', topics: ['java'], scope: 'ci', state: 'verified',
+    title: 'Error 발생 뒤 실행 중지와 자원 정리',
+    description: '합성 AssertionError로 정상 종료 오기록과 부분 client 정리 누락을 재현·수정했습니다. H2·mock client 기반 관련 회귀33개와 같은 소스의 Linux API240개 검사를 통과했습니다.',
+    boundary: '검사에서 자원 종료 호출과 원 Error 보존을 확인했습니다. 실제 OOM·운영 장애 복구·현재 배포 상태나 가용성을 검증한 결과는 아닙니다.',
+    recordedOn: '2026-10-20',
+    source: `${repo}/blob/64be1e8e50e0a84eab4510c1bcc8188f550df96f/apps/api/src/main/java/io/github/devdooly/platformlab/jobs/runtime/RuntimeMain.java`,
+    evidence: `${repo}/blob/main/docs/evidence/client-construction-error/README.md`, evidenceLabel: '재현·정리 순서·Linux CI 근거',
+    recordLabel: '합성 오류 회귀 · Linux CI',
+  },
+  {
     id: 'cloud-catalog-restart', topics: ['iceberg'], scope: 'cloud', state: 'verified',
     title: 'PostgreSQL 재시작 뒤 catalog·데이터 보존',
     description: '같은 PostgreSQL 컨테이너·볼륨을 정상 stop/start한 뒤 catalog 전체 행과 DB 식별자를 대조했습니다. 새 Trino의 조회 10개와 전체 객체 20개의 bytes 보존을 확인했습니다.',

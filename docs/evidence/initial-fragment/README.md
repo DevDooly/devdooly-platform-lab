@@ -30,4 +30,8 @@ head의 짧은 inline script가 새 문서 navigation의 초기 hash 한 개만 
 
 임시 fixture는 빌드 출력의 단일 파일로만 배치했고 검증 뒤 제거했습니다. 공개 소스·운영 자료·통과 표시로 게시하지 않습니다. wheel·touch 및 DOM 준비 전 입력은 취소 코드의 정적 검토 범위이며 별도의 실제 기기 시험으로 확대하지 않습니다.
 
-기존 웹207개 검사·skip0, Astro47파일 오류0·경고0, 루트/프로젝트 경로 두 빌드를 통과했습니다. 207개는 기존 데이터·관측 계약 검사이며 위 브라우저 동작과 구분합니다. 공개 Pages 최종 확인은 병합 후 진행합니다.
+기존 웹207개 검사·skip0, Astro47파일 오류0·경고0, 루트/프로젝트 경로 두 빌드를 통과했습니다. 207개는 기존 데이터·관측 계약 검사이며 위 브라우저 동작과 구분합니다.
+
+## 공개 확인
+
+PR161의 main `b23b3800349c0f577933d2907bf8c7e0ead62078`에서 [Pages39469520695](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39469520695)·[컨테이너CI39469520692](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39469520692) 성공을 확인했습니다. 공개 페이지의 새 직접 진입에서도 입력 없이 작업 조회를 마친 뒤390px target top120.27px·문서375px, 1280px top120.86px·문서1265px였습니다. hash는 같고 focus는 BODY, details는 기본 닫힘을 유지했으며 기존 클릭·Enter 토글도 확인했습니다. 이는 공개 웹 수정 확인이며 TLS 재관측·자연 갱신·운영 worker 배포를 수행한 결과는 아닙니다.

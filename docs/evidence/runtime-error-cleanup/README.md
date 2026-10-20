@@ -31,4 +31,6 @@
 
 ## Linux CI 확인
 
-PR159의 main `12197d5a72b50a8e56feddb50ce09d9e31bf9f14`에서 [컨테이너CI39468011021](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39468011021)의 API233개가 모두 통과·skip0이며 verify·공개 조회 gateway job도 성공했습니다. 이미지 workflow39468369830은 gate만 성공하고 publish·GitOps 제안은 생략됐습니다. 새 이미지 게시나 미니 PC 배포 결과로 해석하지 않습니다.
+PR159의 main `12197d5a72b50a8e56feddb50ce09d9e31bf9f14`에서 [컨테이너CI39468011021](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39468011021)의 API233개가 모두 통과·skip0이며 verify·공개 조회 gateway job도 성공했습니다. 최초 이미지 workflow39468369830은 gate만 성공하고 publish·GitOps 제안은 생략됐습니다.
+
+이후 같은 source의 Jenkins `ci/jenkins-test` 성공 뒤 별도 [이미지 게시39468879682](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39468879682)의 gate·publish·propose-gitops가 모두 성공했습니다. 자동 초안 PR160은 API·웹 digest 제안이며 이번 작업에서 병합하지 않았습니다. 저장소의 worker pin은 이 API·웹 제안과 별개입니다. 뒤늦은 게시를 최초 workflow의 성공으로 바꾸거나 운영 배포 완료로 해석하지 않습니다.
