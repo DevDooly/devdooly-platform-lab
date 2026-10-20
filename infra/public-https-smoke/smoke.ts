@@ -274,3 +274,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   // An OS lookup left in flight after its finite deadline cannot keep the CLI alive.
   process.exit(result.status === 'PASS' ? 0 : 1);
 }
+
+// Read-only helpers shared with the separately guarded GET-only probe.
+export { ROUTES as PUBLIC_GET_ROUTES, selectPublicIpv4, oneRequest, validateLab, SmokeError };
