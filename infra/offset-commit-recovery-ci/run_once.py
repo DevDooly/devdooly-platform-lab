@@ -104,6 +104,58 @@ def need(value):
         raise ValueError('OFFSET_RECOVERY_UNVERIFIED')
 
 
+PREPARATION_STAGES = frozenset({'API_COMPILE', 'MAVEN_VERSION', 'OFFLINE_DEPENDENCIES',
+                              'SUREFIRE_PROVIDER', 'JUNIT_LAUNCHER'})
+PREPARATION_SIGNALS = {
+    'ARTIFACT_TRANSFER_FAILED': (b'Could not transfer artifact',),
+    'DEPENDENCY_RESOLUTION_FAILED': (b'Could not resolve dependencies',),
+    'PLUGIN_RESOLUTION_FAILED': (b'Plugin ', b' could not be resolved'),
+    'HTTP_429': (b'status code: 429',),
+    'HTTP_502': (b'status code: 502',),
+    'HTTP_503': (b'status code: 503',),
+    'HTTP_504': (b'status code: 504',),
+    'TLS_VALIDATION_FAILED': (b'PKIX path building failed',),
+    'DNS_LOOKUP_FAILED': (b'UnknownHostException',),
+    'JAVA_COMPILE_FAILED': (b'COMPILATION ERROR',),
+    'DISK_FULL': (b'No space left on device',),
+}
+
+
+class PreparationCommandFailure(Exception):
+    def __init__(self, stage, exit_code, signals):
+        need(stage in PREPARATION_STAGES and (exit_code is None
+             or type(exit_code) is int and -255 <= exit_code <= 255)
+             and type(signals) is list and signals == sorted(set(signals))
+             and set(signals) <= set(PREPARATION_SIGNALS))
+        self.stage, self.exit_code, self.signals = stage, exit_code, tuple(signals)
+        super().__init__('PREPARATION_COMMAND_FAILED')
+
+
+def preparation_command(base, args, deadline, stage, environment):
+    """Retain only fixed stage/status/signatures; never retain or publish native output."""
+    need(stage in PREPARATION_STAGES)
+    try:
+        status, out, err = base.command(args, deadline, environment=environment)
+    except Exception as failure:
+        raise PreparationCommandFailure(stage, None, []) from failure
+    need(type(status) is int and -255 <= status <= 255 and type(out) is bytes and type(err) is bytes
+         and len(out) + len(err) <= 4194304)
+    if status != 0:
+        lines = out.splitlines() + err.splitlines()
+        signals = sorted(name for name, parts in PREPARATION_SIGNALS.items()
+                         if any(all(part in line for part in parts) for line in lines))
+        raise PreparationCommandFailure(stage, status, signals)
+    return out
+
+
+def preparation_failure(error):
+    """Only this runner's finite exception can become a preparation diagnosis."""
+    if type(error) is not PreparationCommandFailure:
+        return None
+    return {'schemaVersion': 1, 'stage': error.stage, 'exitCode': error.exit_code,
+            'observedSignals': list(error.signals)}
+
+
 def pairs(values):
     result = {}
     for key, val in values:
@@ -232,22 +284,22 @@ def prepare(base, helper, owner, repo, rows, expected, environment):
     env['MAVEN_OPTS'] += ' -Xmx128m'
     deadline = time.monotonic() + 900
     common = helper.maven_arguments(task, staged)
-    base.checked_command(['sh', str(staged / 'mvnw'), *common, '-DskipTests', 'test-compile'], deadline, environment=env)
+    preparation_command(base, ['sh', str(staged / 'mvnw'), *common, '-DskipTests', 'test-compile'], deadline, 'API_COMPILE', env)
     candidates = [x for x in (task / 'wrapper-home').rglob('bin/mvn') if x.is_file() and not x.is_symlink()]
     need(len(candidates) == 1)
     maven = candidates[0].parent.parent.resolve(strict=True)
     need(maven.is_relative_to(task / 'wrapper-home'))
-    version = base.checked_command(['sh', str(maven / 'bin/mvn'), '-version'], deadline, environment=env).decode('utf8')
+    version = preparation_command(base, ['sh', str(maven / 'bin/mvn'), '-version'], deadline, 'MAVEN_VERSION', env).decode('utf8')
     need(re.search(r'Apache Maven 3\.10\.0(?:\s|\x1b)', version) and re.search(r'Java version: 21(?:\.|,)', version))
     surefire, dependency = helper.managed_plugin_versions(base, task)
     plugin = 'org.apache.maven.plugins:maven-dependency-plugin:' + dependency
-    base.checked_command(['sh', str(maven / 'bin/mvn'), *common, plugin + ':go-offline'], deadline, environment=env)
+    preparation_command(base, ['sh', str(maven / 'bin/mvn'), *common, plugin + ':go-offline'], deadline, 'OFFLINE_DEPENDENCIES', env)
     engines = list((task / 'repository/org/junit/platform/junit-platform-engine').glob('*/*.jar'))
     need(len(engines) == 1 and re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', engines[0].parent.name))
-    for artifact in ('org.apache.maven.surefire:surefire-junit-platform:' + surefire,
-                     'org.junit.platform:junit-platform-launcher:' + engines[0].parent.name):
-        base.checked_command(['sh', str(maven / 'bin/mvn'), *common, plugin + ':get',
-                              '-Dartifact=' + artifact, '-Dtransitive=true'], deadline, environment=env)
+    for stage, artifact in (('SUREFIRE_PROVIDER', 'org.apache.maven.surefire:surefire-junit-platform:' + surefire),
+                            ('JUNIT_LAUNCHER', 'org.junit.platform:junit-platform-launcher:' + engines[0].parent.name)):
+        preparation_command(base, ['sh', str(maven / 'bin/mvn'), *common, plugin + ':get',
+                                  '-Dartifact=' + artifact, '-Dtransitive=true'], deadline, stage, env)
     need(not list((staged / 'target').rglob('TEST-*.xml')))
     staged_check(base, task, source)
     owned = owner.OwnedDocker(base, task, state, deadline)
@@ -715,5 +767,5 @@ if __name__ == '__main__':
         except BaseException:
             pass
         print(json.dumps({'scope': 'OFFSET_COMMIT_RUNNER_FAILURE', 'failureCode': 'PREPARATION_OR_INPUT_UNVERIFIED',
-                          'selectedFailure': diagnostic}))
+                          'selectedFailure': diagnostic, 'preparationFailure': preparation_failure(error)}))
         raise SystemExit(1)

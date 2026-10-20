@@ -8,6 +8,7 @@ import tempfile
 import time
 import unittest
 from unittest.mock import patch
+from types import SimpleNamespace
 import run_once as runner
 
 
@@ -26,6 +27,60 @@ def failure(phase='TEST_ENTRY', kind='ASSERTION', line=None):
 
 
 class RunnerTest(unittest.TestCase):
+    def test_preparation_success_preserves_command_deadline_environment_and_output(self):
+        seen = []
+        def command(args, deadline, environment):
+            seen.append((args, deadline, environment))
+            return 0, b'public version output', b''
+        args, environment = ['owned-test-command'], {'TEST': 'fixture'}
+        self.assertEqual(b'public version output', runner.preparation_command(
+            SimpleNamespace(command=command), args, 123, 'MAVEN_VERSION', environment))
+        self.assertEqual([(args, 123, environment)], seen)
+
+    def test_preparation_failure_exposes_only_fixed_status_and_signatures(self):
+        native = b'PRIVATE_CANARY Could not transfer artifact x status code: 502\n'
+        base = SimpleNamespace(command=lambda *args, **kwargs: (1, native, b'PKIX path building failed PRIVATE_CANARY'))
+        with self.assertRaises(runner.PreparationCommandFailure) as caught:
+            runner.preparation_command(base, ['PRIVATE_CANARY'], 123, 'OFFLINE_DEPENDENCIES', {})
+        value = runner.preparation_failure(caught.exception)
+        self.assertEqual({'schemaVersion': 1, 'stage': 'OFFLINE_DEPENDENCIES', 'exitCode': 1,
+                          'observedSignals': ['ARTIFACT_TRANSFER_FAILED', 'HTTP_502', 'TLS_VALIDATION_FAILED']}, value)
+        self.assertNotIn('PRIVATE_CANARY', json.dumps(value) + str(caught.exception))
+        self.assertEqual({'stage', 'exit_code', 'signals'}, set(caught.exception.__dict__))
+
+    def test_preparation_command_boundary_exception_is_unknown_not_invented_status(self):
+        def command(*args, **kwargs):
+            raise RuntimeError('PRIVATE_CANARY')
+        with self.assertRaises(runner.PreparationCommandFailure) as caught:
+            runner.preparation_command(SimpleNamespace(command=command), ['test'], 123, 'API_COMPILE', {})
+        self.assertEqual({'schemaVersion': 1, 'stage': 'API_COMPILE', 'exitCode': None, 'observedSignals': []},
+                         runner.preparation_failure(caught.exception))
+        self.assertNotIn('PRIVATE_CANARY', str(caught.exception))
+        self.assertIsNone(runner.preparation_failure(RuntimeError('PRIVATE_CANARY')))
+
+    def test_preparation_unknown_stage_and_invalid_native_types_fail_closed(self):
+        seen = []
+        def command(*args, **kwargs):
+            seen.append(True)
+            return False, b'', b''
+        with self.assertRaises(ValueError):
+            runner.preparation_command(SimpleNamespace(command=command), [], 123, 'PRIVATE_CANARY', {})
+        self.assertEqual([], seen)
+        with self.assertRaises(ValueError):
+            runner.preparation_command(SimpleNamespace(command=command), [], 123, 'API_COMPILE', {})
+        self.assertEqual([True], seen)
+        with self.assertRaises(ValueError):
+            runner.PreparationCommandFailure('API_COMPILE', True, [])
+        with self.assertRaises(ValueError):
+            runner.PreparationCommandFailure('API_COMPILE', 1, ['PRIVATE_CANARY'])
+
+    def test_preparation_unclassified_exit_is_not_a_transfer_failure(self):
+        base = SimpleNamespace(command=lambda *args, **kwargs: (-9, b'PRIVATE_CANARY', b''))
+        with self.assertRaises(runner.PreparationCommandFailure) as caught:
+            runner.preparation_command(base, ['test'], 123, 'API_COMPILE', {})
+        self.assertEqual({'schemaVersion': 1, 'stage': 'API_COMPILE', 'exitCode': -9, 'observedSignals': []},
+                         runner.preparation_failure(caught.exception))
+
     def test_actual_uncertain_commit_outcomes_and_both_observed_replay_counts(self):
         for state, offset in (('NO_COMMIT', None), ('OBSERVED', 1)):
             for replays in (0, 1):
