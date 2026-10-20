@@ -86,6 +86,51 @@ public class OffsetCommitRecoveryIT {
         OBSERVE_COMMIT, RUN_REFUSAL, OPERATOR_RESUME, START_RECOVERY, VERIFY_EXPORT,
         VERIFY_FINAL_OFFSET, STOP_RECOVERY, FINAL_INVARIANTS, CLOSE_CLIENTS
     }
+    private enum FailureKind {
+        ASSERTION, INTERRUPTED, SQL, GROUP_NOT_FOUND, UNKNOWN_TOPIC,
+        COORDINATOR_NOT_AVAILABLE, COORDINATOR_LOAD_IN_PROGRESS, NOT_COORDINATOR,
+        TIMEOUT, KAFKA_OTHER, OTHER
+    }
+
+    private static FailureKind failureKind(Throwable original) {
+        Throwable failure = original;
+        var seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<Throwable, Boolean>());
+        for (int depth = 0; depth < 8; depth++) {
+            if (!seen.add(failure)) { return FailureKind.OTHER; }
+            if (!(failure instanceof java.util.concurrent.ExecutionException)
+                    && !(failure instanceof java.util.concurrent.CompletionException)) { break; }
+            Throwable cause = failure.getCause();
+            if (cause == null) { return FailureKind.OTHER; }
+            failure = cause;
+            if (depth == 7) { return FailureKind.OTHER; }
+        }
+        if (failure instanceof AssertionError) { return FailureKind.ASSERTION; }
+        if (failure instanceof InterruptedException) { return FailureKind.INTERRUPTED; }
+        if (failure instanceof java.sql.SQLException) { return FailureKind.SQL; }
+        if (failure instanceof GroupIdNotFoundException) { return FailureKind.GROUP_NOT_FOUND; }
+        if (failure instanceof org.apache.kafka.common.errors.UnknownTopicOrPartitionException) { return FailureKind.UNKNOWN_TOPIC; }
+        if (failure instanceof org.apache.kafka.common.errors.CoordinatorNotAvailableException) { return FailureKind.COORDINATOR_NOT_AVAILABLE; }
+        if (failure instanceof org.apache.kafka.common.errors.CoordinatorLoadInProgressException) { return FailureKind.COORDINATOR_LOAD_IN_PROGRESS; }
+        if (failure instanceof org.apache.kafka.common.errors.NotCoordinatorException) { return FailureKind.NOT_COORDINATOR; }
+        if (failure instanceof java.util.concurrent.TimeoutException
+                || failure instanceof org.apache.kafka.common.errors.TimeoutException) { return FailureKind.TIMEOUT; }
+        if (failure instanceof org.apache.kafka.common.KafkaException) { return FailureKind.KAFKA_OTHER; }
+        return FailureKind.OTHER;
+    }
+
+    private static Integer failureSourceLine(Throwable failure) {
+        StackTraceElement[] frames = failure.getStackTrace();
+        for (int index = 0; index < Math.min(frames.length, 64); index++) {
+            StackTraceElement frame = frames[index];
+            String ownClass = OffsetCommitRecoveryIT.class.getName();
+            if ((frame.getClassName().equals(ownClass) || frame.getClassName().startsWith(ownClass + "$"))
+                    && "OffsetCommitRecoveryIT.java".equals(frame.getFileName())
+                    && frame.getLineNumber() > 0 && frame.getLineNumber() <= 10000) {
+                return frame.getLineNumber();
+            }
+        }
+        return null;
+    }
 
     @DynamicPropertySource static void guardBeforeFlyway(DynamicPropertyRegistry registry) {
         // Guard every destination before Spring/Flyway opens the first connection.
@@ -106,7 +151,8 @@ public class OffsetCommitRecoveryIT {
             emitSuccess(result.postUnpause(), result.completedReplays());
         } catch (Throwable failure) {
             if (failure instanceof InterruptedException) { Thread.currentThread().interrupt(); }
-            System.out.println("OFFSET_COMMIT_RECOVERY_RESULT {\"schemaVersion\":1,\"status\":\"FAIL\",\"failureCode\":\"VALIDATION_FAILED\",\"failurePhase\":\"" + failurePhase.name() + "\"}");
+            System.out.println("OFFSET_COMMIT_RECOVERY_RESULT {\"schemaVersion\":1,\"status\":\"FAIL\",\"failureCode\":\"VALIDATION_FAILED\",\"failurePhase\":\"" + failurePhase.name()
+                + "\",\"failureKind\":\"" + failureKind(failure).name() + "\",\"failureSourceLine\":" + failureSourceLine(failure) + "}");
             // Exception text and assertions can contain raw rows, addresses and local file names.
             throw new AssertionError("Offset commit recovery validation failed; inspect private test diagnostics");
         } finally {
