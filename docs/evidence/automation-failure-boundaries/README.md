@@ -32,6 +32,10 @@ fake wait의 반환 시계만19.999초·20초·20.001초로 바꾼 새 검사1�
 
 기존 Linux workflow의 예상 검사 수도4→5로 맞췄습니다. source·test·service·timer4파일의 전후 SHA 보존 조건과 실제 curl/DNS/systemd 미검증 표시는 유지했습니다. 인증서 자연 갱신·DNS 전파·실제 DDNS 갱신·운영 배포를 이 합성 결과로 완료 처리하지 않습니다.
 
-## 다음 확인
+## 같은 main의 Linux 확인
 
-이 수정의 PR과 같은 source의 Linux CI를 확인합니다. 기존 HTTPS 외부 조회는 별도 읽기 검증이며, 기동 복원·토큰 교체·예산 정책·PR102의 보류는 유지합니다.
+[PR168](https://github.com/DevDooly/devdooly-platform-lab/pull/168)의 main `6f551a16a8ed536bb126403234c41b9e9b266d43`에서 [CI39476929942](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39476929942)의 관측160개 모두 통과·skip0, API240개 통과·skip0와 verify·gateway 성공을 확인했습니다. 로컬에서 생략했던 POSIX 검사를 Linux 결과로 확인한 것이며 기존 Windows 결과를 덮어쓰지 않습니다.
+
+[DDNS39476929984](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39476929984)는5개 통과·실패/오류/생략0·대상4파일 전후 SHA 동일을 보고했습니다. 같은 main의 [Pages39476929939](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39476929939)도 build·deploy를 통과했습니다. 앞선 검색 준비상태의 공개 결과는 [별도 근거](../evidence-input-readiness/README.md)를 따릅니다.
+
+실제 미니 PC에 이 Python 수정본을 설치하지 않았습니다. 기존 HTTPS 외부 조회는 별도 읽기 검증이며, 기동 복원·토큰 교체·예산 정책·PR102의 보류는 유지합니다.
