@@ -9,6 +9,8 @@ import KafkaLagRecoveryCard from '../components/KafkaLagRecoveryCard';
 import kafkaLagRecovery from '../data/kafka-lag-recovery.generated.json';
 import OffsetCommitRecoveryCard from '../components/OffsetCommitRecoveryCard';
 import offsetCommitRecovery from '../data/offset-commit-recovery.generated.json';
+import ExportIntegrityRuntimeCard from '../components/ExportIntegrityRuntimeCard';
+import exportIntegrityRuntime from '../data/export-integrity-runtime.generated.json';
 import AiWindowCase from '../components/AiWindowCase';
 import WorkerReadinessProof from '../components/WorkerReadinessProof.astro';
 import IcebergDataflowCard from '../components/IcebergDataflowCard';
@@ -79,6 +81,7 @@ const steps = [
       <KafkaObservationCard client:load apiBase={apiBase} observationUrl={`${assetBase}observations/kafka.latest.json`} mode={jobObservationMode} preferLive={preferLive}/>
       <KafkaLagRecoveryCard client:load record={kafkaLagRecovery}/>
       <OffsetCommitRecoveryCard client:load record={offsetCommitRecovery}/>
+      <ExportIntegrityRuntimeCard client:load record={exportIntegrityRuntime}/>
       <WorkerReadinessProof />
       <PlatformObservationCard client:load observationUrl={`${assetBase}data/platform-observation.json`}/>
       <AiWindowCase client:load observationUrl={`${assetBase}observations/ai-window.latest.json`}/>
