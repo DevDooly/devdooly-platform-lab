@@ -1,3 +1,4 @@
+import { boundedObservationText, discardObservationBody, InvalidObservationBody } from './observation-response-body.ts';
 /** Separate, strict job observation v1. No storage addresses, keys, inputs or free-form errors. */
 export const JOB_RECORD_STALE_AFTER_MS = 2 * 60 * 60 * 1000;
 export const JOB_HEARTBEAT_STALE_AFTER_MS = 5 * 60 * 1000;
@@ -121,14 +122,17 @@ export async function loadJobObservation(options: { url: string; previousRecord?
   const failed = (browserError: JobBrowserError): JobObservationLoad => ({ record: previous, browserError, retainedPrevious: previous !== null });
   try {
     const response = await (options.fetcher || fetch)(options.url, { headers: { Accept: 'application/json' }, signal: options.signal, cache: 'no-store', credentials: 'omit', ...(options.rejectRedirects ? { redirect: 'error' as const } : {}) });
-    if (!response.ok) return failed(response.status === 404 ? 'NOT_CONFIGURED' : 'HTTP_ERROR');
-    const text = await response.text();
-    if (new TextEncoder().encode(text).byteLength > MAX_JOB_OBSERVATION_BYTES) return failed('INVALID_RECORD');
+    if (!response.ok) {
+      discardObservationBody(response);
+      return failed(response.status === 404 ? 'NOT_CONFIGURED' : 'HTTP_ERROR');
+    }
+    const text = await boundedObservationText(response, MAX_JOB_OBSERVATION_BYTES);
     let record: unknown; try { record = JSON.parse(text); } catch { return failed('INVALID_RECORD'); }
     if (!validateJobObservation(record)) return failed('INVALID_RECORD');
     if (previous && utcNs(record.capturedAt)! < utcNs(previous.capturedAt)!) return failed('OLDER_RECORD');
     return { record, browserError: null, retainedPrevious: false };
-  } catch { return failed(options.signal?.aborted ? 'ABORTED' : 'NETWORK_ERROR'); }
+  } catch (error) { return failed(options.signal?.aborted ? 'ABORTED'
+    : error instanceof InvalidObservationBody ? 'INVALID_RECORD' : 'NETWORK_ERROR'); }
 }
 export function jobObservationView(record: JobObservationRecord | null, nowMs: number): { freshness: 'absent' | 'within-window' | 'stale' | 'clock-check'; heartbeat: 'unobserved' | 'recent-signal' | 'stale-signal' | 'not-running' | 'clock-check' } {
   if (!record) return { freshness: 'absent', heartbeat: 'unobserved' };

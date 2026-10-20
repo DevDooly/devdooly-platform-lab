@@ -1,4 +1,5 @@
 import { publicReadUrl } from './public-api-base.ts';
+import { boundedObservationText, discardObservationBody } from './observation-response-body.ts';
 /** Kafka public v1: bounded source reader before parsing, no private identities or controls. */
 export const MAX_KAFKA_OBSERVATION_BYTES = 8 * 1024;
 export const KAFKA_STALE_AFTER_MS = 2 * 60 * 60 * 1000;
@@ -106,21 +107,6 @@ export function safeKafkaObservationUrl(value: string, apiBase?: string): boolea
   if (apiBase !== undefined) return publicReadUrl(apiBase, '/kafka/observation') === value;
   return value === '/api/kafka/observation' || /^\/(?:[A-Za-z0-9_-]+\/)*observations\/kafka\.latest\.json$/.test(value);
 }
-async function boundedText(response: Response): Promise<string> {
-  if (!response.body) return '';
-  const reader = response.body.getReader(); const chunks: Uint8Array[] = []; let size = 0;
-  try {
-    while (true) {
-      const item = await reader.read(); if (item.done) break;
-      size += item.value.byteLength;
-      if (size > MAX_KAFKA_OBSERVATION_BYTES) { await reader.cancel().catch(() => undefined); throw new Error('INVALID_RECORD'); }
-      chunks.push(item.value);
-    }
-  } finally { reader.releaseLock(); }
-  const bytes = new Uint8Array(size); let cursor = 0;
-  for (const chunk of chunks) { bytes.set(chunk, cursor); cursor += chunk.byteLength; }
-  return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
-}
 export interface KafkaObservationLoad { record: KafkaObservation | null; browserError: KafkaBrowserError | null; retainedPrevious: boolean; }
 export async function loadKafkaObservation(options: { url: string; previousRecord?: KafkaObservation | null; allowIsolated?: boolean;
   nowMs?: number; signal?: AbortSignal; fetcher?: typeof fetch; apiBase?: string; rejectRedirects?: boolean }): Promise<KafkaObservationLoad> {
@@ -131,9 +117,12 @@ export async function loadKafkaObservation(options: { url: string; previousRecor
   let response: Response;
   try { response = await (options.fetcher || fetch)(options.url, { headers: { Accept: 'application/json' }, signal: options.signal, cache: 'no-store', credentials: 'omit', ...(options.rejectRedirects ? { redirect: 'error' as const } : {}) }); }
   catch { return failed(options.signal?.aborted ? 'ABORTED' : 'NETWORK_ERROR'); }
-  if (response.status === 404) return failed('NOT_CONFIGURED');
+  if (response.status === 404) {
+    discardObservationBody(response);
+    return failed('NOT_CONFIGURED');
+  }
   let text: string;
-  try { text = await boundedText(response); }
+  try { text = await boundedObservationText(response, MAX_KAFKA_OBSERVATION_BYTES); }
   catch { return failed(options.signal?.aborted ? 'ABORTED' : 'INVALID_RECORD'); }
   if (!response.ok) {
     const code = parseKafkaObservationError(text);
