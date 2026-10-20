@@ -10,6 +10,17 @@
         "trialConclusion": "success",
         "artifactSha256": "72c806703547c2fb30a1e9a7e15b1baf41cddc88cc6318ef5589f7c24c69a157"
       }
+    },
+    {
+      "summaryText": "{\n  \"schemaVersion\": 1,\n  \"kind\": \"tls-certificate-snapshot\",\n  \"scope\": \"PUBLIC_TLS_HANDSHAKE_ONLY\",\n  \"status\": \"PASS\",\n  \"errorCode\": \"NONE\",\n  \"validatorSourceCommit\": \"6f551a16a8ed536bb126403234c41b9e9b266d43\",\n  \"captureStartedAt\": \"2026-10-20T18:42:25.437Z\",\n  \"capturedAt\": \"2026-10-20T18:42:26.245Z\",\n  \"publicIpv4Verified\": true,\n  \"standardTlsVerified\": true,\n  \"connectionClosed\": true,\n  \"protocol\": \"TLSv1.3\",\n  \"targetBindingSha256\": \"1168720dade3422dda77b9978f95b97eccb0c10b536b14e96023efcb8d20cc13\",\n  \"certificateSha256\": \"9ca310a17f17118a73bd074e5935ff455451cfd733d6ebcaea397cbebabba12b\",\n  \"notBefore\": \"2026-10-18T13:10:03.000Z\",\n  \"notAfter\": \"2027-01-16T13:10:02.000Z\",\n  \"remainingValiditySeconds\": 7583255,\n  \"remainingFullDays\": 87,\n  \"warningThresholdDays\": 30,\n  \"expiryAssessment\": \"VALID_OVER_30_DAYS\",\n  \"naturalRenewalVerified\": false,\n  \"operatingConfigurationChanged\": false\n}\n",
+      "metadata": {
+        "runUrl": "https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39477022262",
+        "sourceCommit": "6f551a16a8ed536bb126403234c41b9e9b266d43",
+        "completedAt": "2026-10-20T18:42:31Z",
+        "runConclusion": "success",
+        "trialConclusion": "success",
+        "artifactSha256": "8c80681035f3e8f87d18eed2d84577f999e71cada2f6a361d2a727559c75e39f"
+      }
     }
   ]
 }

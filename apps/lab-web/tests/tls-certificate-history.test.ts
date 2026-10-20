@@ -12,6 +12,11 @@ const ACTUAL_TARGET = '1168720dade3422dda77b9978f95b97eccb0c10b536b14e96023efcb8
 const ACTUAL_CERTIFICATE = '9ca310a17f17118a73bd074e5935ff455451cfd733d6ebcaea397cbebabba12b';
 const NOW = Date.parse('2026-10-22T00:00:00.000Z');
 const ACTUAL_BINDING: TlsTrustedBinding = { runUrl: ACTUAL_RUN, sourceCommit: ACTUAL_SOURCE, artifactSha256: ACTUAL_HASH };
+const SECOND_ACTUAL_BINDING: TlsTrustedBinding = {
+  runUrl: 'https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39477022262',
+  sourceCommit: '6f551a16a8ed536bb126403234c41b9e9b266d43',
+  artifactSha256: '8c80681035f3e8f87d18eed2d84577f999e71cada2f6a361d2a727559c75e39f',
+};
 const actual = actualData.entries[0] as TlsHistoryEntry;
 const digest = (text: string) => createHash('sha256').update(text, 'utf8').digest('hex');
 
@@ -48,10 +53,10 @@ function rejected(entry: TlsHistoryEntry, trusted: TlsTrustedBinding) {
 }
 
 test('실제 원문 bytes와 사전 검토한 출처를 결합한 첫 저장 관측', () => {
-  assert.equal(actualData.entries.length, 1);
+  assert.equal(actualData.entries.length, 2);
   assert.equal(Buffer.byteLength(actual.summaryText, 'utf8'), 911);
   assert.equal(digest(actual.summaryText), ACTUAL_HASH);
-  const result = buildTlsHistory(actualData.entries, [ACTUAL_BINDING], NOW);
+  const result = buildTlsHistory([actual], [ACTUAL_BINDING], NOW);
   assert.equal(result.records.length, 1);
   assert.equal(result.visibleIssue, 'NONE');
   assert.equal(result.quarantinedCount, 0);
@@ -67,6 +72,29 @@ test('실제 원문 bytes와 사전 검토한 출처를 결합한 첫 저장 관
   assert.equal(result.lastSuccess?.summary.remainingValiditySeconds, 7_593_528);
   assert.equal(result.lastSuccess?.summary.remainingFullDays, 87);
   assert.equal(result.lastSuccess?.summary.naturalRenewalVerified, false);
+
+  const second = actualData.entries[1] as TlsHistoryEntry;
+  assert.equal(Buffer.byteLength(second.summaryText, 'utf8'), 911);
+  assert.equal(digest(second.summaryText), SECOND_ACTUAL_BINDING.artifactSha256);
+  const both = buildTlsHistory(actualData.entries, [ACTUAL_BINDING, SECOND_ACTUAL_BINDING], NOW);
+  assert.equal(both.records.length, 2);
+  assert.equal(both.visibleIssue, 'NONE');
+  assert.equal(both.quarantinedCount, 0);
+  assert.equal(both.comparison.kind, 'UNCHANGED_CERTIFICATE');
+  assert.equal(both.comparison.previous, both.records[0]);
+  assert.equal(both.comparison.current, both.records[1]);
+  assert.equal(both.comparison.previous?.artifactSha256, ACTUAL_HASH);
+  assert.equal(both.comparison.current?.artifactSha256, SECOND_ACTUAL_BINDING.artifactSha256);
+  assert.equal(both.lastSuccess, both.comparison.current);
+  assert.equal(both.lastAttempt, both.lastSuccess);
+  assert.deepEqual(both.lastSuccess?.summary, JSON.parse(second.summaryText));
+  assert.equal(both.lastSuccess?.summary.targetBindingSha256, ACTUAL_TARGET);
+  assert.equal(both.lastSuccess?.summary.certificateSha256, ACTUAL_CERTIFICATE);
+  assert.equal(both.lastSuccess?.summary.notAfter, '2027-01-16T13:10:02.000Z');
+  assert.equal(both.lastSuccess?.summary.capturedAt, '2026-10-20T18:42:26.245Z');
+  assert.equal(both.lastSuccess?.summary.remainingValiditySeconds, 7_583_255);
+  assert.equal(both.lastSuccess?.summary.remainingFullDays, 87);
+  assert.equal(both.lastSuccess?.summary.naturalRenewalVerified, false);
 });
 
 test('빈 이력과 잘못된 설정을 인증서 성공으로 표시하지 않는다', () => {
