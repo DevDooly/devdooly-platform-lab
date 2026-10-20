@@ -1,0 +1,158 @@
+name: Validate fresh Cloud PostgreSQL catalog restart
+
+on:
+  pull_request:
+    paths:
+      - infra/cloud-catalog-restart/**
+      - .github/workflows/cloud-catalog-restart.yml
+      - infra/cloud-lakehouse-restart/run_restart.py
+      - infra/cloud-lakehouse-restart/runtime-manifest.json
+      - infra/cloud-lakehouse-ci/**
+      - infra/spark-ci/**
+      - infra/spark-silver/**
+  push:
+    branches: [main]
+    paths:
+      - infra/cloud-catalog-restart/**
+      - .github/workflows/cloud-catalog-restart.yml
+      - infra/cloud-lakehouse-restart/run_restart.py
+      - infra/cloud-lakehouse-restart/runtime-manifest.json
+      - infra/cloud-lakehouse-ci/**
+      - infra/spark-ci/**
+      - infra/spark-silver/**
+  workflow_dispatch:
+    inputs:
+      run_catalog_restart_trial:
+        description: Run one fresh quiescent PostgreSQL catalog normal stop and start
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloud-postgres-catalog-restart-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  offline_contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact contract source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify source pins and synthetic boundaries without services
+        run: |
+          python3 -I -B - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          import platform
+          import re
+          import unittest
+
+          MANIFEST_SHA = '5d0bacc9bfc68814c83f08faee091cb8d05c94798e911ba5801284a7b83134aa'
+          FROZEN_MANIFEST_SHA = 'c63aded0a891bb66cb1fb2de591d67e237467681eb4a4e5a337b9d1d1b02d5e8'
+          OLD_RESTART_MANIFEST_SHA = '6c9d7fd5e50f295aefc60191f9f3f49e745f166bb070c590f461c82dd4aed3b6'
+          SCOPE = 'FRESH_CLOUD_POSTGRES_CATALOG_NORMAL_RESTART'
+          OWN_FILES = {'README.ko.md', 'run_catalog_restart.py', 'test_run_catalog_restart.py',
+                       'catalog_lifecycle.py', 'test_catalog_lifecycle.py'}
+          FROZEN_FILES = {
+              'infra/cloud-lakehouse-restart/run_restart.py',
+              'infra/cloud-lakehouse-restart/runtime-manifest.json',
+              'infra/cloud-lakehouse-ci/bootstrap_trial9.py',
+              'infra/cloud-lakehouse-ci/compose_trial9.py',
+              'infra/cloud-lakehouse-ci/contract.py',
+              'infra/cloud-lakehouse-ci/frozen_s3_primitives.py',
+              'infra/cloud-lakehouse-ci/pinned_trino_configuration.py',
+              'infra/cloud-lakehouse-ci/run_trial9.py',
+              'infra/cloud-lakehouse-ci/runtime-manifest.json',
+              'infra/cloud-lakehouse-ci/s3_readonly.py',
+              'infra/spark-ci/bootstrap_spark.py',
+              'infra/spark-ci/compose_plan.py',
+              'infra/spark-ci/run_ci.py',
+              'infra/spark-silver/Dockerfile.candidate',
+              'infra/spark-silver/artifact-lock.downloaded.json',
+              'infra/spark-silver/silver_contract.py',
+              'infra/spark-silver/spark_silver.py',
+              'infra/spark-silver/synthetic-v1.ndjson',
+          }
+          repo = Path.cwd()
+          folder = repo / 'infra/cloud-catalog-restart'
+
+          def snapshot():
+              manifest_path = folder / 'runtime-manifest.json'
+              assert not manifest_path.is_symlink(), 'REGULAR_MANIFEST_REQUIRED'
+              raw = manifest_path.read_bytes()
+              assert hashlib.sha256(raw).hexdigest() == MANIFEST_SHA, 'LITERAL_MANIFEST_PIN_REQUIRED'
+              manifest = json.loads(raw)
+              assert set(manifest) == {'schemaVersion', 'scope', 'status', 'files', 'frozenSources',
+                                       'frozenRuntimeManifestSha256', 'frozenTrinoRestartManifestSha256'}
+              assert type(manifest['schemaVersion']) is int and manifest['schemaVersion'] == 1
+              assert manifest['scope'] == SCOPE and manifest['status'] == 'SOURCE_ONLY_NOT_RUN'
+              assert manifest['frozenRuntimeManifestSha256'] == FROZEN_MANIFEST_SHA
+              assert manifest['frozenTrinoRestartManifestSha256'] == OLD_RESTART_MANIFEST_SHA
+              assert set(manifest['files']) == OWN_FILES and set(manifest['frozenSources']) == FROZEN_FILES
+              values = {'infra/cloud-catalog-restart/runtime-manifest.json': raw}
+              for root, rows in ((folder, manifest['files']), (repo, manifest['frozenSources'])):
+                  for name, pin in rows.items():
+                      assert set(pin) == {'bytes', 'sha256'}
+                      assert type(pin['bytes']) is int and 0 < pin['bytes'] <= 262144
+                      assert re.fullmatch('[a-f0-9]{64}', pin['sha256'])
+                      path = root / name
+                      assert not path.is_symlink() and path.is_file(), 'REGULAR_PINNED_SOURCE_REQUIRED'
+                      data = path.read_bytes()
+                      assert len(data) == pin['bytes'] and hashlib.sha256(data).hexdigest() == pin['sha256'], 'SOURCE_BYTES_MUST_MATCH'
+                      values[path.relative_to(repo).as_posix()] = data
+              assert len(values) == 24
+              return values
+
+          before = snapshot()
+          assert {path.name for path in folder.glob('test_*.py')} == {'test_catalog_lifecycle.py', 'test_run_catalog_restart.py'}
+          suite = unittest.defaultTestLoader.discover(str(folder), pattern='test_*.py')
+          assert suite.countTestCases() == 22, 'EXACT_SYNTHETIC_CASES_REQUIRED'
+          result = unittest.TextTestRunner(verbosity=2).run(suite)
+          unchanged = snapshot() == before
+          print(json.dumps({'scope': 'SOURCE_PINNED_SYNTHETIC_CATALOG_LIFECYCLE_ONLY',
+              'testsRun': result.testsRun, 'failures': len(result.failures),
+              'errors': len(result.errors), 'skips': len(result.skipped),
+              'pythonVersion': platform.python_version(), 'sourceFilesChecked': len(before),
+              'sourceBeforeAfterSame': unchanged, 'actualCloudRuntimeCalled': False}, sort_keys=True))
+          assert result.testsRun == 22 and result.wasSuccessful() and not result.skipped
+          assert unchanged, 'SOURCE_BYTES_UNCHANGED_AFTER_SYNTHETIC_CASES_REQUIRED'
+          PY
+
+  fresh_catalog_restart:
+    needs: offline_contract
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_catalog_restart_trial == true && github.repository == 'DevDooly/devdooly-platform-lab' && github.ref == 'refs/heads/main' && github.run_attempt == '1' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact manual runtime source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Prepare fresh pinned fixture and verify one PostgreSQL normal restart
+        timeout-minutes: 40
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+          CLOUD_CATALOG_RESTART_OPT_IN: 'true'
+        # Build/pull preparation precedes the single 600s workload clock.
+        # PASS includes owned cleanup; failure cleanup retains explicit command bounds.
+        run: >-
+          python3 -I -B infra/cloud-catalog-restart/run_catalog_restart.py
+          --source-manifest-sha256 5d0bacc9bfc68814c83f08faee091cb8d05c94798e911ba5801284a7b83134aa
+          --ack-fresh-cloud-postgres-catalog-restart
+      - name: Upload only the finite catalog restart summary
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fresh-cloud-postgres-catalog-restart-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .local/cloud-catalog-restart-public/summary.json
+          if-no-files-found: error
+          retention-days: 7
