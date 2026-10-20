@@ -43,6 +43,26 @@ resume은 같은 named lock을 확보해 정지 표시만 STOPPED로 바꾸며 K
 
 DB/lease 자체가 끊겨 journal을 쓰지 못한 경우에는 PAUSED가 확정됐다고 기록하지 않는다. 마지막 RUNNING/heartbeat가 남을 수 있으며 화면의 오래된 실행 신호 표시와 실제 private 진단을 함께 확인한다. 이 구현은 소유권 확인과 외부 IO의 원자적 fencing이나 HA가 아니다.
 
+## 실제 네 가지 장애의 판단 기준 — 2026-10-20 UTC
+
+아래는 새 격리 환경의 서로 다른 네 실행을 구분하는 표다. DB에 저장된 상태와 실제 프로세스의 종료를 함께 읽고, 복구 완료와 작업을 보존한 중지를 구분한다. 과거 시험의 PASS는 현재 운영 상태나 자동 복구 정책을 뜻하지 않는다.
+
+| 실제 경계 | 저장 상태와 실제 프로세스 | 보존한 대상 | 재개 전에 필요한 판단과 이번에 확인한 결과 | 근거 |
+| --- | --- | --- | --- | --- |
+| DB commit 뒤 `OFFSET_COMMIT_FAILED` | `PAUSED_OPERATOR / CONSUME / OFFSET_COMMIT_FAILED`가 남았고 실패 child의 자원 종료를 확인했다. 일반 run은 journal을 바꾸지 않고 거부됐다. | 이미 완료한 업무 행·처리 시각을 보존했다. 재전달을 새 업무 처리로 계산하지 않았다. | broker 재개 뒤 같은 target의 실제 committed offset을 대조했다. 이 실행의 첫 조회는 `NO_COMMIT / null`이었고, 명시 resume 뒤 완료 메시지 replay 1회·전체 파일 2개 검증·`EXPORTED`·슬롯 해제·commit/end 1·lag 0까지 확인했다. | [실제 기록](../evidence/offset-commit-recovery/README.md) · [summary](../evidence/offset-commit-recovery/summary.json) · [당시 IT][offset-commit-it] |
+| 손상 export의 `EXPORT_FAILED` | `PAUSED_OPERATOR / EXPORT / EXPORT_FAILED`가 자원 종료·lease 해제 뒤에도 남았다. 일반 run은 거부됐고 수리 없는 resume 뒤 새 daemon도 다시 중지됐다. | 수리 전 손상 객체·업무 행과 시각·source/raw·DISPATCH ACK·점유 슬롯을 보존했다. 최초 업무 완료는 직접 DB fixture이며 consumer 처리와 구분한다. | 같은 key의 전체 bytes·크기·SHA와 시험 소유 범위를 대조한 명시 수리를 resume와 구분했다. 수리 뒤 별도 resume에서 파일 2개·`EXPORTED`·슬롯 해제·완료 메시지 replay 1회·lag 0을 확인했다. | [실제 기록](../evidence/export-integrity-runtime/README.md) · [summary](../evidence/export-integrity-runtime/summary.json) · [당시 IT][export-integrity-it] |
+| 잘못된 JSON의 `INVALID_MESSAGE` | 두 새 worker 모두 `PAUSED_OPERATOR / CONSUME / INVALID_MESSAGE`를 저장하고 종료했다. 두 일반 run 거부는 journal을 보존했고 수리 없는 resume는 재중지로 끝났다. | 뒤의 정상 작업은 `QUEUED / NOT_REQUESTED`·슬롯 점유, 업무·EXPORT 결과 0이었다. job 전체 값·시각/BLOB·source/raw·DISPATCH ACK·policy를 보존했다. | resume는 입력을 수리하지 않는다. 두 종료 뒤 실제 commit은 모두 `NO_COMMIT / null`, end는 2였다. 입력 수리·DLQ·skip·offset reset 정책은 이 시험에서 구현하지 않았다. **보호 동작의 통과이며 처리·export·슬롯 해제나 복구 완료가 아니다.** | [실제 기록](../evidence/invalid-message-runtime/README.md) · [summary](../evidence/invalid-message-runtime/summary.json) · [당시 IT][invalid-message-it] |
+| 실행 잠금용 DB 연결 손실 | DB에는 fault 직전 `RUNNING / EXPORT / failureCode null`의 전체 행·시각이 남았다. 다음 소유권 검사와 pause 저장이 거부됐고 최종 stop 호출은 건너뛰었다. 실제 client·lease·context와 child는 종료했다. 존재하지 않는 `PAUSED_OPERATOR / LEASE_LOST`로 바꾸지 않는다. | queued job·source/raw·DISPATCH PENDING·policy·점유 슬롯을 보존했다. publisher·receiver 호출은 각각 0이며 업무·EXPORT 결과도 0이었다. | 마지막 `RUNNING`으로 생존을 판정하지 않는다. 이전 child 종료와 lease 소유 상태를 구분해 확인했다. 시험에서는 종료 후 새 lease 획득·검증·해제만 수행했다. 새 daemon·resume·업무 처리·슬롯 해제·자동 복구는 검증하지 않았다. Kafka는 end 0·`NO_COMMIT / null`이었다. | [실제 기록](../evidence/runtime-lease-loss/README.md) · [summary](../evidence/runtime-lease-loss/summary.json) · [당시 IT][lease-loss-it] |
+
+`NO_COMMIT / null`은 offset 0이 아니다. commit 부재를 0으로 채워 lag를 계산하지 않으며, timeout만으로 commit 미처리나 재전달 횟수를 가정하지 않는다. offset 실패 시험은 broker 재개 뒤 실제 부재를 관측했지만 늦은 commit이 가능한 다른 실행의 결과까지 결정하지 않는다.
+
+export 수리 시험에서 삭제한 것은 종료한 child·해제된 lease·정확한 소유 key·손상 bytes를 대조한 **시험 소유 객체 한 개**였다. 이를 운영 객체의 일반 자동 삭제나 자동 재Put 절차로 옮기지 않는다. 잘못된 Kafka 입력은 그대로 남긴 보호 시험이며 record/topic 삭제나 offset 건너뛰기로 성공을 만들지 않았다. 잠금 손실 시험도 자동 resume나 이미 진행 중인 I/O의 원자적 fencing을 입증하지 않는다.
+
+[offset-commit-it]: https://github.com/DevDooly/devdooly-platform-lab/blob/0d49ab99bd1caccf8109642758f2ea8367dbb504/infra/offset-commit-recovery-ci/OffsetCommitRecoveryIT.java
+[export-integrity-it]: https://github.com/DevDooly/devdooly-platform-lab/blob/0f5c4bc2b0e5296c0c29924a5487d2c62ad1cd75/infra/export-integrity-runtime-ci/ExportIntegrityRuntimeIT.java
+[invalid-message-it]: https://github.com/DevDooly/devdooly-platform-lab/blob/15def17943f89975b22d9634cdeab2ec38b113fe/infra/invalid-message-runtime-ci/InvalidMessageRuntimeIT.java
+[lease-loss-it]: https://github.com/DevDooly/devdooly-platform-lab/blob/dd9feb815ead4744bf4b6c80a466095e2a4bc6ac/infra/runtime-lease-loss-ci/RuntimeLeaseLossIT.java
+
 ## 관측 API와 화면
 
 `GET /api/jobs/observation`은 별도 [job-observation v1](../contracts/job-observation.md) 계약이다. runtime journal·슬롯·최신 작업 최대 20개, 상태·시각·건수·파일별 예상 SHA/크기만 반환한다. 읽기 snapshot 안에서 Kafka/S3를 호출하거나 작업 row lock을 잡지 않는다. 현재 저장소 재조회·현재 프로세스 생존 보장과 구분한다.

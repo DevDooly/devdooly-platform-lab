@@ -8,7 +8,7 @@
 | --- | --- |
 | 완료한 격리 검증 | Kafka backlog·offset commit 실패 복구·손상 export 수리·잘못된 메시지 보호·실행 잠금 손실 검증. 특히 [잠금 손실](evidence/runtime-lease-loss/README.md)은 stale `RUNNING / EXPORT`와 실제 종료를 구분합니다. |
 | 완료한 데이터·탐색 구현 | [같은 PostgreSQL의 정상 stop/start](evidence/cloud-catalog-restart/README.md) 뒤 catalog·조회·전체 객체 보존을 확인했습니다. 근거 목록의 검색·필터·6개씩 더 보기는 웹173개 검사·타입·빌드와 같은 main의 Pages·CI, 로컬·공개 화면 확인을 마쳤습니다. |
-| 진행 중 | 기존 잠금 손실 기록을 설명하는 별도 사례 페이지(`/cases/runtime-ownership/`)를 준비합니다. 검증·게시 결과는 [다음 개발 계획의 최신 안내](NEXT_STEPS.md)를 따릅니다. |
+| 사례·운영 문서 | [별도 잠금 손실 사례](https://devdooly.github.io/devdooly-platform-lab/cases/runtime-ownership/)의 공개·키보드·모바일 확인을 마쳤습니다. 장애별 판단표와 AI 소유자 검토자료를 정리했으며, 세부 근거와 다음 순서는 [최신 안내](NEXT_STEPS.md)를 따릅니다. |
 | 보류 | 자격증명 교체·회전, 자원 예산 정책, [PR102 접수 gate](https://github.com/DevDooly/devdooly-platform-lab/pull/102) 활성화는 보류를 유지합니다. 현재 공개 경로의 재부팅·인증서 자연 갱신도 미검증입니다. |
 
 ## 이전 안내 — 2026-10-18 UTC 검증 반영

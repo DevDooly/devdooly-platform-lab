@@ -4,8 +4,6 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 [포트폴리오](https://devdooly.github.io/devdooly-platform-lab/) · [GitHub](https://github.com/DevDooly/devdooly-platform-lab) · [시작 안내](docs/START_HERE.md) · [진행 목록](docs/ROADMAP.md) · [다음 개발 계획](docs/NEXT_STEPS.md)
 
-화면 이동: [Lab](https://devdooly.github.io/devdooly-platform-lab/#lab) · [작업·export](https://devdooly.github.io/devdooly-platform-lab/#job-observation) · [플랫폼](https://devdooly.github.io/devdooly-platform-lab/#platform) · [기술별 근거](https://devdooly.github.io/devdooly-platform-lab/#evidence) · [합성 보존 조건](https://devdooly.github.io/devdooly-platform-lab/#iceberg-policy-scenarios) · [snapshot 전후](https://devdooly.github.io/devdooly-platform-lab/#snapshot-expiration)
-
 ## 현재 상태
 
 현재 목표는 기존 미니 PC의 서비스·자료를 보존하면서 Java·데이터 처리·배포·복구 경험과 공개 연결을 검증 기록으로 보여주는 것입니다.
@@ -17,27 +15,18 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 | 보존 계획·화면 | Iceberg 실제 metadata의 KEEP 계획, 기술별 근거 탐색·합성 정책 선택 UI의 로컬 검증 | [실측 기록](docs/evidence/iceberg-capture/ATTEMPT_9.md), [합성 예제](examples/iceberg-retention-scenarios/README.md) |
 | Java·AI 활용 | 합성 시간창 예제의 회귀 테스트와 Windows·Linux JMH 재현. 사람 검토는 대기 중 | [Java 예제](examples/java-window-analysis/PROVENANCE.md), [Linux 재현 결과](docs/evidence/ai-window-analysis/hosted-linux-20261018/README.md) |
 
-지금 완료: Kafka 관측 API·collector 연결, systemd·수동 host 실행, 원래 타이머의 자연 실행 2회·회차 간격 1개와 각 회차의 공개 3파일 대조를 확인했습니다. [자연 관측 근거](docs/evidence/kafka-observation/README.md#원래-타이머의-자연-2회와-공개-게시-대조)를 따르며, 화면은 마지막 수집 기록을 보여줍니다.
+최근 완료한 범위는 다음과 같습니다. 실행별 소스·수치·실패 이력과 한계는 연결한 실제 근거를 따릅니다.
 
-내부 게이트웨이 조회와 기존 상태 보존 검증을 마쳤고, 기존 Traefik과 설정 파일 7개를 유지했습니다([검증 범위](docs/runbooks/public-read-gateway-chart.md)). DuckDNS의 표준 TLS와 외부 runner의 조회 6개·거부 3개에 이어, 공개 화면의 작업·Kafka 실시간 조회도 확인했습니다([공개 HTTPS·화면 근거](docs/evidence/public-read-https/README.md)). 작업 8개의 export 상태와 Kafka 관측을 대조했으며, 같은 Kafka 기록의 시계 경고가 해소되는 것도 확인했습니다. 격리 Kafka와 공개 근거 카드 연결을 완료했으며([검증 근거](docs/evidence/kafka-acl/README.md)), 토큰 2개도 각 목적의 GET 응답 200을 확인했습니다(회전 미실행).
+- **런타임 장애:** [offset commit 실패 복구](docs/evidence/offset-commit-recovery/README.md)와 [손상 export 수리](docs/evidence/export-integrity-runtime/README.md)를 검증했습니다. [잘못된 입력](docs/evidence/invalid-message-runtime/README.md)과 [잠금 연결 손실](docs/evidence/runtime-lease-loss/README.md)은 정상 작업 보존과 실행기 종료를 확인한 결과로, 복구 완료와 구분합니다.
+- **데이터 보존:** [격리 PostgreSQL 정상 재시작](docs/evidence/cloud-catalog-restart/README.md) 뒤 catalog·조회·전체 객체 보존과 [새 합성 warehouse의 snapshot 만료](docs/evidence/cloud-iceberg-expiration/README.md)를 확인했습니다. 운영 자료의 만료·삭제 결과가 아닙니다.
+- **공개 조회:** [10월20일 운영 기록](docs/evidence/public-read-https/ops-20261020/README.md)에서 DDNS·표준 TLS·외부 조회와 작업·Kafka 화면을 확인했습니다. 수집 시점의 기록이며 장기간 가용성을 뜻하지 않습니다.
+- **공개 화면:** [근거 검색·필터·6개씩 더 보기](https://devdooly.github.io/devdooly-platform-lab/#evidence)와 [실행 잠금 사례](https://devdooly.github.io/devdooly-platform-lab/cases/runtime-ownership/)를 공개했습니다. 웹186개 검사·타입·루트/프로젝트 경로 빌드, 같은 main의 Pages·CI와 공개 데스크톱·모바일 확인을 마쳤습니다.
 
-새 격리 warehouse에서 snapshot 1개·data 파일 1개 만료와 tag·공유 파일·행 보존, 후속 조회·정리 검증을 마쳤습니다([실제 근거](docs/evidence/cloud-iceberg-expiration/README.md) · [TIL 해설](https://devdooly.github.io/TIL/Data/Iceberg_Snapshot_Expiration_Lab/)). DB·Garage의 선택 볼륨이 같은 파일시스템을 공유함을 읽기 전용으로 확인했습니다. 자원 예산 근거가 미확정이라 접수 gate는 보류하고, snapshot 만료 전후 [관측 화면](https://devdooly.github.io/devdooly-platform-lab/#snapshot-expiration)의 공개와 전후 전환을 확인했습니다.
+[장애별 판단표](docs/runbooks/continuous-runtime.md#실제-네-가지-장애의-판단-기준--2026-10-20-utc)는 저장 상태·실제 종료·재개 전제를 구분합니다. [AI 예제 소유자 검토자료](docs/reviews/ai-window-owner-review.md)의 사람 판단은 **PENDING**입니다.
 
-2026-10-20 UTC에 선택 운영 상태·DDNS 자연 실행·표준 TLS와 외부 조회 6개·거부 3개, 공개 작업·Kafka 화면을 다시 확인했습니다([시점별 운영 근거](docs/evidence/public-read-https/ops-20261020/README.md)). 자격증명 회전과 자원 예산·접수 gate는 보류하며, 인증서 자연 갱신과 현재 공개 경로의 재부팅은 이번 검증에 포함하지 않았습니다.
+## 다음 단계와 보류
 
-새 격리 Kafka에서 consumer 정상 종료 중 backlog가 8→14로 늘고, 같은 group의 새 client가 남은 14개를 실제로 읽어 lag 0에 도달하는 검증을 마쳤습니다([실제 4단계 근거](docs/evidence/kafka-lag-recovery/README.md)). [단계별 관측 화면](https://devdooly.github.io/devdooly-platform-lab/#kafka-lag-recovery)을 공개하고 데스크톱·모바일의 단계 전환과 키보드 이동을 확인했습니다. 이 시험은 정상 consumer 종료의 범위이며, 아래 DB·export를 포함한 별도 commit 실패 시험과 구분합니다.
-
-DB commit 후 실제 Kafka offset commit 실패와 영속 pause, 일반 run 거부, 명시적 resume 뒤 재전달 1회·export 파일 2개 검증·슬롯 해제·lag 0을 새 격리 환경에서 확인했습니다([실제 실행·앞선 실패 기록](docs/evidence/offset-commit-recovery/README.md)). 업무 행·처리 시각과 소스도 보존됐습니다. [단계별 화면](https://devdooly.github.io/devdooly-platform-lab/#offset-commit-recovery)을 공개하고 2026-10-20 13:01–13:02 UTC에 데스크톱·모바일의 단계 전환·키보드 이동·상세 근거와 가로 넘침 부재를 확인했습니다.
-
-손상 export를 실제 런타임이 발견해 `EXPORT_FAILED`로 중지하고, 수리 없이 resume하면 재중지되는 검증도 통과했습니다([실제 수리·복구 근거](docs/evidence/export-integrity-runtime/README.md)). 시험 소유 손상 객체를 명시 삭제한 뒤 별도 resume에서 파일 2개·슬롯 해제·실제 완료 메시지 replay 1회·lag 0을 확인했습니다. 원본·업무 행과 시각·소스 보존 및 소유 자원 정리도 통과했습니다. 실제 기록을 연결한 [단계 화면](https://devdooly.github.io/devdooly-platform-lab/#export-integrity-runtime)은 웹 160개 검사·타입·빌드와 Pages·main CI를 통과했고, 공개 데스크톱·모바일의 단계 전환·키보드·가독성을 확인했습니다. 토큰 교체·예산 정책·PR102는 계속 보류합니다.
-
-잘못된 Kafka JSON 뒤의 정상 작업을 보호하는 실제 시험도 통과했습니다([실행·보존 근거](docs/evidence/invalid-message-runtime/README.md)). 두 새 worker의 `INVALID_MESSAGE` 영속 중지, 일반 run 거부·명시 resume 후 재중지와 실제 `NO_COMMIT/null`을 확인했습니다. 정상 작업은 `QUEUED / NOT_REQUESTED`·슬롯 점유 상태로 보존됐으며 복구 완료를 뜻하지 않습니다. [공개 근거 목록](https://devdooly.github.io/devdooly-platform-lab/#evidence)에 연결해 데스크톱·모바일의 필터·출처·가독성을 확인했습니다.
-
-실제 DB 실행 잠금 연결을 잃은 뒤 다음 단계의 발행·수신 호출이 모두 0이고 자원이 종료되는 검증도 통과했습니다([실행·종료 근거](docs/evidence/runtime-lease-loss/README.md)). queued 작업·원본·슬롯을 보존하고 이전 child 종료 뒤 새 잠금 획득을 확인했습니다. DB의 `RUNNING / EXPORT`는 종료된 프로세스의 마지막 기록으로, 현재 정상 상태와 구분합니다. 공개 근거 목록에 반영해 Pages·main CI와 공개 데스크톱·모바일의 필터·출처·가독성을 확인했습니다.
-
-새 격리 PostgreSQL을 같은 컨테이너·볼륨에서 한 번 정상 stop/start한 뒤 catalog 전체 행·DB 식별자와 fresh Trino의 조회10개·전체20객체 bytes를 보존하는 시험도 통과했습니다([실제 재시작 근거](docs/evidence/cloud-catalog-restart/README.md)). 실제 작업·정리106.252초는 이미지 준비를 제외한 당시 값이며 운영 성능이나 SLA를 뜻하지 않습니다. 이 기록을 추가한 [공개 근거 목록](https://devdooly.github.io/devdooly-platform-lab/#evidence)은 검색·기술/환경 필터·6개씩 더 보기를 제공합니다. 웹173개 검사·타입·빌드와 동일 main의 Pages·CI를 통과했고, 2026-10-20 14:49–14:50 UTC에 공개 데스크톱·모바일의 검색·필터·6→12→18개 표시·키보드 초점·실제 출처·가로 넘침 부재를 확인했습니다. 토큰 교체·예산 정책·PR102는 계속 보류합니다.
-
-실행 잠금 손실 기록을 설명하는 [별도 사례 페이지](https://devdooly.github.io/devdooly-platform-lab/cases/runtime-ownership/)를 준비했습니다. DB의 마지막 저장 상태와 실제 종료를 나란히 보여주고, 네 개의 확인 지점과 원문 근거를 연결합니다. 웹186개 검사·타입·루트/프로젝트 경로 빌드, 로컬1280px·390px의 상세 펼치기·키보드·왕복 이동·가독성을 확인했습니다. Pages 게시와 공개 화면 확인은 다음 단계입니다.
+인증서 자연 갱신·현재 공개 경로의 재부팅·K3s/Jenkins 전체 archive 복원은 아직 검증하지 않았습니다. 필요한 운영 후속의 범위와 순서는 [다음 개발 계획](docs/NEXT_STEPS.md)을 따릅니다. 토큰 교체·자원 예산 정책·PR102 접수 gate는 계속 보류합니다.
 
 ## 로컬 실행
 
