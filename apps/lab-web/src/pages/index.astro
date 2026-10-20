@@ -1,5 +1,6 @@
 ---
 import LabExplorer from '../components/LabExplorer';
+import InitialFragment from '../components/InitialFragment.astro';
 import { publicApiConfiguration } from '../lib/public-api-base';
 import EvidenceExplorer from '../components/EvidenceExplorer';
 import PlatformObservationCard from '../components/PlatformObservationCard';
@@ -60,6 +61,7 @@ const steps = [
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#f7f6f0" />
+    <InitialFragment />
     <title>DevDooly — 만드는 과정이 보이는 Platform Lab</title>
     <meta name="description" content="김선홍의 Java·데이터·플랫폼 개발 기록. 합성 데이터의 처리 결과와 배포 상태를 직접 살펴보는 개인 엔지니어링 Lab입니다." />
     <link rel="icon" type="image/svg+xml" href={`${assetBase}favicon.svg`} />
