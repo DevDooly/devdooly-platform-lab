@@ -1,0 +1,23 @@
+{
+    "schemaVersion":  1,
+    "status":  "VERIFIED",
+    "scope":  "CREDENTIAL_FREE_PUBLIC_OCI_INDEX_READ_ONLY",
+    "reference":  "ghcr.io/devdooly/devdooly-platform-lab-api@sha256:ee71389be27fa484284a517a324c52a9c827cd20db21f0b306c4dcfd52147aad",
+    "captureStartedAt":  "2026-10-20T19:55:33.0906193Z",
+    "capturedAt":  "2026-10-20T19:55:34.1820149Z",
+    "dockerVersion":  "Docker version 29.8.2, build 7fc2dff",
+    "buildxVersion":  "v0.37.2",
+    "configSha256":  "64c7e828e79197d4e016a5bd0c7701b68e1538eba6f9e26b8ade668fbe38c52e",
+    "indexBytes":  856,
+    "indexSha256":  "ee71389be27fa484284a517a324c52a9c827cd20db21f0b306c4dcfd52147aad",
+    "manifestCount":  2,
+    "linuxAmd64ManifestDigest":  "sha256:d324a231e6e190f88556f6ab85d90763d29a50163c1724ba2d21d4962e06a834",
+    "userCredentialsProvided":  false,
+    "credentialHelperAutodetectionDisabled":  true,
+    "authEnvironmentUnset":  true,
+    "imageConfigSourceLabelsVerified":  false,
+    "imageLayersDownloaded":  false,
+    "imageExecuted":  false,
+    "miniPcAccessed":  false,
+    "operatingConfigurationChanged":  false
+}
