@@ -137,13 +137,13 @@ public final class RuntimeMain {
         }
     }
 
-    private record Clients(S3Client s3, Producer<String, String> producer, Consumer<String, String> consumer,
-                           RuntimeResources resources) implements AutoCloseable {
+    record Clients(S3Client s3, Producer<String, String> producer, Consumer<String, String> consumer,
+                   RuntimeResources resources) implements AutoCloseable {
         @Override public void close() { closeResources(resources); }
     }
 
-    private static Clients openClients(URI endpoint, String region, StaticCredentialsProvider credentials,
-                                       String bootstrap, String group) {
+    static Clients openClients(URI endpoint, String region, StaticCredentialsProvider credentials,
+                               String bootstrap, String group) {
         var partial = new ArrayList<AutoCloseable>();
         try {
             var s3 = S3ClientFactory.createGarage(endpoint, region, credentials); partial.add(s3);
@@ -153,8 +153,14 @@ public final class RuntimeMain {
                 () -> consumer.close(Duration.ofSeconds(10)), () -> producer.close(Duration.ofSeconds(10)), s3::close));
         } catch (RuntimeException failure) {
             java.util.Collections.reverse(partial);
-            closeResources(new RuntimeResources(partial.toArray(AutoCloseable[]::new)));
+            try { closeResources(new RuntimeResources(partial.toArray(AutoCloseable[]::new))); }
+            catch (RuntimeException closeFailure) { /* Keep only the fixed construction failure; a cleanup Error still propagates. */ }
             throw new IllegalStateException("Runtime clients could not be constructed");
+        } catch (Error failure) {
+            java.util.Collections.reverse(partial);
+            try { closeResources(new RuntimeResources(partial.toArray(AutoCloseable[]::new))); }
+            catch (RuntimeException | Error closeFailure) { /* The original construction Error remains primary, without suppressed data. */ }
+            throw failure;
         }
     }
 

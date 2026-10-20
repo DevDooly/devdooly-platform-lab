@@ -23,6 +23,8 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 - **실행기 오류 처리:** [합성 Error 회귀 검증](docs/evidence/runtime-error-cleanup/README.md)으로 정상 종료 오기록과 자원 정리 누락을 재현·수정했습니다. 관련26개·로컬 전체 검증과 같은 main의 Linux API233개 통과·skip0를 확인했습니다. 운영 배포는 별도입니다.
 
+- **시작 실패 정리:** [일부 client만 구성된 뒤의 Error](docs/evidence/client-construction-error/README.md)에서도 역순 종료를 수행하도록 수정했습니다. 수정 전3개 실패와 수정 후7개 통과, 로컬 전체 API240개 중229개 통과·Linux 전용11개 생략을 확인했습니다.
+
 - **런타임 장애:** [offset commit 실패 복구](docs/evidence/offset-commit-recovery/README.md)와 [손상 export 수리](docs/evidence/export-integrity-runtime/README.md)를 검증했습니다. [잘못된 입력](docs/evidence/invalid-message-runtime/README.md)과 [잠금 연결 손실](docs/evidence/runtime-lease-loss/README.md)은 정상 작업 보존과 실행기 종료를 확인한 결과로, 복구 완료와 구분합니다.
 - **데이터 보존:** [격리 PostgreSQL 정상 재시작](docs/evidence/cloud-catalog-restart/README.md) 뒤 catalog·조회·전체 객체 보존과 [새 합성 warehouse의 snapshot 만료](docs/evidence/cloud-iceberg-expiration/README.md)를 확인했습니다. 운영 자료의 만료·삭제 결과가 아닙니다.
 - **공개 조회:** [첫 TLS 인증서 관측](docs/evidence/tls-certificate/README.md)의 수집 당시87일·만료시각과 출처를 [공개 화면](https://devdooly.github.io/devdooly-platform-lab/#tls-certificate)에 연결했습니다. 웹207검사·타입·두 경로 빌드, 같은 main의 Pages·컨테이너CI와 공개 데스크톱·모바일 확인을 마쳤습니다. 자연 갱신·현재 가용성은 별도입니다.

@@ -8,6 +8,8 @@
 
 [초기 직접 링크 보정](evidence/initial-fragment/README.md)은 로컬390px·1280px에서 목표 제목 유지, 별도 임시 HTML에서10초·최대4회·pointer/Tab 입력 취소·hash 없음·reload 제외를 확인했습니다. 웹207개·타입47파일과 두 경로 빌드도 통과했으며 임시 HTML은 제거했습니다. 공개 반영을 확인한 뒤 부분 client 구성 오류 검증을 마무리합니다.
 
+[부분 client 구성 Error](evidence/client-construction-error/README.md)는 기존 동작의 close 누락3개 실패를 재현한 뒤 수정7개·전체 API 검증을 완료했습니다. 로컬240개 중229개 통과·기존 Linux 전용11개 생략입니다. 같은 소스의 Linux CI와 앞선 직접 링크의 공개 Pages 반영을 확인합니다. 네 보류 항목은 유지합니다.
+
 **추가 보류 결정:** 별도 VM·장비가 없어 사용자 결정에 따라 K3s·Jenkins 실제 기동 복원을 보류합니다. 기존 파일·무결성 검증 결과와 사전준비 문서는 유지하며, 실행 환경이 준비되면 대상·버전·자료와 정확한 시험 범위를 확인해 재개합니다.
 
 [heartbeat 시각 순서 표시](evidence/job-heartbeat-order/README.md)의 합성 반례를 재현했습니다. DB 확인보다 미래인 heartbeat를 브라우저가 따라잡으면 “5분 초과”로 잘못 분류하던 화면을 수정했습니다. 해당 기록의 nanosecond 순서 역전은 `clock-check`로 유지하며 원 시각·source·API 계약을 보존합니다.
