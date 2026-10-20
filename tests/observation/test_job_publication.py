@@ -178,13 +178,13 @@ class CycleFeatureTests(Files):
             'collector_path':'/PRIVATE/platform_collector.py','state_directory':str(self.root/'state'),'runtime_directory':str(self.root/'runtime'),
             'pages_token_file':str(self.token),'jobs_enabled':'true'}
 
-    def execute(self,job_failure=False,nanoseconds=False):
+    def execute(self,job_failure=False,nanoseconds=False,uploader=None):
         config=self.config();calls=[];posted=[]
         def runner(arguments,**kwargs):
             calls.append(arguments)
             if len(calls)==1:return SimpleNamespace(returncode=0,stdout=b'aaa.bbb.ccc')
             output=Path(arguments[arguments.index('--output')+1]);instant=datetime.now(timezone.utc).isoformat(timespec='microseconds').replace('+00:00','Z')
-            if nanoseconds:instant=instant[:-1]+'298Z'
+            if nanoseconds:instant='2000-01-01T00:00:04.845617298Z'
             if len(calls)==2:output.write_text(json.dumps(platform_snapshot(instant)));os.chmod(output,0o600);return SimpleNamespace(returncode=0)
             self.assertNotIn('--kubeconfig',arguments)
             if job_failure:
@@ -192,7 +192,7 @@ class CycleFeatureTests(Files):
                 raise subprocess.TimeoutExpired(arguments,20,stderr='PRIVATE_CANARY')
             output.write_text(json.dumps(job_record(instant)));os.chmod(output,0o600);return SimpleNamespace(returncode=0)
         def publish(*args,**kwargs):posted.append((args,kwargs));return pages_uploader.public_report('DISPATCHED',123)
-        report=host_cycle.run_cycle(config,runner=runner,uploader=publish,lock_class=NoLock)
+        report=host_cycle.run_cycle(config,runner=runner,uploader=publish if uploader is None else uploader,lock_class=NoLock)
         return config,calls,posted,report
 
     def test_enabled_jobs_share_short_lived_token_and_joint_dispatch_then_cleanup(self):
@@ -204,11 +204,18 @@ class CycleFeatureTests(Files):
         self.assertEqual(json.loads((Path(config['state_directory'])/'jobs-capture.json').read_text())['status'],'success')
 
     def test_nine_digit_http_capture_is_dispatched_without_loss_or_legacy_iso_parser(self):
-        with patch.object(host_cycle,'datetime',NoIsoParserDatetime):
+        class CycleDatetime(NoIsoParserDatetime):
+            started=False
+            @classmethod
+            def now(cls,tz=None):
+                first=not cls.started;cls.started=True
+                # Only cycle start is 04Z; every later ceiling is 05Z, regardless of call count.
+                return cls(2000,1,1,0,0,4 if first else 5,tzinfo=tz)
+        with patch.object(host_cycle,'datetime',CycleDatetime):
             config,calls,posted,report=self.execute(nanoseconds=True)
         self.assertEqual(report['attemptStatus'],'DISPATCHED')
         captured=posted[0][1]['job_snapshot']['capturedAt']
-        self.assertRegex(captured,r'\.[0-9]{6}298Z$')
+        self.assertEqual(captured,'2000-01-01T00:00:04.845617298Z')
         self.assertEqual(json.loads((Path(config['state_directory'])/'jobs-capture.json').read_text())['capturedAt'],captured)
         self.assertEqual(list(Path(config['runtime_directory']).iterdir()),[])
 
@@ -220,6 +227,55 @@ class CycleFeatureTests(Files):
         self.assertEqual(journal['status'],'failure');self.assertIsNone(journal['capturedAt'])
         self.assertNotIn('PRIVATE_CANARY',json.dumps(journal))
         self.assertEqual(json.loads((Path(config['state_directory'])/'jobs-observation.json').read_text()),job_record())
+
+    def assert_job_diagnostic_failure_does_not_block(self,job_failure):
+        config=self.config();state=Path(config['state_directory']);diagnostic=state/'jobs-capture.json'
+        original_write=host_cycle.atomic_private_json;observed=[]
+        def fail_only_diagnostic(path,value):
+            if path==diagnostic:
+                observed.append((deepcopy(value),(state/'jobs-observation.json').read_bytes()))
+                raise OSError('PRIVATE_DIAGNOSTIC_CANARY')
+            return original_write(path,value)
+        with patch.object(host_cycle,'atomic_private_json',side_effect=fail_only_diagnostic),\
+                patch('sys.stdout',new_callable=io.StringIO) as stdout,patch('sys.stderr',new_callable=io.StringIO) as stderr:
+            config,calls,posted,report=self.execute(job_failure=job_failure)
+        self.assertEqual(report,pages_uploader.public_report('DISPATCHED',123))
+        self.assertEqual(len(calls),3);self.assertEqual(len(posted),1);self.assertEqual(len(observed),1)
+        self.assertEqual(posted[0][0][0],json.loads((state/'platform-observation.json').read_text()))
+        self.assertEqual((state/'jobs-observation.json').read_bytes(),observed[0][1])
+        self.assertFalse(diagnostic.exists());self.assertEqual(list(Path(config['runtime_directory']).iterdir()),[])
+        self.assertEqual(stdout.getvalue()+stderr.getvalue(),'')
+        self.assertNotIn('PRIVATE_DIAGNOSTIC_CANARY',json.dumps(report))
+        return state,posted[0][1],observed[0][0]
+
+    def test_successful_jobs_are_dispatched_even_when_only_diagnostic_write_fails(self):
+        state,options,diagnostic=self.assert_job_diagnostic_failure_does_not_block(False)
+        self.assertEqual(options,{'job_snapshot':json.loads((state/'jobs-observation.json').read_text())})
+        self.assertEqual(diagnostic['status'],'success');self.assertEqual(diagnostic['errorCode'],'NONE')
+        self.assertEqual(diagnostic['capturedAt'],options['job_snapshot']['capturedAt'])
+
+    def test_job_timeout_and_diagnostic_write_failure_keep_platform_and_last_good_jobs(self):
+        state,options,diagnostic=self.assert_job_diagnostic_failure_does_not_block(True)
+        self.assertEqual(options,{})
+        self.assertEqual((state/'jobs-observation.json').read_bytes(),json.dumps(job_record()).encode())
+        self.assertEqual(diagnostic['status'],'failure');self.assertEqual(diagnostic['errorCode'],'JOB_CAPTURE_FAILED')
+        self.assertIsNone(diagnostic['capturedAt'])
+
+    def test_required_dispatch_intent_write_failure_still_propagates_before_any_send(self):
+        config=self.config();state=Path(config['state_directory']);sent=[]
+        error=OSError('PRIVATE_INTENT_CANARY')
+        def sender(request):sent.append(request);return response()
+        def publish(snapshot,token,journal,**options):
+            return pages_uploader.dispatch(snapshot,token,journal,sender=sender,**options)
+        with patch.object(pages_uploader,'atomic_private_json',side_effect=error) as write:
+            with self.assertRaises(OSError) as caught:self.execute(uploader=publish)
+        self.assertIs(caught.exception,error);self.assertEqual(sent,[])
+        write.assert_called_once()
+        self.assertEqual(write.call_args.args[0],state/'pages-dispatch.json')
+        self.assertEqual(write.call_args.args[1]['attemptStatus'],'DISPATCH_INTENT_RECORDED')
+        self.assertFalse((state/'pages-dispatch.json').exists())
+        self.assertEqual(json.loads((state/'jobs-capture.json').read_text())['status'],'success')
+        self.assertEqual(list(Path(config['runtime_directory']).iterdir()),[])
 
 class JobPagesTests(unittest.TestCase):
     setup_source=previous_tests.ArtifactTests.setup_source

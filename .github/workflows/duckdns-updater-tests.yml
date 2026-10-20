@@ -56,7 +56,7 @@ jobs:
                   unchanged = snapshot() == before
               except Exception:
                   unchanged = False
-          passed = completed and unchanged and result.testsRun == 4 and result.wasSuccessful()
+          passed = completed and unchanged and result.testsRun == 5 and result.wasSuccessful()
           passed = passed and not (result.failures or result.errors or result.skipped
                                    or result.expectedFailures or result.unexpectedSuccesses)
           print(json.dumps({'scope': 'SYNTHETIC_DUCKDNS_UNIT_ONLY', 'passed': passed,

@@ -25,10 +25,17 @@ class DuckDnsUpdateTest(unittest.TestCase):
                 replacement.start()
                 self.addCleanup(replacement.stop)
 
-    def native_case(self, raw, returncode=0, clock=None):
+    def native_case(self, raw, returncode=0, clock=None, wait_elapsed=None):
         child, selector = Mock(), Mock()
         child.stdout.fileno.return_value = 41
         child.wait.return_value = returncode
+        if wait_elapsed is not None:
+            current = [1.0]
+            def completed_wait(**unused):
+                current[0] = 1.0 + wait_elapsed
+                return returncode
+            child.wait.side_effect = completed_wait
+            clock = lambda: current[0]
         child.poll.return_value = None
         selector.select.return_value = [(object(), update.selectors.EVENT_READ)]
         config = update.build_config(b"synthetic-example.duckdns.org\n", b"SYNTHETIC&PRIVATE_MARKER\n")
@@ -142,6 +149,19 @@ class DuckDnsUpdateTest(unittest.TestCase):
         self.assertNotIn("CANARY", output.getvalue())
         self.assertIn('"passed": false', output.getvalue())
         self.assertIn('"result": "UPDATE_UNVERIFIED"', output.getvalue())
+
+    def test_successful_wait_return_at_or_after_total_deadline_is_not_accepted_or_joined_twice(self):
+        for elapsed, expected in ((19.999, None), (20.0, "UPDATE_TIMEOUT_OUTCOME_UNKNOWN"),
+                                  (20.001, "UPDATE_TIMEOUT_OUTCOME_UNKNOWN")):
+            with self.subTest(wait_elapsed_seconds=elapsed):
+                child, spawn, read, _, failure = self.native_case(b"OK\n200", wait_elapsed=elapsed)
+                self.assertEqual(failure, expected)
+                spawn.assert_called_once()
+                child.wait.assert_called_once_with(timeout=20.0)
+                child.kill.assert_not_called()
+                child.poll.assert_not_called()
+                child.stdout.close.assert_called_once()
+                self.assertEqual(read.call_count, 2)
 
 
 if __name__ == "__main__":

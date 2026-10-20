@@ -170,9 +170,11 @@ def run_cycle(config: dict, *, runner=subprocess.run, uploader=dispatch, lock_cl
                     except Exception:pass
                     # Failure does not rewrite the last job record or block a valid
                     # platform envelope. Missing input makes Pages retain last-good.
-                    atomic_private_json(state/'jobs-capture.json',{'attemptedAt':datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),
-                        'status':'success' if jobs is not None else 'failure','errorCode':code,
-                        'capturedAt':jobs['capturedAt'] if jobs is not None else None})
+                    try:
+                        atomic_private_json(state/'jobs-capture.json',{'attemptedAt':datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),
+                            'status':'success' if jobs is not None else 'failure','errorCode':code,
+                            'capturedAt':jobs['capturedAt'] if jobs is not None else None})
+                    except Exception:pass  # Optional diagnostics cannot block the existing publication.
                 kafka=None
                 if config.get('kafka_enabled')=='true':
                     kafka_output=state/'kafka-observation.json';code='KAFKA_CAPTURE_FAILED'
