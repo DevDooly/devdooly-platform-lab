@@ -4,6 +4,7 @@
 
 | 기록 | 확인한 범위 |
 | --- | --- |
+| [DB commit 뒤 Kafka commit 실패 복구](offset-commit-recovery/README.md) | 실제 영속 pause·일반 run 거부·명시 resume·재전달 1회·파일 2개 검증·슬롯 해제·lag 0과 업무 행/시각·소스 보존, 앞선 실패 5건 별도 기록 |
 | [보존 정책·정리·자원 예산](retention-resource-budget/README.md) | 실제 dry-run 후보 0·별도 합성 PVC의 UID/Retain 정리, 기존 limit 유지·고정 12개 입력 3회/약 63초 자원·지연 관측·최종 보존 25개 |
 | [Kafka·Garage 격리 PVC 복원](runtime-pvc-restore/README.md) | 외부 암호화 cold backup 반환·새 PVC 3개 복원·Kafka 메시지/offset/재시작·Garage 9객체 및 별도 128KiB 블록 2PVC 복원·원본 보존 |
 | [Linux 컨테이너 통합](compose-ci/README.md) | 실제 MariaDB·Flyway·컨테이너·API 주소 변경·Nginx와 결과 보존 |

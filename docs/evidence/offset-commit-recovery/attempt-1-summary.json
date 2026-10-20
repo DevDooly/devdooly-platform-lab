@@ -1,0 +1,23 @@
+{
+  "expectedTests": 1,
+  "failureCode": "RECOVERY_UNVERIFIED",
+  "hostOrBrokerRestartVerified": false,
+  "operatingServicesChanged": false,
+  "ownedResourcesRemoved": true,
+  "publicExecutionEnabled": false,
+  "recoveryResult": null,
+  "runtimeManifestSha256": "4ca6fe3799132bab231b5d20cf1d5c3d5804df4f8b3aab28ddd4c39110530d38",
+  "schemaVersion": 1,
+  "scope": "ISOLATED_REAL_OFFSET_COMMIT_RECOVERY",
+  "selectedFailure": {
+    "sourceFile": "runner",
+    "sourceLine": 267,
+    "stage": "POST_DB_WAIT"
+  },
+  "sourceAndArtifactsUnchanged": false,
+  "sourceCommit": "721e2f5158602a726cf10860885b77a55f08098b",
+  "status": "FAILED",
+  "surefireXmlSha256": null,
+  "synthetic": true,
+  "verifiedTests": 0
+}

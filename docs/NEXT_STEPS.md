@@ -1,12 +1,18 @@
 # Platform Lab 다음 개발 계획
 
-## 최신 격리 Kafka 검증 — 2026-10-20 UTC
+## 최신 격리 런타임 검증 — 2026-10-20 12:44 UTC
+
+[DB commit 뒤 Kafka commit 실패 복구](evidence/offset-commit-recovery/README.md)의 실제 시험을 통과했습니다. 영속 `PAUSED_OPERATOR / CONSUME / OFFSET_COMMIT_FAILED`, 일반 run 거부와 명시적 resume, 실제 완료 작업 재전달 1회·export 파일 2개·슬롯 해제·commit/end 1·lag 0을 확인했습니다. 업무 행·처리 시각·소스와 소유 자원 정리도 확인했습니다. broker 재개 직후 commit은 실제 미관측(null)이었으며 offset reset은 하지 않았습니다.
+
+실제 기록을 단계별 화면에 연결하고 로컬·공개 화면 검증을 진행합니다. 다음은 손상된 PENDING export로 실제 런타임이 중지되고, 수리 없이 resume하면 다시 중지되며, 시험 소유 파일의 명시 수리 후에만 완료되는 경계입니다. 해당 후속 시험은 아직 실행하지 않았습니다. 토큰 교체·예산 정책·PR102는 보류합니다. 운영 복구·host/broker 재시작·HA·모든 장애의 exactly-once는 이번 결과의 범위가 아닙니다.
+
+## 앞선 Kafka backlog 검증 — 2026-10-20 11:25 UTC 기록
 
 [consumer 종료 후 backlog 복구](evidence/kafka-lag-recovery/README.md)를 새 hosted broker에서 확인했습니다. 실제 4개 처리·commit 뒤 정상 close로 group EMPTY를 만들고, 중단 중 6개를 추가한 뒤 같은 group의 새 client가 남은 14개를 읽었습니다. 네 단계의 LSO/commit/lag는 12/4/8 → 12/4/8 → 18/4/14 → 18/18/0이며, observer target·읽기 전후 상태와 소유 자원 정리도 확인했습니다.
 
 저장된 [단계 관측 화면](https://devdooly.github.io/devdooly-platform-lab/#kafka-lag-recovery)은 [PR127](https://github.com/DevDooly/devdooly-platform-lab/pull/127)과 [Pages 39414345653](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39414345653)으로 공개했습니다. 2026-10-20 11:24–11:25 UTC에 1280px·390px 화면의 단계 전환·키보드 이동과 페이지 가로 넘침 부재를 확인했습니다. 현재 Kafka 검증을 실제 worker·DB·export 복구, 강제 종료·broker 재시작·HA·처리량 검증으로 확대하지 않습니다.
 
-다음은 **DB commit 후 Kafka offset commit 실패 → 영속 pause → 재시작 거부 → 명시적 resume**를 새 Kafka·MariaDB·Garage에서 확인하는 별도 격리 시험입니다. broker process pause 중 timeout이 발생해도 unpause 뒤 늦은 commit이 처리될 수 있으므로, commit 부재를 가정하거나 offset을 reset하지 않고 실제 absent/1을 기록하는 설계를 준비합니다. 새 시험은 아직 실행 성공으로 기록하지 않습니다. 토큰 회전과 자원 예산·PR102 접수 gate는 보류합니다.
+당시 다음 과제로 계획한 **DB commit 후 Kafka offset commit 실패 → 영속 pause → 재시작 거부 → 명시적 resume**의 후속 결과는 위 최신 기록을 따릅니다. broker process pause 중 timeout이 발생해도 unpause 뒤 늦은 commit이 처리될 수 있으므로, offset을 reset하거나 commit 부재를 가정하지 않는 설계를 유지했습니다. 토큰 회전과 자원 예산·PR102 접수 gate는 보류합니다.
 
 ## 최신 운영 재확인 — 2026-10-20 UTC
 
