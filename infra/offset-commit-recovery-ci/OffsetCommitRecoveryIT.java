@@ -1,7 +1,6 @@
 package io.github.devdooly.platformlab.jobs.runtime;
 
 import io.github.devdooly.platformlab.demo.SyntheticScenario;
-import io.github.devdooly.platformlab.jobs.AdmissionTestFixtures;
 import io.github.devdooly.platformlab.jobs.CanonicalSource;
 import io.github.devdooly.platformlab.jobs.LabJobService;
 import io.github.devdooly.platformlab.jobs.S3ClientFactory;
@@ -184,7 +183,7 @@ public class OffsetCommitRecoveryIT {
         topicId = actualTopic.topicId(); assertThat(topicId).isNotEqualTo(Uuid.ZERO_UUID);
         assertThat(readCommittedEnd()).isZero(); awaitInitialEmptyOffsets();
         failurePhase = FailurePhase.STAGE_INPUT;
-        AdmissionTestFixtures.makeEligible(jdbc);
+        requirePristineAdmissionPolicy();
         String run = "runtime-it-" + UUID.randomUUID(); ContinuousRuntimeIT.requireOwnedRun(run);
         var admitted = new SourceStagingService(jobs, new S3RawSourceStore(s3, bucket)).stage(run, SyntheticScenario.NAME, source);
         assertThat(admitted.status()).isEqualTo(LabJobService.Status.QUEUED);
@@ -292,6 +291,15 @@ public class OffsetCommitRecoveryIT {
         }
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM flyway_schema_history WHERE success=0", Long.class)).isZero();
         assertJournal("NOT_STARTED", "IDLE", null); assertLeaseAvailable();
+    }
+
+    private void requirePristineAdmissionPolicy() {
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM lab_admission_policy", Long.class)).isEqualTo(1L);
+        var policy = jdbc.queryForMap("SELECT id,cooldown_seconds,last_admitted_at,next_admission_at FROM lab_admission_policy WHERE id=1");
+        assertThat(((Number) policy.get("id")).intValue()).isEqualTo(1);
+        assertThat(((Number) policy.get("cooldown_seconds")).intValue()).isEqualTo(30);
+        assertThat(policy.get("last_admitted_at")).isNull();
+        assertThat(policy.get("next_admission_at")).isNull();
     }
 
     private Child startProbe(String mode, String run) throws Exception {

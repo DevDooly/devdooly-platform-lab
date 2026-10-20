@@ -104,7 +104,7 @@ jobs:
     env:
       SOURCE_COMMIT: ${{ github.sha }}
       OFFSET_COMMIT_RUNTIME_OPT_IN: 'true'
-      OFFSET_COMMIT_MANIFEST_SHA256: 02189145ccf86d83c7f88207e4d461b45312b4e5427cdcd66487a0d7c11c09b8
+      OFFSET_COMMIT_MANIFEST_SHA256: d73472d374f61585486daf58d141fc4d3a51c6a579d61cd47a44aa8c51be37d0
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
