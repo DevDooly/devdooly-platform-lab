@@ -26,7 +26,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 ## 다음 단계와 보류
 
-인증서 자연 갱신·현재 공개 경로의 재부팅·K3s/Jenkins 전체 archive 복원은 아직 검증하지 않았습니다. [복원 사전준비](docs/plans/historical-runtime-restore.md)에서 파일 검증과 실제 기동, 필요한 자료·실행 대상을 구분했습니다. 후속 순서는 [다음 개발 계획](docs/NEXT_STEPS.md)을 따릅니다. 토큰 교체·자원 예산 정책·PR102 접수 gate는 계속 보류합니다.
+인증서 자연 갱신·현재 공개 경로의 재부팅·K3s/Jenkins 전체 archive 복원은 아직 검증하지 않았습니다. 별도 격리 환경이 없어 **K3s·Jenkins 실제 기동 복원은 보류**합니다. [복원 사전준비](docs/plans/historical-runtime-restore.md)에 파일 검증과 실제 기동, 재개 시 필요한 자료·실행 대상을 정리했습니다. 후속 순서는 [다음 개발 계획](docs/NEXT_STEPS.md)을 따릅니다. 토큰 교체·자원 예산 정책·PR102 접수 gate의 보류도 유지합니다.
 
 ## 로컬 실행
 
