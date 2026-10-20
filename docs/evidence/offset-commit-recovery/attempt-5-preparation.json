@@ -1,0 +1,16 @@
+{
+  "run": "39422876573",
+  "source": "4d874926e45578df6eb766a1efde03d0f6747e45",
+  "diagnostics": [
+    {
+      "scope": "OFFSET_COMMIT_RUNNER_FAILURE",
+      "failureCode": "PREPARATION_OR_INPUT_UNVERIFIED",
+      "selectedFailure": {
+        "stage": "PREPARATION_OR_INPUT",
+        "sourceFile": "base",
+        "sourceLine": 187
+      }
+    }
+  ],
+  "completedAt": "2026-10-20T12:31:52Z"
+}

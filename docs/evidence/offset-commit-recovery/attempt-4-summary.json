@@ -1,0 +1,54 @@
+{
+  "expectedTests": 1,
+  "failureCode": "RECOVERY_UNVERIFIED",
+  "hostOrBrokerRestartVerified": false,
+  "jvmFailure": {
+    "exitCode": 1,
+    "javaFailure": {
+      "failureCode": "VALIDATION_FAILED",
+      "failureKind": "OTHER",
+      "failurePhase": "STAGE_INPUT",
+      "failureSourceLine": 187,
+      "schemaVersion": 1,
+      "status": "FAIL"
+    },
+    "javaFrames": [
+      {
+        "sourceFile": "OffsetCommitRecoveryIT.java",
+        "sourceLine": 157
+      }
+    ],
+    "junitCounts": {
+      "errors": 0,
+      "failures": 1,
+      "skipped": 0,
+      "tests": 1
+    },
+    "junitReportStatus": "VERIFIED",
+    "nativeLogStatus": "READ",
+    "observedSignals": [
+      "MAVEN_TEST_FAILURE"
+    ],
+    "oomKilled": false,
+    "schemaVersion": 1,
+    "status": "OWNED_JVM_EXITED"
+  },
+  "operatingServicesChanged": false,
+  "ownedResourcesRemoved": true,
+  "publicExecutionEnabled": false,
+  "recoveryResult": null,
+  "runtimeManifestSha256": "02189145ccf86d83c7f88207e4d461b45312b4e5427cdcd66487a0d7c11c09b8",
+  "schemaVersion": 1,
+  "scope": "ISOLATED_REAL_OFFSET_COMMIT_RECOVERY",
+  "selectedFailure": {
+    "sourceFile": "runner",
+    "sourceLine": 296,
+    "stage": "POST_DB_WAIT"
+  },
+  "sourceAndArtifactsUnchanged": false,
+  "sourceCommit": "3c6566b0e8110e196c1f2a2d9d6215578fc2c903",
+  "status": "FAILED",
+  "surefireXmlSha256": null,
+  "synthetic": true,
+  "verifiedTests": 0
+}

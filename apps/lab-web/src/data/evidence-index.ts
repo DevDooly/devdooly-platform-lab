@@ -39,6 +39,16 @@ const kafkaSource = 'f7b5567963f9a34a34d5f201fb2ed747bdf7652a';
 
 export const evidenceItems: readonly EvidenceItem[] = [
   {
+    id: 'offset-commit-recovery', topics: ['java', 'kafka'], scope: 'cloud', state: 'verified',
+    title: 'DB 완료 뒤 Kafka commit 실패에서 복구하기',
+    description: 'DB 처리 뒤 격리 broker를 멈춰 실제 offset commit 실패와 영속 pause를 확인했습니다. 명시적 resume 뒤 재전달 1회·파일 2개 검증·슬롯 해제와 lag 0을 확인했습니다.',
+    boundary: '새 격리 환경의 한 번의 시험입니다. 운영 복구·broker/host 재시작·HA·모든 장애의 exactly-once를 증명하지 않습니다.',
+    recordedOn: '2026-10-20',
+    source: `${repo}/blob/0d49ab99bd1caccf8109642758f2ea8367dbb504/infra/offset-commit-recovery-ci/OffsetCommitRecoveryIT.java`,
+    evidence: `${repo}/blob/main/docs/evidence/offset-commit-recovery/README.md`, evidenceLabel: '실제 pause·resume·export 근거',
+    recordLabel: '격리 복구 IT 1/1', screen: '#offset-commit-recovery',
+  },
+  {
     id: 'kafka-lag-recovery', topics: ['java', 'kafka'], scope: 'cloud', state: 'verified',
     title: '소비자 종료 중 쌓인 메시지 이어 읽기',
     description: '12건 중 4건을 읽고 종료한 뒤 6건을 추가했습니다. 같은 그룹의 새 소비자가 남은 14건을 읽고 확인해 lag 14에서 0으로 돌아오는 과정을 검증했습니다.',

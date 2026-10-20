@@ -1,0 +1,54 @@
+{
+  "expectedTests": 1,
+  "failureCode": "RECOVERY_UNVERIFIED",
+  "hostOrBrokerRestartVerified": false,
+  "jvmFailure": {
+    "exitCode": 1,
+    "javaFailure": {
+      "failureCode": "VALIDATION_FAILED",
+      "failureKind": "TIMEOUT",
+      "failurePhase": "KAFKA_CREATE",
+      "failureSourceLine": 446,
+      "schemaVersion": 1,
+      "status": "FAIL"
+    },
+    "javaFrames": [
+      {
+        "sourceFile": "OffsetCommitRecoveryIT.java",
+        "sourceLine": 157
+      }
+    ],
+    "junitCounts": {
+      "errors": 0,
+      "failures": 1,
+      "skipped": 0,
+      "tests": 1
+    },
+    "junitReportStatus": "VERIFIED",
+    "nativeLogStatus": "READ",
+    "observedSignals": [
+      "MAVEN_TEST_FAILURE"
+    ],
+    "oomKilled": false,
+    "schemaVersion": 1,
+    "status": "OWNED_JVM_EXITED"
+  },
+  "operatingServicesChanged": false,
+  "ownedResourcesRemoved": true,
+  "publicExecutionEnabled": false,
+  "recoveryResult": null,
+  "runtimeManifestSha256": "f8426b938edfd833d8cfdea160f5afa36d27aee08730363e4091f873ec6c38ec",
+  "schemaVersion": 1,
+  "scope": "ISOLATED_REAL_OFFSET_COMMIT_RECOVERY",
+  "selectedFailure": {
+    "sourceFile": "runner",
+    "sourceLine": 296,
+    "stage": "POST_DB_WAIT"
+  },
+  "sourceAndArtifactsUnchanged": false,
+  "sourceCommit": "9786f47300d0fdcdea4d030537b84177eefd2ca7",
+  "status": "FAILED",
+  "surefireXmlSha256": null,
+  "synthetic": true,
+  "verifiedTests": 0
+}
