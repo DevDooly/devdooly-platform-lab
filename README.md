@@ -17,7 +17,9 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 최근 완료한 범위는 다음과 같습니다. 실행별 소스·수치·실패 이력과 한계는 연결한 실제 근거를 따릅니다.
 
-- **키보드 탐색:** [실행 결과 탭](docs/evidence/lab-keyboard/README.md)의 양끝 방향키 순환과 Home·End 이동을 수정했습니다. 로컬 브라우저8가지·웹207검사·타입·빌드를 확인했으며 공개 반영 확인은 진행 중입니다.
+- **키보드 탐색:** [실행 결과 탭](docs/evidence/lab-keyboard/README.md)의 양끝 방향키 순환과 Home·End 이동을 수정했습니다. 로컬 브라우저8가지·웹207검사·타입·빌드와 같은 main의 Pages·CI, 공개 데스크톱·모바일 반영을 확인했습니다.
+
+- **실행기 오류 처리:** [합성 Error 회귀 검증](docs/evidence/runtime-error-cleanup/README.md)으로 정상 종료 오기록과 자원 정리 누락을 재현·수정했습니다. 관련26개와 전체 API 검증(233개 중222개 통과·Linux 전용11개 생략)을 로컬에서 확인했으며 운영 배포는 별도입니다.
 
 - **런타임 장애:** [offset commit 실패 복구](docs/evidence/offset-commit-recovery/README.md)와 [손상 export 수리](docs/evidence/export-integrity-runtime/README.md)를 검증했습니다. [잘못된 입력](docs/evidence/invalid-message-runtime/README.md)과 [잠금 연결 손실](docs/evidence/runtime-lease-loss/README.md)은 정상 작업 보존과 실행기 종료를 확인한 결과로, 복구 완료와 구분합니다.
 - **데이터 보존:** [격리 PostgreSQL 정상 재시작](docs/evidence/cloud-catalog-restart/README.md) 뒤 catalog·조회·전체 객체 보존과 [새 합성 warehouse의 snapshot 만료](docs/evidence/cloud-iceberg-expiration/README.md)를 확인했습니다. 운영 자료의 만료·삭제 결과가 아닙니다.

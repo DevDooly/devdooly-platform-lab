@@ -11,11 +11,15 @@ public final class RuntimeResources implements AutoCloseable {
     public RuntimeResources(AutoCloseable... resources) { this.resources = List.of(resources); this.resources.forEach(Objects::requireNonNull); }
     @Override public void close() throws Exception {
         if (!closed.compareAndSet(false, true)) { return; }
-        Exception first = null;
+        boolean failed = false;
+        Error firstError = null;
         for (AutoCloseable resource : resources) {
             try { resource.close(); }
-            catch (Exception failure) { if (first == null) { first = failure; } }
+            catch (Exception failure) { failed = true; }
+            catch (Error failure) { if (firstError == null) { firstError = failure; } }
         }
-        if (first != null) { throw new IllegalStateException("One or more runtime resources failed to close"); }
+        // Preserve the first Error itself, without attaching later private failures as suppressed data.
+        if (firstError != null) { throw firstError; }
+        if (failed) { throw new IllegalStateException("One or more runtime resources failed to close"); }
     }
 }

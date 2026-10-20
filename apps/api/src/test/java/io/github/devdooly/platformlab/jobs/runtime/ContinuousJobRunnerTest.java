@@ -120,6 +120,154 @@ class ContinuousJobRunnerTest {
         assertThat(state.failureCode()).isEqualTo(FailureCode.RESOURCE_CLOSE_FAILED); assertThat(lease.closed).isTrue();
     }
 
+    @Test void actionErrorPersistsFixedPauseClosesResourcesAndPropagatesTheOriginalError() throws Exception {
+        var lease = new FakeLease(); var closes = new AtomicInteger();
+        var actions = mock(ContinuousJobRunner.Actions.class); var error = new AssertionError("private action detail");
+        when(actions.exportOne()).thenThrow(error);
+        assertThatThrownBy(() -> runner(lease, actions, closes::incrementAndGet).run()).isSameAs(error);
+        assertThat(states.read()).isEqualTo(new State(Status.PAUSED_OPERATOR, Stage.EXPORT, FailureCode.RUNTIME_FAILED, NOW, NOW, NOW, SOURCE));
+        verify(actions, never()).publishOne(); verify(actions, never()).receiveOne(any());
+        assertThat(closes.get()).isEqualTo(1); assertThat(lease.closes).isEqualTo(1);
+        assertThat(error.getSuppressed()).isEmpty();
+    }
+
+    @Test void ordinaryActionFailureStillInvalidatesLocalReadinessBeforeTheJournalWrite() {
+        var lease = new FakeLease(); var journal = spy(states); var notReady = new AtomicInteger();
+        var actions = mock(ContinuousJobRunner.Actions.class); when(actions.exportOne()).thenThrow(new IllegalStateException("private action"));
+        var progress = new RuntimeProgress() { @Override public void notReady() { notReady.incrementAndGet(); } };
+        doAnswer(invocation -> { assertThat(notReady.get()).isEqualTo(1); return invocation.callRealMethod(); })
+            .when(journal).pause(any(), any(), any());
+        var runner = new ContinuousJobRunner(journal, lease, actions, () -> {}, SOURCE, Duration.ofMillis(100), Duration.ofMillis(100), progress);
+        assertThat(runner.run().failureCode()).isEqualTo(FailureCode.EXPORT_FAILED);
+        assertThat(notReady.get()).isEqualTo(2); assertThat(lease.closes).isEqualTo(1);
+    }
+
+    @Test void bodyErrorSurvivesJournalResourceAndLeaseErrorsWithoutNormalStoppedOrAnImplicitJournalRetry() throws Exception {
+        var lease = new FakeLease(); lease.closeError = new AssertionError("private lease detail");
+        var journal = spy(states); var journalError = new AssertionError("private journal detail");
+        doThrow(journalError).when(journal).pause(any(), any(), any());
+        var actions = mock(ContinuousJobRunner.Actions.class); var original = new AssertionError("private body detail");
+        when(actions.exportOne()).thenThrow(original);
+        var closed = new ArrayList<String>();
+        var resources = new RuntimeResources(() -> { closed.add("consumer"); throw new AssertionError("private close detail"); },
+            () -> closed.add("producer"), () -> { closed.add("store"); throw new IllegalStateException("private exception"); });
+        var runner = new ContinuousJobRunner(journal, lease, actions, resources, SOURCE, Duration.ofMillis(100), Duration.ofMillis(100));
+        assertThatThrownBy(runner::run).isSameAs(original);
+        assertThat(states.read()).isEqualTo(new State(Status.RUNNING, Stage.EXPORT, null, NOW, NOW, null, SOURCE));
+        verify(journal, times(1)).pause(any(), eq(Stage.EXPORT), eq(FailureCode.RUNTIME_FAILED));
+        verify(journal, never()).stop(any()); verify(journal, never()).read();
+        verify(actions, never()).publishOne(); verify(actions, never()).receiveOne(any());
+        assertThat(closed).containsExactly("consumer", "producer", "store"); assertThat(lease.closes).isEqualTo(1);
+        assertThat(original.getSuppressed()).isEmpty(); assertThat(original.getCause()).isNull();
+    }
+
+    @Test void ordinaryPauseWriteFailureWithBodyErrorPreservesStaleJournalAndStillClosesEverything() throws Exception {
+        var lease = new FakeLease(); var journal = spy(states); var closes = new AtomicInteger();
+        doThrow(new IllegalStateException("private SQL detail")).when(journal).pause(any(), any(), any());
+        var actions = mock(ContinuousJobRunner.Actions.class); var original = new AssertionError("private body detail");
+        when(actions.exportOne()).thenThrow(original);
+        var runner = new ContinuousJobRunner(journal, lease, actions, closes::incrementAndGet, SOURCE, Duration.ofMillis(100), Duration.ofMillis(100));
+        assertThatThrownBy(runner::run).isSameAs(original);
+        assertThat(states.read().status()).isEqualTo(Status.RUNNING); assertThat(states.read().stage()).isEqualTo(Stage.EXPORT);
+        verify(journal, times(1)).pause(any(), any(), any()); verify(journal, never()).stop(any());
+        assertThat(closes.get()).isEqualTo(1); assertThat(lease.closes).isEqualTo(1); assertThat(original.getSuppressed()).isEmpty();
+    }
+
+    @Test void resourceOnlyErrorPersistsCloseFailureAttemptsAllClientsAndPropagatesTheSameError() throws Exception {
+        var lease = new FakeLease(); var closed = new ArrayList<String>(); var error = new AssertionError("private close detail");
+        var resources = new RuntimeResources(() -> { closed.add("consumer"); throw error; },
+            () -> closed.add("producer"), () -> closed.add("store"));
+        var actions = mock(ContinuousJobRunner.Actions.class); var runner = runner(lease, actions, resources); runner.requestStop();
+        assertThatThrownBy(runner::run).isSameAs(error);
+        assertThat(states.read()).isEqualTo(new State(Status.PAUSED_OPERATOR, Stage.STOPPED, FailureCode.RESOURCE_CLOSE_FAILED, NOW, NOW, NOW, SOURCE));
+        assertThat(closed).containsExactly("consumer", "producer", "store"); assertThat(lease.closes).isEqualTo(1);
+        verifyNoInteractions(actions); assertThat(error.getSuppressed()).isEmpty();
+    }
+
+    @Test void laterCloseErrorDoesNotReplaceTheAlreadyPersistedOrdinaryActionFailure() throws Exception {
+        var lease = new FakeLease(); var actions = mock(ContinuousJobRunner.Actions.class); var closes = new AtomicInteger();
+        when(actions.exportOne()).thenThrow(new IllegalStateException("private ordinary action detail"));
+        var error = new AssertionError("private close detail");
+        assertThatThrownBy(() -> runner(lease, actions, () -> { closes.incrementAndGet(); throw error; }).run()).isSameAs(error);
+        assertThat(states.read().status()).isEqualTo(Status.PAUSED_OPERATOR);
+        assertThat(states.read().failureCode()).isEqualTo(FailureCode.EXPORT_FAILED);
+        assertThat(closes.get()).isEqualTo(1); assertThat(lease.closes).isEqualTo(1); assertThat(error.getSuppressed()).isEmpty();
+    }
+
+    @Test void startupProgressErrorCannotRunAnActionOrSkipResourceAndLeaseClose() {
+        var lease = new FakeLease(); var actions = mock(ContinuousJobRunner.Actions.class); var closes = new AtomicInteger();
+        var notReady = new AtomicInteger(); var error = new AssertionError("private progress detail");
+        var progress = new RuntimeProgress() {
+            @Override public void starting() { throw error; }
+            @Override public void notReady() { notReady.incrementAndGet(); }
+        };
+        var runner = new ContinuousJobRunner(states, lease, actions, closes::incrementAndGet, SOURCE, Duration.ofMillis(100), Duration.ofMillis(100), progress);
+        assertThatThrownBy(runner::run).isSameAs(error);
+        assertThat(states.read()).isEqualTo(new State(Status.PAUSED_OPERATOR, Stage.IDLE, FailureCode.RUNTIME_FAILED, NOW, NOW, NOW, SOURCE));
+        verifyNoInteractions(actions); assertThat(notReady.get()).isEqualTo(1);
+        assertThat(closes.get()).isEqualTo(1); assertThat(lease.closes).isEqualTo(1);
+    }
+
+    @Test void evenAThrowingTerminalProgressHookCannotSkipCleanupOrRecordNormalStopped() {
+        var lease = new FakeLease(); var actions = mock(ContinuousJobRunner.Actions.class); var closes = new AtomicInteger();
+        var notReady = new AtomicInteger(); var error = new AssertionError("private terminal progress detail");
+        var progress = new RuntimeProgress() {
+            @Override public void notReady() { if (notReady.incrementAndGet() == 2) { throw error; } }
+        };
+        var runner = new ContinuousJobRunner(states, lease, actions, closes::incrementAndGet, SOURCE, Duration.ofMillis(100), Duration.ofMillis(100), progress);
+        runner.requestStop(); assertThatThrownBy(runner::run).isSameAs(error);
+        assertThat(states.read()).isEqualTo(new State(Status.PAUSED_OPERATOR, Stage.IDLE, FailureCode.RUNTIME_FAILED, NOW, NOW, NOW, SOURCE));
+        verifyNoInteractions(actions); assertThat(notReady.get()).isEqualTo(2);
+        assertThat(closes.get()).isEqualTo(1); assertThat(lease.closes).isEqualTo(1);
+    }
+
+    @Test void journalErrorWhileHandlingAnOrdinaryActionFailureIsNotSwallowedOrRetried() throws Exception {
+        var lease = new FakeLease(); var journal = spy(states); var closes = new AtomicInteger();
+        var error = new AssertionError("private journal detail"); doThrow(error).when(journal).pause(any(), any(), any());
+        var actions = mock(ContinuousJobRunner.Actions.class); when(actions.exportOne()).thenThrow(new IllegalStateException("private action"));
+        var runner = new ContinuousJobRunner(journal, lease, actions, closes::incrementAndGet, SOURCE, Duration.ofMillis(100), Duration.ofMillis(100));
+        assertThatThrownBy(runner::run).isSameAs(error);
+        assertThat(states.read().status()).isEqualTo(Status.RUNNING); assertThat(states.read().stage()).isEqualTo(Stage.EXPORT);
+        verify(journal, times(1)).pause(any(), any(), any()); verify(journal, never()).stop(any());
+        assertThat(closes.get()).isEqualTo(1); assertThat(lease.closes).isEqualTo(1);
+    }
+
+    @Test void startAndFinalStopErrorsStillAttemptResourceAndLeaseCloseWithoutInventingAState() {
+        for (boolean atStart : List.of(true, false)) {
+            resetOwnJournal();
+            var lease = new FakeLease(); var journal = spy(states); var closes = new AtomicInteger();
+            var error = new AssertionError("private journal detail");
+            if (atStart) { doThrow(error).when(journal).start(any(), any()); }
+            else { doThrow(error).when(journal).stop(any()); }
+            var actions = mock(ContinuousJobRunner.Actions.class);
+            var runner = new ContinuousJobRunner(journal, lease, actions, closes::incrementAndGet, SOURCE, Duration.ofMillis(100), Duration.ofMillis(100));
+            runner.requestStop(); assertThatThrownBy(runner::run).isSameAs(error);
+            assertThat(states.read().status()).isEqualTo(atStart ? Status.NOT_STARTED : Status.RUNNING);
+            verifyNoInteractions(actions); assertThat(closes.get()).isEqualTo(1); assertThat(lease.closes).isEqualTo(1);
+        }
+    }
+
+    @Test void finalReadErrorIsPropagatedAfterSuccessfulStopAndLeaseIsStillClosed() {
+        var lease = new FakeLease(); var journal = spy(states); var closes = new AtomicInteger();
+        var error = new AssertionError("private read detail"); doThrow(error).when(journal).read();
+        var actions = mock(ContinuousJobRunner.Actions.class);
+        var runner = new ContinuousJobRunner(journal, lease, actions, closes::incrementAndGet, SOURCE, Duration.ofMillis(100), Duration.ofMillis(100));
+        runner.requestStop(); assertThatThrownBy(runner::run).isSameAs(error);
+        assertThat(states.read().status()).isEqualTo(Status.STOPPED);
+        verify(journal, times(1)).stop(lease); verifyNoInteractions(actions);
+        assertThat(closes.get()).isEqualTo(1); assertThat(lease.closes).isEqualTo(1);
+    }
+
+    @Test void firstLeaseCloseErrorIsPropagatedWithoutAddingPrivateDiagnostics() {
+        var lease = new FakeLease(); var error = new AssertionError("private lease detail"); lease.closeError = error;
+        var closes = new AtomicInteger(); var actions = mock(ContinuousJobRunner.Actions.class);
+        var runner = runner(lease, actions, closes::incrementAndGet); runner.requestStop();
+        assertThatThrownBy(runner::run).isSameAs(error);
+        assertThat(states.read().status()).isEqualTo(Status.STOPPED); verifyNoInteractions(actions);
+        assertThat(closes.get()).isEqualTo(1); assertThat(lease.closes).isEqualTo(1);
+        assertThat(error.getSuppressed()).isEmpty(); assertThat(error.getCause()).isNull();
+    }
+
     @Test void invalidConfigurationAndOuterTransactionCannotStartOrRunIo() {
         var actions = mock(ContinuousJobRunner.Actions.class); var lease = new FakeLease();
         assertThatThrownBy(() -> new ContinuousJobRunner(states, lease, actions, () -> {}, "short", Duration.ofMillis(100), Duration.ofMillis(100)))
@@ -143,8 +291,8 @@ class ContinuousJobRunnerTest {
         return new ContinuousJobRunner(states, lease, actions, resources, SOURCE, Duration.ofMillis(100), Duration.ofMillis(100));
     }
     private static final class FakeLease implements RuntimeLease {
-        boolean closed; boolean lost; int checks;
+        boolean closed; boolean lost; int checks; int closes; Error closeError;
         @Override public void verifyHeld() { checks++; if (closed || lost) { throw new RuntimeLease.LeaseLostException(); } }
-        @Override public void close() { closed = true; }
+        @Override public void close() { closes++; closed = true; if (closeError != null) { throw closeError; } }
     }
 }
