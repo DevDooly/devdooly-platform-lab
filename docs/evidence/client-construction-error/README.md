@@ -28,4 +28,16 @@ PR162의 main `64be1e8e50e0a84eab4510c1bcc8188f550df96f`에서 [Linux CI39469985
 
 ## 근거 목록 연결
 
-Java·GitHub Linux CI 카드에 관련33개·전체240개와 immutable source64be1e8을 연결했습니다. 로컬1280px·390px에서 Error 검색+Java+CI 필터의 결과1개와 코드·근거 링크, 본문17px·모바일 링크44px·문서 폭375px를 확인했습니다. 기존 웹207개 검사·skip0, Astro47파일 오류·경고0, 프로젝트 경로 빌드도 통과했습니다. 공개 Pages 반영 확인은 아직 진행 전입니다.
+Java·GitHub Linux CI 카드에 관련33개·전체240개와 immutable source64be1e8을 연결했습니다. 로컬1280px·390px에서 Error 검색+Java+CI 필터의 결과1개와 코드·근거 링크, 본문17px·모바일 링크44px·문서 폭375px를 확인했습니다. 기존 웹207개 검사·skip0, Astro47파일 오류·경고0, 프로젝트 경로 빌드도 통과했습니다.
+
+PR164의 main `c5203cb41429e83757ff3279fc3326a7021fd337`은 [CI39472100483](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39472100483)의 verify·gateway를 통과했습니다. 최초 [push Pages39472100508](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39472100508)은 `WORKFLOW_HISTORY_CHANGED_DURING_READ`로 실패했습니다. 기존 게시기가 시작한 별도 [workflow_dispatch39472209197](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39472209197)의 같은 main build·deploy 성공과 구분하며 최초 결과를 성공으로 고치지 않습니다. 이력 보호를 완화하거나 중복 dispatch·재시도를 추가하지 않았습니다.
+
+성공 실행의 정확한 artifact와 공개 GET 파일3개의 전체 bytes·SHA256가 일치했습니다. 이는 해당 게시 결과의 보존 확인이며 새로운 운영 수집 성공을 뜻하지 않습니다.
+
+| 파일 | 바이트 | SHA256 |
+| --- | ---: | --- |
+| platform-observation.json | 1133 | `689f30fff20dd89237554e9b8fb07d4f21546782c8a5d58dc743a347647e4fe9` |
+| jobs.latest.json | 5809 | `35f2e1fae516d295d5d56028dc30003c4b9c3f97ce0301aada04d7238aad4583` |
+| kafka.latest.json | 562 | `b4e867495547de0d3031245802298f9c6451fc52deb78d6481301fc75f136a84` |
+
+공개1280px·390px에서 초기19개 중6개, 준비 후 Error+Java+CI 결과1개·source/근거 링크·본문17px·모바일 링크44px·문서 폭375px를 확인했습니다. 첫 접속의 초기 입력 불일치는 별도 [검색 준비상태 수정](../evidence-input-readiness/README.md)으로 다룹니다.
