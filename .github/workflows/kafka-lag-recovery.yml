@@ -1,0 +1,129 @@
+name: Isolated Kafka lag recovery
+
+on:
+  pull_request:
+    paths:
+      - infra/kafka-lag-recovery-ci/**
+      - infra/kafka-observation-ci/run_once.py
+      - infra/kafka-acl-ci/run_once.py
+      - .github/workflows/kafka-lag-recovery.yml
+  workflow_dispatch:
+    inputs:
+      run_lag_trial:
+        description: Run one fresh isolated consumer backlog recovery trial
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kafka-lag-recovery-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  pure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify new offline source, marker and ownership boundaries only
+        run: python3 -I -B -m unittest discover -s infra/kafka-lag-recovery-ci -p test_run_once.py -v
+
+  compile:
+    if: ${{ github.event_name == 'pull_request' }}
+    needs: pure
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Compile only API106 plus one staged Java test without running tests
+        shell: bash
+        run: |
+          set -eu
+          umask 077
+          task="$RUNNER_TEMP/kafka-lag-compile-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          test ! -e "$task"
+          export LAG_COMPILE_TASK="$task"
+          python3 -I -B - <<'PY'
+          from pathlib import Path
+          import os
+          import shutil
+          root = Path.cwd()
+          task = Path(os.environ['LAG_COMPILE_TASK'])
+          assert not task.exists()
+          task.mkdir(mode=0o700)
+          api = root / 'apps/api'
+          files = []
+          for path in api.rglob('*'):
+              assert not path.is_symlink()
+              assert path.relative_to(api).parts[0] != 'target'
+              assert path.is_dir() or path.is_file()
+              if path.is_file():
+                  files.append(path)
+          assert len(files) == 106
+          for path in files:
+              target = task / 'api' / path.relative_to(api)
+              target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+              shutil.copyfile(path, target)
+          source = root / 'infra/kafka-lag-recovery-ci/KafkaLagRecoveryIT.java'
+          assert source.is_file() and not source.is_symlink()
+          target = task / 'api/src/test/java/io/github/devdooly/platformlab/jobs/observation/KafkaLagRecoveryIT.java'
+          assert not target.exists()
+          shutil.copyfile(source, target)
+          (task / 'settings.xml').write_text('<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"><interactiveMode>false</interactiveMode><mirrors><mirror><id>owned-public-central-only</id><mirrorOf>*</mirrorOf><url>https://repo.maven.apache.org/maven2</url></mirror></mirrors></settings>\n', encoding='utf8')
+          PY
+          env -i PATH="$JAVA_HOME/bin:/usr/bin:/bin" JAVA_HOME="$JAVA_HOME" LANG=C.UTF-8 \
+            MAVEN_SKIP_RC=true MAVEN_OPTS="-Dmaven.user.home=$task/wrapper-home -Duser.home=$task/user-home" \
+            sh "$task/api/mvnw" -B -ntp -s "$task/settings.xml" -gs "$task/settings.xml" \
+            "-Dmaven.repo.local=$task/repository" -f "$task/api/pom.xml" -DskipTests test-compile
+          test -z "$(find "$task/api/target" -name 'TEST-*.xml' -print -quit)"
+
+  trial:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && inputs.run_lag_trial == true }}
+    needs: pure
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      SOURCE_COMMIT: ${{ github.sha }}
+      KAFKA_LAG_RUNTIME_OPT_IN: 'true'
+      LAG_MANIFEST_SHA256: 07d084f0f8a46745f99918fbc1794c908b11c8b5224b84c6d49bbe3afc5d2236
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Compile fresh staging and prepare offline dependencies only
+        timeout-minutes: 16
+        run: python3 -I -B infra/kafka-lag-recovery-ci/run_once.py prepare --source-manifest-sha256 "$LAG_MANIFEST_SHA256" --ack-fresh-hosted-kafka-lag-it
+      - name: Run one owned Kafka recovery test
+        timeout-minutes: 18
+        run: python3 -I -B infra/kafka-lag-recovery-ci/run_once.py run --source-manifest-sha256 "$LAG_MANIFEST_SHA256" --ack-fresh-hosted-kafka-lag-it
+      - name: Confirm same owned resources removed even after failure
+        if: always()
+        timeout-minutes: 2
+        run: python3 -I -B infra/kafka-lag-recovery-ci/run_once.py cleanup --source-manifest-sha256 "$LAG_MANIFEST_SHA256" --ack-fresh-hosted-kafka-lag-it
+      - name: Upload only the finite public summary
+        if: always()
+        timeout-minutes: 2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: kafka-lag-recovery-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .local/kafka-lag-recovery-ci-public/summary.json
+          if-no-files-found: error
+          retention-days: 7
