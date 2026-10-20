@@ -275,3 +275,34 @@ test('browser clock tolerance rejects invalid or overflow-prone now values witho
   assert.equal(highestSafeCeiling.browserError, null);
   assert.equal(highestSafeCeiling.record?.capturedAt, previous.capturedAt);
 });
+
+test('Kafka 404 discards its unused body without waiting and preserves the prior capture', { timeout: 1000 }, async () => {
+  const previous = sample(); let cancellations = 0;
+  const result = await loadKafkaObservation({ url, previousRecord: previous, nowMs: now,
+    fetcher: async () => new Response(new ReadableStream<Uint8Array>({
+      cancel() { cancellations++; return new Promise<void>(() => {}); },
+    }), { status: 404 }) });
+  assert.equal(cancellations, 1); assert.equal(result.browserError, 'NOT_CONFIGURED');
+  assert.equal(result.record, previous); assert.equal(result.retainedPrevious, true);
+  assert.equal(result.record?.capturedAt, previous.capturedAt);
+});
+
+test('Kafka byte ceiling cancels at the first excess byte even when cancellation never settles', { timeout: 1000 }, async () => {
+  const previous = sample(); let pulls = 0; let cancellations = 0;
+  const bytes = new Uint8Array(MAX_KAFKA_OBSERVATION_BYTES).fill(0x20);
+  bytes.set(new TextEncoder().encode(encoded(previous)));
+  const result = await loadKafkaObservation({ url, previousRecord: previous, nowMs: now,
+    fetcher: async () => new Response(new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulls++;
+        if (pulls === 1) controller.enqueue(bytes);
+        else if (pulls === 2) controller.enqueue(new Uint8Array([0x20]));
+        else throw new Error('PRIVATE_UNREAD_CANARY');
+      },
+      cancel() { cancellations++; return new Promise<void>(() => {}); },
+    }, { highWaterMark: 0 })) });
+  assert.equal(pulls, 2); assert.equal(cancellations, 1);
+  assert.equal(result.browserError, 'INVALID_RECORD'); assert.equal(result.record, previous);
+  assert.equal(result.retainedPrevious, true); assert.equal(result.record?.capturedAt, previous.capturedAt);
+  assert.ok(!JSON.stringify(result).includes('PRIVATE_'));
+});

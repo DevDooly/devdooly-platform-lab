@@ -3,6 +3,7 @@ import { createServer } from 'node:http';
 import { test } from 'node:test';
 import { JOB_HEARTBEAT_STALE_AFTER_MS, JOB_RECORD_STALE_AFTER_MS, MAX_JOB_OBSERVATION_BYTES, jobObservationView, loadJobObservation, validateJobObservation } from '../src/lib/job-observation.ts';
 import type { JobObservation, JobObservationRecord } from '../src/lib/job-observation.ts';
+import { boundedObservationText } from '../src/lib/observation-response-body.ts';
 
 // Test-only DTOs. These are never published or used as a successful UI fallback.
 function record(): JobObservationRecord {
@@ -126,4 +127,71 @@ test('actual HTTP loads only the selected public route and sends no authenticati
     const result = await loadJobObservation({ url: `http://127.0.0.1:${address.port}/base/observations/jobs.latest.json` });
     assert.equal(result.browserError, null); assert.deepEqual(result.record, value);
   } finally { await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
+});
+
+test('job byte ceiling is enforced while reading and the excess stream is cancelled without replacing memory', { timeout: 1000 }, async () => {
+  const previous = record();
+  const json = new TextEncoder().encode(JSON.stringify(previous));
+  const exact = new Uint8Array(MAX_JOB_OBSERVATION_BYTES).fill(0x20); exact.set(json);
+  const accepted = await loadJobObservation({ url: '/jobs', previousRecord: previous,
+    fetcher: async () => new Response(new ReadableStream<Uint8Array>({
+      start(controller) { controller.enqueue(exact.subarray(0, 300)); controller.enqueue(exact.subarray(300)); controller.close(); },
+    })) });
+  assert.equal(accepted.browserError, null); assert.deepEqual(accepted.record, previous);
+
+  let pulls = 0; let cancellations = 0;
+  const rejected = await loadJobObservation({ url: '/jobs', previousRecord: previous,
+    fetcher: async () => new Response(new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulls++;
+        if (pulls === 1) controller.enqueue(exact);
+        else if (pulls === 2) controller.enqueue(new Uint8Array([0x20]));
+        else throw new Error('PRIVATE_UNREAD_CANARY');
+      },
+      cancel() { cancellations++; return new Promise<void>(() => {}); },
+    }, { highWaterMark: 0 })) });
+  assert.equal(pulls, 2); assert.equal(cancellations, 1);
+  assert.equal(rejected.browserError, 'INVALID_RECORD'); assert.equal(rejected.record, previous);
+  assert.equal(rejected.retainedPrevious, true); assert.equal(rejected.record?.capturedAt, previous.capturedAt);
+  assert.ok(!JSON.stringify(rejected).includes('PRIVATE_'));
+});
+
+test('bounded response decoding joins split UTF-8 bytes and rejects malformed UTF-8 as an invalid job record', async () => {
+  const text = '{"synthetic":"한글"}'; const bytes = new TextEncoder().encode(text);
+  const split = bytes.indexOf(0xed) + 1;
+  assert.ok(split > 0 && split < bytes.length);
+  const decoded = await boundedObservationText(new Response(new ReadableStream<Uint8Array>({
+    start(controller) { controller.enqueue(bytes.subarray(0, split)); controller.enqueue(bytes.subarray(split)); controller.close(); },
+  })), bytes.length);
+  assert.equal(decoded, text);
+  const previous = record();
+  const rejected = await loadJobObservation({ url: '/jobs', previousRecord: previous,
+    fetcher: async () => new Response(new Uint8Array([0xc3, 0x28])) });
+  assert.equal(rejected.browserError, 'INVALID_RECORD'); assert.equal(rejected.record, previous);
+  assert.equal(rejected.record?.capturedAt, previous.capturedAt);
+});
+
+test('unused job HTTP error bodies are cancelled without awaiting a provider cancellation promise', { timeout: 1000 }, async () => {
+  const previous = record();
+  for (const [status, error] of [[404, 'NOT_CONFIGURED'], [503, 'HTTP_ERROR']] as const) {
+    let cancellations = 0;
+    const result = await loadJobObservation({ url: '/jobs', previousRecord: previous,
+      fetcher: async () => new Response(new ReadableStream<Uint8Array>({
+        cancel() { cancellations++; return new Promise<void>(() => {}); },
+      }), { status }) });
+    assert.equal(cancellations, 1); assert.equal(result.browserError, error);
+    assert.equal(result.record, previous); assert.equal(result.retainedPrevious, true);
+    assert.equal(result.record?.capturedAt, previous.capturedAt);
+  }
+});
+
+test('job stream transport failure keeps its existing network error and the prior observation', async () => {
+  const previous = record();
+  const result = await loadJobObservation({ url: '/jobs', previousRecord: previous,
+    fetcher: async () => new Response(new ReadableStream<Uint8Array>({
+      start(controller) { controller.error(new Error('PRIVATE_STREAM_FAILURE')); },
+    })) });
+  assert.equal(result.browserError, 'NETWORK_ERROR'); assert.equal(result.record, previous);
+  assert.equal(result.record?.capturedAt, previous.capturedAt);
+  assert.ok(!JSON.stringify(result).includes('PRIVATE_STREAM_FAILURE'));
 });
