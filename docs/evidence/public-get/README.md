@@ -68,3 +68,33 @@ PASS는 당시 지정 HTTPS 응답과 DTO 계약 범위입니다. 현재 worker 
 `deniedRequestsTested=false`, `operatingConfigurationChanged=false`는 이 GET 실행의 범위입니다. POST·거부 경로·인증서 자연 갱신·worker 프로세스 생존이나 장기간 가용성을 확인한 결과가 아닙니다. 수집 구간은 단일 순차 관측이며 성능 benchmark가 아닙니다.
 
 별도 공개 브라우저 관측에서는 작업 카드의 실시간 API 10초 조회, 실행기 소스 `6f551a16a8ed536bb126403234c41b9e9b266d43`와 관측 API 소스 `245d61a5749760a20918ab091d9410ce6735b1c0`의 구분, 새 실행 시작 `2026-10-21T00:20:05Z`, heartbeat의 `00:26:53` → `00:27:32 UTC` 전진을 확인했습니다. 이 화면 관측은 위 GET artifact가 증명한 항목과 별개입니다. GET artifact의 `JOBS.sourceCommit`은 관측 API 소스이며 실행기 소스·시작 시각·heartbeat를 담지 않습니다. DB의 RUNNING·heartbeat도 현재 프로세스나 lease 생존을 직접 확인한 값으로 해석하지 않습니다.
+
+## 세 번째 실제 관측 — 2026-10-21 UTC
+
+[수동 실행39533662559](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39533662559)은 main의 첫 attempt에서 `offline`·`public_gets`가 성공했습니다. 앞선 두 관측과 worker의 [신규 고정 입력 처리·자연 게시](../current-worker-fixture/README.md)를 보존하면서 현재 공개 GET 계약을 다시 확인했습니다. 이 GET artifact 자체는 신규 작업의 처리나 worker 생존을 검증하지 않습니다.
+
+| 출처 | 세 번째 실제 기록 |
+| --- | --- |
+| 검사기 소스 | `0984634a5546b16df18f6d35d939d3d76e9cea2f` |
+| 응답에서 확인한 API 소스 | 6개 모두 `245d61a5749760a20918ab091d9410ce6735b1c0` |
+| 수집 시작 → 완료(UTC) | `2026-10-21T02:33:42.937Z` → `2026-10-21T02:33:52.437Z` |
+| 실제 job 완료(UTC) | `2026-10-21T02:33:55Z` |
+| 결과 | `PASS / NONE`, 공개 IPv4·표준 TLS 확인 |
+| 결과 원문 | [summary.json](hosted-39533662559/summary.json), 1,635bytes |
+| 출처 metadata | [run-metadata.json](hosted-39533662559/run-metadata.json), 6필드 |
+| 원문 SHA-256 | `dd16fb4cf96fc4f18c901794fd971b0f763fd2a8b0d2527305fde88edbe1a815` |
+
+아래 시각은 원문 응답의 나노초 표기를 그대로 보존했습니다. 지정6개 모두 HTTP200·`passed=true`입니다.
+
+| 검사 | 응답 관측 시각(UTC) |
+| --- | --- |
+| SUMMARY | `2026-10-21T02:33:43.423330791Z` |
+| RELEASES | `2026-10-21T02:33:45.103082180Z` |
+| RUN_LIST | `2026-10-21T02:33:46.772267046Z` |
+| RUN_DETAIL_EXAMPLE | `2026-10-21T02:33:48.491800755Z` |
+| JOBS | `2026-10-21T02:33:50.204397434Z` |
+| KAFKA | `2026-10-21T02:33:52.264594965Z` |
+
+원문14필드와6개 검사, 같은 run·source의 단일 artifact를 확인해 원본 bytes를 보존했습니다. 새 토큰·SSH·별도 환경·POST·거부 경로·운영 설정 변경 없이 수행했으며, `deniedRequestsTested=false`, `operatingConfigurationChanged=false`를 유지합니다. 단일 순차 수집의9.5초는 성능 benchmark나 장기 가용성·SLA·인증서 자연 갱신의 근거가 아닙니다. 기동 복원·토큰 교체·자원 예산·PR102는 계속 보류합니다.
+
+별도 안내 게시인 같은 main의 [Pages39533611898](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39533611898)은 build·deploy, [CI39533611971](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39533611971)은 verify·public-read-gateway가 성공했습니다. 조건부 격리4개 job은 생략됐습니다. 공개 desktop에서는 전체 근거21개 중 첫6개와 새 입력 검색1개, 근거·고정 소스 링크를 확인했습니다. 이 화면 확인은 GET6 응답 검사와 별도이며, 다음은 아직 완료하지 않은 공개 실행결과 선택 항목의 구분 개선입니다.
