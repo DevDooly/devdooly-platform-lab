@@ -65,7 +65,7 @@ export async function getJson(base: string, path: string, signal?: AbortSignal):
 }
 export async function fetchRun(base: string, id: string, signal?: AbortSignal): Promise<RunDetail> {
   const detail = await getJson(base, `/demo/runs/${encodeURIComponent(id)}`, signal);
-  if (!isRunDetail(detail)) throw new Error('실행 결과 형식을 확인할 수 없습니다.');
+  if (!isRunDetail(detail) || detail.id !== id) throw new Error('실행 결과 형식을 확인할 수 없습니다.');
   return detail;
 }
 export async function fetchLab(base: string, signal?: AbortSignal, preferredId?: string): Promise<LabData> {

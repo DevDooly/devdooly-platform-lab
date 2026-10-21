@@ -13,3 +13,11 @@
 - 로컬은 기존 게시 관측으로 fallback하는 읽기 화면입니다. 여기의 화면 검증을 미니 PC의 실제 여러 실행 선택·새 작업 처리·외부 API 성공으로 바꾸어 기록하지 않습니다. 공개 API의 별도 [GET6 관측](../public-get/README.md)과 [새 worker 처리 실측](../current-worker-fixture/README.md)은 각각의 범위를 따릅니다.
 
 기동 복원·토큰 교체·예산 정책·PR102 보류는 유지합니다.
+
+## 공개 확인과 별도 발견 — 2026-10-21 UTC
+
+main `f4ac13a3893accbd88e42cdc61845ba3264ab5b4`의 [Pages39535377222](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39535377222)는 build `02:52:55Z`·deploy `02:53:10Z`에 성공했습니다. [CI39535377189](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39535377189)의 verify는 `02:54:41Z`, public-read-gateway는 `02:52:58Z`에 성공했고 조건부 격리4개 job은 생략됐습니다.
+
+공개 화면에서 서로 다른 실행 ID10개를 확인했습니다. 입력12개 결과의12/7/3/2/0과 입력1,000개 결과의1,000/500/300/200/0을 각각 선택해 표시된 전체 ID와 select 값의 일치를 확인한 뒤 기본 항목으로 복귀했습니다. 입력12개를 선택한390px 모바일에서는 문서 client·scroll 폭이 모두375px, 선택 입력은303px였으며 전체 ID도 확인했습니다. 새 작업 생성·POST·운영 설정 변경 없이 기존 공개 결과를 읽은 확인이며, 별도 [GET6 artifact](../public-get/README.md)가 증명한 항목으로 합치지 않습니다.
+
+다만 입력1,000개·센서100개 결과를 선택하자 `.chart-legend` 폭이8364.6875px, 오른쪽 끝이8446.1875px로 늘어나 문서 scroll 폭8446px이 client 폭1265px을 넘었습니다. 위 기본 결과의 모바일 확인을 모든 선택 결과의 넘침 부재로 확대하지 않습니다. 이 범례 문제는 아직 해결 전이며 별도 CSS 수정과 검증이 필요합니다. 요청·응답 ID 일치의 [로컬 회귀 수정](../run-response-identity/README.md)도 이 공개 selector 확인과 별도입니다.
