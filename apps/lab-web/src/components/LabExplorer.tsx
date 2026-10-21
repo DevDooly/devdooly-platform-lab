@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
-import { fetchRun } from '../lib/api';
+import { describeLiveFailure, fetchRun, liveFailureOf } from '../lib/api';
 import { loadLabSources } from '../lib/observation';
 import type { ObservationRecord, SourceMode } from '../lib/observation';
 import type { LabData, Point, OutcomeStatus } from '../lib/api';
@@ -73,9 +73,9 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
     const timer = setTimeout(() => request.abort(), 8000);
     try {
       const result = await loadLabSources({ apiBase, observationUrl, fixture: initial, signal: request.signal, preferredId: data.detail.id, previousObservation: cachedObservation.current });
-      if (mounted.current && controller.current === request) { setData(result.data); setMode(result.mode); setObservation(result.observation); cachedObservation.current = result.cachedObservation; if (result.mode !== 'live') setError('실시간 Lab 연결 불가'); }
+      if (mounted.current && controller.current === request) { setData(result.data); setMode(result.mode); setObservation(result.observation); cachedObservation.current = result.cachedObservation; setError(result.liveFailure ? describeLiveFailure(result.liveFailure) : ''); }
     }
-    catch { if (mounted.current && controller.current === request) { setData(initial); setMode('fixture'); setObservation(null); setError('실시간 Lab 연결 불가'); } }
+    catch (failure) { if (mounted.current && controller.current === request) { setData(initial); setMode('fixture'); setObservation(null); setError(describeLiveFailure(liveFailureOf(failure))); } }
     finally { clearTimeout(timer); if (mounted.current && controller.current === request) setLoading(false); }
   }
   useEffect(() => { mounted.current = true; void refresh(); return () => { mounted.current = false; controller.current?.abort(); }; }, []);
@@ -85,7 +85,7 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
     controller.current?.abort(); const request = new AbortController(); controller.current = request;
     setLoading(true); setError(''); const timer = setTimeout(() => request.abort(), 8000);
     try { const detail = await fetchRun(apiBase, id, request.signal); if (mounted.current) setData(previous => ({ ...previous, detail })); }
-    catch { if (mounted.current && controller.current === request) setError('선택한 결과를 불러오지 못했습니다. 이전 결과를 표시합니다.'); }
+    catch (failure) { if (mounted.current && controller.current === request) setError(`선택한 결과를 불러오지 못했습니다. 이전 결과를 표시합니다. ${describeLiveFailure(liveFailureOf(failure))}`); }
     finally { clearTimeout(timer); if (mounted.current && controller.current === request) setLoading(false); }
   }
   function handleTabKey(event: KeyboardEvent<HTMLButtonElement>) {

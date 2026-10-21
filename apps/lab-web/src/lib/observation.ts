@@ -1,5 +1,5 @@
-import { fetchLab, isRelease, isRun, isRunDetail, isSummary } from './api.ts';
-import type { LabData } from './api.ts';
+import { fetchLab, isRelease, isRun, isRunDetail, isSummary, liveFailureOf } from './api.ts';
+import type { LabData, LiveFailure } from './api.ts';
 
 export interface ObservationRecord {
   schemaVersion: 1;
@@ -73,12 +73,14 @@ export async function fetchObservation(url: string, signal?: AbortSignal): Promi
 export async function loadLabSources(options: {
   apiBase: string; observationUrl: string; fixture: LabData; signal?: AbortSignal;
   preferredId?: string; previousObservation?: ObservationRecord | null;
-}): Promise<SourceSelection & { cachedObservation: ObservationRecord | null }> {
+}): Promise<SourceSelection & { cachedObservation: ObservationRecord | null; liveFailure: LiveFailure | null }> {
   const observationSignal = options.signal ? AbortSignal.any([options.signal, AbortSignal.timeout(3000)]) : AbortSignal.timeout(3000);
   const [liveResult, observationResult] = await Promise.allSettled([
     fetchLab(options.apiBase, options.signal, options.preferredId), fetchObservation(options.observationUrl, observationSignal),
   ]);
   const candidates = [observationResult.status === 'fulfilled' ? observationResult.value : null, options.previousObservation || null].filter((record): record is ObservationRecord => record !== null);
   const record = candidates.sort((left, right) => Date.parse(right.capturedAt) - Date.parse(left.capturedAt))[0] || null;
-  return { ...selectDataSource(liveResult.status === 'fulfilled' ? liveResult.value : null, record, options.fixture), cachedObservation: record };
+  // Promise.all reports the first observed live-query failure, not a system root cause.
+  return { ...selectDataSource(liveResult.status === 'fulfilled' ? liveResult.value : null, record, options.fixture), cachedObservation: record,
+    liveFailure: liveResult.status === 'rejected' ? liveFailureOf(liveResult.reason) : null };
 }

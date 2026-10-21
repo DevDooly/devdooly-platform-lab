@@ -28,6 +28,32 @@ export interface LabData {
   observedAt: string | null; capturedAt?: string; snapshotNote?: string;
 }
 
+export type LiveFailureKind = 'HTTP_REJECTED' | 'INVALID_RESPONSE' | 'REQUEST_ABORTED' | 'NETWORK_UNVERIFIED' | 'OTHER';
+export interface LiveFailure { kind: LiveFailureKind; httpStatus: number | null; }
+class LabReadError extends Error {
+  readonly failure: LiveFailure;
+  constructor(message: string, kind: LiveFailureKind, status: number | null = null) {
+    super(message);
+    this.failure = kind === 'HTTP_REJECTED' && (!Number.isInteger(status) || status === null || status < 100 || status > 599)
+      ? { kind: 'OTHER', httpStatus: null }
+      : { kind, httpStatus: kind === 'HTTP_REJECTED' ? status : null };
+  }
+}
+// Only this projection crosses into source selection and UI; never forward an exception.
+export function liveFailureOf(error: unknown): LiveFailure {
+  if (error instanceof LabReadError) return { ...error.failure };
+  return { kind: error instanceof TypeError ? 'NETWORK_UNVERIFIED' : 'OTHER', httpStatus: null };
+}
+export function describeLiveFailure(failure: LiveFailure): string {
+  switch (failure.kind) {
+    case 'HTTP_REJECTED': return `실시간 Lab 연결 불가: HTTP 응답 오류(${failure.httpStatus})`;
+    case 'INVALID_RESPONSE': return '실시간 Lab 연결 불가: 응답 형식 또는 실행 ID를 확인하지 못했습니다.';
+    case 'REQUEST_ABORTED': return '실시간 Lab 연결 불가: 요청이 중단되었습니다.';
+    case 'NETWORK_UNVERIFIED': return '실시간 Lab 연결 불가: 네트워크 요청을 완료하지 못했습니다. 원인은 확인되지 않았습니다.';
+    default: return '실시간 Lab 연결 불가';
+  }
+}
+
 const object = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 const text = (value: unknown): value is string => typeof value === 'string';
 const count = (value: unknown): value is number => typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
@@ -57,26 +83,38 @@ export function isRelease(value: unknown): value is Release {
 }
 export async function getJson(base: string, path: string, signal?: AbortSignal): Promise<unknown> {
   // The page validates public configuration; retain the generic integration/smoke transport.
-  if (base === 'invalid-public-api-base' || !isPublicReadPath(path)) throw new Error('공개 조회 주소를 확인할 수 없습니다.');
+  if (base === 'invalid-public-api-base' || !isPublicReadPath(path)) throw new LabReadError('공개 조회 주소를 확인할 수 없습니다.', 'OTHER');
   const url = `${base.replace(/\/$/, '')}${path}`;
-  const response = await fetch(url, { signal, headers: { Accept: 'application/json' }, cache: 'no-store', credentials: 'omit', redirect: 'error' });
-  if (!response.ok) throw new Error(`API 응답 ${response.status}`);
-  return response.json();
+  try {
+    const response = await fetch(url, { signal, headers: { Accept: 'application/json' }, cache: 'no-store', credentials: 'omit', redirect: 'error' });
+    if (!response.ok) throw new LabReadError(`API 응답 ${response.status}`, 'HTTP_REJECTED', response.status);
+    try { return await response.json(); }
+    catch (error) {
+      if (error instanceof SyntaxError) throw new LabReadError('API 응답 형식을 확인할 수 없습니다.', 'INVALID_RESPONSE');
+      throw error;
+    }
+  } catch (error) {
+    // Preserve an observed HTTP/JSON failure even if the caller aborts afterwards.
+    if (error instanceof LabReadError) throw error;
+    if (signal?.aborted) throw new LabReadError('실시간 Lab 연결 불가', 'REQUEST_ABORTED');
+    if (error instanceof TypeError) throw error;
+    throw new LabReadError('실시간 Lab 연결 불가', 'OTHER');
+  }
 }
 export async function fetchRun(base: string, id: string, signal?: AbortSignal): Promise<RunDetail> {
   const detail = await getJson(base, `/demo/runs/${encodeURIComponent(id)}`, signal);
-  if (!isRunDetail(detail) || detail.id !== id) throw new Error('실행 결과 형식을 확인할 수 없습니다.');
+  if (!isRunDetail(detail) || detail.id !== id) throw new LabReadError('실행 결과 형식을 확인할 수 없습니다.', 'INVALID_RESPONSE');
   return detail;
 }
 export async function fetchLab(base: string, signal?: AbortSignal, preferredId?: string): Promise<LabData> {
   const [runsPayload, summary, releasePayload] = await Promise.all([
     getJson(base, '/demo/runs', signal), getJson(base, '/platform/summary', signal), getJson(base, '/platform/releases', signal),
   ]);
-  if (!object(runsPayload) || !Array.isArray(runsPayload.items) || !runsPayload.items.every(isRun) || !timestamp(runsPayload.observedAt)) throw new Error('실행 목록 형식을 확인할 수 없습니다.');
-  if (!isSummary(summary) || !object(releasePayload) || !Array.isArray(releasePayload.items) || !releasePayload.items.every(isRelease) || !timestamp(releasePayload.observedAt)) throw new Error('플랫폼 응답 형식을 확인할 수 없습니다.');
+  if (!object(runsPayload) || !Array.isArray(runsPayload.items) || !runsPayload.items.every(isRun) || !timestamp(runsPayload.observedAt)) throw new LabReadError('실행 목록 형식을 확인할 수 없습니다.', 'INVALID_RESPONSE');
+  if (!isSummary(summary) || !object(releasePayload) || !Array.isArray(releasePayload.items) || !releasePayload.items.every(isRelease) || !timestamp(releasePayload.observedAt)) throw new LabReadError('플랫폼 응답 형식을 확인할 수 없습니다.', 'INVALID_RESPONSE');
   const runs = runsPayload.items;
   const selected = runs.find(run => run.id === preferredId) || runs[0];
-  if (!selected) throw new Error('아직 저장된 실행 결과가 없습니다.');
+  if (!selected) throw new LabReadError('아직 저장된 실행 결과가 없습니다.', 'OTHER');
   const detail = await fetchRun(base, selected.id, signal);
   return { runs, detail, summary, releases: releasePayload.items, observedAt: summary.observedAt };
 }

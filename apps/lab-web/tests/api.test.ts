@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
-import { fetchLab, fetchRun, getJson, isRun, isRunDetail } from '../src/lib/api.ts';
+import { describeLiveFailure, fetchLab, fetchRun, getJson, isRun, isRunDetail, liveFailureOf } from '../src/lib/api.ts';
 
 const sample = JSON.parse(await readFile(new URL('../src/data/snapshot.json', import.meta.url), 'utf8'));
 const expected = JSON.parse(await readFile(new URL('../../../tests/scenarios/sensor-validation-v1.json', import.meta.url), 'utf8'));
@@ -56,7 +56,10 @@ test('HTTP adapter loads list, detail, runtime summary and releases without a PO
     assert.equal(first.detail.id, run.id, 'An unavailable preference must still select the first listed run');
     assert.equal(paths.length, 8);
     assert.ok(paths.every(path => path.startsWith('GET ')));
-    await assert.rejects(fetchRun(base, 'unknown/id'), /공개 조회 주소/);
+    await assert.rejects(fetchRun(base, 'unknown/id'), error => {
+      assert.ok(error instanceof Error); assert.match(error.message, /공개 조회 주소/);
+      assert.deepEqual(liveFailureOf(error), { kind: 'OTHER', httpStatus: null }); return true;
+    });
     assert.equal(paths.length, 8, 'A noncanonical public detail path must not send another request');
   } finally { await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
 });
@@ -80,18 +83,26 @@ test('HTTP detail identity must match the requested run even when the other run 
   const address = server.address(); assert.ok(address && typeof address === 'object');
   const base = `http://127.0.0.1:${address.port}/api`;
   try {
-    const results = await Promise.allSettled([fetchRun(base, run.id), fetchLab(base, undefined, run.id)]);
+    const controller = new AbortController();
+    const results = await Promise.allSettled([fetchRun(base, run.id, controller.signal), fetchLab(base, controller.signal, run.id)]);
+    controller.abort();
     assert.deepEqual(paths.slice().sort(), ['GET /api/demo/runs', 'GET /api/demo/runs/' + run.id,
       'GET /api/demo/runs/' + run.id, 'GET /api/platform/summary', 'GET /api/platform/releases'].sort());
     assert.deepEqual(results.map(result => result.status), ['rejected', 'rejected']);
-    for (const result of results) if (result.status === 'rejected') assert.equal(result.reason.message, '실행 결과 형식을 확인할 수 없습니다.');
+    for (const result of results) if (result.status === 'rejected') {
+      assert.equal(result.reason.message, '실행 결과 형식을 확인할 수 없습니다.');
+      assert.deepEqual(liveFailureOf(result.reason), { kind: 'INVALID_RESPONSE', httpStatus: null });
+    }
   } finally { await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
 });
 test('malformed HTTP payload is rejected instead of being shown as live data', async () => {
   const server = createServer((_request, response) => { response.setHeader('Content-Type', 'application/json'); response.end(JSON.stringify({ items: [{ ...run, inputCount: 999 }], observedAt })); });
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
   const address = server.address(); assert.ok(address && typeof address === 'object');
-  try { await assert.rejects(fetchLab(`http://127.0.0.1:${address.port}/api`), /실행 목록 형식/); }
+  try { await assert.rejects(fetchLab(`http://127.0.0.1:${address.port}/api`), error => {
+    assert.ok(error instanceof Error); assert.match(error.message, /실행 목록 형식/);
+    assert.deepEqual(liveFailureOf(error), { kind: 'INVALID_RESPONSE', httpStatus: null }); return true;
+  }); }
   finally { await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
 });
 
@@ -118,4 +129,73 @@ test('public read adapter rejects a redirect without requesting its target', asy
   } finally {
     await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
   }
+});
+
+test('HTTP failures retain only a validated status after a later abort, without response content', async context => {
+  for (const status of [429, 500]) await context.test(String(status), async () => {
+    const canary = 'PRIVATE_RESPONSE_CANARY';
+    let requests = 0;
+    const server = createServer((_request, response) => {
+      requests += 1; response.writeHead(status, { 'X-Private-Diagnostic': canary }); response.end(canary);
+    });
+    await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+    const address = server.address(); assert.ok(address && typeof address === 'object');
+    const base = `http://127.0.0.1:${address.port}/api`;
+    const controller = new AbortController();
+    try {
+      await assert.rejects(getJson(base, '/platform/summary', controller.signal), error => {
+        controller.abort(new Error(canary));
+        assert.ok(error instanceof Error); assert.equal(error.message, `API 응답 ${status}`);
+        const failure = liveFailureOf(error);
+        assert.deepEqual(failure, { kind: 'HTTP_REJECTED', httpStatus: status });
+        const output = JSON.stringify(failure) + describeLiveFailure(failure);
+        assert.equal(output.includes(canary), false); assert.equal(output.includes(base), false);
+        assert.deepEqual(Object.keys(failure).sort(), ['httpStatus', 'kind']); return true;
+      });
+      assert.equal(requests, 1, 'Diagnostics must not retry the request');
+    } finally { await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
+  });
+});
+
+test('JSON, aborted requests and unverified transport failures have finite non-causal diagnostics', async context => {
+  for (const scenario of ['json', 'abort', 'network'] as const) await context.test(scenario, async () => {
+    const controller = new AbortController();
+    const canary = 'PRIVATE_ERROR_CANARY';
+    let requests = 0;
+    const server = createServer((request, response) => {
+      requests += 1;
+      if (scenario === 'network') request.socket.destroy();
+      else if (scenario === 'abort') { controller.abort(new Error(canary)); response.destroy(); }
+      else { response.setHeader('Content-Type', 'application/json'); response.end(canary + '{'); }
+    });
+    await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+    const address = server.address(); assert.ok(address && typeof address === 'object');
+    const base = `http://127.0.0.1:${address.port}/api`;
+    try {
+      await assert.rejects(getJson(base, '/platform/summary', controller.signal), error => {
+        if (scenario === 'json') controller.abort();
+        const failure = liveFailureOf(error);
+        assert.deepEqual(failure, { kind: scenario === 'json' ? 'INVALID_RESPONSE' : scenario === 'abort' ? 'REQUEST_ABORTED' : 'NETWORK_UNVERIFIED', httpStatus: null });
+        const output = JSON.stringify(failure) + describeLiveFailure(failure);
+        assert.equal(output.includes(canary), false); assert.equal(output.includes(base), false);
+        assert.equal(/timeout|CORS|시간 초과/i.test(output), false);
+        assert.ok(error instanceof Error); assert.equal(error.message.includes(canary), false); return true;
+      });
+      assert.equal(requests, 1);
+    } finally { await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
+  });
+  assert.deepEqual(liveFailureOf({ kind: 'HTTP_REJECTED', httpStatus: 999, message: 'PRIVATE_ERROR_CANARY' }), { kind: 'OTHER', httpStatus: null });
+});
+
+test('a valid empty run list is not reported as a transport or DTO failure', async () => {
+  const server = createServer((request, response) => {
+    response.setHeader('Content-Type', 'application/json');
+    response.end(JSON.stringify(request.url === '/api/platform/summary' ? summary : { items: [], observedAt }));
+  });
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+  const address = server.address(); assert.ok(address && typeof address === 'object');
+  try { await assert.rejects(fetchLab(`http://127.0.0.1:${address.port}/api`), error => {
+    assert.ok(error instanceof Error); assert.equal(error.message, '아직 저장된 실행 결과가 없습니다.');
+    assert.deepEqual(liveFailureOf(error), { kind: 'OTHER', httpStatus: null }); return true;
+  }); } finally { await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
 });
