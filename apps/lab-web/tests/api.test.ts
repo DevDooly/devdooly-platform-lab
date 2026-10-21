@@ -48,12 +48,43 @@ test('HTTP adapter loads list, detail, runtime summary and releases without a PO
   const base = `http://127.0.0.1:${address.port}/api`;
   try {
     const result = await fetchLab(base + '/');
+    assert.equal(result.detail.id, run.id);
     assert.equal(result.detail.successCount, 7);
     assert.equal(result.summary.status, 'UP');
     assert.equal(paths.length, 4);
+    const first = await fetchLab(base, undefined, 'not-listed-run');
+    assert.equal(first.detail.id, run.id, 'An unavailable preference must still select the first listed run');
+    assert.equal(paths.length, 8);
     assert.ok(paths.every(path => path.startsWith('GET ')));
     await assert.rejects(fetchRun(base, 'unknown/id'), /공개 조회 주소/);
-    assert.equal(paths.length, 4, 'A noncanonical public detail path must not send another request');
+    assert.equal(paths.length, 8, 'A noncanonical public detail path must not send another request');
+  } finally { await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
+});
+
+test('HTTP detail identity must match the requested run even when the other run is listed', async () => {
+  const other = { ...run, id: 'other-listed-run' };
+  const wrongDetail = { ...detail, id: other.id };
+  assert.equal(isRun(other), true);
+  assert.equal(isRunDetail(wrongDetail), true, 'This response is structurally valid; only its request identity is wrong');
+  const paths: string[] = [];
+  const server = createServer((request, response) => {
+    paths.push(`${request.method} ${request.url}`);
+    response.setHeader('Content-Type', 'application/json');
+    if (request.url === '/api/demo/runs') response.end(JSON.stringify({ items: [run, other], observedAt }));
+    else if (request.url === '/api/demo/runs/' + run.id) response.end(JSON.stringify(wrongDetail));
+    else if (request.url === '/api/platform/summary') response.end(JSON.stringify(summary));
+    else if (request.url === '/api/platform/releases') response.end(JSON.stringify({ items: [], observedAt }));
+    else { response.writeHead(404); response.end('{}'); }
+  });
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+  const address = server.address(); assert.ok(address && typeof address === 'object');
+  const base = `http://127.0.0.1:${address.port}/api`;
+  try {
+    const results = await Promise.allSettled([fetchRun(base, run.id), fetchLab(base, undefined, run.id)]);
+    assert.deepEqual(paths.slice().sort(), ['GET /api/demo/runs', 'GET /api/demo/runs/' + run.id,
+      'GET /api/demo/runs/' + run.id, 'GET /api/platform/summary', 'GET /api/platform/releases'].sort());
+    assert.deepEqual(results.map(result => result.status), ['rejected', 'rejected']);
+    for (const result of results) if (result.status === 'rejected') assert.equal(result.reason.message, '실행 결과 형식을 확인할 수 없습니다.');
   } finally { await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
 });
 test('malformed HTTP payload is rejected instead of being shown as live data', async () => {

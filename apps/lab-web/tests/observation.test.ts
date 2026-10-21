@@ -47,19 +47,22 @@ test('source priority is live API, then last observation, then illustrative fixt
   assert.equal(selectDataSource(null, null, fixture).mode, 'fixture');
 });
 test('real HTTP fallback keeps records static and handles missing or malformed public files', async context => {
-  for (const scenario of ['live', 'recorded', 'missing', 'malformed', 'cached'] as const) {
+  for (const scenario of ['live', 'recorded', 'missing', 'malformed', 'cached', 'wrong-detail'] as const) {
     await context.test(scenario, async () => {
       const record = testObservation();
+      const other = { ...record.data.runs[0]!, id: 'other-listed-run' };
+      const paths: string[] = [];
       const server = createServer((request, response) => {
+        paths.push(`${request.method} ${request.url}`);
         response.setHeader('Content-Type', 'application/json');
         if (request.url === '/data/lab-observation.json') {
           if (scenario === 'missing') { response.writeHead(404); response.end('{}'); }
           else if (scenario === 'malformed') response.end(JSON.stringify({ ...record, provenance: { ...record.provenance, sourceCommit: 'unknown' } }));
           else if (scenario === 'cached') { response.writeHead(503); response.end('{}'); }
           else response.end(JSON.stringify(record));
-        } else if (scenario !== 'live') { response.writeHead(503); response.end('{}'); }
-        else if (request.url === '/api/demo/runs') response.end(JSON.stringify({ items: record.data.runs, observedAt: record.data.observedAt }));
-        else if (request.url === '/api/demo/runs/synthetic-v1-seed-42') response.end(JSON.stringify(record.data.detail));
+        } else if (scenario !== 'live' && scenario !== 'wrong-detail') { response.writeHead(503); response.end('{}'); }
+        else if (request.url === '/api/demo/runs') response.end(JSON.stringify({ items: scenario === 'wrong-detail' ? [...record.data.runs, other] : record.data.runs, observedAt: record.data.observedAt }));
+        else if (request.url === '/api/demo/runs/synthetic-v1-seed-42') response.end(JSON.stringify(scenario === 'wrong-detail' ? { ...record.data.detail, id: other.id } : record.data.detail));
         else if (request.url === '/api/platform/summary') response.end(JSON.stringify(record.data.summary));
         else if (request.url === '/api/platform/releases') response.end(JSON.stringify({ items: record.data.releases, observedAt: record.data.observedAt }));
         else { response.writeHead(404); response.end('{}'); }
@@ -69,9 +72,16 @@ test('real HTTP fallback keeps records static and handles missing or malformed p
       const base = `http://127.0.0.1:${address.port}`;
       try {
         const result = await loadLabSources({ apiBase: base + '/api', observationUrl: base + '/data/lab-observation.json', fixture, signal: AbortSignal.timeout(2000), previousObservation: scenario === 'cached' ? record : null });
-        assert.equal(result.mode, scenario === 'live' ? 'live' : ['recorded', 'cached'].includes(scenario) ? 'recorded' : 'fixture');
+        assert.equal(result.mode, scenario === 'live' ? 'live' : ['recorded', 'cached', 'wrong-detail'].includes(scenario) ? 'recorded' : 'fixture');
         if (result.mode === 'recorded') { assert.equal(result.data.observedAt, record.data.observedAt); assert.equal(result.observation?.capturedAt, record.capturedAt); }
         if (result.mode === 'fixture') assert.equal(result.data.detail.startedAt, null);
+        if (scenario === 'wrong-detail') {
+          assert.equal(isObservationRecord(record), true);
+          assert.deepEqual(result.data, record.data);
+          assert.deepEqual(result.cachedObservation, record);
+          assert.deepEqual(paths.slice().sort(), ['GET /data/lab-observation.json', 'GET /api/demo/runs',
+            'GET /api/demo/runs/synthetic-v1-seed-42', 'GET /api/platform/summary', 'GET /api/platform/releases'].sort());
+        }
       } finally { await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
     });
   }
