@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "scope": "SELECTED_LAB_CLUSTER_METADATA_AFTER_WORKER_PIN_CHANGE",
+  "capturedAt": "2026-10-21T00:23:59.660316Z",
+  "change": {
+    "pullRequestUrl": "https://github.com/DevDooly/devdooly-platform-lab/pull/177",
+    "pullRequestHead": "70264c390385bcff96ae5bb528a1ce45416421eb",
+    "mergeRevision": "33c5e8c0cf211dc3f4c622b98b40be0b48a3890b",
+    "mergedAt": "2026-10-21T00:19:02Z",
+    "declaredValuesChanged": ["runtime.worker.image.digest", "runtime.worker.sourceCommit"]
+  },
+  "deployments": {
+    "count": 4,
+    "allObservedGenerationsMatch": true,
+    "desiredReplicasPerDeployment": 1,
+    "readyReplicasPerDeployment": 1
+  },
+  "pods": {
+    "count": 7,
+    "runningCount": 7,
+    "readyCount": 7,
+    "containerRestartCounts": {
+      "database": 1,
+      "allOtherContainers": 0
+    }
+  },
+  "persistentVolumeClaims": {
+    "count": 4,
+    "boundCount": 4,
+    "storageClass": "local-path",
+    "accessMode": "ReadWriteOnce"
+  },
+  "declaredRuntimePins": {
+    "api": {
+      "sourceCommit": "245d61a5749760a20918ab091d9410ce6735b1c0",
+      "imageDigest": "sha256:9e81facc7365161fbc6a2e5a4b92f76f3787bc91c73bda7e6c51b5f1a90a2395"
+    },
+    "web": {
+      "imageDigest": "sha256:029c07bfcf9f872315ecf8307d8aec22425b23d9467492c62bb810420395e376"
+    },
+    "worker": {
+      "sourceCommit": "6f551a16a8ed536bb126403234c41b9e9b266d43",
+      "imageDigest": "sha256:ee71389be27fa484284a517a324c52a9c827cd20db21f0b306c4dcfd52147aad"
+    }
+  },
+  "workerConfiguration": {
+    "strategy": "Recreate",
+    "terminationGracePeriodSeconds": 300,
+    "runtimeRunArgument": true,
+    "preStopPresent": false,
+    "readinessType": "exec",
+    "readinessPeriodSeconds": 10,
+    "readinessTimeoutSeconds": 5,
+    "readinessFailureThreshold": 3,
+    "memoryRequest": "256Mi",
+    "memoryLimit": "768Mi"
+  },
+  "workerImageChecks": {
+    "deploymentImageMatchesExpected": true,
+    "podImageMatchesExpected": true,
+    "containerRuntimeImageMatchesExpected": true
+  },
+  "argo": {
+    "syncStatus": "Synced",
+    "healthStatus": "Healthy",
+    "syncRevision": "33c5e8c0cf211dc3f4c622b98b40be0b48a3890b",
+    "targetRevision": "main"
+  },
+  "scopeLimits": {
+    "privateDataReceiptsIncluded": false,
+    "oldProcessExitObserved": false,
+    "oldLeaseReleaseEventObserved": false,
+    "runtimeFaultInjected": false,
+    "longTermAvailabilityVerified": false
+  }
+}

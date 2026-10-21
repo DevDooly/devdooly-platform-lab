@@ -1,6 +1,6 @@
 # 단계별 작업과 완료 조건
 
-## 현재 우선순위 — 2026-10-20 UTC
+## 현재 우선순위 — 2026-10-21 UTC
 
 현재 완료·진행·보류의 기준은 [다음 개발 계획의 최신 안내](NEXT_STEPS.md)입니다. 아래 단계별 체크리스트는 날짜가 다른 실행의 기록이며, 과거의 미완료 표시를 현재 할 일로 다시 실행하지 않습니다.
 
@@ -9,7 +9,9 @@
 | 완료한 격리 검증 | Kafka backlog·offset commit 실패 복구·손상 export 수리·잘못된 메시지 보호·실행 잠금 손실 검증. 특히 [잠금 손실](evidence/runtime-lease-loss/README.md)은 stale `RUNNING / EXPORT`와 실제 종료를 구분합니다. |
 | 완료한 데이터·탐색 구현 | [같은 PostgreSQL의 정상 stop/start](evidence/cloud-catalog-restart/README.md) 뒤 catalog·조회·전체 객체 보존을 확인했습니다. 근거 목록의 검색·필터·6개씩 더 보기는 웹173개 검사·타입·빌드와 같은 main의 Pages·CI, 로컬·공개 화면 확인을 마쳤습니다. |
 | 사례·운영 문서 | [별도 잠금 손실 사례](https://devdooly.github.io/devdooly-platform-lab/cases/runtime-ownership/)의 공개·키보드·모바일 확인을 마쳤습니다. 장애별 판단표와 AI 소유자 검토자료를 정리했으며, 세부 근거와 다음 순서는 [최신 안내](NEXT_STEPS.md)를 따릅니다. |
-| 보류 | 자격증명 교체·회전, 자원 예산 정책, [PR102 접수 gate](https://github.com/DevDooly/devdooly-platform-lab/pull/102) 활성화는 보류를 유지합니다. 현재 공개 경로의 재부팅·인증서 자연 갱신도 미검증입니다. |
+| worker·공개 관측 | [PR177의 worker 교체](evidence/worker-image-rollout/README.md)는 main33c5e8c·source6f551a1·image ee713에서 Argo Synced·Healthy·새 Pod Ready를 확인했습니다. API245d61a·웹 image029c는 유지합니다. [후속 GET39521322979](evidence/public-get/README.md)의6개 HTTP200·API245d61a와 별도 공개 UI의 새 worker 소스·시작·heartbeat 관측을 구분합니다. GET artifact 자체는 worker 생존의 증명이 아닙니다. |
+| 다음 | 기존 약30분 timer의 새 worker 자동 수집·정적 Pages 반영은 아직 미확인입니다. 현재 정적 기록은 교체 전00:16:55 UTC입니다. 그다음 관측 자동화 수정의 미니 PC 반영을 준비하며 실제 호스트 설정 변경은 별도입니다. |
+| 보류 | 별도 격리 환경이 없어 K3s·Jenkins 실제 기동 복원을 보류합니다. 자격증명 교체·회전, 자원 예산 정책, [PR102 접수 gate](https://github.com/DevDooly/devdooly-platform-lab/pull/102) 활성화도 보류합니다. 현재 공개 경로의 재부팅·인증서 자연 갱신은 미검증입니다. |
 
 ## 이전 안내 — 2026-10-18 UTC 검증 반영
 

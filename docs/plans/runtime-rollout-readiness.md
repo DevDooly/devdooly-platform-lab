@@ -1,6 +1,16 @@
-# runtime 소스 차이와 배포 전 확인
+# runtime 소스 차이와 worker 전환 기록
 
-비교 기준은 [`46d099d1792f3e93125db7f1ffb2ab3e286abc17`](https://github.com/DevDooly/devdooly-platform-lab/commit/46d099d1792f3e93125db7f1ffb2ab3e286abc17)이다. 아래는 공개 응답·저장소 코드와 선언의 대조이며, 새 이미지 선정이나 실제 운영 배포 완료 기록이 아니다.
+## 최신 — 2026-10-21 UTC worker 반영 완료
+
+[PR177의 worker 전환](../evidence/worker-image-rollout/README.md)에서 image·source 두 값만 변경했습니다. source `6f551a16a8ed536bb126403234c41b9e9b266d43`와 digest `sha256:ee71389be27fa484284a517a324c52a9c827cd20db21f0b306c4dcfd52147aad`를 적용한 뒤 새 worker Ready와 main `33c5e8c0cf211dc3f4c622b98b40be0b48a3890b`의 Argo Synced·Healthy를 확인했습니다. API245·웹 pin은 유지했고 API·웹 초안을 함께 병합하지 않았습니다.
+
+허용받은 배포 전 DB 조건과 선택 자료의 보존 기준을 읽고, 적용 후 같은 항목과 새 실행·현재 소유를 대조했습니다. 비공개 점검 원본은 공개 문서에 포함하지 않으며, 공개 메타데이터와 그 점검의 근거 범위를 구분합니다. 기존 프로세스의 종료 코드·잠금 해제 순간은 직접 포착하지 못했습니다. Error 수정이 포함된 이미지의 반영이며 실제 OOM·Error 주입 복구의 완료가 아닙니다.
+
+교체 후 [별도 GET6·공개 화면 관측](../evidence/public-get/README.md#후속-실제-관측--2026-10-21-utc)을 마쳤습니다. 다음은 기존30분 timer가 새 상태를 저장된 관측과 Pages에도 반영하는지 확인하는 것입니다. 기동 복원·토큰 교체·자원 예산 정책·PR102는 계속 보류합니다.
+
+## 이전 배포 준비 기록 — 2026-10-20 UTC
+
+아래 비교 기준은 [`46d099d1792f3e93125db7f1ffb2ab3e286abc17`](https://github.com/DevDooly/devdooly-platform-lab/commit/46d099d1792f3e93125db7f1ffb2ab3e286abc17)이다. 당시 공개 응답·저장소 코드·선언과 배포 전 미확인 조건을 보존한다. 아래의 “현재·아직·미배포”는 준비 시점의 상태이며 위 전환 이후 상태를 뜻하지 않는다.
 
 ## 서로 다른 source의 의미
 
@@ -36,11 +46,11 @@ Deployment4개는 각각 observed generation 일치·1개 Ready였고 Pod7개는
 
 이는 그때의 메타데이터와 readiness 확인이다. DB journal·schema·유휴·lease 소유, S3 파일·Kafka offset의 새 기준값이나 최근 오류 수정의 worker 반영을 증명하지 않는다. 현재 worker는74 소스이며 새 pin·배포·재시작은 수행하지 않았다.
 
-## 아직 확인하지 않은 배포 전제
+## 당시 아직 확인하지 않은 배포 전제
 
 - 위 게시 후보의 검증·게시·공개 index 자료는 확인했지만, 실제 배포 대상으로 쓸 source·API/worker 각각의 pin·현재 Pod와 이전 pin의 대응은 아직 확정하지 않았다. 새 OCI는 아직 선택하지 않았고 자동 GitOps 초안을 일괄 병합하지 않았다.
 - Argo의 source revision·valueFiles/override·sync 상태와 worker의 소유 관계·image ID·readiness는 위 시점에 대조했다. 실제 배포 직전에는 같은 조건과 기존 실행의 identity를 다시 확인해야 한다.
 - 실제 DB의 V3/V4 성공 이력·checksum·runtime 행과 새 binary 호환, 유휴·EXPORTED·빈 슬롯·pending outbox 0, 기존 SQL·파일·offset 보존 기준은 아직 대조하지 않았다.
 - 기존 Recreate·종료 유예300초·JVM 종료 hook 대기240초·exec readiness를 유지하고 이전 실행의 종료·lease 해제와 새 실행의 identity·heartbeat를 구분해야 한다. `PAUSED_OPERATOR`는 재시작으로 해제되지 않고 resume도 자료를 수리하지 않는다. DB/lease 손실로 pause·stop 기록이 남지 않을 수 있으므로 RUNNING만으로 정상 종료·생존을 판정하거나 잠금을 강제 해제하지 않는다.
 
-SSH를 통한 위 Kubernetes·Argo 메타데이터 조회를 마쳤다. DB 조건 조회와 서버 변경은 아직 수행하지 않았다. 기동 복원·토큰 교체·자원 예산 정책·PR102 접수 gate의 네 보류는 유지한다. 이 문서는 새 실행 절차나 쓰기 명령을 추가하지 않는다.
+이 준비 기록 시점에는 SSH를 통한 위 Kubernetes·Argo 메타데이터 조회만 마쳤고 DB 조건 조회와 서버 변경은 아직 수행하지 않았다. 이후 확인과 worker 반영 결과는 맨앞 최신 절을 따른다. 기동 복원·토큰 교체·자원 예산 정책·PR102 접수 gate의 네 보류는 유지한다. 이 문서는 새 실행 절차나 쓰기 명령을 추가하지 않는다.
