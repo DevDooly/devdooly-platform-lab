@@ -73,6 +73,7 @@ test('real HTTP fallback keeps records static and handles missing or malformed p
       try {
         const result = await loadLabSources({ apiBase: base + '/api', observationUrl: base + '/data/lab-observation.json', fixture, signal: AbortSignal.timeout(2000), previousObservation: scenario === 'cached' ? record : null });
         assert.equal(result.mode, scenario === 'live' ? 'live' : ['recorded', 'cached', 'wrong-detail'].includes(scenario) ? 'recorded' : 'fixture');
+        assert.deepEqual(result.liveFailure, scenario === 'live' ? null : { kind: scenario === 'wrong-detail' ? 'INVALID_RESPONSE' : 'HTTP_REJECTED', httpStatus: scenario === 'wrong-detail' ? null : 503 });
         if (result.mode === 'recorded') { assert.equal(result.data.observedAt, record.data.observedAt); assert.equal(result.observation?.capturedAt, record.capturedAt); }
         if (result.mode === 'fixture') assert.equal(result.data.detail.startedAt, null);
         if (scenario === 'wrong-detail') {
@@ -85,4 +86,72 @@ test('real HTTP fallback keeps records static and handles missing or malformed p
       } finally { await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
     });
   }
+});
+
+test('live failure diagnostics preserve the exact last good record through abort, transport and invalid responses', async context => {
+  for (const scenario of ['json', 'dto', 'abort', 'network'] as const) await context.test(scenario, async () => {
+    const record = testObservation();
+    const preserved = structuredClone(record);
+    const controller = new AbortController();
+    const canary = 'PRIVATE_LIVE_FAILURE_CANARY';
+    const methods: string[] = [];
+    const server = createServer((request, response) => {
+      methods.push(request.method || '');
+      if (request.url === '/data/lab-observation.json') { response.writeHead(404); response.end('{}'); }
+      else if (scenario === 'network') request.socket.destroy();
+      else if (scenario === 'abort') { controller.abort(new Error(canary)); response.destroy(); }
+      else { response.setHeader('Content-Type', 'application/json'); response.end(scenario === 'json' ? canary + '{' : JSON.stringify({ items: [{ ...record.data.runs[0], inputCount: 999 }], observedAt: record.data.observedAt })); }
+    });
+    await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+    const address = server.address(); assert.ok(address && typeof address === 'object');
+    const base = `http://127.0.0.1:${address.port}`;
+    try {
+      const result = await loadLabSources({ apiBase: base + '/api', observationUrl: base + '/data/lab-observation.json', fixture, signal: controller.signal, previousObservation: record });
+      assert.equal(result.mode, 'recorded');
+      assert.deepEqual(result.data, preserved.data); assert.deepEqual(result.observation, preserved);
+      assert.deepEqual(result.cachedObservation, preserved); assert.deepEqual(record, preserved);
+      assert.deepEqual(result.liveFailure, { kind: scenario === 'abort' ? 'REQUEST_ABORTED' : scenario === 'network' ? 'NETWORK_UNVERIFIED' : 'INVALID_RESPONSE', httpStatus: null });
+      const diagnostic = JSON.stringify(result.liveFailure);
+      assert.equal(diagnostic.includes(canary), false); assert.equal(diagnostic.includes(base), false);
+      assert.ok(methods.length > 0 && methods.every(method => method === 'GET'));
+    } finally { await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
+  });
+});
+
+test('a successful later live read clears the failure while keeping the original cached observation', async () => {
+  const record = testObservation();
+  let live = false;
+  let initialApiRequests = 0;
+  let allInitialApiRequests!: () => void;
+  const initialBatch = new Promise<void>(resolve => { allInitialApiRequests = resolve; });
+  const paths: string[] = [];
+  const server = createServer((request, response) => {
+    paths.push(`${request.method} ${request.url}`);
+    response.setHeader('Content-Type', 'application/json');
+    if (request.url === '/data/lab-observation.json') { response.writeHead(404); response.end('{}'); }
+    else if (!live) {
+      initialApiRequests += 1; response.writeHead(500); response.end('PRIVATE_LIVE_FAILURE_CANARY');
+      if (initialApiRequests === 3) allInitialApiRequests();
+    } else if (request.url === '/api/demo/runs') response.end(JSON.stringify({ items: record.data.runs, observedAt: record.data.observedAt }));
+    else if (request.url === '/api/demo/runs/' + record.data.detail.id) response.end(JSON.stringify(record.data.detail));
+    else if (request.url === '/api/platform/summary') response.end(JSON.stringify(record.data.summary));
+    else if (request.url === '/api/platform/releases') response.end(JSON.stringify({ items: record.data.releases, observedAt: record.data.observedAt }));
+    else { response.writeHead(404); response.end('{}'); }
+  });
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+  const address = server.address(); assert.ok(address && typeof address === 'object');
+  const base = `http://127.0.0.1:${address.port}`;
+  try {
+    const options = { apiBase: base + '/api', observationUrl: base + '/data/lab-observation.json', fixture, previousObservation: record };
+    const failed = await loadLabSources(options);
+    await initialBatch;
+    assert.equal(failed.mode, 'recorded'); assert.deepEqual(failed.liveFailure, { kind: 'HTTP_REJECTED', httpStatus: 500 });
+    assert.deepEqual(failed.data, record.data); assert.deepEqual(failed.cachedObservation, record);
+    assert.equal(paths.length, 4);
+    live = true;
+    const recovered = await loadLabSources({ ...options, previousObservation: failed.cachedObservation });
+    assert.equal(recovered.mode, 'live'); assert.equal(recovered.liveFailure, null); assert.equal(recovered.observation, null);
+    assert.deepEqual(recovered.data, record.data); assert.deepEqual(recovered.cachedObservation, record);
+    assert.equal(paths.length, 9); assert.ok(paths.every(path => path.startsWith('GET ')));
+  } finally { await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
 });
