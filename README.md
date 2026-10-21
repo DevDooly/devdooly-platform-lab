@@ -40,7 +40,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 ## 다음 단계와 보류
 
-기존 약30분 timer의 [새 worker 자동 수집·Pages 게시](docs/evidence/worker-image-rollout/NATURAL_PUBLICATION.md)에 이어 [관측 코드 교체 후 자연 게시](docs/evidence/automation-failure-boundaries/DEPLOYED.md)까지 확인했습니다. [새 worker의 고정 합성 입력 한 건](docs/evidence/current-worker-fixture/README.md)은 입력12·성공7·실패3·중복2·대기0의 COMPLETED·EXPORTED, 새 객체3개 전체 bytes와 기존8작업·24객체 보존을 확인했고 완료된 임시 Job도 선택 정리했습니다. 원래 자연 주기의 [Pages39532314754](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39532314754) build·deploy와 공개 JSON3개·artifact 원문 일치, 새9작업 반영도 확인했습니다. [현재 공개 HTTPS 재관측](docs/evidence/public-get/README.md)은 run39533662559에서 지정 GET6개 모두 HTTP200·DTO 검증을 통과했습니다. 다음은 공개 실행결과 선택 항목 구분 개선입니다.
+기존 약30분 timer의 [새 worker 자동 수집·Pages 게시](docs/evidence/worker-image-rollout/NATURAL_PUBLICATION.md)에 이어 [관측 코드 교체 후 자연 게시](docs/evidence/automation-failure-boundaries/DEPLOYED.md)까지 확인했습니다. [새 worker의 고정 합성 입력 한 건](docs/evidence/current-worker-fixture/README.md)은 입력12·성공7·실패3·중복2·대기0의 COMPLETED·EXPORTED, 새 객체3개 전체 bytes와 기존8작업·24객체 보존을 확인했고 완료된 임시 Job도 선택 정리했습니다. 원래 자연 주기의 [Pages39532314754](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39532314754) build·deploy와 공개 JSON3개·artifact 원문 일치, 새9작업 반영도 확인했습니다. [현재 공개 HTTPS 재관측](docs/evidence/public-get/README.md)은 run39533662559에서 지정 GET6개 모두 HTTP200·DTO 검증을 통과했습니다. 실행 결과는 [ID·입력 건수와 전체 ID](docs/evidence/run-selection/README.md)로 구분하도록 수정했고 로컬 화면 확인을 마쳤습니다. 다음은 요청한 실행과 다른 상세 응답을 차단하는 검증입니다.
 
 인증서 자연 갱신·현재 공개 경로의 재부팅·K3s/Jenkins 전체 archive 복원은 아직 검증하지 않았습니다. 별도 격리 환경이 없어 **K3s·Jenkins 실제 기동 복원은 보류**합니다. [복원 사전준비](docs/plans/historical-runtime-restore.md)에 파일 검증과 실제 기동, 재개 시 필요한 자료·실행 대상을 정리했습니다. 후속 순서는 [다음 개발 계획](docs/NEXT_STEPS.md)을 따릅니다. 토큰 교체·자원 예산 정책·PR102 접수 gate의 보류도 유지합니다.
 
