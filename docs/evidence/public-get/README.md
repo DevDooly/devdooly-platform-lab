@@ -1,4 +1,4 @@
-# 공개 GET 응답 계약 — 첫 실제 관측
+# 공개 GET 응답 계약 — 실제 관측 기록
 
 2026-10-20 UTC의 [수동 실행39483000285](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39483000285)에서 `offline`·`public_gets` 두 job이 성공했습니다. 고정 GET6개가 모두200과 공개 DTO 검증을 통과했습니다. 이 실행은 POST나 거부 경로를 보내지 않으며, [기존 GET6·거부3 검사](../public-read-https/README.md)와 범위를 구분합니다.
 
@@ -49,3 +49,22 @@ PASS는 당시 지정 HTTPS 응답과 DTO 계약 범위입니다. 현재 worker 
 ## 근거 목록 연결
 
 기존19개를 유지하고 수동 GET 관측 카드1개를 추가했습니다. 웹207개·생략0, 타입47파일 오류·경고·힌트0와 프로젝트 경로 두 페이지 빌드를 통과했습니다. 로컬1280px·390px에서 GET 검색·CI/CD·GitHub Linux CI 교집합1개, 원문 문서·고정 소스 링크, 본문17px·모바일 링크44px·가로 넘침 부재를 확인했습니다. 조건 초기화 뒤 전체20개 중6개·18개·20개 표시를 확인했습니다. 같은 main `bd4eb39881f7ddc85e82e75264ab3b8794c27098`의 [Pages39484421012](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39484421012) build/deploy와 [CI39484421037](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39484421037)의 verify·public-read-gateway가 성공했습니다(조건부 격리4개 job은 생략). 공개1280px·390px에서도 GET·CI/CD·GitHub Linux CI 교집합1개, 원문 문서·고정 소스 링크, 본문17px·모바일 링크44px·문서 폭1265px/375px의 가로 넘침 부재를 확인했습니다. 새 GET 재실행이나 미니 PC 배포는 하지 않았습니다.
+
+## 후속 실제 관측 — 2026-10-21 UTC
+
+[수동 실행39521322979](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39521322979)은 main의 첫 attempt에서 `offline`·`public_gets`가 성공했습니다. 지정 GET6개가 모두 HTTP200·`passed=true`이며 공개 DTO 검증을 통과했습니다. 위 첫 관측 원문과 당시 검증 기록은 그대로 보존합니다.
+
+| 출처 | 후속 실제 기록 |
+| --- | --- |
+| 검사기 소스 | `33c5e8c0cf211dc3f4c622b98b40be0b48a3890b` |
+| 응답에서 확인한 API 소스 | 6개 모두 `245d61a5749760a20918ab091d9410ce6735b1c0` |
+| 수집 시작 → 완료(UTC) | `2026-10-21T00:26:48.755Z` → `2026-10-21T00:26:58.079Z` |
+| 실제 job 완료(UTC) | `2026-10-21T00:27:02Z` |
+| 결과 | `PASS / NONE`, 공개 IPv4·표준 TLS 확인 |
+| 결과 원문 | [summary.json](hosted-39521322979/summary.json), 1,635bytes |
+| 출처 metadata | [run-metadata.json](hosted-39521322979/run-metadata.json), 346bytes |
+| 원문 SHA-256 | `8178a94d89d98df6e8ebb8ab01a949431880c75a9be3fb0da61963917de61e8e` |
+
+`deniedRequestsTested=false`, `operatingConfigurationChanged=false`는 이 GET 실행의 범위입니다. POST·거부 경로·인증서 자연 갱신·worker 프로세스 생존이나 장기간 가용성을 확인한 결과가 아닙니다. 수집 구간은 단일 순차 관측이며 성능 benchmark가 아닙니다.
+
+별도 공개 브라우저 관측에서는 작업 카드의 실시간 API 10초 조회, 실행기 소스 `6f551a16a8ed536bb126403234c41b9e9b266d43`와 관측 API 소스 `245d61a5749760a20918ab091d9410ce6735b1c0`의 구분, 새 실행 시작 `2026-10-21T00:20:05Z`, heartbeat의 `00:26:53` → `00:27:32 UTC` 전진을 확인했습니다. 이 화면 관측은 위 GET artifact가 증명한 항목과 별개입니다. GET artifact의 `JOBS.sourceCommit`은 관측 API 소스이며 실행기 소스·시작 시각·heartbeat를 담지 않습니다. DB의 RUNNING·heartbeat도 현재 프로세스나 lease 생존을 직접 확인한 값으로 해석하지 않습니다.

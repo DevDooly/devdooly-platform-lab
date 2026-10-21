@@ -25,20 +25,22 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 - **직접 링크:** [초기 위치 보정](docs/evidence/initial-fragment/README.md)으로 비동기 카드 로딩 뒤 목표 제목이 밀리는 현상을 수정했습니다. 로컬 두 화면·제한 시간·횟수·입력 취소와 같은 main의 Pages·CI, 공개 데스크톱·모바일 반영을 확인했습니다.
 
-- **실행기 오류 처리:** [합성 Error 회귀 검증](docs/evidence/runtime-error-cleanup/README.md)으로 정상 종료 오기록과 자원 정리 누락을 재현·수정했습니다. 관련26개·로컬 전체 검증과 같은 main의 Linux API233개 통과·skip0를 확인했습니다. 운영 배포는 별도입니다.
+- **실행기 오류 처리:** [합성 Error 회귀 검증](docs/evidence/runtime-error-cleanup/README.md)으로 정상 종료 오기록과 자원 정리 누락을 재현·수정했습니다. 관련26개·로컬 전체 검증과 같은 main의 Linux API233개 통과·skip0를 확인했습니다. 해당 수정의 worker 반영은 아래 별도 배포 근거를 따릅니다.
 
 - **시작 실패 정리:** [일부 client만 구성된 뒤의 Error](docs/evidence/client-construction-error/README.md)에서도 역순 종료를 수행하도록 수정했습니다. 수정 전3개 실패·수정 후7개와 로컬 전체 검증, 같은 main의 Linux API240개 통과·skip0를 확인했습니다.
 
 - **런타임 장애:** [offset commit 실패 복구](docs/evidence/offset-commit-recovery/README.md)와 [손상 export 수리](docs/evidence/export-integrity-runtime/README.md)를 검증했습니다. [잘못된 입력](docs/evidence/invalid-message-runtime/README.md)과 [잠금 연결 손실](docs/evidence/runtime-lease-loss/README.md)은 정상 작업 보존과 실행기 종료를 확인한 결과로, 복구 완료와 구분합니다.
 - **데이터 보존:** [격리 PostgreSQL 정상 재시작](docs/evidence/cloud-catalog-restart/README.md) 뒤 catalog·조회·전체 객체 보존과 [새 합성 warehouse의 snapshot 만료](docs/evidence/cloud-iceberg-expiration/README.md)를 확인했습니다. 운영 자료의 만료·삭제 결과가 아닙니다.
-- **공개 응답:** [외부 GET 관측](docs/evidence/public-get/README.md)에서 지정6개 응답의 HTTP200·헤더·DTO·출처와 시각을 확인하고 원문·해시를 보존했습니다. 근거 카드의 공개 데스크톱·모바일 반영과 같은 main의 Pages·CI도 확인했습니다. 검사기 소스와 실제 API 소스를 구분하며, 현재 worker 생존·POST 차단·장기 가용성을 검증한 결과는 아닙니다.
-- **배포 준비:** [실제 클러스터의 읽기 전용 점검](docs/evidence/cluster-readonly/README.md)에서 Argo·Pod·Deployment·PVC와 worker의 소유 관계·이미지 pin을 대조했습니다. 현재 worker74와 최근 오류 처리 수정의 미배포 상태를 구분하고, [다음 배포 전 조건](docs/plans/runtime-rollout-readiness.md)을 정리했습니다.
+- **공개 응답:** [외부 GET 관측](docs/evidence/public-get/README.md)의 첫 실행과 후속39521322979에서 지정6개 응답의 HTTP200·헤더·DTO·API 소스245d61a를 확인했습니다. 별도 공개 UI에서는 worker 소스6f551a1·새 실행 시작·heartbeat 전진을 관측했습니다. GET artifact 자체는 worker 소스·시작 시각을 담지 않으며, worker 생존·POST 차단·장기 가용성을 증명하지 않습니다.
+- **worker 배포:** [PR177의 실제 worker 교체](docs/evidence/worker-image-rollout/README.md)를 main33c5e8c에서 반영했습니다. worker는 source6f551a1·image ee713으로 전환했고 Argo Synced·Healthy와 새 Pod Ready를 확인했습니다. API245d61a·웹 image029c는 유지합니다. [이전 읽기 전용 점검](docs/evidence/cluster-readonly/README.md)의 worker74 기록과 구분합니다.
 - **공개 조회:** [두 번의 실제 TLS 관측](docs/evidence/tls-certificate/README.md)에서 동일 대상·leaf·유효기간과 수집 당시87일을 확인했습니다. 첫 기록의 [공개 화면](https://devdooly.github.io/devdooly-platform-lab/#tls-certificate) 검증은 완료했습니다. 두 번째 원문·이력 연결은 웹207개·타입·빌드와 로컬 확인을 마쳤으며, 같은 main의 Pages·CI와 공개 데스크톱·모바일의 두 기록·출처·접기/펼치기까지 확인했습니다. 자연 갱신·HTTP API 정상 여부·현재 가용성은 이 TLS 관측의 범위가 아닙니다.
 - **공개 화면:** [근거 검색·필터·6개씩 더 보기](https://devdooly.github.io/devdooly-platform-lab/#evidence)와 [실행 잠금 사례](https://devdooly.github.io/devdooly-platform-lab/cases/runtime-ownership/)를 공개했습니다. [heartbeat 시각 표시 수정](docs/evidence/job-heartbeat-order/README.md)은 웹188개 검사·타입·프로젝트 경로 빌드와 같은 main의 Pages·CI·Jenkins, 공개 데스크톱·모바일 확인을 마쳤습니다.
 
 [장애별 판단표](docs/runbooks/continuous-runtime.md#실제-네-가지-장애의-판단-기준--2026-10-20-utc)는 저장 상태·실제 종료·재개 전제를 구분합니다. [AI 예제 소유자 검토자료](docs/reviews/ai-window-owner-review.md)의 사람 판단은 **PENDING**입니다.
 
 ## 다음 단계와 보류
+
+다음은 기존 약30분 timer가 새 worker를 자동 수집해 정적 Pages 기록에 반영하는지 확인하는 것입니다. 현재 정적 기록은 교체 전 `00:16:55 UTC`이며 새 worker 반영은 아직 미확인입니다. 그다음 관측 자동화 수정의 미니 PC 반영을 준비하며, 실제 호스트 설정 변경은 별도입니다.
 
 인증서 자연 갱신·현재 공개 경로의 재부팅·K3s/Jenkins 전체 archive 복원은 아직 검증하지 않았습니다. 별도 격리 환경이 없어 **K3s·Jenkins 실제 기동 복원은 보류**합니다. [복원 사전준비](docs/plans/historical-runtime-restore.md)에 파일 검증과 실제 기동, 재개 시 필요한 자료·실행 대상을 정리했습니다. 후속 순서는 [다음 개발 계획](docs/NEXT_STEPS.md)을 따릅니다. 토큰 교체·자원 예산 정책·PR102 접수 gate의 보류도 유지합니다.
 
