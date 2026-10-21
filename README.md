@@ -17,7 +17,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 최근 완료한 범위는 다음과 같습니다. 실행별 소스·수치·실패 이력과 한계는 연결한 실제 근거를 따릅니다.
 
-- **관측 자동화:** [선택적 진단 실패·DDNS 완료 시한](docs/evidence/automation-failure-boundaries/README.md)을 수정했습니다. 로컬 관측156개 통과·기존 POSIX4개 생략에 이어 같은 main의 Linux 관측160개·DDNS5개 통과·skip0와 Pages 성공을 확인했습니다. 실제 미니 PC 반영은 별도입니다.
+- **관측 자동화:** [선택적 진단 실패·DDNS 완료 시한](docs/evidence/automation-failure-boundaries/README.md)을 수정했습니다. 로컬 관측156개 통과·기존 POSIX4개 생략에 이어 같은 main의 Linux 관측160개·DDNS5개 통과·skip0와 Pages 성공을 확인했습니다. [운영 반영](docs/evidence/automation-failure-boundaries/DEPLOYED.md)에서는 두 코드 교체·DDNS 새 자연 회차 한 번과 새 관측 실행기의 Pages39526516518·공개 JSON3개 일치를 확인했습니다.
 
 - **검색 초기 입력:** [준비 전 입력 보호](docs/evidence/evidence-input-readiness/README.md)로 이벤트 연결 전에 입력이 유실될 수 있는 구간을 막았습니다. 로컬 SSR 사본·준비 후 검색·19개 순차 표시·모바일 Tab 이동과 웹207검사·타입·빌드, 같은 main의 Pages·CI·공개 첫 접속 검색을 확인했습니다.
 
@@ -40,7 +40,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 ## 다음 단계와 보류
 
-다음은 기존 약30분 timer가 새 worker를 자동 수집해 정적 Pages 기록에 반영하는지 확인하는 것입니다. 현재 정적 기록은 교체 전 `00:16:55 UTC`이며 새 worker 반영은 아직 미확인입니다. 그다음 관측 자동화 수정의 미니 PC 반영을 준비하며, 실제 호스트 설정 변경은 별도입니다.
+기존 약30분 timer의 [새 worker 자동 수집·Pages 게시](docs/evidence/worker-image-rollout/NATURAL_PUBLICATION.md)에 이어 [관측 코드 교체 후 자연 게시](docs/evidence/automation-failure-boundaries/DEPLOYED.md)까지 확인했습니다. 다음은 [새 worker의 고정 합성 입력 한 건 검증](docs/plans/worker-fixture-verification.md)을 준비하는 것입니다. 아직 신규 작업은 실행하지 않았습니다.
 
 인증서 자연 갱신·현재 공개 경로의 재부팅·K3s/Jenkins 전체 archive 복원은 아직 검증하지 않았습니다. 별도 격리 환경이 없어 **K3s·Jenkins 실제 기동 복원은 보류**합니다. [복원 사전준비](docs/plans/historical-runtime-restore.md)에 파일 검증과 실제 기동, 재개 시 필요한 자료·실행 대상을 정리했습니다. 후속 순서는 [다음 개발 계획](docs/NEXT_STEPS.md)을 따릅니다. 토큰 교체·자원 예산 정책·PR102 접수 gate의 보류도 유지합니다.
 

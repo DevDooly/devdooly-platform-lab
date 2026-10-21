@@ -1,5 +1,7 @@
 # 설치와 운영 전환 검증
 
+2026-10-21 UTC의 [관측·DDNS 코드 후속 반영](../../docs/evidence/automation-failure-boundaries/DEPLOYED.md)에서 두 Python 파일만 기존 권한을 유지해 교체했습니다. DDNS의 교체 후 자연 회차 한 번과 새 관측 실행기의 Pages·공개 결과 연결까지 확인했습니다. 기존 활성 unit·timer·설정·자격증명을 재설치하지 않았으며, 아래 초기 설치 절차를 반복한 결과가 아닙니다.
+
 기존 활성 서버에 작업·export 관측을 추가할 때는 아래의 초기 설치를 반복하지 않고 [작업 관측 전환 절차](JOBS_AUTOMATION.md)를 따른다. 새 Pages v2 workflow를 먼저 반영하고 실제 MINI_PC HTTP 응답을 확인한 뒤 root 코드와 선택 설정을 함께 갱신한다. unit·PAT·RBAC를 확대하지 않는다.
 
 초기 설치에서는 root 소유 실행 파일·private 설정·unit의 비활성 배치와 `systemd-analyze verify`, `daemon-reload`까지만 완료했습니다. 당시 timer는 disabled·inactive이고 전용 Pages 자격증명은 없었으며 토큰 내용 읽기·host cycle dispatch·timer enable/start를 수행하지 않았습니다. 초기 Ubuntu 격리 환경의 자동화 검사 33개 통과 이후, 정책 검사 2개를 추가한 35개가 root·일반 사용자 환경에서 각각 모두 통과했고 제외 항목은 0개였습니다.

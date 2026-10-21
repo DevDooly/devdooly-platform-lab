@@ -40,6 +40,8 @@ worker의 Recreate, 종료 유예300초, exec readiness의 주기10초·timeout5
 
 교체 후 [수동 GET39521322979](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39521322979)의 고정6개 조회가 HTTP200·공개 DTO 검증을 통과했습니다. 응답 source는 관측 API245이며 worker6f55와 구분합니다. [원문과 별도 공개 화면 관측](../public-get/README.md#후속-실제-관측--2026-10-21-utc)에서 GET 결과와 브라우저의 새 실행 표시를 각각 설명합니다. GET artifact 자체는 worker의 source·시작 시각·heartbeat를 담지 않습니다.
 
-다음은 기존30분 주기의 관측 수집·게시가 새 worker를 저장된 Pages 관측에도 반영하는지 확인하는 것입니다. 실시간 조회 화면의 갱신과 저장된 관측의 자동 게시를 구분하며, timer를 강제 실행하거나 주기를 줄인 결과를 자연 갱신으로 기록하지 않습니다.
+기존30분 주기의 [새 worker 자동 수집·Pages 게시](NATURAL_PUBLICATION.md)를 확인했습니다. main6b62821의 Pages39523423769 build·deploy가 성공했고, 공개 플랫폼·작업·Kafka JSON3개가 대응 artifact 원문과 전체 bytes가 같았습니다. 저장된 runtime6f551a1·API245d61a와 새 시작·heartbeat를 구분해 보존했습니다. 같은 unit의 DISPATCHED 결과를 해당 run과 연결했으며 수동 Pages dispatch·timer 강제 실행·주기 단축은 하지 않았습니다. 이는 해당 회차의 게시 확인이며 모든 회차 성공이나 현재 프로세스 생존의 증명은 아닙니다.
+
+이후 [관측·DDNS 코드 두 개](../automation-failure-boundaries/DEPLOYED.md)를 반영하고 DDNS 새 자연 회차와 새 관측 코드의 Pages·공개 결과 연결을 확인했습니다. 다음은 [새 worker의 고정 입력 한 건 검증](../../plans/worker-fixture-verification.md)을 준비하는 것입니다. 신규 작업은 아직 실행하지 않았습니다.
 
 기동 복원·토큰 교체·자원 예산 정책·[PR102](https://github.com/DevDooly/devdooly-platform-lab/pull/102)는 계속 보류합니다.
