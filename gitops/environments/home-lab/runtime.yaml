@@ -17,8 +17,8 @@ runtime:
     progressProbeEnabled: true
     image:
       repository: ghcr.io/devdooly/devdooly-platform-lab-api
-      digest: sha256:e128652b6a28704bc2cb0a1e8bec318948df8dd467ed660b12d22c921d720399
-    sourceCommit: 74a8e98844a8fea0653951136ede0e7de0d7ac08
+      digest: sha256:ee71389be27fa484284a517a324c52a9c827cd20db21f0b306c4dcfd52147aad
+    sourceCommit: 6f551a16a8ed536bb126403234c41b9e9b266d43
     existingS3Secret: platform-lab-runtime-s3
 
 # Internal ClusterIP only; bootstrap NetworkPolicy permission must be applied first.
