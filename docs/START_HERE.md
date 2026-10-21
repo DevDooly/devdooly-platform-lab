@@ -8,7 +8,7 @@
 - **사례·운영 문서:** 기존 잠금 손실의 stale DB 기록과 실제 종료를 설명하는 [별도 사례 페이지](https://devdooly.github.io/devdooly-platform-lab/cases/runtime-ownership/)를 공개하고 키보드·모바일 확인을 마쳤습니다. 장애별 판단표와 AI 소유자 검토자료의 세부 근거·다음 순서는 [최신 안내](NEXT_STEPS.md)를 따릅니다.
 - **worker·공개 관측:** [PR177의 worker 교체](evidence/worker-image-rollout/README.md)는 main33c5e8c·source6f551a1·image ee713에서 Argo Synced·Healthy·새 Pod Ready를 확인했습니다. API245d61a·웹 image029c는 유지합니다. [후속 GET39521322979](evidence/public-get/README.md)의6개 HTTP200·API245d61a와 별도 공개 UI의 새 worker 소스·시작 시각·heartbeat 관측을 구분합니다. GET artifact 자체는 worker 생존의 증명이 아닙니다.
 - **자동 게시:** 기존 약30분 timer의 [새 worker 수집·Pages39523423769 게시](evidence/worker-image-rollout/NATURAL_PUBLICATION.md)를 확인했습니다. main6b62821의 build·deploy가 성공했고 공개 관측3개가 artifact 원문과 같았습니다. API245d61a와 runtime6f551a1의 소스·원래 시각을 보존했으며 수동 dispatch·timer 강제 실행은 하지 않았습니다.
-- **자동화·다음:** [관측·DDNS 코드 두 개](evidence/automation-failure-boundaries/DEPLOYED.md)를 반영하고 DDNS 새 자연 회차와 관측 코드의 Pages39526516518·공개 결과 연결까지 확인했습니다. 다음은 [새 worker의 고정 입력 한 건 검증](plans/worker-fixture-verification.md)을 준비하는 것입니다. 신규 작업은 아직 실행하지 않았습니다.
+- **자동화·다음:** [관측·DDNS 코드 두 개](evidence/automation-failure-boundaries/DEPLOYED.md)의 자연 회차·Pages 연결에 이어 [새 worker의 고정 입력 한 건](evidence/current-worker-fixture/README.md)에서12/7/3/2/0·COMPLETED/EXPORTED, 새 객체3개 검증·기존8작업/24객체 보존과 완료된 임시 Job의 선택 정리를 확인했습니다. 원래 자연 주기의 [Pages39532314754](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39532314754) build·deploy·공개 JSON3개 일치와 새9작업 반영도 확인했습니다. 다음은 현재 HTTPS 재관측과 장기 운영 후속의 범위를 확인하는 것입니다.
 - **보류:** 별도 격리 환경이 없어 K3s·Jenkins 실제 기동 복원을 보류합니다. 토큰 교체·회전, 자원 예산 정책, [PR102 접수 gate](https://github.com/DevDooly/devdooly-platform-lab/pull/102) 활성화도 모두 보류합니다. 인증서 자연 갱신·현재 공개 경로의 재부팅은 아직 검증하지 않았습니다.
 
 ## 이전 연결·구축 기록 — 2026-10-18까지의 안내

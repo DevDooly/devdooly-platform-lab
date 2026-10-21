@@ -39,6 +39,16 @@ const kafkaSource = 'f7b5567963f9a34a34d5f201fb2ed747bdf7652a';
 
 export const evidenceItems: readonly EvidenceItem[] = [
   {
+    id: 'current-worker-fixture', topics: ['java', 'kafka', 'kubernetes'], scope: 'mini-pc', state: 'verified',
+    title: '배포된 worker의 새 입력·파일 확인',
+    description: '고정 합성 입력12개를 현재 worker로 처리해 성공7·실패3·중복2·대기0과 새 파일3개를 확인했습니다. 기존 작업8개·객체24개를 보존하고 Kafka commit8→9·lag0과 슬롯 해제를 대조했습니다.',
+    boundary: '고정 합성 입력 한 건의 정상 처리 기록입니다. 장애 복구·처리량·장기 가용성을 검증한 결과는 아닙니다.',
+    recordedOn: '2026-10-21',
+    source: `${repo}/blob/6f551a16a8ed536bb126403234c41b9e9b266d43/apps/api/src/main/java/io/github/devdooly/platformlab/jobs/runtime/RuntimeMain.java`,
+    evidence: `${repo}/blob/main/docs/evidence/current-worker-fixture/README.md`, evidenceLabel: '처리·새 파일·기존 자료 보존 근거',
+    recordLabel: '신규 입력·export 실측', screen: '#job-observation',
+  },
+  {
     id: 'public-https-get', topics: ['delivery'], scope: 'ci', state: 'verified',
     title: '외부 HTTPS의 고정 GET 응답 확인',
     description: 'GitHub hosted runner에서 고정 GET 6개를 한 번씩 수동 조회해 HTTP200·공개 헤더·DTO 계약을 확인했습니다. 응답 소스와 관측 시각은 검사기 소스와 구분해 보존했습니다.',

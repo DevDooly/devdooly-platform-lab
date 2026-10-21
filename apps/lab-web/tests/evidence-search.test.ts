@@ -39,7 +39,7 @@ test('공백으로 구분한 모든 단어와 보이는 환경 이름을 함께 
   ]);
   assert.deepEqual(search('Windows', { topic: 'java' }), ['ai-java-example']);
   assert.deepEqual(search('Kubernetes Helm'), [
-    'kubernetes-runtime', 'delivery-gate', 'kafka-mini-pc-pending',
+    'current-worker-fixture', 'kubernetes-runtime', 'delivery-gate', 'kafka-mini-pc-pending',
     'public-read-gateway-internal', 'public-read-https',
   ]);
 });

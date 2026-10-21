@@ -42,6 +42,6 @@ worker의 Recreate, 종료 유예300초, exec readiness의 주기10초·timeout5
 
 기존30분 주기의 [새 worker 자동 수집·Pages 게시](NATURAL_PUBLICATION.md)를 확인했습니다. main6b62821의 Pages39523423769 build·deploy가 성공했고, 공개 플랫폼·작업·Kafka JSON3개가 대응 artifact 원문과 전체 bytes가 같았습니다. 저장된 runtime6f551a1·API245d61a와 새 시작·heartbeat를 구분해 보존했습니다. 같은 unit의 DISPATCHED 결과를 해당 run과 연결했으며 수동 Pages dispatch·timer 강제 실행·주기 단축은 하지 않았습니다. 이는 해당 회차의 게시 확인이며 모든 회차 성공이나 현재 프로세스 생존의 증명은 아닙니다.
 
-이후 [관측·DDNS 코드 두 개](../automation-failure-boundaries/DEPLOYED.md)를 반영하고 DDNS 새 자연 회차와 새 관측 코드의 Pages·공개 결과 연결을 확인했습니다. 다음은 [새 worker의 고정 입력 한 건 검증](../../plans/worker-fixture-verification.md)을 준비하는 것입니다. 신규 작업은 아직 실행하지 않았습니다.
+이후 [관측·DDNS 코드 두 개](../automation-failure-boundaries/DEPLOYED.md)를 반영하고 DDNS 새 자연 회차와 새 관측 코드의 Pages·공개 결과 연결을 확인했습니다. 그 뒤 [새 worker의 고정 입력 한 건](../current-worker-fixture/README.md)에서12/7/3/2/0·COMPLETED/EXPORTED, 새 객체3개 전체 bytes와 기존8작업·24객체 보존을 확인했고 완료된 임시 Job도 선택 정리했습니다. 원래 자연 주기의 [Pages39532314754](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39532314754) build·deploy·공개 JSON3개와 artifact 원문 일치, 새9작업 반영도 확인했습니다. 다음은 현재 HTTPS 재관측과 장기 운영 후속의 범위를 확인하는 것입니다.
 
 기동 복원·토큰 교체·자원 예산 정책·[PR102](https://github.com/DevDooly/devdooly-platform-lab/pull/102)는 계속 보류합니다.
