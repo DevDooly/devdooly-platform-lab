@@ -38,4 +38,4 @@ fake wait의 반환 시계만19.999초·20초·20.001초로 바꾼 새 검사1�
 
 [DDNS39476929984](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39476929984)는5개 통과·실패/오류/생략0·대상4파일 전후 SHA 동일을 보고했습니다. 같은 main의 [Pages39476929939](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39476929939)도 build·deploy를 통과했습니다. 앞선 검색 준비상태의 공개 결과는 [별도 근거](../evidence-input-readiness/README.md)를 따릅니다.
 
-실제 미니 PC에 이 Python 수정본을 설치하지 않았습니다. 기존 HTTPS 외부 조회는 별도 읽기 검증이며, 기동 복원·토큰 교체·예산 정책·PR102의 보류는 유지합니다.
+위 합성·Linux 검증 이후의 [운영 반영](DEPLOYED.md)에서는 Python 두 파일의 교체·DDNS 새 자연 회차 한 번·새 관측 코드의 Pages와 공개 결과 연결을 확인했습니다. 정상 운영 회차를 실패 경계 주입으로 해석하지 않습니다. 기존 HTTPS 외부 조회는 별도 읽기 검증이며, 기동 복원·토큰 교체·예산 정책·PR102의 보류는 유지합니다.

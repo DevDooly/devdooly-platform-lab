@@ -6,7 +6,7 @@
 
 허용받은 배포 전 DB 조건과 선택 자료의 보존 기준을 읽고, 적용 후 같은 항목과 새 실행·현재 소유를 대조했습니다. 비공개 점검 원본은 공개 문서에 포함하지 않으며, 공개 메타데이터와 그 점검의 근거 범위를 구분합니다. 기존 프로세스의 종료 코드·잠금 해제 순간은 직접 포착하지 못했습니다. Error 수정이 포함된 이미지의 반영이며 실제 OOM·Error 주입 복구의 완료가 아닙니다.
 
-교체 후 [별도 GET6·공개 화면 관측](../evidence/public-get/README.md#후속-실제-관측--2026-10-21-utc)을 마쳤습니다. 다음은 기존30분 timer가 새 상태를 저장된 관측과 Pages에도 반영하는지 확인하는 것입니다. 기동 복원·토큰 교체·자원 예산 정책·PR102는 계속 보류합니다.
+교체 후 [별도 GET6·공개 화면 관측](../evidence/public-get/README.md#후속-실제-관측--2026-10-21-utc)과 기존30분 timer의 [새 worker 자동 수집·Pages 게시](../evidence/worker-image-rollout/NATURAL_PUBLICATION.md)를 확인했습니다. main6b62821의 Pages39523423769 build·deploy가 성공했고 공개 관측3개는 대응 artifact 원문과 같았습니다. 이후 [관측·DDNS 코드 두 개](../evidence/automation-failure-boundaries/DEPLOYED.md)를 반영하고 새 자연 회차·Pages·공개 결과도 확인했습니다. 다음은 [새 worker의 고정 입력 한 건 검증](worker-fixture-verification.md)을 준비하는 것입니다. 신규 작업은 아직 실행하지 않았습니다. 기동 복원·토큰 교체·자원 예산 정책·PR102는 계속 보류합니다.
 
 ## 이전 배포 준비 기록 — 2026-10-20 UTC
 

@@ -8,7 +8,7 @@ curl URL은 stdin config로만 전달한다. argv/env/로그에 토큰을 넣지
 
 curl exit0·HTTP200·정확한 OK 응답만 `UPDATE_ACCEPTED`다. 그 외에는 fixed 결과와 exit1이며 원문 응답·예외를 남기지 않는다. timeout은 서버에서 갱신했는지 불명확할 수 있어 즉시 재요청하지 않는다. 접수 성공은 DNS 전파·외부 접속·TLS 인증서 발급 검증이 아니다. 기존 AAAA의 값과 변경 여부는 검사하지 않는다. 계정 토큰의 서버 권한 범위 자체를 이 프로그램이 축소하지는 않는다.
 
-[2026-10-21 KST 완료 시한 수정](../../docs/evidence/automation-failure-boundaries/README.md#ddns의-전체-완료-시한)은 정상 wait 반환 뒤에도 부모의20초 기한을 확인합니다. fake 시계19.999초는 성공,20초·20.001초는 결과 불명으로 거부했고, 이미 join한 child를 다시 종료하지 않았습니다. 기존4개와 새1개, 합계5개 합성 검사를 통과했습니다. 이 저장소 수정의 실제 미니 PC 반영·curl·DNS 검증은 별도입니다.
+[2026-10-21 KST 완료 시한 수정](../../docs/evidence/automation-failure-boundaries/README.md#ddns의-전체-완료-시한)은 정상 wait 반환 뒤에도 부모의20초 기한을 확인합니다. fake 시계19.999초는 성공,20초·20.001초는 결과 불명으로 거부했고, 이미 join한 child를 다시 종료하지 않았습니다. 기존4개와 새1개, 합계5개 합성 검사를 통과했습니다. 이후 [운영 반영](../../docs/evidence/automation-failure-boundaries/DEPLOYED.md)에서 코드 교체와 새 자연 회차 한 번의 요청 수락을 확인했습니다. 운영의 시한 실패 경로·DNS 전파·지속 일치는 별도입니다.
 
 systemd 두 파일은 구현 당시 미설치 템플릿으로 제공했다. 후속 배포 결과는 위 실제 근거를 따른다. service의 고정 실행 경로는 `/opt/devdooly-platform-lab/duckdns-updater/duckdns_update.py`이며 Ubuntu의 기존 `/usr/bin/python3`, `/usr/bin/curl`, 기본 CA store 읽기가 필요하다. timer의 `OnActiveSec=5min`과 최근 service 활성 기준 `OnUnitActiveSec=5min`은 OR 조건으로, 유효한 예정 시각 중 먼저 도래한 조건에 jitter·Accuracy 지연을 더한다. 실행 이력이 없는 새 서비스는 timer 활성 5분이 첫 기준이지만, 최근 수동 실행이 있으면 그 활성 기준 다음 5분이 먼저 올 수 있다. 기준 시각이 이미 지난 경우도 실제 manager의 다음 예정 시각을 확인하며, timer를 켠 뒤 항상 최소 5분을 기다린다고 보장하지 않는다. OnBootSec는 쓰지 않는다. 같은 unit의 active oneshot은 겹쳐 시작하지 않으며 module 직접 중복 실행은 지원 절차가 아니다. 다음 정기 회차는 한 요청 내부 재시도와 구분한다. [systemd timer 기준](https://www.freedesktop.org/software/systemd/man/latest/systemd.timer.html)
 
