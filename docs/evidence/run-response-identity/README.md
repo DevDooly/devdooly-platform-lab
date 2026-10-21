@@ -30,3 +30,9 @@ URL·GET·redirect·credentials·공개 API 설정과 기존 고정 오류 문�
 로컬 HTTP 회귀와 타입·빌드는 실제 외부 HTTPS·CORS·운영 worker 생존·장기 가용성의 검증이 아닙니다. 공개 화면의 이전 [선택 표시 확인](../run-selection/README.md)과 이번 응답 ID 수정의 공개 반영 여부도 구분합니다. 이번 수정으로 POST·운영 설정 변경·새 작업 생성은 하지 않았습니다.
 
 다음은 별도로 발견한100개 센서 범례의 줄바꿈과 화면 넘침 개선·검증입니다. 기동 복원·토큰 교체·자원 예산 정책·PR102는 계속 보류합니다.
+
+## 후속 공개 반영 — 2026-10-21 UTC
+
+위 ‘공개 반영 전’은 로컬 RED/GREEN 검증 당시의 상태입니다. 이후 PR185의 main `cc9787ea3e118cb747839ad61ab6307e3877bf50`에서 [Pages39536939965](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39536939965)의 build `03:09:52Z`·deploy `03:10:08Z`, [CI39536940011](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39536940011)의 verify `03:11:12Z`·public-read-gateway `03:10:07Z` 성공을 확인했습니다. 조건부 격리4개 job은 생략됐습니다. 같은 main의 관련 오프라인3개 검사는 성공했고 외부 실행3개는 생략됐습니다.
+
+공개 화면에서 입력12개 결과의 선택 ID와 select 값·12/7/3/2/0의 일치, 문서 폭1265px을 확인했습니다. 운영에 잘못된 상세 응답을 주입한 검증은 아니며, 다른 ID 거부의 실패·성공 근거는 위 로컬 회귀입니다. 후속 [100개 센서 범례](../chart-legend-wrap/README.md)는 공개 줄바꿈 확인을 마쳤고, 첫 API 조회 fallback 원인 진단은 별도로 남아 있습니다.
