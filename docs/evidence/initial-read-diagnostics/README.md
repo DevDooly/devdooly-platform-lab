@@ -28,3 +28,16 @@
 ## 남은 범위
 
 다음은 공개 반영과 실제 첫 조회의 실패 정보 관측입니다. 이번 변경으로 공개 장애 원인을 확인하거나 해결했다고 표시하지 않습니다. 새 자동 재시도·프록시·보안 설정·서버·SQL·토큰 변경은 없습니다. 기동 복원·토큰 교체·자원 예산 정책·PR102 접수 gate의 네 보류도 유지합니다.
+
+## 공개 반영 후속 — 2026-10-21 UTC
+
+위 본문은 공개 반영 전의 로컬 검증 기록입니다. 이후 [PR189](https://github.com/DevDooly/devdooly-platform-lab/pull/189)의 head `32741cf`를 `03:47:19 UTC`에 main `18d73d9fb05b1622bc1f17ca6505d2460d110a6a`로 병합했습니다.
+
+- 같은 main의 [Pages39540495083](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39540495083)은 build job `119026865520`이 `03:48:29 UTC`, deploy job `119027185211`이 `03:48:44 UTC`에 성공했습니다.
+- [CI39540495108](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39540495108)은 verify job `119026865462`가 `03:50:16 UTC`, public-read gateway job `119026865664`가 `03:48:36 UTC`에 성공했습니다. 조건부 격리4개 job은 생략됐습니다.
+
+공개 기본 URL에서 새 `LabExplorer.DABbvCTh.js` 번들 일치를 확인했고, 첫 완료 조회는 live였습니다. API 관측 표시는 `2026-10-21 12:49:07 KST`, 선택 항목은10개였으며 기본 `synthetic-v1-seed-42`의 입력12·성공7·실패3·중복2·대기0과 오류·fallback 안내 없음(`null`)을 확인했습니다. 이어 `lab-fixture-worker-6f55-20261021-1`을 실제 선택해 select value와 전체 ID 일치, 같은12/7/3/2/0·오류 없음도 확인했습니다. 데스크톱 client/scroll 폭은 각각1265px로 같았습니다.
+
+이번 공개 확인에서는 수동 refresh·장애 주입을 하지 않았고 실패도 관측하지 않았습니다. 정상 첫 조회는 앞선 fallback의 원인 규명이나 실패 분류의 공개 재현을 뜻하지 않으며, 과거 원인은 계속 **UNOBSERVED**입니다. 당시 데스크톱 스크린샷은 smooth scroll 중 다른 구간을 담았으므로 결과 영역의 시각 근거로 사용하지 않습니다.
+
+이번 후속에서 추가 운영 실행은 하지 않았습니다. 실패가 다시 발생하면 이번 조회의 유한 진단을 관측하며, 기동 복원·토큰 교체·자원 예산 정책·PR102 접수 gate의 보류는 유지합니다. 장기 가용성·인증서 자연 갱신·현재 공개 경로 재부팅을 검증한 기록은 아닙니다.
