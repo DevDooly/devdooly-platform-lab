@@ -1034,6 +1034,9 @@ img,svg {
 
 .chart-legend {
   display:flex;
+  flex-wrap:wrap;
+  min-width:0;
+  max-width:100%;
   gap:15px;
   font-family:var(--mono);
   font-size:var(--font-small);
