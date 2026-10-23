@@ -1,0 +1,34 @@
+name: Validate observation contracts
+
+on:
+  pull_request:
+    paths:
+      - infra/observation/**
+      - tests/observation/**
+      - .github/workflows/observation-contracts.yml
+  push:
+    branches: [main]
+    paths:
+      - infra/observation/**
+      - tests/observation/**
+      - .github/workflows/observation-contracts.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: observation-contracts-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  observation-contracts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Validate offline collectors and publication contracts
+        run: python3 -B -m unittest discover -s tests/observation -p 'test_*.py' -v

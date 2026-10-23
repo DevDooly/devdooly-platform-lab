@@ -101,6 +101,75 @@ def snapshot(sources=None, instant=NOW, previous=None):
     return collector.collect_with_preservation(source.github,source.kube,instant,previous)
 
 
+class ResponseDeadlineTests(unittest.TestCase):
+    """A fake response advances only the local clock; no network or sleep."""
+
+    class Response:
+        def __init__(self, clock, completed, body):
+            self.clock=clock;self.completed=completed;self.body=body
+            self.reads=0;self.closed=False
+        def __enter__(self):return self
+        def __exit__(self,*unused):self.closed=True
+        def read(self,limit):
+            self.reads+=1;self.clock[0]=self.completed
+            return self.body[:limit]
+
+    def test_body_completed_before_deadline_is_accepted_and_closed(self):
+        clock=[1.0]
+        reply=self.Response(clock,4.999,b'{"synthetic":true}')
+        client=collector.JsonTransport('https://api.github.com',5.0)
+        with patch.object(collector.time,'monotonic',side_effect=lambda:clock[0]),\
+                patch.object(client.opener,'open',return_value=reply) as opened:
+            self.assertEqual(client('/synthetic','GITHUB_STATUS_UNAVAILABLE'),{'synthetic':True})
+        self.assertEqual(opened.call_count,1)
+        self.assertEqual(reply.reads,1);self.assertTrue(reply.closed)
+
+    def test_body_completed_at_or_after_deadline_is_timeout_and_closed(self):
+        for completed in (5.0,9.0):
+            with self.subTest(completed=completed):
+                clock=[1.0]
+                reply=self.Response(clock,completed,b'{"synthetic":true}')
+                client=collector.JsonTransport('https://api.github.com',5.0)
+                with patch.object(collector.time,'monotonic',side_effect=lambda:clock[0]),\
+                        patch.object(client.opener,'open',return_value=reply) as opened:
+                    with self.assertRaisesRegex(collector.CollectionError,'^TIMEOUT$'):
+                        client('/synthetic','GITHUB_STATUS_UNAVAILABLE')
+                self.assertEqual(opened.call_count,1)
+                self.assertEqual(reply.reads,1);self.assertTrue(reply.closed)
+
+    def test_expired_deadline_never_opens_request(self):
+        client=collector.JsonTransport('https://api.github.com',5.0)
+        with patch.object(collector.time,'monotonic',return_value=5.0),\
+                patch.object(client.opener,'open') as opened:
+            with self.assertRaisesRegex(collector.CollectionError,'^TIMEOUT$'):
+                client('/synthetic','GITHUB_STATUS_UNAVAILABLE')
+        opened.assert_not_called()
+
+    def test_late_final_main_check_preserves_last_success(self):
+        previous=snapshot();before=deepcopy(previous)
+        sources=Sources();clock=[1.0]
+        body=json.dumps({'ref':'refs/heads/main','object':{'type':'commit','sha':MAIN},
+                         'private':CANARY}).encode()
+        reply=self.Response(clock,9.0,body)
+        client=collector.JsonTransport('https://api.github.com',5.0)
+        final_calls=[]
+        def github(path,code):
+            if path.endswith('/git/ref/heads/main') and sources.main_calls==1:
+                final_calls.append(path)
+                return client(path,code)
+            return sources.github(path,code)
+        with patch.object(collector.time,'monotonic',side_effect=lambda:clock[0]),\
+                patch.object(client.opener,'open',return_value=reply) as opened:
+            value=collector.collect_with_preservation(github,sources.kube,LATER,previous)
+        self.assertEqual(value['latestAttempt'],{
+            'attemptedAt':LATER,'status':'failure','errorCode':'TIMEOUT'})
+        self.assertEqual(value['lastSuccess'],before['lastSuccess'])
+        self.assertEqual(previous,before)
+        self.assertEqual(len(final_calls),1);self.assertEqual(opened.call_count,1)
+        self.assertEqual(reply.reads,1);self.assertTrue(reply.closed)
+        self.assertNotIn(CANARY,json.dumps(value))
+
+
 class CollectorTests(unittest.TestCase):
     def test_success_extracts_only_public_fields(self):
         value=snapshot()
@@ -384,12 +453,33 @@ class FileAndTransportTests(unittest.TestCase):
     def test_existing_writer_lock_prevents_network_and_output_changes(self):
         with tempfile.TemporaryDirectory() as directory:
             path=Path(directory)/'snapshot.json';path.write_bytes(b'preserve-me')
-            (path.parent/('.'+path.name+'.lock')).write_text('')
+            lock_path=path.parent/('.'+path.name+'.lock')
             out=io.StringIO()
-            with patch.object(collector,'JsonTransport') as transport,patch('sys.stdout',out):
+            with collector.CollectorLock(lock_path),\
+                    patch.object(collector,'JsonTransport') as transport,patch('sys.stdout',out):
                 code=collector.main(['--server','https://127.0.0.1:6443','--token-file',str(path),
                     '--ca-file',str(path),'--output',str(path)])
             self.assertEqual(code,1);transport.assert_not_called();self.assertEqual(path.read_bytes(),b'preserve-me')
+            self.assertNotIn(str(path),out.getvalue())
+
+    def test_unlocked_lock_file_allows_collection_and_keeps_inode(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/'snapshot.json'
+            previous=snapshot();path.write_text(json.dumps(previous))
+            lock_path=path.parent/('.'+path.name+'.lock')
+            lock_path.write_bytes(b'');os.chmod(lock_path,0o600)
+            identity=(lock_path.stat().st_dev,lock_path.stat().st_ino)
+            out=io.StringIO()
+            with patch.object(collector,'JsonTransport',
+                    side_effect=collector.CollectionError('AUTHENTICATION_FAILED')) as transport,\
+                    patch('sys.stdout',out):
+                code=collector.main(['--server','https://127.0.0.1:6443','--token-file',str(path),
+                    '--ca-file',str(path),'--output',str(path)])
+            self.assertEqual(code,1);self.assertEqual(transport.call_count,1)
+            value=json.loads(path.read_text())
+            self.assertEqual(value['latestAttempt']['errorCode'],'AUTHENTICATION_FAILED')
+            self.assertEqual(value['lastSuccess'],previous['lastSuccess'])
+            self.assertEqual((lock_path.stat().st_dev,lock_path.stat().st_ino),identity)
             self.assertNotIn(str(path),out.getvalue())
 
     def test_invalid_ca_records_failed_attempt_and_preserves_previous_success(self):
