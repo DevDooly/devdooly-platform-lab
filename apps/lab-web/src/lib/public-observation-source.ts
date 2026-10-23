@@ -20,6 +20,13 @@ export async function loadLiveWithRecordedFallback<Record, ErrorCode extends str
       lastLive: live.record, lastRecorded: options.previousRecorded };
   }
   const published = await options.load(options.recordedUrl, options.previousRecorded, bounded(2000), 'recorded');
+  if (published.record === null && live.browserError !== null && live.retainedPrevious === true
+    && live.record !== null && live.record === options.previousLive
+    && (!options.acceptLive || options.acceptLive(live.record))) {
+    return { record: live.record, browserError: live.browserError, retainedPrevious: true,
+      sourceMode: 'api', fallbackUsed: false, fallbackBrowserError: published.browserError,
+      lastLive: live.record, lastRecorded: null };
+  }
   return { ...published, browserError: live.browserError || options.invalidLiveError,
     sourceMode: 'recorded', fallbackUsed: true, fallbackBrowserError: published.browserError,
     lastLive: options.previousLive, lastRecorded: published.record };

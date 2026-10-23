@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import { fetchLab, getJson } from '../src/lib/api.ts';
 import { publicApiConfiguration, publicReadUrl } from '../src/lib/public-api-base.ts';
 import { loadLiveWithRecordedFallback } from '../src/lib/public-observation-source.ts';
+import type { PreferredObservation } from '../src/lib/public-observation-source.ts';
 import { loadJobObservation, validateJobObservation } from '../src/lib/job-observation.ts';
 import type { JobBrowserError, JobObservationRecord } from '../src/lib/job-observation.ts';
 import { loadKafkaObservation, validateKafkaObservation } from '../src/lib/kafka-observation.ts';
@@ -163,7 +164,7 @@ test('Kafka HTTP, private, regressed, changed-target and isolated live responses
   }
 });
 
-test('when both reads fail only an already validated published record survives and first failure stays unobserved', async () => {
+test('both failed reads retain a validated published cache and no prior evidence stays unobserved', async () => {
   const previousRecorded = { ...job(), sourceCommit: 'c'.repeat(40), capturedAt: '2026-10-18T08:00:00Z' };
   const read: typeof fetch = async (input, options) => {
     const url = publicGet(input, options);
@@ -178,6 +179,95 @@ test('when both reads fail only an already validated published record survives a
   assert.equal(absent.record, null); assert.equal(absent.lastRecorded, null);
   assert.equal(absent.fallbackUsed, true); assert.equal(absent.sourceMode, 'recorded');
   assert.equal(JSON.stringify(absent).includes(marker), false);
+});
+
+function assertRetainedLive<Record extends { capturedAt: string }, ErrorCode extends string>(
+  selected: PreferredObservation<Record, ErrorCode>, previous: Record, error: ErrorCode, fallbackError: ErrorCode,
+) {
+  assert.equal(selected.record, previous); assert.equal(selected.lastLive, previous);
+  assert.equal(selected.record?.capturedAt, previous.capturedAt); assert.equal(selected.lastRecorded, null);
+  assert.equal(selected.sourceMode, 'api'); assert.equal(selected.fallbackUsed, false);
+  assert.equal(selected.retainedPrevious, true); assert.equal(selected.browserError, error);
+  assert.equal(selected.fallbackBrowserError, fallbackError); assert.equal(JSON.stringify(selected).includes(marker), false);
+}
+
+test('Job retains its validated live cache when both reads fail before any published cache exists', async () => {
+  const first = await selectJob(async (input, options) => {
+    assert.equal(publicGet(input, options), base + '/jobs/observation'); return json(job());
+  });
+  const previous = first.record; assert.ok(previous); assert.equal(first.lastRecorded, null);
+  for (const network of [false, true]) {
+    const calls: string[] = [];
+    const selected = await selectJob(async (input, options) => {
+      const url = publicGet(input, options); calls.push(url);
+      if (network) throw new TypeError(marker);
+      return url === base + '/jobs/observation' ? new Response(marker, { status: 503 }) : new Response('', { status: 404 });
+    }, first.lastLive);
+    assert.deepEqual(calls, [base + '/jobs/observation', jobPublished]);
+    assertRetainedLive(selected, previous, network ? 'NETWORK_ERROR' : 'HTTP_ERROR', network ? 'NETWORK_ERROR' : 'NOT_CONFIGURED');
+  }
+});
+
+test('Kafka retains its validated live cache when both reads fail before any published cache exists', async () => {
+  const first = await selectKafka(async (input, options) => {
+    assert.equal(publicGet(input, options), base + '/kafka/observation'); return json(kafka());
+  });
+  const previous = first.record; assert.ok(previous); assert.equal(first.lastRecorded, null);
+  for (const network of [false, true]) {
+    const calls: string[] = [];
+    const selected = await selectKafka(async (input, options) => {
+      const url = publicGet(input, options); calls.push(url);
+      if (network) throw new TypeError(marker);
+      return url === base + '/kafka/observation' ? new Response(marker, { status: 503 }) : new Response('', { status: 404 });
+    }, first.lastLive);
+    assert.deepEqual(calls, [base + '/kafka/observation', kafkaPublished]);
+    assertRetainedLive(selected, previous, network ? 'NETWORK_ERROR' : 'HTTP_ERROR', network ? 'NETWORK_ERROR' : 'NOT_CONFIGURED');
+  }
+});
+
+test('live cache retention never promotes invalid previous evidence rejected environments or unretained objects', async () => {
+  const previous = job();
+  const failed: typeof fetch = async (input, options) => publicGet(input, options) === base + '/jobs/observation'
+    ? new Response(marker, { status: 503 }) : new Response('', { status: 404 });
+  const invalidPrevious = { ...job(), capturedAt: 'not-a-UTC-instant' };
+  const isolated: JobObservationRecord = { ...job(), environment: 'ISOLATED_LAB', scope: 'ISOLATED_LAB' };
+  assert.equal(validateJobObservation(invalidPrevious), false); assert.equal(validateJobObservation(isolated), true);
+  const rejected = [await selectJob(failed, invalidPrevious), await selectJob(failed, isolated)];
+  rejected.push(await selectJob(async (input, options) => publicGet(input, options) === base + '/jobs/observation'
+    ? json({ ...isolated, capturedAt: '2026-10-18T12:00:03Z' }) : new Response('', { status: 404 }), previous));
+  for (const [record, retainedPrevious] of [[structuredClone(previous), true], [previous, false]] as const) {
+    rejected.push(await loadLiveWithRecordedFallback<JobObservationRecord, JobBrowserError>({
+      liveUrl: base + '/jobs/observation', recordedUrl: jobPublished, previousLive: previous, previousRecorded: null,
+      invalidLiveError: 'INVALID_RECORD', acceptLive: value => value.environment === 'MINI_PC',
+      load: async (_url, _previous, _signal, source) => source === 'api'
+        ? { record, retainedPrevious, browserError: 'NETWORK_ERROR' }
+        : { record: null, retainedPrevious: false, browserError: 'NOT_CONFIGURED' },
+    }));
+  }
+  for (const selected of rejected) {
+    assert.equal(selected.record, null); assert.equal(selected.sourceMode, 'recorded');
+    assert.equal(selected.fallbackUsed, true); assert.equal(selected.retainedPrevious, false);
+    assert.equal(JSON.stringify(selected).includes(marker), false);
+  }
+});
+
+test('parent cancellation retains validated live evidence in its own source when no published record exists', { timeout: 1000 }, async () => {
+  const first = await selectJob(async () => json(job())); const previous = first.record; assert.ok(previous);
+  const controller = new AbortController(); const signals: AbortSignal[] = [];
+  let notifyStarted!: () => void;
+  const started = new Promise<void>(resolve => { notifyStarted = resolve; });
+  const read: typeof fetch = async (input, options) => {
+    publicGet(input, options); const signal = options?.signal; assert.ok(signal); signals.push(signal);
+    if (signal.aborted) throw new DOMException(marker, 'AbortError');
+    return new Promise<Response>((_resolve, reject) => {
+      signal.addEventListener('abort', () => reject(new DOMException(marker, 'AbortError')), { once: true });
+      notifyStarted();
+    });
+  };
+  const pending = selectJob(read, first.lastLive, null, controller.signal);
+  await started; controller.abort(); const selected = await pending;
+  assert.equal(signals.length, 2); assert.ok(signals.every(signal => signal.aborted));
+  assertRetainedLive(selected, previous, 'ABORTED', 'ABORTED');
 });
 
 test('parent cancellation aborts the changed helper reads and cannot turn the retained published cache into live success', { timeout: 1000 }, async () => {
