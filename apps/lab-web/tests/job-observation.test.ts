@@ -21,6 +21,69 @@ function running(): JobObservationRecord {
   const value = record(); value.runtime = { status: 'RUNNING', stage: 'CONSUME', failureCode: null, startedAt: '2026-10-15T09:59:00Z', heartbeatAt: value.capturedAt, stoppedAt: null, sourceCommit: 'a'.repeat(40), stale: false }; return value;
 }
 
+function freezeEvidence(value: unknown): void {
+  if (value && typeof value === 'object') { Object.values(value).forEach(freezeEvidence); Object.freeze(value); }
+}
+async function loadInjected(incoming: JobObservationRecord, previous: JobObservationRecord) {
+  assert.equal(validateJobObservation(incoming), true); assert.equal(validateJobObservation(previous), true);
+  const before = structuredClone(previous); const sent = structuredClone(incoming);
+  freezeEvidence(previous); freezeEvidence(incoming);
+  const result = await loadJobObservation({ url: '/synthetic-job-record', previousRecord: previous, rejectRedirects: true,
+    fetcher: async (_url, options) => {
+      assert.equal(options?.redirect, 'error'); assert.equal(options?.credentials, 'omit');
+      return new Response(JSON.stringify(incoming));
+    } });
+  assert.deepEqual(previous, before); assert.deepEqual(incoming, sent);
+  return result;
+}
+
+test('job capture conflict keeps the whole previous record when valid runtime evidence changes at the same instant', async () => {
+  const previous = record();
+  const result = await loadInjected(running(), previous);
+  assert.equal(result.browserError, 'CONFLICTING_RECORD'); assert.equal(result.record, previous);
+  assert.equal(result.retainedPrevious, true); assert.equal(result.record!.runtime.status, 'NOT_STARTED');
+  assert.equal(result.record!.capturedAt, previous.capturedAt);
+});
+
+test('job capture conflict keeps pending export evidence when a different valid export acknowledgement shares its capture', async () => {
+  const previous = record(); previous.jobs = [completed()]; previous.slot.occupiedRunId = previous.jobs[0]!.runId;
+  const incoming = structuredClone(previous);
+  incoming.jobs[0] = { ...completed(), exportStatus: 'EXPORTED', exportCompletedAt: '2026-10-15T09:00:03Z', fileEvidence: 'VERIFIED_AT_EXPORT_COMMIT' };
+  incoming.slot.occupiedRunId = null;
+  const result = await loadInjected(incoming, previous);
+  assert.equal(result.browserError, 'CONFLICTING_RECORD'); assert.equal(result.record, previous);
+  assert.equal(result.retainedPrevious, true); assert.equal(result.record!.jobs[0]!.exportStatus, 'PENDING');
+  assert.equal(result.record!.slot.occupiedRunId, previous.slot.occupiedRunId);
+});
+
+test('job capture conflict treats reordered object keys and an identical reread as unchanged valid evidence', async () => {
+  function reverseKeys(value: unknown): unknown {
+    if (Array.isArray(value)) return value.map(reverseKeys);
+    if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).reverse().map(([key, item]) => [key, reverseKeys(item)]));
+    return value;
+  }
+  const previous = running(); previous.jobs = [completed()]; previous.slot.occupiedRunId = previous.jobs[0]!.runId;
+  for (const incoming of [structuredClone(previous), reverseKeys(previous) as JobObservationRecord]) {
+    const result = await loadInjected(incoming, previous);
+    assert.equal(result.browserError, null); assert.deepEqual(result.record, previous);
+    assert.equal(result.retainedPrevious, false);
+    assert.equal(result.record!.capturedAt, previous.capturedAt);
+    assert.equal(result.record!.sourceCommit, previous.sourceCommit);
+  }
+});
+
+test('job capture conflict still permits a newer nanosecond update and rejects an older one', async () => {
+  const previous = record();
+  const incoming = running(); incoming.capturedAt = '2026-10-15T10:00:00.123456790Z';
+  const newer = await loadInjected(incoming, previous);
+  assert.equal(newer.browserError, null); assert.deepEqual(newer.record, incoming);
+  assert.equal(newer.retainedPrevious, false); assert.equal(newer.record!.runtime.status, 'RUNNING');
+  const olderInput = record(); olderInput.capturedAt = '2026-10-15T10:00:00.123456788Z';
+  const older = await loadInjected(olderInput, previous);
+  assert.equal(older.browserError, 'OLDER_RECORD'); assert.equal(older.record, previous);
+  assert.equal(older.retainedPrevious, true);
+});
+
 test('accepts distinct committed job and export states without treating expected files as verified', () => {
   const value = record();
   assert.equal(validateJobObservation(value), true);

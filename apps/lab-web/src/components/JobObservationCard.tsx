@@ -15,6 +15,7 @@ const errorNames: Record<JobBrowserError, string> = {
   NOT_CONFIGURED: '작업 관측 연결 또는 게시 기록이 아직 없습니다.', HTTP_ERROR: '새 작업 관측을 조회하지 못했습니다.',
   NETWORK_ERROR: '브라우저 연결 문제로 새 기록을 읽지 못했습니다.', INVALID_RECORD: '공개 형식을 확인할 수 없어 새 기록을 표시하지 않았습니다.',
   ABORTED: '기록 조회가 중단되거나 제한 시간을 넘었습니다.', OLDER_RECORD: '수집 시각이 이전 기록보다 오래되어 마지막 유효 기록을 유지합니다.',
+  CONFLICTING_RECORD: '같은 수집 시각의 작업 기록이 달라 마지막 유효 기록을 유지합니다.',
 };
 function time(value: string | null) {
   return value ? `${new Intl.DateTimeFormat('ko-KR', { timeZone: 'UTC', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).format(new Date(value))} UTC` : '미기록';
