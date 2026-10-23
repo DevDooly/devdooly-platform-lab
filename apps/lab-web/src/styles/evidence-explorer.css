@@ -58,6 +58,12 @@
   font-size:1rem;
   color:var(--muted);
 }
+.evidence-share { display:flex; flex-wrap:wrap; align-items:center; gap:12px 20px; margin-top:20px; }
+.evidence-share .button { min-height:48px; font-size:var(--font-body); }
+.evidence-share p { margin:0; color:var(--muted); font-size:var(--font-body); }
+.evidence-share label { display:flex; flex:1 1 100%; min-width:0; flex-direction:column; gap:8px; font-weight:600; }
+.evidence-share input { width:100%; min-width:0; box-sizing:border-box; padding:10px 12px; min-height:48px; border:1px solid var(--muted); background:var(--surface); color:var(--ink); font-size:var(--font-body); }
+.evidence-share :is(button,input):focus-visible { outline:3px solid var(--ink); outline-offset:4px; }
 .evidence-grid {
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
