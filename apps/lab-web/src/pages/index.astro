@@ -4,6 +4,7 @@ import InitialFragment from '../components/InitialFragment.astro';
 import { publicApiConfiguration } from '../lib/public-api-base';
 import EvidenceExplorer from '../components/EvidenceExplorer';
 import PlatformObservationCard from '../components/PlatformObservationCard';
+import GitHubAppRenewalCard from '../components/GitHubAppRenewalCard.astro';
 import TlsCertificateObservation from '../components/TlsCertificateObservation.astro';
 import tlsCertificate from '../data/tls-certificate.generated.json';
 import { buildTlsHistory } from '../lib/tls-certificate-history';
@@ -102,6 +103,7 @@ const steps = [
       <ExportIntegrityRuntimeCard client:load record={exportIntegrityRuntime}/>
       <WorkerReadinessProof />
       <PlatformObservationCard client:load observationUrl={`${assetBase}data/platform-observation.json`}/>
+      <GitHubAppRenewalCard />
       <TlsCertificateObservation view={tlsHistory} rawSummaryUrl={tlsRawSummaryUrl}/>
       <AiWindowCase client:load observationUrl={`${assetBase}observations/ai-window.latest.json`}/>
       <IcebergDataflowCard client:load observationUrl={`${assetBase}observations/iceberg.latest.json`}/>

@@ -1,6 +1,16 @@
 # Platform Lab 다음 개발 계획
 
-## 현재 작업 — 2026-10-21(KST)
+## 현재 작업 — 2026-10-23(KST)
+
+[Jenkins GitHub App 연결](evidence/github-app-jenkins/README.md)에 이어 [설치 토큰의 자연 만료 후 갱신](evidence/github-app-jenkins/NATURAL_EXPIRY.md) 한 주기를 완료했습니다. 19:18:35 만료 → 19:19:28 기존 토큰 401 → native credential 접근 1회 → 19:19:30 새 토큰 200·정확한 저장소 일치 → 20:19:30 새 만료를 확인했습니다. 유효기간은 응답 시각부터 3,600초이고 credential 소속·job 구성과 상태·비밀 입력은 보존했습니다. 접근 시의 lazy refresh이며 선제·주기 발급, 키 교체·권한 철회 복구, 이번 갱신 뒤 새 전체 CI 실행은 미검증입니다. 앞선 첫 만료 시도는 UNVERIFIED로 유지합니다.
+
+다음은 [공개 요약 JSON](evidence/github-app-jenkins/natural-expiry-summary.json)과 포트폴리오의 갱신 흐름·범위·한계를 연결하고, 같은 소스의 웹 검증·CI·Pages 게시와 공개 데스크톱·모바일 반영을 확인하는 일입니다. 해당 게시 검증이 끝나기 전에는 공개 반영 완료로 표시하지 않습니다. 이후 작업도 새 토큰·별도 환경이 필요하지 않은 범위에서 진행하며, 계정 잔여 사용 한도가 60% 이하가 되면 중단합니다.
+
+**보류:** Pages 토큰 교체·별도 환경의 K3s/Jenkins 실제 기동 복원·자원 예산 정책·[PR #102 접수 gate](https://github.com/DevDooly/devdooly-platform-lab/pull/102)는 재개하지 않습니다. 인증서 자연 갱신·현재 공개 경로의 재부팅은 여전히 미검증입니다. 이전 기록의 일반적인 “토큰 교체 보류” 표현은 당시 상태이며, 현재 보류하는 토큰 작업은 Pages 토큰 교체입니다.
+
+## 이전 진행 기록 — 2026-10-21(KST)
+
+아래는 각 실행 당시의 조건·관측을 보존한 기록입니다. 현재 완료·보류와 다음 순서는 위 10월 23일 안내를 우선합니다.
 
 [배포 전 Kubernetes·Argo 읽기 전용 점검](evidence/cluster-readonly/README.md)을 완료했습니다. 2026-10-20 22:25 UTC의 Argo는 main `e0f14d3`에 Synced·Healthy였고 Deployment4개·Pod7개가 Ready, PVC4개가 Bound였습니다. worker의 Pod→ReplicaSet→Deployment 소유 연결과 기존 image pin도 대조했습니다. 이 점검은 교체 전 worker74의 기록입니다. 이후 [PR177의 worker 교체](evidence/worker-image-rollout/README.md)를 `2026-10-21T00:19:02Z`에 main `33c5e8c0cf211dc3f4c622b98b40be0b48a3890b`로 반영했습니다. worker source는 `6f551a16a8ed536bb126403234c41b9e9b266d43`, image는 ee713이며 API245d61a·웹 image029c는 유지했습니다. `00:20:56 UTC`와 후속 `00:23:59 UTC`에 Argo Synced·Healthy·새 Pod Ready를 확인했습니다. [배포 준비 문서](plans/runtime-rollout-readiness.md)의 당시 조건과 실제 반영 근거를 구분합니다.
 

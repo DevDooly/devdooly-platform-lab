@@ -1,0 +1,88 @@
+---
+import summary from '../../../../docs/evidence/github-app-jenkins/natural-expiry-summary.json';
+import { parseGitHubAppRenewal } from '../lib/github-app-renewal';
+const record = parseGitHubAppRenewal(summary);
+const repo = 'https://github.com/DevDooly/devdooly-platform-lab';
+const evidence = `${repo}/blob/main/docs/evidence/github-app-jenkins/NATURAL_EXPIRY.md`;
+const clock = (value: string) => new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Seoul', hourCycle: 'h23', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date(value));
+const steps = record ? [
+  { at: record.oldExpiresAt, title: '기존 토큰 자연 만료', note: '시계나 캐시를 조작하지 않고 실제 만료를 기다렸습니다.', result: '만료' },
+  { at: record.oldHttp.at, title: '기존 토큰으로 조회', note: '만료한 토큰의 요청이 실제로 거부되는지 확인했습니다.', result: `HTTP ${record.oldHttp.status}` },
+  { at: null, title: 'Jenkins가 자격증명에 접근', note: '네이티브 자격증명 접근 1회로 새 토큰과 캐시가 만들어졌습니다.', result: '자동 갱신' },
+  { at: record.newHttp.at, title: '새 토큰으로 같은 저장소 조회', note: '정확한 저장소의 응답과 새 토큰의 유효기간을 대조했습니다.', result: `HTTP ${record.newHttp.status}` },
+  { at: record.newExpiresAt, title: '새 토큰의 만료 예정 시각', note: '새 응답 시각에서 유효기간 1시간을 확인했습니다.', result: '유효기간 확인' },
+] : [];
+---
+<section id="github-app-renewal" class="section app-renewal" aria-labelledby="app-renewal-title">
+  <div class="section-heading app-renewal-heading">
+    <div><span class="eyebrow">CI/CD / CREDENTIAL LIFECYCLE</span>
+      <h2 id="app-renewal-title">토큰이 만료된 뒤에도,<br />Jenkins가 다시 인증할 수 있을까.</h2>
+      <p>{record ? 'GitHub App 토큰의 실제 만료부터 새 토큰의 인증까지, 한 주기를 직접 확인했습니다.' : '공개 요약을 검증하지 못해 만료 후 갱신 결과를 표시할 수 없습니다.'}</p>
+    </div>
+    <span class="tag">{record ? '자연 만료 후 갱신 확인' : '검증 기록 확인 불가'}</span>
+  </div>
+  {record ? <>
+    <p class="app-renewal-date">2026년 10월 23일 검증 기록 · 아래 시각은 모두 한국 표준시(KST)입니다. 현재 인증 상태를 실시간 조회한 값이 아닙니다.</p>
+    <dl class="app-renewal-metrics" aria-label="확인한 자동 갱신 결과">
+      <div><dt>실제 인증 응답</dt><dd><span>{record.oldHttp.status}</span><span aria-label="에서"> → </span><span>{record.newHttp.status}</span><p>만료 거부 뒤 새 토큰 인증 성공</p></dd></div>
+      <div><dt>Jenkins 네이티브 접근</dt><dd>{record.refresh.nativeAccessCount}<small>회</small><p>토큰·캐시 변경을 함께 확인</p></dd></div>
+      <div><dt>새 토큰 유효기간</dt><dd>{record.validitySeconds / 3600}<small>시간</small><p>응답 시각과 새 만료 시각 대조</p></dd></div>
+    </dl>
+    <ol class="app-renewal-timeline" aria-label="실제 만료와 갱신 순서">
+      {steps.map((step, index) => <li>
+        <div class="app-renewal-time">{step.at ? <time datetime={step.at}>{clock(step.at)}</time> : <span>접근 시</span>}<span class="app-renewal-order" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span></div>
+        <div><h3>{step.title}</h3><p>{step.note}</p></div>
+        <strong class="app-renewal-result">{step.result}</strong>
+      </li>)}
+    </ol>
+    <p class="app-renewal-conclusion">만료 후 자격증명을 사용하는 시점에 갱신됩니다. 타이머가 미리 새 토큰을 발급하는 방식과 구분합니다.</p>
+    <details class="app-renewal-details">
+      <summary>보존한 설정과 검증 범위 보기</summary>
+      <div><p>기본 저장소의 자격증명 하나의 캐시를 대상으로, 기존 토큰의 401 응답과 새 토큰의 200 응답·저장소 일치·유효기간을 확인한 한 번의 기록입니다.</p>
+        <p>자격증명 저장소 구성, Job 설정·상태와 비공개 입력을 보존했습니다. 강제 만료·설정 변경·상태 쓰기·빌드 실행·자동 재시도는 하지 않았고 비밀 원문을 출력하지 않았습니다.</p>
+        <p>장기 무중단 운영, 개인키 교체, 다음 빌드의 성공을 입증한 결과는 아닙니다. Pages 토큰 교체·별도 환경 기동 복원·예산 정책·PR #102의 보류는 유지합니다.</p>
+      </div>
+    </details>
+  </> : <p class="app-renewal-date">공개 요약의 필드·시각·보존 조건을 확인하지 못했습니다. 성공으로 표시하지 않으며 근거 문서에서 기록을 확인할 수 있습니다.</p>}
+  <div class="app-renewal-links"><a href={evidence} target="_blank" rel="noreferrer">실제 만료·갱신 검증 근거 ↗</a><a href={`${repo}/blob/main/docs/evidence/github-app-jenkins/natural-expiry-summary.json`} target="_blank" rel="noreferrer">공개 결과 JSON ↗</a></div>
+</section>
+<style>
+  .app-renewal { padding-block:64px; border-top:1px solid var(--line); }
+  .app-renewal-heading { align-items:flex-start; gap:24px; flex-wrap:wrap; }
+  .app-renewal-heading > div { flex:1 1 36rem; min-width:0; }
+  .app-renewal h2 { font-size:var(--font-section-title); line-height:1.5; }
+  .app-renewal-heading p { max-width:46em; margin-top:18px; color:var(--muted); }
+  .app-renewal-heading .tag { white-space:normal; }
+  .app-renewal-date { margin:24px 0; color:var(--muted); font-size:var(--font-body); }
+  .app-renewal-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin:28px 0; }
+  .app-renewal-metrics > div { min-width:0; padding:24px; border:1px solid var(--line); background:var(--surface); }
+  .app-renewal-metrics dt,.app-renewal-metrics p { color:var(--muted); }
+  .app-renewal-metrics dd { margin:12px 0; font:600 clamp(1.6rem,3vw,2rem) var(--mono); color:var(--green); }
+  .app-renewal-metrics small { margin-left:10px; font:var(--font-body) var(--sans); }
+  .app-renewal-metrics p { margin:12px 0 0; font:400 var(--font-body)/1.75 var(--sans); }
+  .app-renewal-timeline { margin:0; padding:0; list-style:none; border-top:1px solid var(--line); }
+  .app-renewal-timeline li { display:grid; grid-template-columns:112px minmax(0,1fr) auto; align-items:start; gap:20px; padding:24px 0; border-bottom:1px solid var(--line); }
+  .app-renewal-time { font-family:var(--mono); }
+  .app-renewal-order { display:block; margin-top:6px; color:var(--muted); font-size:var(--font-small); }
+  .app-renewal-timeline h3 { font-size:var(--font-card-title); line-height:1.6; }
+  .app-renewal-timeline p { margin:8px 0 0; color:var(--muted); }
+  .app-renewal-result { border:1px solid var(--line); padding:6px 12px; color:var(--green); font-size:var(--font-body); white-space:nowrap; }
+  .app-renewal-conclusion { margin:24px 0; font-size:var(--font-body); }
+  .app-renewal-details { border:1px solid var(--line); }
+  .app-renewal-details summary { padding:18px; min-height:44px; cursor:pointer; font-weight:600; }
+  .app-renewal-details summary:hover { background:var(--cream); }
+  .app-renewal-details > div { padding:0 18px 18px; }
+  .app-renewal-details p { margin:14px 0 0; line-height:1.8; }
+  .app-renewal-links { display:flex; flex-wrap:wrap; gap:16px 28px; margin-top:24px; font-weight:600; }
+  .app-renewal-links a { display:inline-flex; align-items:center; min-height:44px; text-decoration:underline; text-underline-offset:4px; }
+  .app-renewal :is(a,summary):focus-visible { outline:3px solid var(--green); outline-offset:4px; }
+  @media(max-width:800px) { .app-renewal-metrics { grid-template-columns:1fr; } }
+  @media(max-width:620px) {
+    .app-renewal { padding-block:44px; }
+    .app-renewal-metrics > div { padding:20px; }
+    .app-renewal-timeline li { grid-template-columns:minmax(0,1fr); gap:10px; }
+    .app-renewal-time { display:flex; align-items:center; gap:16px; }
+    .app-renewal-order { margin-top:0; }
+    .app-renewal-result { justify-self:start; }
+  }
+</style>

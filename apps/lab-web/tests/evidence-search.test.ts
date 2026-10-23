@@ -18,7 +18,7 @@ function fixture(id: string, overrides: Partial<EvidenceItem> = {}): EvidenceIte
 }
 
 test('Jenkins와 잠금은 각각 실제 관련 기록을 찾는다', () => {
-  assert.deepEqual(search('Jenkins'), ['delivery-gate']);
+  assert.deepEqual(search('Jenkins'), ['github-app-natural-renewal', 'delivery-gate']);
   assert.deepEqual(search('잠금'), ['runtime-lease-loss']);
   assert.deepEqual(search('Java 잠금'), ['runtime-lease-loss']);
   assert.deepEqual(search('Kafka 잠금'), []);
@@ -45,8 +45,8 @@ test('공백으로 구분한 모든 단어와 보이는 환경 이름을 함께 
 });
 
 test('NFKC와 대소문자 및 여러 종류의 공백을 정규화한다', () => {
-  assert.deepEqual(search('　Ｊｅｎｋｉｎｓ　'), ['delivery-gate']);
-  assert.deepEqual(search('\tjenKINS\n'), ['delivery-gate']);
+  assert.deepEqual(search('　Ｊｅｎｋｉｎｓ　'), ['github-app-natural-renewal', 'delivery-gate']);
+  assert.deepEqual(search('\tjenKINS\n'), ['github-app-natural-renewal', 'delivery-gate']);
   assert.deepEqual(evidenceQueryWords('　ＫＡＦＫＡ\n Cloud\t'), ['kafka', 'cloud']);
 });
 

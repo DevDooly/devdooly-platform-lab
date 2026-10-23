@@ -1,5 +1,13 @@
 # 공개 GET 응답 계약 — 실제 관측 기록
 
+## 최신 후속 관측 — 2026-10-23 UTC
+
+[수동 실행39940801991](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39940801991)의 첫 attempt에서 `offline`·`public_gets`가 성공했습니다. `10:41:16.550Z`–`10:41:26.508Z`에 고정 GET6개가 모두 HTTP200·공개 헤더·DTO 계약을 통과했고, 공개 IPv4·표준 TLS를 확인했습니다. 검사기 소스는 `285d148638ece7b085bf3726b3344271e6e1cd08`, 응답 소스는 기존 API `245d61a5749760a20918ab091d9410ce6735b1c0`이며 두 값을 구분합니다.
+
+[요약 원문](hosted-39940801991/summary.json) 1,635bytes와 [실행 결합 metadata](hosted-39940801991/run-metadata.json) 346bytes를 run·job·단일 artifact·ZIP entry와 대조했습니다. 요약 SHA-256은 `42f4b04ca2e77554e01494c66bbf607a65d5869924a80cbeddaf25f70e870841`, metadata SHA-256은 `93ad969da5de707f8a12a84151b8a831b4d6d8ff30504323954c7ad13aa2e669`입니다. 주소·IP·본문·자격증명은 포함하지 않습니다.
+
+이번 후속은 고정 읽기 응답의 계약 확인입니다. POST·거부 요청·운영 설정 변경은 하지 않았으며, worker 생존·지속 가용성·인증서 자연 갱신이나 새 배포의 증명은 아닙니다. [GitHub App 만료 후 갱신](../github-app-jenkins/NATURAL_EXPIRY.md)과도 별도 실행입니다. Pages 토큰 교체·별도 환경 기동 복원·예산 정책·PR #102 보류를 유지합니다. 아래 이전 관측은 원래 출처와 함께 보존합니다.
+
 2026-10-20 UTC의 [수동 실행39483000285](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39483000285)에서 `offline`·`public_gets` 두 job이 성공했습니다. 고정 GET6개가 모두200과 공개 DTO 검증을 통과했습니다. 이 실행은 POST나 거부 경로를 보내지 않으며, [기존 GET6·거부3 검사](../public-read-https/README.md)와 범위를 구분합니다.
 
 | 출처 | 실제 기록 |
