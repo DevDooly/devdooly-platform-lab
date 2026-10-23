@@ -2,7 +2,9 @@
 
 ## 현재 작업 — 2026-10-23(KST)
 
-[Jenkins GitHub App 연결](evidence/github-app-jenkins/README.md)에 이어 [설치 토큰의 자연 만료 후 갱신](evidence/github-app-jenkins/NATURAL_EXPIRY.md) 한 주기를 완료했습니다. 19:18:35 만료 → 19:19:28 기존 토큰 401 → native credential 접근 1회 → 19:19:30 새 토큰 200·정확한 저장소 일치 → 20:19:30 새 만료를 확인했습니다. 유효기간은 응답 시각부터 3,600초이고 credential 소속·job 구성과 상태·비밀 입력은 보존했습니다. 접근 시의 lazy refresh이며 선제·주기 발급, 키 교체·권한 철회 복구, 이번 갱신 뒤 새 전체 CI 실행은 미검증입니다. 앞선 첫 만료 시도는 UNVERIFIED로 유지합니다.
+현재 완료·보류와 이어갈 순서는 [현재 범위·다음 작업](AUTONOMOUS_WORK.md)을 우선합니다. 아래는 실행별 근거와 한계를 보존한 기록이며, 과거 작업을 현재 할 일로 다시 실행하지 않습니다.
+
+[Jenkins GitHub App 연결](evidence/github-app-jenkins/README.md)에 이어 [설치 토큰의 자연 만료 후 갱신](evidence/github-app-jenkins/NATURAL_EXPIRY.md) 한 주기를 완료했습니다. 19:18:35 만료 → 19:19:28 기존 토큰 401 → native credential 접근 1회 → 19:19:30 새 토큰 200·정확한 저장소 일치 → 20:19:30 새 만료를 확인했습니다. 유효기간은 응답 시각부터 3,600초이고 credential 소속·job 구성과 상태·비밀 입력은 보존했습니다. 접근 시의 lazy refresh이며 선제·주기 발급, 키 교체·권한 철회 복구는 미검증입니다. 원래 만료 시험에는 새 빌드를 포함하지 않았으며, 이후 별도 Jenkins153의 App 상태 전달은 아래 후속 근거와 구분합니다. 이 상태 기록만으로 전체 CI 단계·산출물 재검증을 뜻하지 않습니다. 앞선 첫 만료 시도는 UNVERIFIED로 유지합니다.
 
 [공개 요약·갱신 카드와 Pages 게시](evidence/github-app-jenkins/PUBLICATION.md)를 완료하고 공개 데스크톱·모바일의 시각·범위·링크·키보드 펼치기를 확인했습니다. Pages 성공과 별도 컨테이너 빌드 결과는 구분하며 웹 이미지의 JSON 누락은 PR #196에서 교정했습니다. 수정 브랜치의 실제 Linux 이미지 빌드·통합 verify와 별도 App Jenkins153 pending→success도 확인했으며, 운영 이미지 pin은 유지합니다.
 
