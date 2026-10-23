@@ -2,9 +2,9 @@
 
 ## 현재 이어서 볼 곳 — 2026-10-23 KST
 
-최신 완료·진행·보류와 다음 순서는 [다음 개발 계획의 맨앞 안내](NEXT_STEPS.md)를 따릅니다. 지난 실행의 설치·재시작 절차를 현재 할 일로 다시 실행하지 않습니다.
+현재 완료·보류와 이어갈 순서는 [현재 범위·다음 작업](AUTONOMOUS_WORK.md)을, 실행별 이력은 [다음 개발 계획](NEXT_STEPS.md)을 따릅니다. 지난 실행의 설치·재시작 절차를 현재 할 일로 다시 실행하지 않습니다.
 
-- **Jenkins 인증:** [GitHub App 연결](evidence/github-app-jenkins/README.md)에 이어 [실제 만료 후 갱신 한 주기](evidence/github-app-jenkins/NATURAL_EXPIRY.md)를 완료했습니다. 만료한 토큰 401 → native 접근 1회 → 새 토큰 200·저장소 일치·유효기간 1시간과 기존 설정 보존을 확인했습니다. credential 사용 시의 lazy refresh이며 선제 발급·키 교체·권한 철회 복구·이번 갱신 뒤 새 전체 CI 실행은 미검증입니다. 공개 포트폴리오 반영 여부와 다음 순서는 [최신 안내](NEXT_STEPS.md)를 따릅니다.
+- **Jenkins 인증:** [GitHub App 연결](evidence/github-app-jenkins/README.md)에 이어 [실제 만료 후 갱신 한 주기](evidence/github-app-jenkins/NATURAL_EXPIRY.md)를 완료했습니다. 만료한 토큰 401 → native 접근 1회 → 새 토큰 200·저장소 일치·유효기간 1시간과 기존 설정 보존을 확인했습니다. credential 사용 시의 lazy refresh이며 선제 발급·키 교체·권한 철회 복구·이번 갱신 뒤 새 전체 CI 실행은 미검증입니다. [공개 카드 게시·화면 확인](evidence/github-app-jenkins/PUBLICATION.md)을 완료했으며, 다음 순서는 [현재 안내](AUTONOMOUS_WORK.md)를 따릅니다.
 
 - **완료:** [실행 잠금 손실](evidence/runtime-lease-loss/README.md) 등 실제 격리 런타임 시험과 [PostgreSQL catalog 정상 재시작](evidence/cloud-catalog-restart/README.md)을 확인했습니다. 근거 목록의 검색·두 필터·6개씩 더 보기는 웹173개 검사·타입·빌드와 같은 main의 Pages·CI, 로컬·공개 화면 확인을 마쳤습니다. 각 기록은 실행 당시의 범위이며 현재 가용성을 뜻하지 않습니다.
 - **사례·운영 문서:** 기존 잠금 손실의 stale DB 기록과 실제 종료를 설명하는 [별도 사례 페이지](https://devdooly.github.io/devdooly-platform-lab/cases/runtime-ownership/)를 공개하고 키보드·모바일 확인을 마쳤습니다. 장애별 판단표와 AI 소유자 검토자료의 세부 근거·다음 순서는 [최신 안내](NEXT_STEPS.md)를 따릅니다.
