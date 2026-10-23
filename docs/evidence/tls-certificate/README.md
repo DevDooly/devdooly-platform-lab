@@ -67,3 +67,11 @@
 2026-10-20 16:16–16:19 UTC에 공개1280px·390px의 수집 시각·87일·만료와 고정 원문 링크, 기본 닫힘·Enter 토글·새로고침 후 닫힘, 본문17px·summary54px·초점3px·긴 지문 줄바꿈·가로 넘침 부재를 확인했습니다. 실제 읽기 API의 카드가 로드된 뒤 모바일 증거 구도를 다시 확인했습니다. TLS 관측을 다시 실행한 결과나 실제 두 인증서의 비교가 아닙니다.
 
 이 화면 소스의 Jenkins commit status는 당시 미관측입니다. 후속 이미지 workflow는 gate 종료 뒤 publish·GitOps 제안을 생략했으며, Pages 게시와 실제 이미지 게시·운영 배포를 구분합니다.
+
+## 저장 이력의 완료 시각 표기 비교
+
+같은 run의 metadata.completedAt이 초 단위 Z와 .000Z로만 다를 때 정상 중복을 출처 경고로 격리하던 비교를 [PR221](https://github.com/DevDooly/devdooly-platform-lab/pull/221)에서 교정했습니다. 이미 검증된 완료 시각의 UTC 값만 비교하고 최초 metadata 표기·summary 원문 bytes·artifact hash·run/source·원 수집 시각은 유지합니다. 실제1ms 차이와 출처·원문 충돌은 계속 거부하며, 저장 summary·metadata·generated JSON 원문은 수정하지 않았습니다.
+
+새 합성 회귀3개 중 수정 전2개 실패를 확인했고 수정 후 TLS 이력22개가 통과했습니다. 로컬 전체 웹273개·생략/실패0, 타입50파일 오류·경고·힌트0·정적2페이지 빌드를 통과했습니다. 병합 main c27e4312474f449687957010393d59752ff8d538의 [CI39964710927](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39964710927) verify·public-read-gateway와 [Pages39964710609](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39964710609) build·deploy도 성공했습니다. 두 실행의 실제 로그에서도 웹273개·타입50파일 진단0·2페이지를 확인했으며 별도 격리 실증4개 job은 생략했습니다.
+
+고정 공개 HTML의 GET1회에서 TLS section3,712바이트·SHA-256 fc30230bd41ff7adce24b4f3d1f47a8e1c256919abbbd940d67f77ad8e1b5fc2가 로컬 빌드와 일치하고 기존 저장2회차·원 artifact hash2개가 남아 있음을 확인했습니다. 이는 정상 공개 렌더의 보존 근거이며 동등 표기 중복 분기의 실행은 위 오프라인 합성 회귀로 구분합니다. 새 브라우저 실행·외부 TLS 관측·인증서 자연 갱신을 확인한 결과가 아닙니다.
