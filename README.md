@@ -25,7 +25,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 - **브라우저 관측 보호:** [응답 순서·내용 충돌·본문 크기](docs/evidence/browser-observation-protection/README.md)를 보완했습니다. 플랫폼의 최신 시도·성공은 각각 유지하고, 플랫폼·작업의 같은 시각에 다른 내용은 거부합니다. 플랫폼 본문은 읽는 중 16KiB 상한을 적용합니다. 최종 웹247개·타입·빌드, 각 변경의 Linux CI·같은 main의 Pages와 공개 정상 재조회를 확인했습니다. 합성 오류 검증과 공개 정상 조회를 구분하며 서버 상태나 장기 가용성을 보장하는 기능은 아닙니다.
 
-- **작업 수집기 완료 시한:** [read·close 뒤 시한 검사](docs/evidence/job-response-deadline/README.md)의 Linux179개·skip0에 이어 [21:18:16(KST) 코드 한 파일 교체](docs/evidence/job-response-deadline/DEPLOYED.md)와 별도 사후 점검을 마쳤습니다. 새 코드 pin·root0600·다른 코드7개와 unit2개 보존을 확인했으며, 새 job의 자연 수집·Pages 연결은 아직 PENDING입니다.
+- **작업 수집기 완료 시한:** [read·close 뒤 시한 검사](docs/evidence/job-response-deadline/README.md)의 Linux179개·skip0에 이어 [21:18:16(KST) 코드 한 파일 교체](docs/evidence/job-response-deadline/DEPLOYED.md)와 별도 사후 점검을 마쳤습니다. [21:42 자연 회차](docs/evidence/job-response-deadline/NATURAL_PUBLICATION.md)의 새 job 수집과 Pages39955401692 attempt1 build·deploy, 공개 JSON3개·artifact 전체 bytes 일치까지 확인했습니다. 한 회차의 결과이며 전체 처리 시한·장기 가용성 검증과 구분합니다.
 
 - **검색 초기 입력:** [준비 전 입력 보호](docs/evidence/evidence-input-readiness/README.md)로 이벤트 연결 전에 입력이 유실될 수 있는 구간을 막았습니다. 로컬 SSR 사본·준비 후 검색·19개 순차 표시·모바일 Tab 이동과 웹207검사·타입·빌드, 같은 main의 Pages·CI·공개 첫 접속 검색을 확인했습니다.
 
