@@ -51,6 +51,8 @@ function Code({ title, text, file }: { title: string; text: string; file: string
 
 /** A static personal case study. Selectors only choose recorded/closed-form data. */
 export default function AiWindowCase({ record, observationUrl }: { record?: unknown; observationUrl?: string }) {
+  const [interactive, setInteractive] = useState(false);
+  useEffect(() => { setInteractive(true); }, []);
   const [loadedRecord, setLoadedRecord] = useState<unknown>(record);
   useEffect(() => {
     if (record !== undefined || !observationUrl) { setLoadedRecord(record); return; }
@@ -114,13 +116,13 @@ export default function AiWindowCase({ record, observationUrl }: { record?: unkn
     </div>
 
     <div className="ai-window-fixture"><div className="ai-window-fixture-heading"><div><span className="code-label">03 / FIXTURE & RECORDED JMH</span>
-      <h3>입력 분포와 크기를 골라 비교하기</h3></div><div className="ai-window-controls">
-        <label htmlFor="ai-window-profile">분포<select id="ai-window-profile" value={profile} onChange={event => setProfile(event.target.value as WindowProfile)}>
+      <h3>입력 분포와 크기를 골라 비교하기</h3></div><div className="ai-window-controls" aria-busy={!interactive}>
+        <label htmlFor="ai-window-profile">분포<select id="ai-window-profile" value={profile} disabled={!interactive} aria-describedby="ai-window-input-help" onChange={event => setProfile(event.target.value as WindowProfile)}>
           <option value="sparse">떨어진 구간 · sparse</option><option value="nested">중첩 구간 · nested</option></select></label>
-        <label htmlFor="ai-window-size">세션 수<select id="ai-window-size" value={size} onChange={event => setSize(Number(event.target.value) as WindowSize)}>
+        <label htmlFor="ai-window-size">세션 수<select id="ai-window-size" value={size} disabled={!interactive} aria-describedby="ai-window-input-help" onChange={event => setSize(Number(event.target.value) as WindowSize)}>
           {windowSizes.map(value => <option key={value} value={value}>{number(value, 0)}개</option>)}</select></label>
       </div></div>
-      <p className="ai-window-note">선택은 정적 기대 결과와 이미 측정한 기록만 바꿉니다. 새 benchmark·서버 작업을 실행하지 않습니다.</p>
+      <p id="ai-window-input-help" className="ai-window-note">{!interactive && '화면 조작 준비 중입니다. '}선택은 정적 기대 결과와 이미 측정한 기록만 바꿉니다. 새 benchmark·서버 작업을 실행하지 않습니다.</p>
       <p>{profile === 'sparse' ? '11ms 구간을 17ms 간격으로 배치합니다. 겹침이 없어 합집합은 n×11ms, 최대 동시는 1입니다.' : '모든 세션이 동시에 시작하고 종료를 1ms씩 늘립니다. 합집합은 n×1ms, 최대 동시는 n입니다.'}</p>
       <dl className="ai-window-expectation" aria-live="polite"><div><dt>합집합 길이 · 닫힌 형태 기대값</dt><dd>{number(expected.coveredNanos / 1_000_000)}<small> ms</small></dd></div>
         <div><dt>최대 동시 관측 세션 · 기대값</dt><dd>{number(expected.peakConcurrentSessions, 0)}<small>개</small></dd></div></dl>
