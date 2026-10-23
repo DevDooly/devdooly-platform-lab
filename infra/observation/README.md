@@ -1,6 +1,6 @@
 # 공개 플랫폼 수집기와 호스트 자동화
 
-2026-10-23 저장소 후속은 [응답 완료 시한·OS 잠금 회귀 근거](../../docs/evidence/collector-completion-boundaries/README.md)를 따릅니다. 시한 후 완료 응답은 TIMEOUT으로 처리하고, 잠금 파일은 유지하며 OS 잠금만 해제합니다. 같은 날 20:17:53(KST)에 기존 수집기 유휴·외부 cycle lock 아래 [collector 한 파일의 운영 교체](../../docs/evidence/collector-completion-boundaries/DEPLOYED.md)를 완료했습니다. 새 코드 pin·계약·unit 파일과 상태를 확인했고 새 자연 수집·Pages 연결은 아직 PENDING입니다. 구 O_EXCL 실행기와 새 flock 실행기를 동시에 사용하지 않습니다.
+2026-10-23 저장소 후속은 [응답 완료 시한·OS 잠금 회귀 근거](../../docs/evidence/collector-completion-boundaries/README.md)를 따릅니다. 시한 후 완료 응답은 TIMEOUT으로 처리하고, 잠금 파일은 유지하며 OS 잠금만 해제합니다. 같은 날 20:17:53(KST)에 기존 수집기 유휴·외부 cycle lock 아래 [collector 한 파일의 운영 교체](../../docs/evidence/collector-completion-boundaries/DEPLOYED.md)를 완료했습니다. 이후 [20:41 자연 회차·Pages39947822996](../../docs/evidence/collector-completion-boundaries/NATURAL_PUBLICATION.md)에서 새 코드 pin과 수집 시각·소스, 같은 run의 build/deploy·공개 JSON3개와 artifact 전체 bytes 일치를 확인했습니다. child lock 파일의 정상 메타데이터와 외부 cycle lock 미점유를 관측했으며 운영 SIGKILL 복구를 시험한 것은 아닙니다. 구 O_EXCL 실행기와 새 flock 실행기를 동시에 사용하지 않습니다.
 
 작업·export의 실제 배포 기록은 선택적 [작업 관측 자동화](JOBS_AUTOMATION.md)로 같은 outbound Pages 주기에 연결한다. 기존 플랫폼 관측 계약과 파일은 별도로 보존한다.
 

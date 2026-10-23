@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "status": "NATURAL_COLLECTION_AND_PUBLICATION_VERIFIED",
+  "verifiedAt": "2026-10-23T11:48:01.007402Z",
+  "rolloutCompletedAt": "2026-10-23T11:17:53.114686Z",
+  "collector": {
+    "bytes": 20725,
+    "sha256": "d87742d75e046a292615e078b279e01d22243c8d2b5d95f39258cd91945c05cf"
+  },
+  "sources": {
+    "observedMainCommit": "af19b912523fe00f461f07f856d3aa504bec614f",
+    "apiSourceCommit": "245d61a5749760a20918ab091d9410ce6735b1c0",
+    "runtimeSourceCommit": "6f551a16a8ed536bb126403234c41b9e9b266d43"
+  },
+  "naturalCycle": {
+    "timerReportedAt": "2026-10-23T11:41:12.000000Z",
+    "serviceStartedAt": "2026-10-23T11:41:12.000000Z",
+    "serviceExitedAt": "2026-10-23T11:41:17.000000Z",
+    "platformCapturedAt": "2026-10-23T11:41:15.086039Z",
+    "reportedPrecisionCorrelationOnly": true,
+    "soleInitiatorVerified": false,
+    "persistentChildLockObserved": true,
+    "childLockMetadataVerified": true,
+    "outerCycleLockHeldAtObservation": false
+  },
+  "pages": {
+    "runId": 39947822996,
+    "runAttempt": 1,
+    "headSha": "af19b912523fe00f461f07f856d3aa504bec614f",
+    "buildCompletedAt": "2026-10-23T11:42:47Z",
+    "deployCompletedAt": "2026-10-23T11:43:01Z",
+    "buildAndDeployVerified": true
+  },
+  "snapshots": {
+    "jobs": {
+      "capturedAt": "2026-10-23T11:41:15.187893980Z",
+      "bytes": 6477,
+      "sha256": "457a137974583c8fa8bf1f1d2930a9ea30b5ece0930e1a4162ce7ad6eae988c4",
+      "publicFullBytesMatch": true
+    },
+    "kafka": {
+      "capturedAt": "2026-10-23T11:41:15.498797399Z",
+      "bytes": 562,
+      "sha256": "529123464f7c8bff930e3245452a24835a05d9e2d821d831459a6d708354a70e",
+      "publicFullBytesMatch": true
+    },
+    "platform": {
+      "capturedAt": "2026-10-23T11:41:15.086039Z",
+      "bytes": 1377,
+      "sha256": "f8f8c82820deb2bfde8a73296b3ea9058fd198d89791c69d33e96e9e37b36c7e",
+      "publicFullBytesMatch": true
+    }
+  },
+  "verification": {
+    "strictContractsVerified": true,
+    "threeExactArtifactsVerified": true,
+    "publicFullBytesMatch": true,
+    "githubGetRequests": 6,
+    "publicGetRequests": 3,
+    "automaticRetry": false,
+    "otherRunFallback": false,
+    "serverStateComparison": "selected-projection-only"
+  },
+  "scope": {
+    "naturalCycles": 1,
+    "operatingSigkillRecoveryVerified": false,
+    "longTermAvailabilityVerified": false,
+    "pagesTokenRotationVerified": false
+  },
+  "holds": [
+    "pages-token-rotation",
+    "isolated-runtime-restore",
+    "resource-budget-policy",
+    "pr-102"
+  ]
+}
