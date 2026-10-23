@@ -6,7 +6,9 @@
 
 [공개 요약·갱신 카드와 Pages 게시](evidence/github-app-jenkins/PUBLICATION.md)를 완료하고 공개 데스크톱·모바일의 시각·범위·링크·키보드 펼치기를 확인했습니다. Pages 성공과 별도 컨테이너 빌드 결과는 구분하며 웹 이미지의 JSON 누락은 PR #196에서 교정했습니다. 수정 브랜치의 실제 Linux 이미지 빌드·통합 verify와 별도 App Jenkins153 pending→success도 확인했으며, 운영 이미지 pin은 유지합니다.
 
-현재 후속은 [관측 응답 완료 시한·강제 종료 후 OS 잠금 복구](evidence/collector-completion-boundaries/README.md)입니다. 시한 초과 응답의 TIMEOUT·이전 성공 보존과 Linux173개·SIGKILL 뒤 같은 inode 재획득을 확인했습니다. 저장소 검증과 운영 설치를 구분하며 기존 O_EXCL 수집기 유휴·외부 cycle lock 아래 교체와 자연 관측/Pages 연결은 아직 후속입니다. 새 토큰·별도 환경이 필요하지 않은 범위에서 진행하고, 계정 잔여 사용 한도가 60% 이하가 되면 중단합니다.
+현재 후속인 [관측 응답 완료 시한·강제 종료 후 OS 잠금 복구](evidence/collector-completion-boundaries/README.md)는 시한 초과 응답의 TIMEOUT·이전 성공 보존과 Linux173개·SIGKILL 뒤 같은 inode 재획득을 확인했습니다. 이후 **20:17:53(KST)**에 [운영 collector 한 파일의 교체](evidence/collector-completion-boundaries/DEPLOYED.md)를 완료했습니다. 기존 O_EXCL 수집기 유휴·외부 cycle lock 아래 원자 교체와 새 코드 pin·계약·unit 파일과 상태 보존을 확인했습니다. 교체 직후 상태의 선택된 시각·출처 projection은 같았으나 전체 JSON 불변이나 새 수집 성공의 증명은 아닙니다.
+
+**다음 확인 — PENDING:** 기존 자연 회차에서 교체 뒤 시작한 실행·새 수집 시각·소스와 Pages 요청·실제 게시 결과를 연결합니다. 다음 회차는 20:40(KST) 무렵으로 예상하며 실제 실행을 관측하기 전 성공으로 표시하지 않습니다. 수동 trigger·timer 주기 단축은 하지 않습니다. 새 토큰·별도 환경이 필요하지 않은 범위에서 진행하고, 계정 잔여 사용 한도가 60% 이하가 되면 중단합니다.
 
 **보류:** Pages 토큰 교체·별도 환경의 K3s/Jenkins 실제 기동 복원·자원 예산 정책·[PR #102 접수 gate](https://github.com/DevDooly/devdooly-platform-lab/pull/102)는 재개하지 않습니다. 인증서 자연 갱신·현재 공개 경로의 재부팅은 여전히 미검증입니다. 이전 기록의 일반적인 “토큰 교체 보류” 표현은 당시 상태이며, 현재 보류하는 토큰 작업은 Pages 토큰 교체입니다.
 
