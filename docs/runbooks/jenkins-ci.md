@@ -6,13 +6,23 @@
 
 Jenkins 2.580.1에 `github-branch-source:1986.v801e40614d00`과 필요한 의존성을 선택 설치했습니다. 기존 77개 집합에서 6개 추가·2개 상향으로 총 83개가 되었고, 전체 집합의 core·필수 의존성·존재하는 optional 의존성 최소 버전과 재기동 후 활성 상태를 확인했습니다. 기존 PVC, job 구성, build 150 기록과 PATv2 credential을 보존했습니다. 이전 교정 절차의 전체 플러그인 재구성을 반복한 결과와 구분합니다.
 
-새 credential ID는 `platform-lab-github-app`이며 기존 `platform-lab-github-status`와 별개입니다. App 설치 대상은 개인 Lab 저장소 한 개로 제한하고 Commit statuses 읽기·쓰기와 필수 Metadata 읽기 범위를 사용합니다. 공개 SCM clone 방식은 유지합니다. 개인키는 Jenkins credential에 암호화 저장하며, 평문 PEM과 토큰은 전달·검증 과정의 메모리에서만 취급합니다. 원문·비밀 지문·관리 응답은 공개 근거에 넣지 않습니다.
+App 전용 credential은 기존 PAT credential과 별개입니다. App 설치 대상은 개인 Lab 저장소 한 개로 제한하고 Commit statuses 읽기·쓰기와 필수 Metadata 읽기 범위를 사용합니다. 공개 SCM clone 방식은 유지합니다. 개인키는 Jenkins credential에 암호화 저장하며, 평문 PEM과 토큰은 전달·검증 과정의 메모리에서만 취급합니다. 원문·비밀 지문·관리 응답은 공개 근거에 넣지 않습니다.
 
-고정 credential의 native `getPassword()` 경로와 GitHub의 installation repositories GET 한 번으로 선택한 저장소 한 개의 일치를 확인했습니다. 이는 새 토큰의 매번 발급, 실제 만료·자동 갱신, installation ID의 독립 검증이나 commit status 쓰기를 증명하지 않습니다. 기존 PATv2는 삭제하거나 덮어쓰지 않았습니다.
+최초 연결 점검은 고정 credential의 native `getPassword()` 경로와 GitHub의 installation repositories GET 한 번으로 선택한 저장소 한 개의 일치를 확인했습니다. 이 최초 점검만으로 매번 새 토큰 발급·실제 만료 후 갱신·installation ID의 독립 검증이나 commit status 쓰기를 증명하지 않습니다. 실제 상태 쓰기와 자연 만료 후 갱신은 아래 별도 근거를 따릅니다. 기존 PATv2는 삭제하거나 덮어쓰지 않았습니다.
 
 [Jenkinsfile](../../Jenkinsfile)의 pending·success·unsuccessful 세 바인딩은 native `usernamePassword`를 사용하고 password만 기존 `GITHUB_STATUS_TOKEN` 환경 변수로 status client에 전달합니다. 새 main `420cf2ce…`의 자동 build **151**에서 7개 필수 단계·산출물·실제 checkout SHA를 검증했고, App 작성자의 pending **57070838925** → success **57070972173**와 같은 소스의 Actions 성공을 확인했습니다. [실행 근거](../evidence/github-app-jenkins/README.md)에 범위와 한계를 기록했습니다.
 
 게시 gate의 `JENKINS_STATUS_ISSUER`는 실측한 `devdooly-platform-lab-ops[bot]`으로 전환했습니다. 새 관측 수집기는 이 작성자만 허용하며 최신 상태를 먼저 선택합니다. DTO·스키마·브라우저는 과거 `DevDooly` 기록도 읽도록 두 개의 명시 값만 허용합니다. 이는 과거 자료를 읽기 위한 호환성으로, 새 상태 수집이나 이미지 게시의 작성자 권한을 넓히지 않습니다. 새 상태가 맞지 않을 때 과거 성공으로 건너뛰지 않습니다.
+
+## 자연 만료 후 갱신 확인 — 2026-10-23 KST
+
+[실제 후속 검증](../evidence/github-app-jenkins/NATURAL_EXPIRY.md)에서 19:18:35에 자연 만료한 토큰의 19:19:28 GET 401 뒤, 기본 저장소 credential의 native 접근 한 번으로 갱신하고 19:19:30 GET 200·정확한 저장소 한 개를 확인했습니다. 새 만료는 20:19:30으로 응답 시각부터 3,600초 뒤였습니다. token·cache 객체가 바뀌었고 credential 저장소 소속·job 구성과 상태·비밀 입력은 보존했습니다.
+
+갱신은 자격증명을 사용할 때 수행하는 lazy refresh입니다. cron이나 별도 주기로 토큰을 미리 발급하도록 설정한 결과가 아닙니다. 이 검증에서는 상태 쓰기·새 빌드·배포·자격증명 변경·서비스 재시작을 하지 않았습니다. 모든 빌드 바인딩의 캐시·개인키 교체·권한 철회 복구·장기 연속성은 미검증입니다.
+
+재검증이 필요하면 먼저 현재 토큰 만료와 job 유휴 상태를 읽고 실제 만료를 기다립니다. 시계 변경·캐시 무효화로 만료를 만들지 않습니다. 기존 토큰의 만료 뒤 401 → native 접근 한 번 → 새 토큰의 200·저장소 일치·새 유효기간을 모두 확인하고 기존 설정·비밀 입력 보존을 대조합니다. 응답이 불명확하면 자동 재시도하거나 캐시 변경만으로 성공 처리하지 않습니다. 토큰·키 원문·접두어·비밀 해시·관리 응답은 출력하거나 저장하지 않습니다. 앞선 첫 시도의 UNVERIFIED는 유지하며, 한 번의 후속 성공으로 소급 변경하지 않습니다.
+
+현재 실제 만료 검증의 일회성 예약은 종료했습니다. Pages 토큰 교체·별도 환경의 K3s/Jenkins 기동 복원·자원 예산 정책·PR #102는 보류합니다.
 
 ## 실행하는 작업
 
@@ -93,4 +103,4 @@ untrusted fork PR에는 registry/GitOps 권한이나 관리자 자격증명을 �
 - [Maven Wrapper bin 방식과 checksum](https://maven.apache.org/tools/wrapper/)
 - [Remote API](https://www.jenkins.io/doc/book/using/remote-access-api/) / [CSRF cookie·crumb](https://www.jenkins.io/doc/book/security/csrf-protection/)
 
-로컬 Helm strict lint와 35개 정책 검증, 실제 Jenkins agent 실행, 실제 실패 차단은 각각 구분해 기록합니다. 동시 요청 실험과 GitHub App 설치 토큰의 실제 만료·자동 갱신은 미검증입니다. 관리자 응답·콘솔 원문·Secret·내부 주소는 공개 근거에서 제외합니다.
+로컬 Helm strict lint와 35개 정책 검증, 실제 Jenkins agent 실행, 실제 실패 차단은 각각 구분해 기록합니다. GitHub App 설치 토큰의 실제 만료 후 갱신은 위 단일 credential 접근 한 주기이며, 동시 요청 실험·선제 주기 갱신·키 교체·권한 철회 복구는 미검증입니다. 관리자 응답·콘솔 원문·Secret·내부 주소는 공개 근거에서 제외합니다.

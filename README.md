@@ -17,7 +17,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 최근 완료한 범위는 다음과 같습니다. 실행별 소스·수치·실패 이력과 한계는 연결한 실제 근거를 따릅니다.
 
-- **Jenkins 인증:** [GitHub App 연결](docs/evidence/github-app-jenkins/README.md)로 수동 PAT 발급을 줄였습니다. 실제 build 151의 7개 단계·산출물·App pending→success와 같은 소스의 Actions 성공을 확인했습니다. 실제 만료 후 갱신은 아직 검증하지 않았습니다.
+- **Jenkins 인증:** [GitHub App 연결](docs/evidence/github-app-jenkins/README.md)로 수동 PAT 발급을 줄였습니다. 실제 build 151의 7개 단계·산출물·App pending→success와 같은 소스의 Actions 성공에 이어, [토큰 자연 만료 후 갱신](docs/evidence/github-app-jenkins/NATURAL_EXPIRY.md) 한 주기를 확인했습니다. 만료한 토큰의 401 → native 자격증명 접근 1회 → 새 토큰의 200·저장소 일치·유효기간 1시간을 검증했고 기존 job·설정·비밀 입력을 보존했습니다. 자격증명 사용 시의 갱신 결과이며, 접근 없이 주기적으로 미리 발급하거나 키 교체·권한 철회 복구를 검증한 결과는 아닙니다.
 
 - **관측 자동화:** [선택적 진단 실패·DDNS 완료 시한](docs/evidence/automation-failure-boundaries/README.md)을 수정했습니다. 로컬 관측156개 통과·기존 POSIX4개 생략에 이어 같은 main의 Linux 관측160개·DDNS5개 통과·skip0와 Pages 성공을 확인했습니다. [운영 반영](docs/evidence/automation-failure-boundaries/DEPLOYED.md)에서는 두 코드 교체·DDNS 새 자연 회차 한 번과 새 관측 실행기의 Pages39526516518·공개 JSON3개 일치를 확인했습니다.
 

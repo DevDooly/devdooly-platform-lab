@@ -39,6 +39,16 @@ const kafkaSource = 'f7b5567963f9a34a34d5f201fb2ed747bdf7652a';
 
 export const evidenceItems: readonly EvidenceItem[] = [
   {
+    id: 'github-app-natural-renewal', topics: ['delivery'], scope: 'mini-pc', state: 'verified',
+    title: '만료한 GitHub App 토큰의 자동 갱신',
+    description: '기존 토큰의 자연 만료와 401 응답 뒤 Jenkins 네이티브 자격증명 접근 1회로 새 토큰의 200 응답·정확한 저장소·1시간 유효기간을 확인했습니다. 기존 설정과 비공개 입력은 보존했습니다.',
+    boundary: '기본 저장소의 자격증명 접근 시 갱신된 한 주기의 기록입니다. 미리 발급하는 타이머·장기 무중단·개인키 교체·새 빌드 성공을 검증한 결과는 아닙니다.',
+    recordedOn: '2026-10-23',
+    source: `${repo}/blob/main/docs/evidence/github-app-jenkins/natural-expiry-summary.json`,
+    evidence: `${repo}/blob/main/docs/evidence/github-app-jenkins/NATURAL_EXPIRY.md`, evidenceLabel: '자연 만료·401→200·설정 보존 근거',
+    recordLabel: '실제 만료 후 갱신 1회', screen: '#github-app-renewal',
+  },
+  {
     id: 'current-worker-fixture', topics: ['java', 'kafka', 'kubernetes'], scope: 'mini-pc', state: 'verified',
     title: '배포된 worker의 새 입력·파일 확인',
     description: '고정 합성 입력12개를 현재 worker로 처리해 성공7·실패3·중복2·대기0과 새 파일3개를 확인했습니다. 기존 작업8개·객체24개를 보존하고 Kafka commit8→9·lag0과 슬롯 해제를 대조했습니다.',
@@ -53,7 +63,7 @@ export const evidenceItems: readonly EvidenceItem[] = [
     title: '외부 HTTPS의 고정 GET 응답 확인',
     description: 'GitHub hosted runner에서 고정 GET 6개를 한 번씩 수동 조회해 HTTP200·공개 헤더·DTO 계약을 확인했습니다. 응답 소스와 관측 시각은 검사기 소스와 구분해 보존했습니다.',
     boundary: '해당 시점의 읽기 응답 기록입니다. worker 프로세스 생존·POST 차단·장기 가용성·인증서 자연 갱신을 검증한 결과가 아닙니다.',
-    recordedOn: '2026-10-20',
+    recordedOn: '2026-10-23',
     source: `${repo}/blob/46d099d1792f3e93125db7f1ffb2ab3e286abc17/infra/public-https-get/probe.ts`,
     evidence: `${repo}/blob/main/docs/evidence/public-get/README.md`, evidenceLabel: 'GET6 응답·출처·시각 원문',
     recordLabel: '수동 외부 GET 관측',

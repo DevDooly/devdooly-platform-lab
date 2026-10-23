@@ -1,18 +1,19 @@
 # 단계별 작업과 완료 조건
 
-## 현재 우선순위 — 2026-10-21 UTC
+## 현재 우선순위 — 2026-10-23 KST
 
 현재 완료·진행·보류의 기준은 [다음 개발 계획의 최신 안내](NEXT_STEPS.md)입니다. 아래 단계별 체크리스트는 날짜가 다른 실행의 기록이며, 과거의 미완료 표시를 현재 할 일로 다시 실행하지 않습니다.
 
 | 구분 | 현재 확인한 범위 |
 | --- | --- |
+| Jenkins App 인증 | [실제 만료 후 lazy refresh 한 주기](evidence/github-app-jenkins/NATURAL_EXPIRY.md): 기존 토큰 401 → native 접근 1회 → 새 토큰 200·저장소 일치·유효기간 1시간과 기존 job·설정·비밀 입력 보존을 확인했습니다. 선제·주기 발급·키 교체·권한 철회 복구·이번 갱신 뒤 새 전체 CI 실행은 미검증입니다. 공개 화면의 게시 검증과 다음 순서는 [최신 안내](NEXT_STEPS.md)를 따릅니다. |
 | 완료한 격리 검증 | Kafka backlog·offset commit 실패 복구·손상 export 수리·잘못된 메시지 보호·실행 잠금 손실 검증. 특히 [잠금 손실](evidence/runtime-lease-loss/README.md)은 stale `RUNNING / EXPORT`와 실제 종료를 구분합니다. |
 | 완료한 데이터·탐색 구현 | [같은 PostgreSQL의 정상 stop/start](evidence/cloud-catalog-restart/README.md) 뒤 catalog·조회·전체 객체 보존을 확인했습니다. 근거 목록의 검색·필터·6개씩 더 보기는 웹173개 검사·타입·빌드와 같은 main의 Pages·CI, 로컬·공개 화면 확인을 마쳤습니다. |
 | 사례·운영 문서 | [별도 잠금 손실 사례](https://devdooly.github.io/devdooly-platform-lab/cases/runtime-ownership/)의 공개·키보드·모바일 확인을 마쳤습니다. 장애별 판단표와 AI 소유자 검토자료를 정리했으며, 세부 근거와 다음 순서는 [최신 안내](NEXT_STEPS.md)를 따릅니다. |
 | worker·공개 관측 | [PR177의 worker 교체](evidence/worker-image-rollout/README.md)는 main33c5e8c·source6f551a1·image ee713에서 Argo Synced·Healthy·새 Pod Ready를 확인했습니다. API245d61a·웹 image029c는 유지합니다. [후속 GET39521322979](evidence/public-get/README.md)의6개 HTTP200·API245d61a와 별도 공개 UI의 새 worker 소스·시작·heartbeat 관측을 구분합니다. GET artifact 자체는 worker 생존의 증명이 아닙니다. |
 | 자동 게시 | 기존 약30분 timer의 [새 worker 수집·Pages39523423769 게시](evidence/worker-image-rollout/NATURAL_PUBLICATION.md)를 확인했습니다. main6b62821의 build·deploy가 성공했고 공개 관측3개가 artifact 원문과 같았습니다. API245d61a와 runtime6f551a1·원 시각을 구분하며 수동 dispatch·timer 강제 실행은 하지 않았습니다. |
 | 자동화·다음 | [관측·DDNS 코드 두 개](evidence/automation-failure-boundaries/DEPLOYED.md)의 자연 회차·Pages 연결을 확인했습니다. [새 worker의 고정 입력 한 건](evidence/current-worker-fixture/README.md)은12/7/3/2/0·COMPLETED/EXPORTED, 새 객체3개 검증·기존8작업/24객체 보존과 완료된 임시 Job의 선택 정리를 확인했습니다. 원래 자연 주기의 [Pages39532314754](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39532314754) build·deploy·공개 JSON3개 일치와 새9작업 반영도 확인했습니다. [현재 공개 HTTPS 재관측](evidence/public-get/README.md)은 run39533662559에서 지정 GET6개 모두 HTTP200·DTO 검증을 통과했습니다. 실행 결과는 [ID·입력 건수와 전체 ID](evidence/run-selection/README.md)로 구분하도록 수정했고 로컬 화면 확인을 마쳤습니다. [요청·응답 ID 일치](evidence/run-response-identity/README.md) 수정의 로컬209개·타입·빌드와 공개 정상 선택을 확인했습니다. [100개 센서 범례 줄바꿈](evidence/chart-legend-wrap/README.md)도 공개 데스크톱·모바일에서 확인했고, 기본 URL은 reload·실시간 조회 후 정상 폭을 확인했습니다. 첫 조회 실패의 [유한 진단](evidence/initial-read-diagnostics/README.md)은 로컬223개·타입·빌드와 같은 main의 Pages·CI, 공개 정상 첫 조회·실행 선택 확인을 마쳤습니다. 과거 fallback 원인은 여전히 미확인입니다. 이번 후속에서 추가 운영 실행은 하지 않았으며, 실패가 다시 발생하면 유한 진단 정보를 관측합니다. |
-| 보류 | 별도 격리 환경이 없어 K3s·Jenkins 실제 기동 복원을 보류합니다. 자격증명 교체·회전, 자원 예산 정책, [PR102 접수 gate](https://github.com/DevDooly/devdooly-platform-lab/pull/102) 활성화도 보류합니다. 현재 공개 경로의 재부팅·인증서 자연 갱신은 미검증입니다. |
+| 보류 | 별도 격리 환경이 없어 K3s·Jenkins 실제 기동 복원을 보류합니다. Pages 토큰 교체, 자원 예산 정책, [PR102 접수 gate](https://github.com/DevDooly/devdooly-platform-lab/pull/102) 활성화도 보류합니다. 현재 공개 경로의 재부팅·인증서 자연 갱신은 미검증입니다. |
 
 ## 이전 안내 — 2026-10-18 UTC 검증 반영
 

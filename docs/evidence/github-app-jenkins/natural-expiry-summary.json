@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "status": "NATURAL_EXPIRY_REFRESH_VERIFIED",
+  "scope": "canonical-credential-access",
+  "observedAt": "2026-10-23T10:19:30Z",
+  "oldExpiresAt": "2026-10-23T10:18:35Z",
+  "oldHttp": {
+    "status": 401,
+    "at": "2026-10-23T10:19:28Z"
+  },
+  "refresh": {
+    "nativeAccessCount": 1,
+    "tokenChanged": true,
+    "cacheObjectChanged": true
+  },
+  "newHttp": {
+    "status": 200,
+    "at": "2026-10-23T10:19:30Z",
+    "repositoryIdentityMatches": true
+  },
+  "newExpiresAt": "2026-10-23T11:19:30Z",
+  "validitySeconds": 3600,
+  "preservation": {
+    "credentialStoreMembership": true,
+    "jobConfiguration": true,
+    "jobState": true,
+    "privateInputs": true
+  },
+  "operations": {
+    "forcedExpiration": false,
+    "credentialUpdate": false,
+    "statusWrite": false,
+    "build": false,
+    "rawValueOutput": false,
+    "automaticRetry": false
+  }
+}
