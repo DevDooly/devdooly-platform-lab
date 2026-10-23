@@ -1,6 +1,6 @@
 # 현재 범위와 다음 작업
 
-기준: 2026-10-23(KST). 개인 Lab에서 실제 확인한 결과와 남은 작업을 찾는 길잡이입니다. 각 근거는 실행 당시의 범위이며 현재 가용성을 보장하지 않습니다.
+기준: 2026-10-24(KST). 개인 Lab에서 실제 확인한 결과와 남은 작업을 찾는 길잡이입니다. 각 근거는 실행 당시의 범위이며 현재 가용성을 보장하지 않습니다.
 
 [프로젝트 소개](../README.md) · [시작 안내](START_HERE.md) · [상세 진행 기록](NEXT_STEPS.md) · [공개 근거 검색](https://devdooly.github.io/devdooly-platform-lab/#evidence)
 
@@ -8,6 +8,7 @@
 
 | 항목 | 확인한 결과와 범위 |
 | --- | --- |
+| 합성 보존 정책 입력 | [PR233](https://github.com/DevDooly/devdooly-platform-lab/pull/233)에서 준비 전 선택 입력을 잠그고 준비 후 활성화합니다. 정적 사본 재현·회귀 검사, 같은 main의 CI·Pages, 공개 자산 전달과 별도 데스크톱/모바일·키보드 선택 흐름을 확인했습니다. 운영 정책·계산·삭제 기능은 변경하지 않았습니다. [실제 근거](evidence/iceberg-policy-input-readiness/README.md) |
 | Job 관측 입력 | [PR226](https://github.com/DevDooly/devdooly-platform-lab/pull/226)에서 같은 JSON object의 중복 key를 거부하고 직전 검증 객체·원 시각을 보존합니다. 합성 회귀, 같은 main의 CI·Pages와 공개 JS 전달을 확인했습니다. 운영 중복 입력 발생·주입이나 새 브라우저 실행의 증명은 아닙니다. [실제 근거](evidence/job-json-key-uniqueness/README.md) · [근거 PR228](https://github.com/DevDooly/devdooly-platform-lab/pull/228) |
 | AI 예제 입력 | [PR227](https://github.com/DevDooly/devdooly-platform-lab/pull/227)에서 준비 전 두 선택 입력을 잠그고 준비 후 활성화합니다. 측정 기록 로딩과 조작 준비를 분리했으며 로컬·공개 데스크톱/모바일에서 선택과 기대값을 확인했습니다. Java·benchmark·사람 검토 결과는 바꾸지 않았습니다. [실제 근거](evidence/ai-window-input-readiness/README.md) · [근거 PR229](https://github.com/DevDooly/devdooly-platform-lab/pull/229) |
 | Jenkins GitHub App | 실제 토큰 자연 만료 뒤 401 → native 자격증명 접근 1회 → 새 토큰 200·저장소 일치·유효기간 1시간을 확인했습니다. 접근 시의 lazy refresh 한 주기이며 선제 발급·개인키 교체·권한 철회 복구를 검증한 결과는 아닙니다. [자연 만료 근거](evidence/github-app-jenkins/NATURAL_EXPIRY.md) · [공개 카드와 별도 CI 근거](evidence/github-app-jenkins/PUBLICATION.md) |
@@ -22,6 +23,8 @@
 4. **PR #102 접수 gate:** 예산·계량 연결이 미확정이므로 활성화하지 않습니다. [PR #102](https://github.com/DevDooly/devdooly-platform-lab/pull/102)
 
 별도로 **인증서 자연 갱신·현재 공개 경로의 재부팅은 미검증**입니다. [TLS 관측](evidence/tls-certificate/README.md)은 두 시점의 같은 인증서 기록이며 갱신 성공이 아닙니다. AI 예제의 [사람 검토는 PENDING](reviews/ai-window-owner-review.md)으로 유지합니다.
+
+2026-10-23~24 현재 안내의 로컬 연결134회·외부 URL8개 접근과 공개 근거23개 카드의63링크를 점검했습니다. [PR232](https://github.com/DevDooly/devdooly-platform-lab/pull/232)에서는 원래 만료 시험의 `build=false`와 후속 Jenkins153의 상태 전달 기록을 구분했습니다. 링크 점검은 개별 시험 재수행이나 현재 서비스 가용성 검증이 아닙니다.
 
 ## 다음 작업의 우선순위
 
