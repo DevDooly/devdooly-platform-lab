@@ -5,6 +5,7 @@ import type { ObservationRecord, SourceMode } from '../lib/observation';
 import type { LabData, Point, OutcomeStatus } from '../lib/api';
 import snapshot from '../data/snapshot.json';
 import '../styles/api-connection-scope.css';
+import TourStepNavigation from './TourStepNavigation';
 
 const initial = snapshot as LabData;
 const evidenceBase = 'https://github.com/DevDooly/devdooly-platform-lab/blob/main/docs/evidence';
@@ -121,6 +122,7 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
         <div id="chart-panel" role="tabpanel" aria-labelledby="chart-tab" hidden={tab !== 'chart'}><SensorChart key={`${detail.id}-${mode}`} points={detail.series} interactive={interactive}/></div>
         <div id="events-panel" role="tabpanel" aria-labelledby="events-tab" hidden={tab !== 'events'}><div className="event-filters"><label htmlFor="event-filter">처리 상태</label><select id="event-filter" value={filter} disabled={!interactive} onChange={event => setFilter(event.target.value as OutcomeStatus | 'ALL')}><option value="ALL">전체 이벤트</option>{Object.entries(statusLabel).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select><span>{outcomes.length}건 표시</span></div><div className="table-scroll" role="region" tabIndex={0} aria-label="이벤트 상세 표, 좌우 스크롤 가능"><table><caption className="sr-only">입력 순서별 이벤트 처리 결과</caption><thead><tr><th scope="col">순서 / ID</th><th scope="col">센서</th><th scope="col">입력 시간 (UTC)</th><th scope="col">값</th><th scope="col">결과 / 이유</th></tr></thead><tbody>{outcomes.map(row => <tr key={row.sequence}><td><span className="muted">{String(row.sequence).padStart(2, '0')}</span> {row.eventId}</td><td>{row.sensorId}</td><td className="time-cell">{row.eventTime}</td><td>{row.value ?? '—'}</td><td><span className={`result-label ${row.status.toLowerCase()}`}>{statusLabel[row.status]}</span><small>{reasonLabel[row.reason] || row.reason}</small></td></tr>)}</tbody></table>{outcomes.length === 0 && <p className="empty-message">해당 상태의 이벤트가 없습니다.</p>}</div></div>
       </div><aside className="run-aside"><div className="aside-heading"><span className="eyebrow">WHY THESE RESULTS</span><h3>건수보다,<br/>처리한 이유까지.</h3></div><div className="reason-item"><span>01</span><div><h4>중복은 한 번만</h4><p>같은 이벤트 ID가 다시 들어와도 중복으로 분리합니다.</p></div></div><div className="reason-item"><span>02</span><div><h4>시간의 순서 확인</h4><p>잘못된 시간 형식과 센서별 과거 이벤트를 검증합니다.</p></div></div><div className="reason-item"><span>03</span><div><h4>실패도 결과에 남기기</h4><p>범위를 벗어난 값을 실패 사유와 함께 조회합니다.</p></div></div><div className="run-metadata"><p id="selected-run-id"><span>선택한 실행 ID</span><strong>{detail.id}</strong></p><p><span>실행 시작</span><strong>{formatTime(detail.startedAt)}</strong></p><p><span>실행 완료</span><strong>{formatTime(detail.completedAt)}</strong></p><p><span>결과 관측</span><strong>{formatTime(detail.observedAt)}</strong></p></div><p className="small-note">회사 데이터·코드를 사용하지 않는 개인 공개 예제입니다.</p></aside></div>
+      <TourStepNavigation step={1}/>
     </section>
     <section id="platform" className="section platform-section" aria-labelledby="platform-title"><div className="section-heading"><div><span className="eyebrow">03 / FROM SOURCE TO SERVICE</span><h2 id="platform-title">배포도 설명할 수 있도록.</h2><p>미니 PC의 검증 기록과 조회 API의 관측 상태를 함께 확인합니다.</p></div><span className="section-mark">[ OBSERVABILITY ]</span></div>
       <div className="deployment-flow" aria-label="빌드·이미지 게시·배포 도구의 역할"><span><b>01</b> Git commit</span><i>→</i><span><b>02</b> CI · Jenkins / Actions</span><i>→</i><span><b>03</b> GHCR image digest</span><i>→</i><span><b>04</b> GitOps + Helm</span><i>→</i><span><b>05</b> Argo CD / K3s</span></div>
@@ -134,6 +136,7 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
       <div className="release-strip"><div><span className="eyebrow">RUNTIME INFORMATION</span><strong>{data.releases.length ? mode === 'recorded' ? '수집 당시 API 런타임' : '현재 API 런타임' : '자동 관측 이력 연결 전'}</strong></div>{data.releases.length ? data.releases.map((release, index) => <div key={`${release.service}-${index}`} className="release-meta"><span>{release.service} / v{release.version}</span><code>{release.sourceCommit === 'unknown' ? '소스 commit 미주입' : release.sourceCommit.slice(0, 12)}</code><small>{release.deploymentStatus === 'LOCAL_RUNTIME' ? '로컬 실행 정보 · CI/CD 이력 연결 전' : release.deploymentStatus === 'RUNTIME_ONLY' ? 'API 런타임 정보 · CI/CD 이력 연결 전' : release.deploymentStatus}</small><small>{release.imageDigest ? `이미지 ${release.imageDigest}` : '이미지 digest 미관측'}</small></div>) : <p>실제 설치·빌드 기록은 위 문서에서 확인할 수 있습니다. 이 영역에는 API가 수집한 런타임 정보를 표시합니다.</p>}<span className="tag">공개 실행 비활성</span></div>
         </div>
       </details>
+      <TourStepNavigation step={3}/>
     </section>
   </>;
 }

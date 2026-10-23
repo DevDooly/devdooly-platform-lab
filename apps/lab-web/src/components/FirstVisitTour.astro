@@ -1,0 +1,25 @@
+---
+import { firstVisitTourSteps } from '../data/first-visit-tour';
+import '../styles/first-visit-tour.css';
+---
+<section id="tour" class="section first-visit-tour" aria-labelledby="tour-title">
+  <div class="tour-heading">
+    <span class="eyebrow">START HERE / FIVE STEPS</span>
+    <h2 id="tour-title">처음이라면, 이 순서로 둘러보세요.</h2>
+    <p>처리 결과에서 배포와 개선의 근거까지, 다섯 화면을 차례로 살펴봅니다.</p>
+  </div>
+  <p class="tour-reading-note">화면의 출처와 관측 시각을 먼저 확인해주세요. 저장된 시험 기록과 현재 API 조회를 구분해 읽습니다.</p>
+  <ol class="tour-steps" role="list" aria-label="다섯 단계 관람 순서">
+    {firstVisitTourSteps.map(step => <li class="tour-step">
+      <div class="tour-step-heading"><span class="tour-order">{String(step.number).padStart(2, '0')} / 05</span><h3>{step.title}</h3></div>
+      <p class="tour-action">{step.action}</p>
+      <div class="tour-step-links">
+        <a class="tour-screen-link" href={step.target} aria-label={`${step.number}단계 ${step.title} 화면 보기`}>화면 보기 <span aria-hidden="true">↓</span></a>
+        <ul class="tour-evidence-links" aria-label={`${step.title} 개별 검증 근거`}>
+          {step.evidence.map(link => <li><a href={link.href} target="_blank" rel="noreferrer">{link.label} <span aria-hidden="true">↗</span><span class="sr-only"> 새 창</span></a></li>)}
+        </ul>
+      </div>
+    </li>)}
+  </ol>
+  <p class="tour-boundary">AI 예제의 사람 검토는 <strong>PENDING</strong>입니다. 둘러보기는 새 Java·JMH 실행이나 운영 자료 삭제를 수행하지 않습니다. 각 기록의 실행 시점과 검증 범위는 개별 근거에서 확인합니다.</p>
+</section>
