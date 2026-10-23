@@ -3,6 +3,7 @@ import { createServer } from 'node:http';
 import { test } from 'node:test';
 import { JOB_HEARTBEAT_STALE_AFTER_MS, JOB_RECORD_STALE_AFTER_MS, MAX_JOB_OBSERVATION_BYTES, jobObservationView, loadJobObservation, validateJobObservation } from '../src/lib/job-observation.ts';
 import type { JobObservation, JobObservationRecord } from '../src/lib/job-observation.ts';
+import { parseJobObservationJson } from '../src/lib/job-observation-json.ts';
 import { boundedObservationText } from '../src/lib/observation-response-body.ts';
 
 // Test-only DTOs. These are never published or used as a successful UI fallback.
@@ -254,6 +255,81 @@ test('loader keeps last good fields and original capture time across HTTP/networ
     assert.equal(result.record!.capturedAt, previous.capturedAt); assert.equal(JSON.stringify(result).includes('private'), false);
   }
 });
+
+test('job unique keys reject identical conflicting and escaped duplicates without replacing validated memory', async () => {
+  const incoming = record(); incoming.jobs = [completed()];
+  const previous = structuredClone(incoming); previous.capturedAt = '2026-10-15T10:00:00.123456788Z';
+  const before = JSON.stringify(previous); freezeEvidence(previous);
+  const raw = JSON.stringify(incoming);
+  const duplicates = [
+    raw.replace('"kind":"job-observation"', '"kind":"job-observation","kind":"job-observation"'),
+    raw.replace('"publicExecutionEnabled":false', '"publicExecutionEnabled":true,"publicExecutionEnabled":false'),
+    raw.replace('"publicExecutionEnabled":false', '"publicExecutionEnabled":true,"\\u0070ublicExecutionEnabled":false'),
+    raw.replace('"sourceCommit":', '"sourceCommit":"PRIVATE_DUPLICATE_CANARY","sourceCommit":'),
+    raw.replace('"status":"NOT_STARTED"', '"status":"RUNNING","\\u0073tatus":"NOT_STARTED"'),
+    raw.replace('"occupiedRunId":null', '"occupiedRunId":null,"occupiedRunId":null'),
+    raw.replace('"input":12', '"input":13,"\\u0069nput":12'),
+    raw.replace('"size":4500', '"size":0,"\\u0073ize":4500'),
+  ];
+  for (const text of duplicates) {
+    assert.notEqual(text, raw); assert.deepEqual(JSON.parse(text), incoming);
+    for (const cached of [null, previous]) {
+      const result = await loadJobObservation({ url: '/jobs', previousRecord: cached, fetcher: async () => new Response(text) });
+      assert.equal(result.browserError, 'INVALID_RECORD'); assert.equal(result.record, cached);
+      assert.equal(result.retainedPrevious, cached !== null);
+      assert.equal(result.record?.capturedAt, cached?.capturedAt);
+      assert.ok(!JSON.stringify(result).includes('PRIVATE_DUPLICATE_CANARY'));
+    }
+  }
+  assert.equal(JSON.stringify(previous), before);
+});
+
+test('job unique keys allow one escaped key and repeated names in separate array objects and file records', async () => {
+  const incoming = exportedAndCancelled();
+  const text = JSON.stringify(incoming).replace('"input":12', '"\\u0069nput":12').replace('"kind":"job-observation"', '"kind":"\\u006aob-observation"');
+  assert.deepEqual(JSON.parse(text), incoming);
+  const result = await loadJobObservation({ url: '/jobs', fetcher: async () => new Response(text) });
+  assert.equal(result.browserError, null); assert.deepEqual(result.record, incoming);
+  assert.equal(result.retainedPrevious, false);
+});
+
+test('job unique keys keep native syntax rejection and deeply nested invalid records out of memory', async () => {
+  const previous = record();
+  for (const text of ['{"kind":"job-observation",}', '{"kind":"unterminated}', '{"key":"bad\\xescape"}',
+    '['.repeat(20_000) + '0' + ']'.repeat(20_000), '{"nested":'.repeat(10_000) + '0' + '}'.repeat(10_000)]) {
+    assert.ok(Buffer.byteLength(text) <= MAX_JOB_OBSERVATION_BYTES);
+    const result = await loadJobObservation({ url: '/jobs', previousRecord: previous, fetcher: async () => new Response(text) });
+    assert.equal(result.browserError, 'INVALID_RECORD'); assert.equal(result.record, previous);
+    assert.equal(result.retainedPrevious, true); assert.equal(result.record?.capturedAt, previous.capturedAt);
+  }
+});
+
+test('job unique keys scan decoded object keys without reading fake keys inside string values', () => {
+  const text = JSON.stringify({ text: 'fake: {"key":1,"key":2}, ["key"], \\ "quoted"',
+    rows: [{ key: 1 }, { key: 2 }], nested: { key: 3 } });
+  assert.deepEqual(parseJobObservationJson(text), JSON.parse(text));
+  assert.deepEqual(parseJobObservationJson('{"\\u006bey" \t\r\n :1}'), { key: 1 });
+  for (const duplicate of ['{"key":1,"key":1}', '{"key":1,"\\u006bey":2}', '{"":1,"":2}',
+    '{"__proto__":1,"\\u005f_proto__":2}', '{"rows":[{"key":1,"\\u006bey":2}]}']) {
+    assert.throws(() => parseJobObservationJson(duplicate), { message: 'INVALID_RECORD' });
+  }
+});
+
+test('job unique keys scan deep valid JSON and reject a deep duplicate without recursive traversal', () => {
+  const depth = 10_000;
+  const arrays = '['.repeat(depth) + '0' + ']'.repeat(depth);
+  let array: unknown = parseJobObservationJson(arrays);
+  for (let index = 0; index < depth; index++) { assert.ok(Array.isArray(array)); array = array[0]; }
+  assert.equal(array, 0);
+  const prefix = '{"nested":'.repeat(depth); const suffix = '}'.repeat(depth);
+  let object = parseJobObservationJson(prefix + '0' + suffix);
+  for (let index = 0; index < depth; index++) { assert.ok(object && typeof object === 'object'); object = (object as { nested: unknown }).nested; }
+  assert.equal(object, 0);
+  const duplicate = prefix + '{"key":1,"\\u006bey":1}' + suffix;
+  assert.ok(Buffer.byteLength(duplicate) < MAX_JOB_OBSERVATION_BYTES);
+  assert.throws(() => parseJobObservationJson(duplicate), { message: 'INVALID_RECORD' });
+});
+
 test('missing/aborted first lookup remains unobserved and a regressed response cannot replace last good record', async () => {
   const controller = new AbortController(); controller.abort();
   const aborted = await loadJobObservation({ url: '/jobs', signal: controller.signal, fetcher: async () => { throw new Error('aborted'); } });

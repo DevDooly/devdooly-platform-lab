@@ -1,4 +1,5 @@
 import { boundedObservationText, discardObservationBody, InvalidObservationBody } from './observation-response-body.ts';
+import { parseJobObservationJson } from './job-observation-json.ts';
 /** Separate, strict job observation v1. No storage addresses, keys, inputs or free-form errors. */
 export const JOB_RECORD_STALE_AFTER_MS = 2 * 60 * 60 * 1000;
 export const JOB_HEARTBEAT_STALE_AFTER_MS = 5 * 60 * 1000;
@@ -143,7 +144,7 @@ export async function loadJobObservation(options: { url: string; previousRecord?
       return failed(response.status === 404 ? 'NOT_CONFIGURED' : 'HTTP_ERROR');
     }
     const text = await boundedObservationText(response, MAX_JOB_OBSERVATION_BYTES);
-    let record: unknown; try { record = JSON.parse(text); } catch { return failed('INVALID_RECORD'); }
+    let record: unknown; try { record = parseJobObservationJson(text); } catch { return failed('INVALID_RECORD'); }
     if (!validateJobObservation(record)) return failed('INVALID_RECORD');
     if (previous && utcNs(record.capturedAt)! < utcNs(previous.capturedAt)!) return failed('OLDER_RECORD');
     if (previous && utcNs(record.capturedAt) === utcNs(previous.capturedAt)) {
