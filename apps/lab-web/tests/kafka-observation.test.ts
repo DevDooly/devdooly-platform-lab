@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { createServer } from 'node:http';
 import { mkdtempSync, readFileSync, rmSync, rmdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -118,6 +119,72 @@ test('failed refresh preserves only the current page memory record and its origi
   }
   const absent = await loadKafkaObservation({ url, nowMs: now, fetcher: fetcher('', 404) });
   assert.equal(absent.record, null); assert.equal(absent.retainedPrevious, false);
+});
+
+test('Kafka body transport failures keep network errors for initial and partially received records', async () => {
+  for (const previous of [sample(), null]) {
+    for (const partial of [false, true]) {
+      const result = await loadKafkaObservation({ url, previousRecord: previous, nowMs: now,
+        fetcher: async () => new Response(new ReadableStream<Uint8Array>({
+          start(controller) {
+            if (partial) controller.enqueue(new TextEncoder().encode('{"schemaVersion":1,'));
+          },
+          pull(controller) { controller.error(new TypeError('PRIVATE_BODY_TRANSPORT_FAILURE')); },
+        }, { highWaterMark: 0 })) });
+      assert.equal(result.browserError, 'NETWORK_ERROR'); assert.equal(result.record, previous);
+      assert.equal(result.retainedPrevious, previous !== null);
+      assert.equal(result.record?.capturedAt, previous?.capturedAt);
+      assert.ok(!encoded(result).includes('PRIVATE_BODY_TRANSPORT_FAILURE'));
+    }
+  }
+});
+
+test('Kafka body abort remains the priority over transport and invalid-body failures', async () => {
+  const previous = sample();
+  for (const oversize of [false, true]) {
+    const request = new AbortController();
+    const result = await loadKafkaObservation({ url, previousRecord: previous, nowMs: now, signal: request.signal,
+      fetcher: async () => new Response(new ReadableStream<Uint8Array>({
+        pull(controller) {
+          request.abort();
+          if (oversize) controller.enqueue(new Uint8Array(MAX_KAFKA_OBSERVATION_BYTES + 1));
+          else controller.error(new TypeError('PRIVATE_ABORTED_BODY_FAILURE'));
+        },
+      }, { highWaterMark: 0 })) });
+    assert.equal(result.browserError, 'ABORTED'); assert.equal(result.record, previous);
+    assert.equal(result.retainedPrevious, true); assert.equal(result.record?.capturedAt, previous.capturedAt);
+    assert.ok(!encoded(result).includes('PRIVATE_ABORTED_BODY_FAILURE'));
+  }
+});
+
+test('Kafka body interruption after real loopback HTTP headers remains a network error', { timeout: 5000 }, async () => {
+  const previous = sample(); let requests = 0; let headersReceived = false; let interrupt: (() => void) | undefined;
+  const server = createServer((request, response) => {
+    requests++;
+    assert.equal(request.url, url); assert.equal(request.method, 'GET');
+    assert.equal(request.headers.authorization, undefined); assert.equal(request.headers.cookie, undefined);
+    response.writeHead(200, { 'Content-Type': 'application/json', 'Content-Length': '1000' });
+    response.flushHeaders(); response.write('{"schemaVersion":1,');
+    interrupt = () => response.destroy();
+  });
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+  try {
+    const address = server.address(); assert.ok(address && typeof address !== 'string');
+    const result = await loadKafkaObservation({ url, previousRecord: previous, nowMs: now,
+      fetcher: async (input, options) => {
+        assert.equal(input, url);
+        const response = await fetch(`http://127.0.0.1:${address.port}${url}`, options);
+        assert.equal(response.status, 200); headersReceived = true;
+        setImmediate(() => interrupt!());
+        return response;
+      } });
+    assert.equal(headersReceived, true); assert.equal(requests, 1);
+    assert.equal(result.browserError, 'NETWORK_ERROR'); assert.equal(result.record, previous);
+    assert.equal(result.retainedPrevious, true); assert.equal(result.record?.capturedAt, previous.capturedAt);
+  } finally {
+    server.closeAllConnections();
+    await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+  }
 });
 
 test('new targets and older timestamps do not replace memory; isolated publication is a separate explicit policy', async () => {

@@ -1,5 +1,5 @@
 import { publicReadUrl } from './public-api-base.ts';
-import { boundedObservationText, discardObservationBody } from './observation-response-body.ts';
+import { boundedObservationText, discardObservationBody, InvalidObservationBody } from './observation-response-body.ts';
 /** Kafka public v1: bounded source reader before parsing, no private identities or controls. */
 export const MAX_KAFKA_OBSERVATION_BYTES = 8 * 1024;
 export const KAFKA_STALE_AFTER_MS = 2 * 60 * 60 * 1000;
@@ -123,7 +123,8 @@ export async function loadKafkaObservation(options: { url: string; previousRecor
   }
   let text: string;
   try { text = await boundedObservationText(response, MAX_KAFKA_OBSERVATION_BYTES); }
-  catch { return failed(options.signal?.aborted ? 'ABORTED' : 'INVALID_RECORD'); }
+  catch (error) { return failed(options.signal?.aborted ? 'ABORTED'
+    : error instanceof InvalidObservationBody ? 'INVALID_RECORD' : 'NETWORK_ERROR'); }
   if (!response.ok) {
     const code = parseKafkaObservationError(text);
     if (code && (response.status === 503 || response.status === 400 && code === 'INVALID_CONFIGURATION')) return failed(code);
