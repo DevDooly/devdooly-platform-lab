@@ -23,7 +23,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 - **수집기 완료 경계:** [응답 완료 시한·OS 잠금](docs/evidence/collector-completion-boundaries/README.md)의 Linux173개·SIGKILL 후 동일 inode 재획득을 확인하고, [collector 한 파일의 운영 교체](docs/evidence/collector-completion-boundaries/DEPLOYED.md)를 20:17:53(KST)에 마쳤습니다. 이어 [20:41 자연 수집·Pages39947822996](docs/evidence/collector-completion-boundaries/NATURAL_PUBLICATION.md)에서 새 코드 pin·수집 시각·같은 run의 build/deploy와 공개 JSON3개·artifact 전체 bytes 일치를 확인했습니다. 이는 자연 회차 한 번의 결과이며 운영 SIGKILL 복구·장기 가용성 검증과 구분합니다.
 
-- **브라우저 관측 보호:** [응답 순서·내용 충돌·본문 크기](docs/evidence/browser-observation-protection/README.md)를 보완했습니다. 플랫폼의 최신 시도·성공은 각각 유지하고, 플랫폼·작업의 같은 시각에 다른 내용은 거부하며 플랫폼 본문은 읽는 중16KiB 상한을 적용합니다. 검증을 통과한 두 작업 DTO 사이의 UTC 동등 표기 오거절도 교정했습니다. 최신 로컬 웹251개·생략0·타입49파일 진단0·프로젝트 경로2페이지 빌드를 통과했습니다. 기존247개까지의 Linux CI·main Pages·공개 정상 재조회 근거는 보존하며 이번 UTC 수정의 CI·공개 반영은 대기 중입니다. 서버 상태나 장기 가용성을 보장하는 기능은 아닙니다.
+- **브라우저 관측 보호:** [응답 순서·내용 충돌·본문 크기](docs/evidence/browser-observation-protection/README.md)를 보완했습니다. 플랫폼의 최신 시도·성공은 각각 유지하고, 플랫폼·작업의 같은 시각에 다른 내용은 거부하며 플랫폼 본문은 읽는 중16KiB 상한을 적용합니다. 검증을 통과한 두 작업 DTO 사이의 UTC 동등 표기 오거절도 교정했습니다. 로컬과 같은 main의 Linux에서 웹251개·생략0·타입49파일 진단0·2페이지 빌드를 통과했고, Pages 게시와 공개 HTML의 새 작업 카드 참조·JS 전체 bytes 일치도 확인했습니다. 기존247개까지의 공개 정상 재조회 근거는 보존합니다. 서버 상태나 장기 가용성을 보장하는 기능은 아닙니다.
 
 - **작업 수집기 완료 시한:** [read·close 뒤 시한 검사](docs/evidence/job-response-deadline/README.md)의 Linux179개·skip0에 이어 [21:18:16(KST) 코드 한 파일 교체](docs/evidence/job-response-deadline/DEPLOYED.md)와 별도 사후 점검을 마쳤습니다. [21:42 자연 회차](docs/evidence/job-response-deadline/NATURAL_PUBLICATION.md)의 새 job 수집과 Pages39955401692 attempt1 build·deploy, 공개 JSON3개·artifact 전체 bytes 일치까지 확인했습니다. 한 회차의 결과이며 전체 처리 시한·장기 가용성 검증과 구분합니다.
 
