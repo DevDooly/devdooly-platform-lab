@@ -108,11 +108,45 @@ export function validatePlatformObservation(document: unknown): document is Plat
     || utcNanoseconds(document.lastSuccess.capturedAt)! <= utcNanoseconds(attempt.attemptedAt)!);
 }
 
-export type BrowserObservationError = 'NOT_PUBLISHED' | 'HTTP_ERROR' | 'NETWORK_ERROR' | 'INVALID_RECORD' | 'ABORTED';
+export type BrowserObservationError = 'NOT_PUBLISHED' | 'HTTP_ERROR' | 'NETWORK_ERROR' | 'INVALID_RECORD' | 'ABORTED' | 'OLDER_RECORD' | 'CONFLICTING_RECORD';
 export interface PlatformObservationLoad {
   record: PlatformObservationRecord | null;
   browserError: BrowserObservationError | null;
   retainedPrevious: boolean;
+}
+
+/** JSON object key order is not evidence of a different capture. Array order remains significant. */
+function sameContent(left: unknown, right: unknown): boolean {
+  if (left === right) return true;
+  if (Array.isArray(left) || Array.isArray(right)) return Array.isArray(left) && Array.isArray(right)
+    && left.length === right.length && left.every((item, index) => sameContent(item, right[index]));
+  if (!object(left) || !object(right)) return false;
+  const keys = Object.keys(left);
+  return keys.length === Object.keys(right).length && keys.every(key => Object.hasOwn(right, key) && sameContent(left[key], right[key]));
+}
+
+/** Match Pages publication: independently retain the latest attempt and latest success from validated records. */
+function mergePlatformRecords(previous: PlatformObservationRecord | null, incoming: PlatformObservationRecord): PlatformObservationLoad {
+  if (!previous) return { record: incoming, browserError: null, retainedPrevious: false };
+  const failed = (browserError: BrowserObservationError): PlatformObservationLoad => ({ record: previous, browserError, retainedPrevious: true });
+  const beforeAttempt = utcNanoseconds(previous.latestAttempt.attemptedAt)!;
+  const afterAttempt = utcNanoseconds(incoming.latestAttempt.attemptedAt)!;
+  const beforeSuccess = previous.lastSuccess ? utcNanoseconds(previous.lastSuccess.capturedAt)! : null;
+  const afterSuccess = incoming.lastSuccess ? utcNanoseconds(incoming.lastSuccess.capturedAt)! : null;
+  if (afterAttempt === beforeAttempt && !sameContent(previous.latestAttempt, incoming.latestAttempt)
+    || beforeSuccess !== null && afterSuccess === beforeSuccess && !sameContent(previous.lastSuccess, incoming.lastSuccess)) {
+    return failed('CONFLICTING_RECORD');
+  }
+  const newerSuccess = afterSuccess !== null && (beforeSuccess === null || afterSuccess > beforeSuccess);
+  const keepAttempt = afterAttempt < beforeAttempt;
+  const keepSuccess = beforeSuccess !== null && (afterSuccess === null || afterSuccess < beforeSuccess);
+  if (afterAttempt <= beforeAttempt && !newerSuccess) {
+    if (keepAttempt || keepSuccess) return failed('OLDER_RECORD');
+    return { record: previous, browserError: null, retainedPrevious: false };
+  }
+  if (!keepAttempt && !keepSuccess) return { record: incoming, browserError: null, retainedPrevious: false };
+  return { record: { ...incoming, latestAttempt: keepAttempt ? previous.latestAttempt : incoming.latestAttempt,
+    lastSuccess: keepSuccess ? previous.lastSuccess : incoming.lastSuccess }, browserError: null, retainedPrevious: true };
 }
 
 /** Failed browser fetches keep an already validated record; collector failures are valid payloads. */
@@ -129,7 +163,7 @@ export async function loadPlatformObservation(options: {
     let payload: unknown;
     try { payload = JSON.parse(text); } catch { return failed('INVALID_RECORD'); }
     if (!validatePlatformObservation(payload)) return failed('INVALID_RECORD');
-    return { record: payload, browserError: null, retainedPrevious: false };
+    return mergePlatformRecords(previous, payload);
   } catch {
     return failed(options.signal?.aborted ? 'ABORTED' : 'NETWORK_ERROR');
   }

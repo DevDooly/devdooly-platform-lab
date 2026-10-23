@@ -24,6 +24,134 @@ function observation(): PlatformObservationRecord {
   };
 }
 
+function successAt(at: string): PlatformObservationRecord {
+  const record = observation();
+  record.latestAttempt.attemptedAt = at;
+  record.lastSuccess!.capturedAt = at;
+  return record;
+}
+function failureAt(at: string, success: string | null): PlatformObservationRecord {
+  const record = successAt(success || '2026-10-12T01:00:00Z');
+  record.latestAttempt = { attemptedAt: at, status: 'failure', errorCode: 'TIMEOUT' };
+  if (success === null) record.lastSuccess = null;
+  return record;
+}
+function freezeRecord(value: unknown): void {
+  if (value && typeof value === 'object') { Object.values(value).forEach(freezeRecord); Object.freeze(value); }
+}
+async function loadSynthetic(incoming: PlatformObservationRecord, previous: PlatformObservationRecord | null) {
+  assert.equal(validatePlatformObservation(incoming), true);
+  if (previous) assert.equal(validatePlatformObservation(previous), true);
+  const before = structuredClone(previous); const untouchedIncoming = structuredClone(incoming);
+  freezeRecord(previous); freezeRecord(incoming);
+  const result = await loadPlatformObservation({ url: '/synthetic-platform-record', previousRecord: previous,
+    fetcher: async () => new Response(JSON.stringify(incoming)) });
+  assert.deepEqual(previous, before); assert.deepEqual(incoming, untouchedIncoming);
+  if (result.record) assert.equal(validatePlatformObservation(result.record), true);
+  return result;
+}
+
+test('platform merge preserves the previous object when an incoming success is one nanosecond older', async () => {
+  const previous = successAt('2026-10-12T01:00:00.123456789Z');
+  const incoming = successAt('2026-10-12T01:00:00.123456788Z');
+  const result = await loadSynthetic(incoming, previous);
+  assert.equal(result.browserError, 'OLDER_RECORD'); assert.equal(result.record, previous);
+  assert.equal(result.retainedPrevious, true);
+});
+
+test('platform merge keeps a newer failure attempt and the previously read newer success independently', async () => {
+  const previous = successAt('2026-10-12T01:00:00.123456789Z');
+  const incoming = failureAt('2026-10-12T01:02:00Z', '2026-10-12T01:00:00.123456788Z');
+  const result = await loadSynthetic(incoming, previous);
+  assert.equal(result.browserError, null); assert.equal(result.retainedPrevious, true);
+  assert.deepEqual(result.record!.latestAttempt, incoming.latestAttempt);
+  assert.equal(result.record!.lastSuccess, previous.lastSuccess);
+  assert.notEqual(result.record, previous);
+});
+
+test('platform merge lets a delayed success improve lastSuccess without erasing a newer failure', async () => {
+  const previous = failureAt('2026-10-12T01:03:00Z', '2026-10-12T01:00:00Z');
+  const incoming = successAt('2026-10-12T01:02:00.123456789Z');
+  const result = await loadSynthetic(incoming, previous);
+  assert.equal(result.browserError, null); assert.equal(result.retainedPrevious, true);
+  assert.equal(result.record!.latestAttempt, previous.latestAttempt);
+  assert.deepEqual(result.record!.lastSuccess, incoming.lastSuccess);
+  assert.equal(platformObservationView(result.record, Date.parse('2026-10-12T01:04:00Z')).collectorFailed, true);
+});
+
+test('platform merge rejects equal-time attempt or success conflicts without partially replacing prior evidence', async () => {
+  const previous = observation();
+  const changedAttempt = structuredClone(previous);
+  changedAttempt.latestAttempt = { attemptedAt: previous.latestAttempt.attemptedAt, status: 'failure', errorCode: 'TIMEOUT' };
+  const changedSuccess = structuredClone(previous); changedSuccess.lastSuccess!.argo.health = 'Degraded';
+  const newerAttemptWithConflictingSuccess = failureAt('2026-10-12T01:02:00Z', previous.lastSuccess!.capturedAt);
+  newerAttemptWithConflictingSuccess.lastSuccess!.argo.health = 'Degraded';
+  for (const incoming of [changedAttempt, changedSuccess, newerAttemptWithConflictingSuccess]) {
+    const result = await loadSynthetic(incoming, previous);
+    assert.equal(result.browserError, 'CONFLICTING_RECORD'); assert.equal(result.record, previous);
+    assert.equal(result.retainedPrevious, true);
+  }
+});
+
+test('platform merge treats identical records with different object key order as a normal reread', async () => {
+  function reverseKeys(value: unknown): unknown {
+    if (Array.isArray(value)) return value.map(reverseKeys);
+    if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).reverse().map(([key, item]) => [key, reverseKeys(item)]));
+    return value;
+  }
+  const previous = observation();
+  for (const incoming of [structuredClone(previous), reverseKeys(previous) as PlatformObservationRecord]) {
+    const result = await loadSynthetic(incoming, previous);
+    assert.equal(result.browserError, null); assert.equal(result.record, previous);
+    assert.equal(result.retainedPrevious, false);
+  }
+});
+
+test('platform merge accepts complete newer success and failure records without marking a partial merge', async () => {
+  const previous = observation();
+  const nextSuccess = successAt('2026-10-12T01:02:00Z');
+  const nextFailure = failureAt('2026-10-12T01:02:00Z', previous.lastSuccess!.capturedAt);
+  for (const incoming of [nextSuccess, nextFailure]) {
+    const result = await loadSynthetic(incoming, previous);
+    assert.equal(result.browserError, null); assert.deepEqual(result.record, incoming);
+    assert.equal(result.retainedPrevious, false);
+  }
+});
+
+test('platform merge does not erase the known success when a newer failure has no lastSuccess', async () => {
+  const previous = observation();
+  const incoming = failureAt('2026-10-12T01:02:00Z', null);
+  const result = await loadSynthetic(incoming, previous);
+  assert.equal(result.browserError, null); assert.equal(result.retainedPrevious, true);
+  assert.deepEqual(result.record!.latestAttempt, incoming.latestAttempt);
+  assert.equal(result.record!.lastSuccess, previous.lastSuccess);
+});
+
+test('platform merge accepts the first success or failure without inventing prior success', async () => {
+  for (const incoming of [observation(), failureAt('2026-10-12T01:02:00Z', null)]) {
+    const result = await loadSynthetic(incoming, null);
+    assert.equal(result.browserError, null); assert.equal(result.retainedPrevious, false);
+    assert.deepEqual(result.record, incoming);
+  }
+});
+
+test('platform merge retains a newer first failure while a delayed success fills its absent lastSuccess', async () => {
+  const previous = failureAt('2026-10-12T01:03:00Z', null);
+  const result = await loadSynthetic(successAt('2026-10-12T01:02:00Z'), previous);
+  assert.equal(result.browserError, null); assert.equal(result.retainedPrevious, true);
+  assert.equal(result.record!.latestAttempt, previous.latestAttempt);
+  assert.equal(result.record!.lastSuccess!.capturedAt, '2026-10-12T01:02:00Z');
+});
+
+test('platform merge rejects an older non-improving failure and preserves original source and times', async () => {
+  const previous = failureAt('2026-10-12T01:03:00Z', '2026-10-12T01:02:00Z');
+  const result = await loadSynthetic(failureAt('2026-10-12T01:02:30Z', '2026-10-12T01:00:00Z'), previous);
+  assert.equal(result.browserError, 'OLDER_RECORD'); assert.equal(result.record, previous);
+  assert.equal(result.retainedPrevious, true);
+  assert.equal(result.record!.lastSuccess!.mainCommit, previous.lastSuccess!.mainCommit);
+  assert.equal(result.record!.lastSuccess!.deploymentSourceCommit, previous.lastSuccess!.deploymentSourceCommit);
+});
+
 test('accepts separate main, Jenkins, GitOps and deployed source evidence without collapsing rollback SHAs', () => {
   const record = observation();
   assert.equal(validatePlatformObservation(record), true);
