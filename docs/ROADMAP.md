@@ -2,11 +2,11 @@
 
 ## 현재 우선순위 — 2026-10-23 KST
 
-현재 완료·진행·보류의 기준은 [다음 개발 계획의 최신 안내](NEXT_STEPS.md)입니다. 아래 단계별 체크리스트는 날짜가 다른 실행의 기록이며, 과거의 미완료 표시를 현재 할 일로 다시 실행하지 않습니다.
+현재 완료·보류와 이어갈 순서는 [현재 범위·다음 작업](AUTONOMOUS_WORK.md)을, 실행별 이력은 [다음 개발 계획](NEXT_STEPS.md)을 따릅니다. 아래 단계별 체크리스트는 날짜가 다른 실행의 기록이며, 과거의 미완료 표시를 현재 할 일로 다시 실행하지 않습니다.
 
 | 구분 | 현재 확인한 범위 |
 | --- | --- |
-| Jenkins App 인증 | [실제 만료 후 lazy refresh 한 주기](evidence/github-app-jenkins/NATURAL_EXPIRY.md): 기존 토큰 401 → native 접근 1회 → 새 토큰 200·저장소 일치·유효기간 1시간과 기존 job·설정·비밀 입력 보존을 확인했습니다. 선제·주기 발급·키 교체·권한 철회 복구·이번 갱신 뒤 새 전체 CI 실행은 미검증입니다. 공개 화면의 게시 검증과 다음 순서는 [최신 안내](NEXT_STEPS.md)를 따릅니다. |
+| Jenkins App 인증 | [실제 만료 후 lazy refresh 한 주기](evidence/github-app-jenkins/NATURAL_EXPIRY.md): 기존 토큰 401 → native 접근 1회 → 새 토큰 200·저장소 일치·유효기간 1시간과 기존 job·설정·비밀 입력 보존을 확인했습니다. 선제·주기 발급·키 교체·권한 철회 복구는 미검증입니다. 원래 만료 시험은 빌드를 포함하지 않았으며, 이후 별도 Jenkins153의 App 상태 pending→success와 공개 카드 확인은 [후속 근거](evidence/github-app-jenkins/PUBLICATION.md)로 구분합니다. 상태 전달만으로 전체 CI 단계·산출물을 재검증했다고 보지 않습니다. 다음 순서는 [현재 안내](AUTONOMOUS_WORK.md)를 따릅니다. |
 | 완료한 격리 검증 | Kafka backlog·offset commit 실패 복구·손상 export 수리·잘못된 메시지 보호·실행 잠금 손실 검증. 특히 [잠금 손실](evidence/runtime-lease-loss/README.md)은 stale `RUNNING / EXPORT`와 실제 종료를 구분합니다. |
 | 완료한 데이터·탐색 구현 | [같은 PostgreSQL의 정상 stop/start](evidence/cloud-catalog-restart/README.md) 뒤 catalog·조회·전체 객체 보존을 확인했습니다. 근거 목록의 검색·필터·6개씩 더 보기는 웹173개 검사·타입·빌드와 같은 main의 Pages·CI, 로컬·공개 화면 확인을 마쳤습니다. |
 | 사례·운영 문서 | [별도 잠금 손실 사례](https://devdooly.github.io/devdooly-platform-lab/cases/runtime-ownership/)의 공개·키보드·모바일 확인을 마쳤습니다. 장애별 판단표와 AI 소유자 검토자료를 정리했으며, 세부 근거와 다음 순서는 [최신 안내](NEXT_STEPS.md)를 따릅니다. |
