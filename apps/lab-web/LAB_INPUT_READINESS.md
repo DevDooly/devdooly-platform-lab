@@ -24,4 +24,12 @@ API 주소·응답 계약·관측 기록 선택·실패 처리·배포 설정은
 - 웹 검사 270개 통과·skip 0, Astro 50파일의 오류·경고·힌트 0, 프로젝트 경로 빌드 2페이지 성공. 390px 화면에서 문서 폭·스크롤 폭 모두 375px이며 센서 조작과 차트를 확인했습니다.
 - 다른 세션의 TLS PR221이 반영된 main을 통합한 뒤 웹 273개·skip 0과 2페이지 빌드를 다시 통과했습니다. TLS 변경은 해당 PR의 별도 검증 범위입니다.
 
-공개 게시 검증은 아직 진행 전입니다. 별도 환경 기동 복원·Pages 토큰 교체·예산 정책·PR102는 계속 보류합니다. 미니 PC의 서비스·데이터·이미지 고정값은 변경하지 않습니다.
+## 공개 반영
+
+PR222의 main `532d1ca257e1c4afb9ed02a94d7e56b5c6e12fc5`에서 [Linux CI39965550270](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39965550270)의 verify·public-read-gateway와 [Pages39965550307](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39965550307)의 build·deploy가 성공했습니다. 별도 Spark·S3·Cloud·Iceberg capture 작업은 선택 조건에 따라 생략됐습니다. 병합 전 고정 source `629703d6d008143467ea2e6256897740c616be64`의 [Linux CI39965049316](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39965049316)도 통과했습니다.
+
+2026-10-23 KST, 공개 HTML·Lab JS를 각각 한 번 읽었습니다. 공개 SSR의 컨트롤 17개 모두 disabled·준비 안내·`aria-busy=true`를 확인했습니다. `LabExplorer.DbV1vdPk.js` 32,609바이트가 로컬 빌드와 전체 bytes·SHA256 `4793d7f7e04dc3120ef45a3ff3a0cb795aebd4d52e31dd872bdb6e64886411d4`까지 일치했습니다.
+
+공개 브라우저에서는 준비 완료 뒤 API 조회 중에도 센서 필터가 동작함을 확인했습니다. 이후 실시간 API 연결 상태에서 `sensor-a` 선택·선 1개·포인트 4개, 포인트의 시각·값과 눌림 표시, 실패 3행, Home 키의 차트 탭 선택·초점 이동을 확인했습니다. 390px 화면에서는 `sensor-b`·선 1개·포인트 3개와 문서 폭·스크롤 폭 375px를 확인했습니다. 이는 해당 시점의 화면 동작 확인이며, API 장기 가용성이나 미니 PC 장애 복구 검증은 아닙니다.
+
+별도 환경 기동 복원·Pages 토큰 교체·예산 정책·PR102는 계속 보류합니다. 미니 PC의 서비스·데이터·이미지 고정값은 변경하지 않았습니다.
