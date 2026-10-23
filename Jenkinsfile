@@ -23,9 +23,9 @@ pipeline {
         NPM_CONFIG_CACHE = '/home/jenkins/.cache/npm'
         XDG_CACHE_HOME = '/home/jenkins/.cache'
         ASTRO_TELEMETRY_DISABLED = '1'
-        // Dedicated secret text: this repository's Commit statuses: write only.
+        // Dedicated GitHub App: this repository's Commit statuses read/write only.
         // Do not replace it with a developer's existing CLI/OAuth/registry token.
-        GITHUB_STATUS_CREDENTIAL_ID = 'platform-lab-github-status'
+        GITHUB_STATUS_CREDENTIAL_ID = 'platform-lab-github-app'
     }
     stages {
         stage('Checkout') {
@@ -47,7 +47,7 @@ pipeline {
         stage('Record pending CI') {
             steps {
                 container('node') {
-                    withCredentials([string(credentialsId: env.GITHUB_STATUS_CREDENTIAL_ID, variable: 'GITHUB_STATUS_TOKEN')]) {
+                    withCredentials([usernamePassword(credentialsId: env.GITHUB_STATUS_CREDENTIAL_ID, usernameVariable: 'GITHUB_APP_USERNAME', passwordVariable: 'GITHUB_STATUS_TOKEN')]) {
                         sh label: 'Record pending status for the exact checked-out commit', script: '''#!/bin/sh
 set -eu
 set +x
@@ -134,7 +134,7 @@ test -s artifacts/jenkins/status-pending.json
             steps {
                 container('node') {
                     // Bind only after tests and the required artifacts succeeded.
-                    withCredentials([string(credentialsId: env.GITHUB_STATUS_CREDENTIAL_ID, variable: 'GITHUB_STATUS_TOKEN')]) {
+                    withCredentials([usernamePassword(credentialsId: env.GITHUB_STATUS_CREDENTIAL_ID, usernameVariable: 'GITHUB_APP_USERNAME', passwordVariable: 'GITHUB_STATUS_TOKEN')]) {
                         sh label: 'Confirm tests and artifacts for the exact source SHA', script: '''#!/bin/sh
 set -eu
 set +x
@@ -150,7 +150,7 @@ CI_STATUS=success node infra/scripts/github-commit-status.mjs
             script {
                 if (env.SOURCE_COMMIT) {
                     container('node') {
-                        withCredentials([string(credentialsId: env.GITHUB_STATUS_CREDENTIAL_ID, variable: 'GITHUB_STATUS_TOKEN')]) {
+                        withCredentials([usernamePassword(credentialsId: env.GITHUB_STATUS_CREDENTIAL_ID, usernameVariable: 'GITHUB_APP_USERNAME', passwordVariable: 'GITHUB_STATUS_TOKEN')]) {
                             withEnv(["CI_STATUS=${currentBuild.currentResult == 'ABORTED' ? 'error' : 'failure'}"]) {
                                 sh label: 'Record unsuccessful CI; never publish', script: '''#!/bin/sh
 set -eu

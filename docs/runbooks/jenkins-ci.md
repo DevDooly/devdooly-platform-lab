@@ -2,10 +2,22 @@
 
 미니 PC의 K3s에서 API JUnit 15개와 웹 Node 테스트 13개, 필수 산출물과 SCM 커밋의 일치를 확인했습니다. 현재 전용 credential로 같은 source SHA의 pending·success·failure를 전달하고 Actions 이미지 게시 gate에 연결합니다. 정상 B 배포와 실제 main의 JUnit 실패 차단도 검증했습니다. [agent 실행 근거](../evidence/jenkins-ci/README.md)와 [연결 검증](../evidence/cicd-gate/README.md)을 함께 확인합니다.
 
+## GitHub App 연결 확인 — 2026-10-23 UTC
+
+Jenkins 2.580.1에 `github-branch-source:1986.v801e40614d00`과 필요한 의존성을 선택 설치했습니다. 기존 77개 집합에서 6개 추가·2개 상향으로 총 83개가 되었고, 전체 집합의 core·필수 의존성·존재하는 optional 의존성 최소 버전과 재기동 후 활성 상태를 확인했습니다. 기존 PVC, job 구성, build 150 기록과 PATv2 credential을 보존했습니다. 이전 교정 절차의 전체 플러그인 재구성을 반복한 결과와 구분합니다.
+
+새 credential ID는 `platform-lab-github-app`이며 기존 `platform-lab-github-status`와 별개입니다. App 설치 대상은 개인 Lab 저장소 한 개로 제한하고 Commit statuses 읽기·쓰기와 필수 Metadata 읽기 범위를 사용합니다. 공개 SCM clone 방식은 유지합니다. 개인키는 Jenkins credential에 암호화 저장하며, 평문 PEM과 토큰은 전달·검증 과정의 메모리에서만 취급합니다. 원문·비밀 지문·관리 응답은 공개 근거에 넣지 않습니다.
+
+고정 credential의 native `getPassword()` 경로와 GitHub의 installation repositories GET 한 번으로 선택한 저장소 한 개의 일치를 확인했습니다. 이는 새 토큰의 매번 발급, 실제 만료·자동 갱신, installation ID의 독립 검증이나 commit status 쓰기를 증명하지 않습니다. 기존 PATv2는 삭제하거나 덮어쓰지 않았습니다.
+
+[Jenkinsfile](../../Jenkinsfile)의 pending·success·unsuccessful 세 바인딩은 `usernamePassword`를 사용하고, password만 기존 `GITHUB_STATUS_TOKEN` 환경 변수로 status client에 전달하도록 준비했습니다. 새 자격을 바인딩한 **새 CI build의 완료 증거는 아직 확인 전**입니다. 이후 실제 checkout SHA·새 queue/build 번호·검증 단계·필수 artifact를 연결하고, 같은 SHA와 build 번호의 pending artifact·success status ID·실제 issuer를 대조해야 합니다. 과거 PAT 기반 build 150의 성공을 App 기반 CI 성공으로 대신하지 않습니다.
+
+이미지 게시 gate의 예상 issuer는 실제 새 status 작성자를 확인한 뒤 정확한 값으로 연결합니다. 공개 관측 수집기·DTO·브라우저의 issuer 계약도 같은 실측 작성자와 맞춰야 하며, issuer 검사를 없애거나 새 상태를 건너뛰고 과거 성공을 선택하지 않습니다. 저장소 변수 변경·이미지 게시·GitOps 반영은 이 App 조회 확인과 별도 단계입니다.
+
 ## 실행하는 작업
 
 1. main의 Jenkinsfile을 읽고 checkout 반환값에서 40자리 source commit을 검증해 ci-build-info.txt에 build 번호와 함께 기록합니다. SHA가 없으면 빌드를 실패시킵니다.
-2. 전용 Secret text를 필요한 단계에만 바인딩해 checkout한 정확한 SHA에 `ci/jenkins-test` pending을 전달합니다. main 이외의 branch는 이 credentialed job에서 허용하지 않습니다.
+2. 전용 commit-status credential을 필요한 단계에만 바인딩해 checkout한 정확한 SHA에 `ci/jenkins-test` pending을 전달합니다. main 이외의 branch는 이 credentialed job에서 허용하지 않습니다.
 3. Java 21 container에서 apps/api의 Maven Wrapper verify를 실행합니다. Surefire XML을 성공·실패와 관계없이 JUnit 결과로 수집하며, 빈 결과를 허용하지 않습니다.
 4. Node 24 container에서 npm ci, npm run check, npm test, npm run build와 status client의 음성 테스트를 실행합니다.
 5. 모든 단계가 성공한 경우 API jar, 웹 dist, ci-build-info.txt와 pending 전달 기록을 필수 산출물로 확인하고 archive·fingerprint를 기록합니다.
@@ -31,7 +43,7 @@ Maven Wrapper 3.3.4는 공식 bin 방식입니다. 저장소의 wrapper jar와 w
 
 [플랫폼 설치 절차](platform-install.md)에 따라 Jenkins를 설치하고 인증된 관리자 경로에서 접속합니다. 공개 저장소의 main을 읽는 Pipeline from SCM job platform-lab-ci를 사용하고 Script Path는 Jenkinsfile로 지정합니다. 관리자 페이지를 외부에 공개하지 않습니다.
 
-기존 작업이 있으면 job type, SCM URL, branch와 Script Path를 확인하고 일치하지 않을 때 중단합니다. 기존 config를 무조건 덮어쓰지 않습니다. 한 번의 수동 실행마다 queue/build 번호를 기록하고, 응답이 불확실할 때 자동으로 재시도하지 않습니다. 원격 검증은 REST API, 세션 cookie와 crumb를 사용했으며 관리자 Groovy 콘솔은 사용하지 않았습니다.
+기존 작업이 있으면 job type, SCM URL, branch와 Script Path를 확인하고 일치하지 않을 때 중단합니다. 기존 config를 무조건 덮어쓰지 않습니다. 한 번의 수동 실행마다 queue/build 번호를 기록하고, 응답이 불확실할 때 자동으로 재시도하지 않습니다. 초기 작업 등록·실행 검증은 REST API, 세션 cookie와 crumb를 사용했으며 관리자 Groovy 콘솔은 사용하지 않았습니다. 위 App 등록·인증 확인은 고정된 관리자 스크립트를 사용한 별도 후속입니다.
 
 완료 판정에는 SUCCESS 문자열 외에 아래 항목이 모두 필요합니다.
 
@@ -81,4 +93,4 @@ untrusted fork PR에는 registry/GitOps 권한이나 관리자 자격증명을 �
 - [Maven Wrapper bin 방식과 checksum](https://maven.apache.org/tools/wrapper/)
 - [Remote API](https://www.jenkins.io/doc/book/using/remote-access-api/) / [CSRF cookie·crumb](https://www.jenkins.io/doc/book/security/csrf-protection/)
 
-로컬 Helm strict lint와 35개 정책 검증, 실제 Jenkins agent 실행, 실제 실패 차단은 각각 구분해 기록합니다. 동시 요청 실험과 credential의 실제 만료·회전은 미검증입니다. 관리자 응답·콘솔 원문·Secret·내부 주소는 공개 근거에서 제외합니다.
+로컬 Helm strict lint와 35개 정책 검증, 실제 Jenkins agent 실행, 실제 실패 차단은 각각 구분해 기록합니다. 동시 요청 실험과 GitHub App 설치 토큰의 실제 만료·자동 갱신은 미검증입니다. 관리자 응답·콘솔 원문·Secret·내부 주소는 공개 근거에서 제외합니다.
