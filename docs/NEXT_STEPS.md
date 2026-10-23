@@ -12,6 +12,8 @@
 
 다음 작업은 웹 관측 이력의 순서 보호이며 현재 구현·검증 중입니다. 아직 이 후속을 완료로 표시하지 않습니다. 새 토큰·별도 환경이 필요하지 않은 범위에서 진행합니다.
 
+**작업 수집기 배포 완료 / 자연 회차 PENDING:** [read·close 뒤 완료 시한 검사](evidence/job-response-deadline/README.md)의 Linux179개·skip0와 PR200 main 검증에 이어 **21:18:16(KST)** [job collector 한 파일의 운영 교체](evidence/job-response-deadline/DEPLOYED.md)를 완료했습니다. 새 코드4,147바이트·SHA·root0600과 다른 코드7개·unit2개 보존을 별도 사후 점검했습니다. 선택한 state projection은 교체 전 기록과 같으며 전체 본문 불변이나 새 수집 성공의 증명은 아닙니다. 다음 기존 자연 회차의 새 job 수집과 정확한 Pages 게시 연결은 아직 확인하지 않았습니다.
+
 **보류:** Pages 토큰 교체·별도 환경의 K3s/Jenkins 실제 기동 복원·자원 예산 정책·[PR #102 접수 gate](https://github.com/DevDooly/devdooly-platform-lab/pull/102)는 재개하지 않습니다. 인증서 자연 갱신·현재 공개 경로의 재부팅은 여전히 미검증입니다. 이전 기록의 일반적인 “토큰 교체 보류” 표현은 당시 상태이며, 현재 보류하는 토큰 작업은 Pages 토큰 교체입니다.
 
 ## 이전 진행 기록 — 2026-10-21(KST)
