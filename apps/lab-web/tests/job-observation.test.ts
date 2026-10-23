@@ -72,6 +72,70 @@ test('job capture conflict treats reordered object keys and an identical reread 
   }
 });
 
+test('job capture UTC equivalence accepts equal top-level instants without changing original evidence', async () => {
+  for (const [original, equivalent] of [
+    ['2026-10-15T10:00:00.123456000Z', '2026-10-15T10:00:00.123456Z'],
+    ['2026-10-15T10:00:00Z', '2026-10-15T10:00:00.000000000Z'],
+  ]) {
+    const previous = record(); previous.capturedAt = original!;
+    const incoming = structuredClone(previous); incoming.capturedAt = equivalent!;
+    const result = await loadInjected(incoming, previous);
+    assert.equal(result.browserError, null); assert.equal(result.record, previous);
+    assert.equal(result.retainedPrevious, false); assert.equal(result.record!.capturedAt, original);
+  }
+});
+
+test('job capture UTC equivalence accepts nested runtime instants without rewriting them', async () => {
+  for (const key of ['startedAt', 'heartbeatAt', 'stoppedAt'] as const) {
+    const previous = running(); previous.runtime = { ...previous.runtime, status: 'STOPPED', stage: 'STOPPED',
+      heartbeatAt: '2026-10-15T10:00:00Z', stoppedAt: '2026-10-15T10:00:00Z' };
+    const incoming = structuredClone(previous);
+    incoming.runtime[key] = previous.runtime[key]!.replace('Z', '.000000000Z');
+    const result = await loadInjected(incoming, previous);
+    assert.equal(result.browserError, null, key); assert.equal(result.record, previous);
+    assert.equal(result.retainedPrevious, false); assert.equal(result.record!.runtime[key], previous.runtime[key]);
+  }
+});
+
+function exportedAndCancelled(): JobObservationRecord {
+  const previous = record();
+  previous.jobs = [
+    { ...completed(), exportStatus: 'EXPORTED', exportCompletedAt: '2026-10-15T09:00:03Z', fileEvidence: 'VERIFIED_AT_EXPORT_COMMIT' },
+    { ...completed(), runId: 'test-job-two', exportStatus: 'CANCELLED', terminatedAt: '2026-10-15T09:00:03Z',
+      files: null, fileEvidence: 'NOT_AVAILABLE' },
+  ];
+  return previous;
+}
+
+test('job capture UTC equivalence accepts nested job and export instants including nullable fields', async () => {
+  const previous = exportedAndCancelled(); const incoming = structuredClone(previous);
+  for (const job of incoming.jobs) {
+    for (const key of ['createdAt', 'sourceVerifiedAt', 'queuedAt', 'completedAt', 'exportCompletedAt', 'terminatedAt'] as const) {
+      if (job[key] !== null) job[key] = job[key]!.replace('Z', '.000000000Z');
+    }
+  }
+  const result = await loadInjected(incoming, previous);
+  assert.equal(result.browserError, null); assert.equal(result.record, previous);
+  assert.equal(result.retainedPrevious, false); assert.deepEqual(result.record!.jobs, previous.jobs);
+});
+
+test('job capture UTC equivalence still rejects real nanosecond source and state changes', async () => {
+  const previous = exportedAndCancelled(); previous.runtime = running().runtime;
+  const variants = [
+    { ...structuredClone(previous), sourceCommit: 'b'.repeat(40) },
+    { ...structuredClone(previous), slot: { occupiedRunId: 'different-job' } },
+  ];
+  const runtime = structuredClone(previous); runtime.runtime.startedAt = '2026-10-15T09:59:00.000000001Z'; variants.push(runtime);
+  const created = structuredClone(previous); created.jobs[0]!.createdAt = '2026-10-15T09:00:00.000000001Z'; variants.push(created);
+  const exported = structuredClone(previous); exported.jobs[0]!.exportCompletedAt = '2026-10-15T09:00:03.000000001Z'; variants.push(exported);
+  const terminated = structuredClone(previous); terminated.jobs[1]!.terminatedAt = '2026-10-15T09:00:03.000000001Z'; variants.push(terminated);
+  for (const incoming of variants) {
+    const result = await loadInjected(incoming, previous);
+    assert.equal(result.browserError, 'CONFLICTING_RECORD'); assert.equal(result.record, previous);
+    assert.equal(result.retainedPrevious, true);
+  }
+});
+
 test('job capture conflict still permits a newer nanosecond update and rejects an older one', async () => {
   const previous = record();
   const incoming = running(); incoming.capturedAt = '2026-10-15T10:00:00.123456790Z';
