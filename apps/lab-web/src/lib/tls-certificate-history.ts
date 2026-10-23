@@ -234,7 +234,7 @@ export function buildTlsHistory(entries: readonly TlsHistoryEntry[], trusted: re
       const duplicate = seenRuns.get(candidate.runUrl);
       if (duplicate) {
         if (duplicate.sourceCommit !== candidate.sourceCommit || duplicate.artifactSha256 !== candidate.artifactSha256
-          || duplicate.completedAt !== candidate.completedAt) quarantined++;
+          || utcMs(duplicate.completedAt, true) !== utcMs(candidate.completedAt, true)) quarantined++;
         continue;
       }
       if ((target !== null && candidate.summary.targetBindingSha256 !== target)
