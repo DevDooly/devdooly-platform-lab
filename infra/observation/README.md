@@ -1,6 +1,6 @@
 # 공개 플랫폼 수집기와 호스트 자동화
 
-2026-10-23 저장소 후속은 [응답 완료 시한·OS 잠금 회귀 근거](../../docs/evidence/collector-completion-boundaries/README.md)를 따릅니다. 시한 후 완료 응답은 TIMEOUT으로 처리하고, 잠금 파일은 유지하며 OS 잠금만 해제합니다. 구 O_EXCL 실행기와 동시에 사용하지 않으며 운영 교체는 외부 cycle lock 아래 유휴 상태에서 수행해야 합니다. 이 안내만으로 미니 PC 설치 반영을 주장하지 않습니다.
+2026-10-23 저장소 후속은 [응답 완료 시한·OS 잠금 회귀 근거](../../docs/evidence/collector-completion-boundaries/README.md)를 따릅니다. 시한 후 완료 응답은 TIMEOUT으로 처리하고, 잠금 파일은 유지하며 OS 잠금만 해제합니다. 같은 날 20:17:53(KST)에 기존 수집기 유휴·외부 cycle lock 아래 [collector 한 파일의 운영 교체](../../docs/evidence/collector-completion-boundaries/DEPLOYED.md)를 완료했습니다. 새 코드 pin·계약·unit 파일과 상태를 확인했고 새 자연 수집·Pages 연결은 아직 PENDING입니다. 구 O_EXCL 실행기와 새 flock 실행기를 동시에 사용하지 않습니다.
 
 작업·export의 실제 배포 기록은 선택적 [작업 관측 자동화](JOBS_AUTOMATION.md)로 같은 outbound Pages 주기에 연결한다. 기존 플랫폼 관측 계약과 파일은 별도로 보존한다.
 
@@ -23,7 +23,7 @@ Python 표준 라이브러리만 사용하는 읽기 전용 수집기입니다. 
 ## 출처와 정확한 의미
 
 - mainCommit: 수집 중 두 번 읽어 동일함을 확인한 공개 저장소 main HEAD입니다.
-- jenkins: 해당 main의 최신 ci/jenkins-test context입니다. 최신 항목을 고른 뒤 issuer DevDooly와 상태별 고정 description을 검사합니다. pending/success/failure/error는 실제 빌드 상태이며 수집 실패 코드와 구분합니다. 현재 main에 status가 없으면 null입니다. 과거 main의 성공을 대신 쓰지 않습니다.
+- jenkins: 해당 main의 최신 ci/jenkins-test context입니다. 최신 항목을 고른 뒤 현재 App 작성자와 상태별 고정 description을 검사합니다. 과거 개인 계정 기록의 DTO 호환성과 현재 수집기의 App 작성자 검사를 구분합니다. pending/success/failure/error는 실제 빌드 상태이며 수집 실패 코드와 구분합니다. 현재 main에 status가 없으면 null입니다. 과거 main의 성공을 대신 쓰지 않습니다.
 - argo: 이름이 platform-lab-home인 Application의 status.sync.revision, sync, health입니다. 정상 상태가 아니어도 실제 응답을 읽었으면 수집은 성공할 수 있습니다.
 - workloads.desired: API·웹 Deployment 및 DB StatefulSet의 spec.replicas입니다.
 - workloads.ready: app/name=platform-lab, instance=lab, component=api/web/database의 실제 Pod 중 Running, Ready=True, 모든 containerStatuses.ready=true, 삭제 중이 아님을 만족하는 수입니다. Pod 이름·주소·환경·로그는 내보내지 않습니다.
@@ -36,11 +36,11 @@ Python 표준 라이브러리만 사용하는 읽기 전용 수집기입니다. 
 
 latestAttempt.attemptedAt과 성공의 capturedAt은 **시도 완료 UTC**이며 같은 문자열입니다. 실패에서는 완료 시각과 고정 오류 코드만 바꾸고, 이전에 검증한 lastSuccess 전체를 유지합니다. 처음부터 실패하면 lastSuccess는 null입니다. 유효하지 않거나 미래 시각인 이전 기록은 받아들이지 않으며 출력 파일을 덮어쓰지 않습니다.
 
-HTTP timeout은 요청당 최대 6초, 전체 기본 기한은 60초입니다. GitHub status 검색은 최대 5페이지이며 모두 읽어도 항목이 없다고 확정할 수 없으면 수집 실패로 처리합니다. PodList가 잘렸으면 결과를 게시하지 않습니다. main이 수집 도중 이동해도 실패로 처리합니다.
+HTTP open·socket timeout 인수의 상한은 6초이며 공유 monotonic 기한의 기본값은 60초입니다. 응답 read·close가 반환한 뒤 공유 기한 이상이면 TIMEOUT으로 처리합니다. 지속 유입되는 본문을 기한 즉시 중단하거나 JSON 파싱·저장까지 전체 hard deadline을 새로 보장하는 것은 아닙니다. GitHub status 검색은 최대 5페이지이며 모두 읽어도 항목이 없다고 확정할 수 없으면 수집 실패로 처리합니다. PodList가 잘렸으면 결과를 게시하지 않습니다. main이 수집 도중 이동해도 실패로 처리합니다.
 
 TLS CA와 hostname 검증을 켜고 리디렉션과 환경 프록시를 사용하지 않습니다. 토큰은 파일에서만 읽으며 매 요청 다시 읽어 회전을 지원합니다. 응답은 최대 2MiB입니다. stdout에는 상태·고정 코드·완료 시각·마지막 성공 유무만 출력합니다.
 
-출력은 같은 디렉터리의 0600 임시 파일을 fsync한 뒤 원자적으로 교체합니다. 출력별 배타 lock으로 동시 쓰기를 막고, 유효하지 않은 snapshot이나 교체 실패가 기존 파일을 지우지 않는지 테스트합니다. Ubuntu 격리 검사 41개와 실제 수집에서 POSIX 0600을 확인했습니다. 비정상 종료로 남은 lock은 실행 중 프로세스가 없는지 확인한 뒤 운영자가 처리합니다.
+출력은 같은 디렉터리의 0600 임시 파일을 fsync한 뒤 원자적으로 교체합니다. 출력별 배타 OS lock으로 동시 쓰기를 막고, 유효하지 않은 snapshot이나 교체 실패가 기존 파일을 지우지 않는지 테스트합니다. lock 파일은 동일 inode로 유지하며 비정상 종료 뒤 파일만 남아 있다는 이유로 삭제하지 않습니다. 신뢰하는 전용 부모 디렉터리에서 regular file·단일 링크·POSIX 현재 소유자·0600 조건을 확인하고 미점유 OS 잠금을 재사용합니다. 앞선 Ubuntu 격리 검사 41개·실제 수집의 POSIX 0600 결과와 새 Linux173개 회귀는 서로 다른 시점의 근거입니다.
 
 ## 새 환경의 최초 서버 검증 순서
 
@@ -98,7 +98,7 @@ PYTHONPATH=infra/observation python3 -B -m unittest discover -s tests/observatio
 python3 -B -m unittest discover -s tests/observation -p 'test_phase3_automation.py' -v
 ```
 
-합성 입력만 사용해 상태 4종, 최신 항목 신뢰 검증, 페이지 제한, main 이동, 실제 Pod 준비 조건, 허용 이미지, 출처 분리, 실패 시 이전 성공 보존, unknown 필드, 잘못된 날짜·나노초 순서, 원자적 파일 교체와 권한·리디렉션을 검증합니다. 합성 검사와 실제 서버 실행은 별도 기록합니다. 자동 수집·게시 요청은 호스트의 oneshot service와 timer로 실행하며 Kubernetes Job/CronJob은 구성하지 않았습니다. 최초 자동 실행을 포함한 11회의 Pages build·deploy success와 실제 서비스 완료 간격 1825.569287~1875.101367초를 확인했습니다. 공개 실시간 HTTP와 새 inbound 포트는 추가하지 않았습니다. 자격증명 만료·회전과 장기간 운영은 아직 검증하지 않았습니다.
+합성 입력만 사용해 상태 4종, 최신 항목 신뢰 검증, 페이지 제한, main 이동, 실제 Pod 준비 조건, 허용 이미지, 출처 분리, 실패 시 이전 성공 보존, unknown 필드, 잘못된 날짜·나노초 순서, 원자적 파일 교체와 권한·리디렉션을 검증합니다. 합성 검사와 실제 서버 실행은 별도 기록합니다. 자동 수집·게시 요청은 호스트의 oneshot service와 timer로 실행하며 Kubernetes Job/CronJob은 구성하지 않았습니다. 최초 자동 실행을 포함한 11회의 Pages build·deploy success와 실제 서비스 완료 간격 1825.569287~1875.101367초를 확인했습니다. 공개 실시간 HTTP와 새 inbound 포트는 추가하지 않았습니다. 이 게시 체인의 Pages 자격증명 교체와 장기간 운영은 미검증입니다. Jenkins GitHub App의 별도 [자연 만료 후 갱신 한 주기](../../docs/evidence/github-app-jenkins/NATURAL_EXPIRY.md)와 수집·게시 체인의 검증을 구분합니다.
 
 ## 공식 근거
 
