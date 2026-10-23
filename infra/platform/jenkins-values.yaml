@@ -22,6 +22,8 @@ controller:
     - git:5.10.1
     - configuration-as-code:2133.ve570217cdb_cd
   additionalPlugins:
+    # GitHub App installation tokens for the existing standalone CI Pipeline.
+    - github-branch-source:1986.v801e40614d00
     - timestamper:1.30
     - junit:1437.v12280a_c49b_50
     - pipeline-model-definition:2.2293.v6e7193cec599
