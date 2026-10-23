@@ -152,6 +152,76 @@ test('platform merge rejects an older non-improving failure and preserves origin
   assert.equal(result.record!.lastSuccess!.deploymentSourceCommit, previous.lastSuccess!.deploymentSourceCommit);
 });
 
+test('platform bounded body accepts an exact byte ceiling without changing captured evidence', async () => {
+  const previous = observation();
+  const bytes = new TextEncoder().encode(JSON.stringify(previous));
+  const exact = new Uint8Array(MAX_PLATFORM_OBSERVATION_BYTES).fill(0x20); exact.set(bytes);
+  const result = await loadPlatformObservation({ url: '/synthetic-platform-record', previousRecord: previous,
+    fetcher: async () => new Response(new ReadableStream<Uint8Array>({
+      start(controller) { controller.enqueue(exact.subarray(0, 300)); controller.enqueue(exact.subarray(300)); controller.close(); },
+    })) });
+  assert.equal(result.browserError, null); assert.deepEqual(result.record, previous);
+  assert.equal(result.record!.lastSuccess!.capturedAt, previous.lastSuccess!.capturedAt);
+  assert.equal(result.record!.lastSuccess!.mainCommit, previous.lastSuccess!.mainCommit);
+});
+
+test('platform bounded body cancels at the first excess chunk without awaiting provider cancellation', { timeout: 1000 }, async () => {
+  const previous = observation(); const before = structuredClone(previous); freezeRecord(previous);
+  const exact = new Uint8Array(MAX_PLATFORM_OBSERVATION_BYTES).fill(0x20);
+  let pulls = 0; let cancellations = 0;
+  const result = await loadPlatformObservation({ url: '/synthetic-platform-record', previousRecord: previous,
+    fetcher: async () => new Response(new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulls++;
+        if (pulls === 1) controller.enqueue(exact);
+        else if (pulls === 2) controller.enqueue(new Uint8Array([0x20]));
+        else controller.error(new Error('PRIVATE_UNREAD_PLATFORM_BODY'));
+      },
+      cancel() { cancellations++; return new Promise<void>(() => {}); },
+    }, { highWaterMark: 0 })) });
+  assert.equal(pulls, 2); assert.equal(cancellations, 1);
+  assert.equal(result.browserError, 'INVALID_RECORD'); assert.equal(result.record, previous);
+  assert.equal(result.retainedPrevious, true); assert.deepEqual(previous, before);
+  assert.equal(JSON.stringify(result).includes('PRIVATE_'), false);
+});
+
+test('platform bounded body discards unused HTTP error streams without reading or waiting for disposal', { timeout: 1000 }, async () => {
+  const previous = observation();
+  for (const [status, error] of [[404, 'NOT_PUBLISHED'], [503, 'HTTP_ERROR']] as const) {
+    let pulls = 0; let cancellations = 0;
+    const result = await loadPlatformObservation({ url: '/synthetic-platform-record', previousRecord: previous,
+      fetcher: async () => new Response(new ReadableStream<Uint8Array>({
+        pull() { pulls++; throw new Error('PRIVATE_UNUSED_PLATFORM_HTTP_BODY'); },
+        cancel() {
+          cancellations++;
+          return status === 404 ? new Promise<void>(() => {}) : Promise.reject(new Error('PRIVATE_PLATFORM_CANCEL_FAILURE'));
+        },
+      }, { highWaterMark: 0 }), { status }) });
+    assert.equal(pulls, 0); assert.equal(cancellations, 1);
+    assert.equal(result.browserError, error); assert.equal(result.record, previous);
+    assert.equal(result.retainedPrevious, true);
+    assert.equal(result.record!.lastSuccess!.capturedAt, previous.lastSuccess!.capturedAt);
+    assert.equal(JSON.stringify(result).includes('PRIVATE_'), false);
+  }
+});
+
+test('platform bounded body preserves network and abort categories when the provider stream fails', async () => {
+  const previous = observation();
+  for (const aborted of [false, true]) {
+    const request = new AbortController();
+    const result = await loadPlatformObservation({ url: '/synthetic-platform-record', previousRecord: previous, signal: request.signal,
+      fetcher: async () => new Response(new ReadableStream<Uint8Array>({
+        start(controller) {
+          if (aborted) request.abort();
+          controller.error(new Error('PRIVATE_PLATFORM_STREAM_FAILURE'));
+        },
+      })) });
+    assert.equal(result.browserError, aborted ? 'ABORTED' : 'NETWORK_ERROR');
+    assert.equal(result.record, previous); assert.equal(result.retainedPrevious, true);
+    assert.equal(JSON.stringify(result).includes('PRIVATE_'), false);
+  }
+});
+
 test('accepts separate main, Jenkins, GitOps and deployed source evidence without collapsing rollback SHAs', () => {
   const record = observation();
   assert.equal(validatePlatformObservation(record), true);
