@@ -10,7 +10,7 @@
 
 **자연 회차 후속 완료:** [20:41:12–20:41:17(KST)의 새 수집·Pages 게시](evidence/collector-completion-boundaries/NATURAL_PUBLICATION.md)를 연결했습니다. 새 코드 pin 유지·서버의 선택된 수집 시각/소스·같은 invocation의 Pages39947822996 attempt1을 대조했고, build·deploy 성공과 공개 JSON3개·artifact 전체 bytes 일치를 확인했습니다. timer 보고 시각은 service 시작과 같은 초였으며, 보고 정밀도의 상관관계를 유일한 기동 원인의 증명으로 해석하지 않습니다. 수동 trigger·timer 주기 단축은 하지 않았습니다.
 
-[웹 관측 응답 보호](evidence/browser-observation-protection/README.md)도 완료했습니다. 플랫폼의 최신 시도·성공을 각각 보존하고, 플랫폼·작업의 같은 시각 내용 충돌은 거부하며, 플랫폼 본문을 읽는 중16KiB 상한을 적용합니다. 최종 웹247개·타입49파일 진단0·base 지정 단일 빌드2페이지와 각 소스의 Linux CI·같은 main의 CI/Pages를 통과했습니다. 공개 정상 조회·재조회에서 새 자산과 원 수집 시각을 확인했고 합성 오류 검증과 구분합니다. 자연 수집 근거는 공개 목록의 “수집기” 검색으로 연결합니다.
+[웹 관측 응답 보호](evidence/browser-observation-protection/README.md)는 플랫폼의 최신 시도·성공을 각각 보존하고, 같은 시각 내용 충돌 거부와 읽는 중16KiB 상한을 적용합니다. #202–#205 당시 웹247개와 CI·Pages·공개 정상 재조회는 해당 실행의 근거로 보존합니다. [PR211](https://github.com/DevDooly/devdooly-platform-lab/pull/211)의 두 검증 완료 작업 DTO 사이 UTC 동등 표기 교정은 로컬·main Linux의 웹251개·생략0·타입49파일 진단0·2페이지 빌드와 Pages 게시·공개 HTML 참조/JS 전체 bytes 일치까지 확인했으며, 새 브라우저 동작 검증과 구분합니다. 이어 Kafka 본문 수신 중 일반 전송 오류를 NETWORK_ERROR로 분류하는 교정에서 로컬 전체 웹262개·생략/실패0·Astro50파일 진단0·프로젝트 경로2페이지 빌드를 통과했습니다. 이번 Kafka 수정의 main CI·Pages·공개 자산 확인은 대기 중입니다. 자연 수집 근거는 공개 목록의 “수집기” 검색으로 연결합니다.
 
 다음 운영 검증은 인증서 자연 갱신 시점의 재관측입니다. 기존 유효기간 기록만으로 갱신 성공을 미리 판단하지 않으며 강제 갱신·서비스 재시작은 하지 않습니다. 현재 공개 경로의 재부팅 검증은 서비스 영향과 실행 시점 확인 후 별도로 진행합니다.
 
