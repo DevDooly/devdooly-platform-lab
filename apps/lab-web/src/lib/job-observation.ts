@@ -115,8 +115,19 @@ export function validateJobObservation(value: unknown): value is JobObservationR
     .every(at => at === null || beforeOrEqual(at, value.capturedAt as string)));
 }
 
-export type JobBrowserError = 'NOT_CONFIGURED' | 'HTTP_ERROR' | 'NETWORK_ERROR' | 'INVALID_RECORD' | 'ABORTED' | 'OLDER_RECORD';
+export type JobBrowserError = 'NOT_CONFIGURED' | 'HTTP_ERROR' | 'NETWORK_ERROR' | 'INVALID_RECORD' | 'ABORTED' | 'OLDER_RECORD' | 'CONFLICTING_RECORD';
 export interface JobObservationLoad { record: JobObservationRecord | null; browserError: JobBrowserError | null; retainedPrevious: boolean; }
+
+/** Match immutable capture evidence without treating object key order as a change. */
+function sameJobContent(left: unknown, right: unknown): boolean {
+  if (left === right) return true;
+  if (Array.isArray(left) || Array.isArray(right)) return Array.isArray(left) && Array.isArray(right)
+    && left.length === right.length && left.every((item, index) => sameJobContent(item, right[index]));
+  if (!object(left) || !object(right)) return false;
+  const keys = Object.keys(left);
+  return keys.length === Object.keys(right).length && keys.every(key => Object.hasOwn(right, key) && sameJobContent(left[key], right[key]));
+}
+
 export async function loadJobObservation(options: { url: string; previousRecord?: JobObservationRecord | null; signal?: AbortSignal; fetcher?: typeof fetch; rejectRedirects?: boolean }): Promise<JobObservationLoad> {
   const previous = validateJobObservation(options.previousRecord) ? options.previousRecord : null;
   const failed = (browserError: JobBrowserError): JobObservationLoad => ({ record: previous, browserError, retainedPrevious: previous !== null });
@@ -130,6 +141,10 @@ export async function loadJobObservation(options: { url: string; previousRecord?
     let record: unknown; try { record = JSON.parse(text); } catch { return failed('INVALID_RECORD'); }
     if (!validateJobObservation(record)) return failed('INVALID_RECORD');
     if (previous && utcNs(record.capturedAt)! < utcNs(previous.capturedAt)!) return failed('OLDER_RECORD');
+    if (previous && utcNs(record.capturedAt) === utcNs(previous.capturedAt)) {
+      if (!sameJobContent(previous, record)) return failed('CONFLICTING_RECORD');
+      return { record: previous, browserError: null, retainedPrevious: false };
+    }
     return { record, browserError: null, retainedPrevious: false };
   } catch (error) { return failed(options.signal?.aborted ? 'ABORTED'
     : error instanceof InvalidObservationBody ? 'INVALID_RECORD' : 'NETWORK_ERROR'); }
