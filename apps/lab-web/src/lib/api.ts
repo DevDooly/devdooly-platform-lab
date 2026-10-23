@@ -1,4 +1,5 @@
 import { isPublicReadPath } from './public-api-base.ts';
+import { discardObservationBody } from './observation-response-body.ts';
 export type OutcomeStatus = 'SUCCESS' | 'FAILED' | 'DUPLICATE' | 'PENDING';
 export interface Run {
   id: string; name: string; status: string; synthetic: boolean; seed: number;
@@ -87,7 +88,10 @@ export async function getJson(base: string, path: string, signal?: AbortSignal):
   const url = `${base.replace(/\/$/, '')}${path}`;
   try {
     const response = await fetch(url, { signal, headers: { Accept: 'application/json' }, cache: 'no-store', credentials: 'omit', redirect: 'error' });
-    if (!response.ok) throw new LabReadError(`API 응답 ${response.status}`, 'HTTP_REJECTED', response.status);
+    if (!response.ok) {
+      discardObservationBody(response);
+      throw new LabReadError(`API 응답 ${response.status}`, 'HTTP_REJECTED', response.status);
+    }
     try { return await response.json(); }
     catch (error) {
       if (error instanceof SyntaxError) throw new LabReadError('API 응답 형식을 확인할 수 없습니다.', 'INVALID_RESPONSE');
