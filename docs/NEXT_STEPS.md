@@ -10,7 +10,9 @@
 
 **자연 회차 후속 완료:** [20:41:12–20:41:17(KST)의 새 수집·Pages 게시](evidence/collector-completion-boundaries/NATURAL_PUBLICATION.md)를 연결했습니다. 새 코드 pin 유지·서버의 선택된 수집 시각/소스·같은 invocation의 Pages39947822996 attempt1을 대조했고, build·deploy 성공과 공개 JSON3개·artifact 전체 bytes 일치를 확인했습니다. timer 보고 시각은 service 시작과 같은 초였으며, 보고 정밀도의 상관관계를 유일한 기동 원인의 증명으로 해석하지 않습니다. 수동 trigger·timer 주기 단축은 하지 않았습니다.
 
-다음 작업은 웹 관측 이력의 순서 보호이며 현재 구현·검증 중입니다. 아직 이 후속을 완료로 표시하지 않습니다. 새 토큰·별도 환경이 필요하지 않은 범위에서 진행합니다.
+[웹 관측 응답 보호](evidence/browser-observation-protection/README.md)도 완료했습니다. 플랫폼의 최신 시도·성공을 각각 보존하고, 플랫폼·작업의 같은 시각 내용 충돌은 거부하며, 플랫폼 본문을 읽는 중16KiB 상한을 적용합니다. 최종 웹247개·타입49파일 진단0·base 지정 단일 빌드2페이지와 각 소스의 Linux CI·같은 main의 CI/Pages를 통과했습니다. 공개 정상 조회·재조회에서 새 자산과 원 수집 시각을 확인했고 합성 오류 검증과 구분합니다. 자연 수집 근거는 공개 목록의 “수집기” 검색으로 연결합니다.
+
+다음 운영 검증은 인증서 자연 갱신 시점의 재관측입니다. 기존 유효기간 기록만으로 갱신 성공을 미리 판단하지 않으며 강제 갱신·서비스 재시작은 하지 않습니다. 현재 공개 경로의 재부팅 검증은 서비스 영향과 실행 시점 확인 후 별도로 진행합니다.
 
 **작업 수집기 배포 완료 / 자연 회차 PENDING:** [read·close 뒤 완료 시한 검사](evidence/job-response-deadline/README.md)의 Linux179개·skip0와 PR200 main 검증에 이어 **21:18:16(KST)** [job collector 한 파일의 운영 교체](evidence/job-response-deadline/DEPLOYED.md)를 완료했습니다. 새 코드4,147바이트·SHA·root0600과 다른 코드7개·unit2개 보존을 별도 사후 점검했습니다. 선택한 state projection은 교체 전 기록과 같으며 전체 본문 불변이나 새 수집 성공의 증명은 아닙니다. 다음 기존 자연 회차의 새 job 수집과 정확한 Pages 게시 연결은 아직 확인하지 않았습니다.
 

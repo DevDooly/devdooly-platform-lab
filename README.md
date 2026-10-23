@@ -23,6 +23,8 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 - **수집기 완료 경계:** [응답 완료 시한·OS 잠금](docs/evidence/collector-completion-boundaries/README.md)의 Linux173개·SIGKILL 후 동일 inode 재획득을 확인하고, [collector 한 파일의 운영 교체](docs/evidence/collector-completion-boundaries/DEPLOYED.md)를 20:17:53(KST)에 마쳤습니다. 이어 [20:41 자연 수집·Pages39947822996](docs/evidence/collector-completion-boundaries/NATURAL_PUBLICATION.md)에서 새 코드 pin·수집 시각·같은 run의 build/deploy와 공개 JSON3개·artifact 전체 bytes 일치를 확인했습니다. 이는 자연 회차 한 번의 결과이며 운영 SIGKILL 복구·장기 가용성 검증과 구분합니다.
 
+- **브라우저 관측 보호:** [응답 순서·내용 충돌·본문 크기](docs/evidence/browser-observation-protection/README.md)를 보완했습니다. 플랫폼의 최신 시도·성공은 각각 유지하고, 플랫폼·작업의 같은 시각에 다른 내용은 거부합니다. 플랫폼 본문은 읽는 중 16KiB 상한을 적용합니다. 최종 웹247개·타입·빌드, 각 변경의 Linux CI·같은 main의 Pages와 공개 정상 재조회를 확인했습니다. 합성 오류 검증과 공개 정상 조회를 구분하며 서버 상태나 장기 가용성을 보장하는 기능은 아닙니다.
+
 - **작업 수집기 완료 시한:** [read·close 뒤 시한 검사](docs/evidence/job-response-deadline/README.md)의 Linux179개·skip0에 이어 [21:18:16(KST) 코드 한 파일 교체](docs/evidence/job-response-deadline/DEPLOYED.md)와 별도 사후 점검을 마쳤습니다. 새 코드 pin·root0600·다른 코드7개와 unit2개 보존을 확인했으며, 새 job의 자연 수집·Pages 연결은 아직 PENDING입니다.
 
 - **검색 초기 입력:** [준비 전 입력 보호](docs/evidence/evidence-input-readiness/README.md)로 이벤트 연결 전에 입력이 유실될 수 있는 구간을 막았습니다. 로컬 SSR 사본·준비 후 검색·19개 순차 표시·모바일 Tab 이동과 웹207검사·타입·빌드, 같은 main의 Pages·CI·공개 첫 접속 검색을 확인했습니다.
@@ -46,7 +48,7 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 ## 다음 단계와 보류
 
-[GitHub App 갱신 카드의 공개 반영](docs/evidence/github-app-jenkins/PUBLICATION.md)에 이어 [관측 collector 한 파일의 운영 교체](docs/evidence/collector-completion-boundaries/DEPLOYED.md)와 [새 코드의 자연 수집·Pages 게시](docs/evidence/collector-completion-boundaries/NATURAL_PUBLICATION.md)를 확인했습니다. 서버의 선택된 수집 시각·출처와 같은 run의 artifact, 공개 JSON3개의 전체 bytes를 각각 대조했습니다. timer 보고 시각의 상관관계를 유일한 기동 원인의 증명으로 확대하지 않습니다. 다음 웹 관측 이력의 순서 보호는 구현·검증 중이며 아직 완료로 표시하지 않습니다.
+[GitHub App 갱신 카드의 공개 반영](docs/evidence/github-app-jenkins/PUBLICATION.md)에 이어 [새 수집기의 자연 수집·Pages 게시](docs/evidence/collector-completion-boundaries/NATURAL_PUBLICATION.md)와 [브라우저 관측 응답 보호](docs/evidence/browser-observation-protection/README.md)를 확인했습니다. 자연 회차 한 번의 서버 시각·출처, 같은 run의 artifact와 공개 JSON3개의 전체 bytes를 대조했고, 브라우저의 늦은 응답·같은 시각 내용 충돌·초과 본문 보호는 별도 합성 검증으로 구분했습니다. [공개 근거 목록](https://devdooly.github.io/devdooly-platform-lab/#evidence)에서 자연 수집 기록을 찾을 수 있습니다. 다음 운영 검증은 인증서 자연 갱신 시점의 재관측이며, 아직 자연 갱신 성공으로 표시하지 않습니다.
 
 기존 약30분 timer의 [새 worker 자동 수집·Pages 게시](docs/evidence/worker-image-rollout/NATURAL_PUBLICATION.md)에 이어 [관측 코드 교체 후 자연 게시](docs/evidence/automation-failure-boundaries/DEPLOYED.md)까지 확인했습니다. [새 worker의 고정 합성 입력 한 건](docs/evidence/current-worker-fixture/README.md)은 입력12·성공7·실패3·중복2·대기0의 COMPLETED·EXPORTED, 새 객체3개 전체 bytes와 기존8작업·24객체 보존을 확인했고 완료된 임시 Job도 선택 정리했습니다. 원래 자연 주기의 [Pages39532314754](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39532314754) build·deploy와 공개 JSON3개·artifact 원문 일치, 새9작업 반영도 확인했습니다. [현재 공개 HTTPS 재관측](docs/evidence/public-get/README.md)은 run39533662559에서 지정 GET6개 모두 HTTP200·DTO 검증을 통과했습니다. 실행 결과는 [ID·입력 건수와 전체 ID](docs/evidence/run-selection/README.md)로 구분하도록 수정했고 로컬 화면 확인을 마쳤습니다. [요청·응답 ID 일치](docs/evidence/run-response-identity/README.md) 수정의 로컬209개·타입·빌드와 공개 정상 선택을 확인했습니다. [100개 센서 범례 줄바꿈](docs/evidence/chart-legend-wrap/README.md)도 공개 데스크톱·모바일에서 확인했고, 기본 URL은 reload·실시간 조회 후 정상 폭을 확인했습니다. 첫 조회 실패의 [유한 진단](docs/evidence/initial-read-diagnostics/README.md)은 로컬223개·타입·빌드와 같은 main의 Pages·CI, 공개 정상 첫 조회·실행 선택 확인을 마쳤습니다. 과거 fallback 원인은 여전히 미확인입니다. 해당 화면 진단 후속에서는 추가 운영 실행을 하지 않았으며, 실패가 다시 발생하면 유한 진단 정보를 관측합니다.
 

@@ -39,6 +39,16 @@ const kafkaSource = 'f7b5567963f9a34a34d5f201fb2ed747bdf7652a';
 
 export const evidenceItems: readonly EvidenceItem[] = [
   {
+    id: 'collector-natural-publication', topics: ['delivery'], scope: 'mini-pc', state: 'verified',
+    title: '새 수집기의 자연 실행과 공개 파일 대조',
+    description: '미니 PC에서 교체한 수집기의 자연 회차와 같은 run의 Pages build·deploy를 연결했습니다. 2026-10-23 20:48(KST)에 공개 JSON 3개가 해당 artifact와 전체 bytes까지 같음을 확인했습니다.',
+    boundary: '자연 회차 한 번의 관측입니다. timer 보고 시각은 상관관계이며, 운영 SIGKILL 복구·장기 가용성·Pages 토큰 교체를 검증한 결과는 아닙니다.',
+    recordedOn: '2026-10-23',
+    source: `${repo}/blob/cb1df8656220a48dd1a61cedf73bcc097cf4e549/infra/observation/platform_collector.py`,
+    evidence: `${repo}/blob/main/docs/evidence/collector-completion-boundaries/NATURAL_PUBLICATION.md`,
+    evidenceLabel: '자연 수집·Pages·3JSON 일치 근거', recordLabel: '자연 1회 · 공개 파일 대조', screen: '#platform-record',
+  },
+  {
     id: 'github-app-natural-renewal', topics: ['delivery'], scope: 'mini-pc', state: 'verified',
     title: '만료한 GitHub App 토큰의 자동 갱신',
     description: '기존 토큰의 자연 만료와 401 응답 뒤 Jenkins 네이티브 자격증명 접근 1회로 새 토큰의 200 응답·정확한 저장소·1시간 유효기간을 확인했습니다. 기존 설정과 비공개 입력은 보존했습니다.',
