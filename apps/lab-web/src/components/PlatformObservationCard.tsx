@@ -10,6 +10,8 @@ const browserMessages: Record<BrowserObservationError, string> = {
   NETWORK_ERROR: '브라우저의 연결 문제로 게시된 파일을 읽지 못했습니다.',
   INVALID_RECORD: '파일의 공개 형식을 확인할 수 없어 새 내용을 표시하지 않았습니다.',
   ABORTED: '브라우저의 파일 조회가 중단되거나 제한 시간을 넘었습니다.',
+  OLDER_RECORD: '이전에 읽은 기록보다 오래되어 새 내용을 적용하지 않았습니다.',
+  CONFLICTING_RECORD: '같은 수집 시각의 내용이 달라 새 내용을 적용하지 않았습니다.',
 };
 const collectorMessages = {
   NONE: '', GITHUB_STATUS_UNAVAILABLE: 'GitHub 검증 기록 조회 실패', ARGO_UNAVAILABLE: 'Argo CD 관측 실패',
@@ -74,6 +76,7 @@ export default function PlatformObservationCard({ observationUrl }: { observatio
     </div>
 
     {browserError && <div className="platform-record-notice" role="status"><strong>브라우저 조회 안내</strong><p>{browserMessages[browserError]}{retained ? ' 이전에 읽은 유효 기록을 유지합니다.' : ''} 이 안내는 수집기의 성공·실패 상태와 별도입니다.</p></div>}
+    {!browserError && retained && <p className="platform-record-notice" role="status">이전에 읽은 기록과 새 응답 중 최신 수집 시도와 최신 성공을 각각 유지합니다. 수집 시각과 출처는 그대로입니다.</p>}
     {view.collectorFailed && record && <div className="platform-record-notice record-caution" role="status"><strong>수집 실패 · {collectorMessages[record.latestAttempt.errorCode]}</strong><p>{success ? '아래는 마지막으로 성공한 수집 기록입니다. 새 수집 실패를 배포 실패나 서비스 중단으로 단정하지 않습니다.' : '아직 성공한 수집 기록이 없습니다.'}</p></div>}
     {view.freshness === 'clock-check' && <p className="platform-record-notice">기록의 시각이 브라우저보다 앞섭니다. 시각을 확인하기 전까지 최신 상태로 판단하지 않습니다.</p>}
 
