@@ -251,6 +251,75 @@ test('같은 run의 동일 원문은 멱등이며 metadata 충돌은 격리한�
   rejected(conflicting, ACTUAL_BINDING);
 });
 
+test('같은 PASS의 동등한 완료 시각은 입력 순서대로 최초 표기와 검토된 원문을 보존한다', () => {
+  const metadata = actual.metadata as Record<string, unknown>;
+  const equivalent = { ...actual, metadata: { ...metadata,
+    completedAt: (metadata.completedAt as string).replace('Z', '.000Z') } };
+  const before = JSON.stringify([actual, equivalent]);
+  for (const entries of [[actual, equivalent], [equivalent, actual]]) {
+    const result = buildTlsHistory(entries, [ACTUAL_BINDING], NOW);
+    assert.deepEqual(result, buildTlsHistory([entries[0]], [ACTUAL_BINDING], NOW));
+    assert.equal(result.quarantinedCount, 0);
+    assert.equal(result.visibleIssue, 'NONE');
+    assert.equal(result.records.length, 1);
+    assert.equal(result.lastAttempt, result.lastSuccess);
+    assert.equal(result.lastSuccess?.completedAt, (entries[0].metadata as Record<string, unknown>).completedAt);
+    assert.equal(result.lastSuccess?.artifactSha256, digest(actual.summaryText));
+    assert.deepEqual(result.lastSuccess?.summary, JSON.parse(actual.summaryText));
+  }
+  assert.equal(JSON.stringify([actual, equivalent]), before);
+});
+
+test('같은 FAILED의 동등한 완료 시각은 최초 실패 표기와 이전 PASS를 함께 보존한다', () => {
+  const failed = synthetic(1017, FAILED_FIELDS);
+  const equivalent = { ...failed.entry, metadata: { ...failed.entry.metadata,
+    completedAt: failed.entry.metadata.completedAt.replace('Z', '.000Z') } };
+  const before = JSON.stringify([failed.entry, equivalent]);
+  for (const entries of [[failed.entry, equivalent], [equivalent, failed.entry]]) {
+    const trusted = [ACTUAL_BINDING, failed.trusted];
+    const result = buildTlsHistory([actual, ...entries], trusted, NOW);
+    assert.deepEqual(result, buildTlsHistory([actual, entries[0]], trusted, NOW));
+    assert.equal(result.quarantinedCount, 0);
+    assert.equal(result.visibleIssue, 'LATEST_ATTEMPT_FAILED');
+    assert.equal(result.records.length, 2);
+    assert.equal(result.lastAttempt?.summary.status, 'FAILED');
+    assert.equal(result.lastAttempt?.completedAt, entries[0].metadata.completedAt);
+    assert.equal(result.lastAttempt?.artifactSha256, digest(failed.entry.summaryText));
+    assert.deepEqual(result.lastAttempt?.summary, JSON.parse(failed.entry.summaryText));
+    assert.equal(result.lastSuccess, result.records[0]);
+    assert.equal(result.lastSuccess?.artifactSha256, ACTUAL_HASH);
+  }
+  assert.equal(JSON.stringify([failed.entry, equivalent]), before);
+});
+
+test('같은 run의 실제 1ms 차이와 동등 완료 시각에 섞인 출처·원문 충돌은 격리한다', () => {
+  for (const item of [synthetic(1018), synthetic(1019, FAILED_FIELDS)]) {
+    const later = { ...item.entry, metadata: { ...item.entry.metadata, completedAt: '2026-10-20T15:53:00.001Z' } };
+    for (const entries of [[item.entry, later], [later, item.entry]]) {
+      const result = buildTlsHistory(entries, [item.trusted], NOW);
+      assert.equal(result.quarantinedCount, 1);
+      assert.equal(result.visibleIssue, 'QUARANTINED_INPUT');
+      assert.deepEqual(result.records, buildTlsHistory([entries[0]], [item.trusted], NOW).records);
+    }
+    const equivalent = { ...item.entry, metadata: { ...item.entry.metadata,
+      completedAt: item.entry.metadata.completedAt.replace('Z', '.000Z') } };
+    const changedEntries = [
+      ...[
+        { sourceCommit: 'c'.repeat(40) }, { artifactSha256: 'd'.repeat(64) },
+        { runUrl: item.trusted.runUrl + '1' },
+        { runConclusion: item.entry.metadata.runConclusion === 'success' ? 'failure' : 'success' },
+      ].map(change => ({ ...equivalent, metadata: { ...equivalent.metadata, ...change } })),
+      { ...equivalent, summaryText: item.entry.summaryText + ' ' },
+    ];
+    for (const changed of changedEntries) {
+      const result = buildTlsHistory([item.entry, changed], [item.trusted], NOW);
+      assert.equal(result.quarantinedCount, 1);
+      assert.equal(result.visibleIssue, 'QUARANTINED_INPUT');
+      assert.deepEqual(result.records, buildTlsHistory([item.entry], [item.trusted], NOW).records);
+    }
+  }
+});
+
 test('다른 대상·같은 시각·늦게 도착한 과거 관측을 재정렬해 합치지 않는다', () => {
   for (const changes of [
     { targetBindingSha256: 'f'.repeat(64) },
