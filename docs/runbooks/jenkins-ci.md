@@ -10,9 +10,9 @@ Jenkins 2.580.1에 `github-branch-source:1986.v801e40614d00`과 필요한 의존
 
 고정 credential의 native `getPassword()` 경로와 GitHub의 installation repositories GET 한 번으로 선택한 저장소 한 개의 일치를 확인했습니다. 이는 새 토큰의 매번 발급, 실제 만료·자동 갱신, installation ID의 독립 검증이나 commit status 쓰기를 증명하지 않습니다. 기존 PATv2는 삭제하거나 덮어쓰지 않았습니다.
 
-[Jenkinsfile](../../Jenkinsfile)의 pending·success·unsuccessful 세 바인딩은 `usernamePassword`를 사용하고, password만 기존 `GITHUB_STATUS_TOKEN` 환경 변수로 status client에 전달하도록 준비했습니다. 새 자격을 바인딩한 **새 CI build의 완료 증거는 아직 확인 전**입니다. 이후 실제 checkout SHA·새 queue/build 번호·검증 단계·필수 artifact를 연결하고, 같은 SHA와 build 번호의 pending artifact·success status ID·실제 issuer를 대조해야 합니다. 과거 PAT 기반 build 150의 성공을 App 기반 CI 성공으로 대신하지 않습니다.
+[Jenkinsfile](../../Jenkinsfile)의 pending·success·unsuccessful 세 바인딩은 native `usernamePassword`를 사용하고 password만 기존 `GITHUB_STATUS_TOKEN` 환경 변수로 status client에 전달합니다. 새 main `420cf2ce…`의 자동 build **151**에서 7개 필수 단계·산출물·실제 checkout SHA를 검증했고, App 작성자의 pending **57070838925** → success **57070972173**와 같은 소스의 Actions 성공을 확인했습니다. [실행 근거](../evidence/github-app-jenkins/README.md)에 범위와 한계를 기록했습니다.
 
-이미지 게시 gate의 예상 issuer는 실제 새 status 작성자를 확인한 뒤 정확한 값으로 연결합니다. 공개 관측 수집기·DTO·브라우저의 issuer 계약도 같은 실측 작성자와 맞춰야 하며, issuer 검사를 없애거나 새 상태를 건너뛰고 과거 성공을 선택하지 않습니다. 저장소 변수 변경·이미지 게시·GitOps 반영은 이 App 조회 확인과 별도 단계입니다.
+게시 gate의 `JENKINS_STATUS_ISSUER`는 실측한 `devdooly-platform-lab-ops[bot]`으로 전환했습니다. 새 관측 수집기는 이 작성자만 허용하며 최신 상태를 먼저 선택합니다. DTO·스키마·브라우저는 과거 `DevDooly` 기록도 읽도록 두 개의 명시 값만 허용합니다. 이는 과거 자료를 읽기 위한 호환성으로, 새 상태 수집이나 이미지 게시의 작성자 권한을 넓히지 않습니다. 새 상태가 맞지 않을 때 과거 성공으로 건너뛰지 않습니다.
 
 ## 실행하는 작업
 

@@ -24,7 +24,7 @@ REVISION = 'c' * 40
 CANARY = 'SYNTHETIC_PRIVATE_VALUE_MUST_NEVER_APPEAR'
 
 
-def status(state='success', number=11, issuer='DevDooly'):
+def status(state='success', number=11, issuer='devdooly-platform-lab-ops[bot]'):
     return {'id':123,'context':'ci/jenkins-test','state':state,
             'creator':{'login':issuer,'email':CANARY},
             'description':f'Jenkins build #{number}: '+collector.DESCRIPTIONS[state],
@@ -108,6 +108,7 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(value['lastSuccess']['mainCommit'],MAIN)
         self.assertEqual(value['lastSuccess']['deploymentSourceCommit'],DEPLOYED)
         self.assertEqual(value['lastSuccess']['argo']['revision'],REVISION)
+        self.assertEqual(value['lastSuccess']['jenkins']['issuer'],'devdooly-platform-lab-ops[bot]')
         self.assertNotIn(CANARY,json.dumps(value))
 
     def test_all_actual_jenkins_states_are_collection_success(self):
@@ -123,9 +124,21 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(value['lastSuccess']['jenkins']['state'],'failure')
 
     def test_wrong_latest_issuer_does_not_fall_back(self):
-        value=snapshot(Sources([status('success',12,'Impersonator'),status('success',11)]))
-        self.assertEqual(value['latestAttempt']['errorCode'],'INVALID_OBSERVATION')
-        self.assertIsNone(value['lastSuccess'])
+        previous=snapshot();previous['lastSuccess']['jenkins']['issuer']='DevDooly'
+        for issuer in ('DevDooly','Impersonator','devdooly-platform-lab-ops',
+                       'devdooly-platform-lab-ops[bot] ','DevDooly-platform-lab-ops[bot]',None):
+            with self.subTest(issuer=issuer):
+                sources=Sources([status('success',12,issuer),status('success',11)])
+                value=snapshot(sources)
+                self.assertEqual(value['latestAttempt']['errorCode'],'INVALID_OBSERVATION')
+                self.assertIsNone(value['lastSuccess'])
+                preserved=snapshot(sources,LATER,previous)
+                self.assertEqual(preserved['latestAttempt'],{'attemptedAt':LATER,
+                    'status':'failure','errorCode':'INVALID_OBSERVATION'})
+                self.assertEqual(preserved['lastSuccess'],previous['lastSuccess'])
+                self.assertIsNot(preserved['lastSuccess'],previous['lastSuccess'])
+                self.assertEqual(preserved['lastSuccess']['capturedAt'],NOW)
+                self.assertNotIn(CANARY,json.dumps(preserved))
 
     def test_unknown_description_is_not_publicized(self):
         bad=status();bad['description']=CANARY
@@ -213,7 +226,7 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(value['latestAttempt']['errorCode'],'INVALID_OBSERVATION')
 
     def test_failed_sources_preserve_entire_previous_success(self):
-        previous=snapshot()
+        previous=snapshot();previous['lastSuccess']['jenkins']['issuer']='DevDooly'
         for code in ('GITHUB_STATUS_UNAVAILABLE','ARGO_UNAVAILABLE','WORKLOADS_UNAVAILABLE','AUTHENTICATION_FAILED','TIMEOUT','COLLECTION_FAILED'):
             with self.subTest(code=code):
                 def failed(path,error_code):raise collector.CollectionError(code)
@@ -305,6 +318,18 @@ class ContractTests(unittest.TestCase):
 
     def test_jenkins_source_must_match_current_main(self):
         self.reject(lambda value:value['lastSuccess']['jenkins'].update(sourceCommit=DEPLOYED))
+
+    def test_only_historical_and_current_jenkins_issuer_literals_are_valid(self):
+        clock=datetime.fromisoformat(LATER.replace('Z','+00:00'))
+        for issuer in ('DevDooly','devdooly-platform-lab-ops[bot]'):
+            with self.subTest(issuer=issuer):
+                value=snapshot();value['lastSuccess']['jenkins']['issuer']=issuer
+                self.assertIs(validate_snapshot(value,clock),value)
+        for issuer in ('devdooly','devdooly-platform-lab-ops','devdooly-platform-lab-ops[bot] ',
+                       'someone-else',None,[],{}):
+            with self.subTest(issuer=issuer):
+                self.reject(lambda value:value['lastSuccess']['jenkins'].update(issuer=issuer))
+        self.reject(lambda value:value['lastSuccess']['jenkins'].pop('issuer'))
 
     def test_failure_none_code_and_success_without_snapshot_are_rejected(self):
         self.reject(lambda value:value['latestAttempt'].update(status='failure'))

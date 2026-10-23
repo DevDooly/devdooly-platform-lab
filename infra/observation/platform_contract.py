@@ -93,7 +93,8 @@ def validate_snapshot(value: Any, now: datetime | None = None) -> dict:
         require(isinstance(jenkins['state'], str) and jenkins['state'] in STATES)
         moment(jenkins['createdAt'], captured)
         integer(jenkins['buildNumber'], 1, MAX_BUILD_NUMBER)
-        require(jenkins['issuer'] == 'DevDooly')
+        require(isinstance(jenkins['issuer'], str)
+                and jenkins['issuer'] in {'DevDooly', 'devdooly-platform-lab-ops[bot]'})
     argo = exact(last['argo'], {'revision', 'sync', 'health'})
     commit(argo['revision'])
     require(isinstance(argo['sync'], str) and argo['sync'] in SYNC

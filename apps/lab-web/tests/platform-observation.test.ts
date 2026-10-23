@@ -27,6 +27,12 @@ function observation(): PlatformObservationRecord {
 test('accepts separate main, Jenkins, GitOps and deployed source evidence without collapsing rollback SHAs', () => {
   const record = observation();
   assert.equal(validatePlatformObservation(record), true);
+  for (const issuer of ['DevDooly', 'devdooly-platform-lab-ops[bot]'] as const) {
+    const candidate = structuredClone(record);
+    candidate.lastSuccess!.jenkins!.issuer = issuer;
+    assert.equal(validatePlatformObservation(candidate), true);
+    assert.equal(candidate.lastSuccess!.capturedAt, record.lastSuccess!.capturedAt);
+  }
   assert.notEqual(record.lastSuccess!.mainCommit, record.lastSuccess!.argo.revision);
   assert.notEqual(record.lastSuccess!.argo.revision, record.lastSuccess!.deploymentSourceCommit);
   assert.equal(validatePlatformObservation({ ...record, lastSuccess: { ...record.lastSuccess!, jenkins: null } }), true);
@@ -65,7 +71,13 @@ test('rejects missing keys, mismatched source/issuer and unchecked numeric value
     delete candidate.lastSuccess[key];
     assert.equal(validatePlatformObservation(candidate), false);
   }
-  for (const change of [{ sourceCommit: 'f'.repeat(40) }, { issuer: 'someone-else' }, { statusId: Number.MAX_SAFE_INTEGER + 1 }, { buildNumber: 0 }, { state: 'running' }]) {
+  const missingIssuer = structuredClone(record) as unknown as { lastSuccess: { jenkins: Record<string, unknown> } };
+  delete missingIssuer.lastSuccess.jenkins.issuer;
+  assert.equal(validatePlatformObservation(missingIssuer), false);
+  for (const change of [{ sourceCommit: 'f'.repeat(40) }, { issuer: 'someone-else' },
+    { issuer: 'devdooly' }, { issuer: 'devdooly-platform-lab-ops' }, { issuer: 'devdooly-platform-lab-ops[bot] ' },
+    { issuer: 'DevDooly-platform-lab-ops[bot]' }, { issuer: null }, { issuer: [] }, { issuer: {} },
+    { statusId: Number.MAX_SAFE_INTEGER + 1 }, { buildNumber: 0 }, { state: 'running' }]) {
     assert.equal(validatePlatformObservation({ ...record, lastSuccess: { ...record.lastSuccess!, jenkins: { ...record.lastSuccess!.jenkins!, ...change } } }), false);
   }
 });
@@ -136,6 +148,7 @@ test('loader discards an invalid previous record, marks abort separately and doe
 });
 test('real HTTP lookup uses public file only, omits credentials and preserves collector timestamps', async () => {
   const record = observation();
+  record.lastSuccess!.jenkins!.issuer = 'devdooly-platform-lab-ops[bot]';
   const server = createServer((request, response) => {
     assert.equal(request.url, '/base/data/platform-observation.json');
     assert.equal(request.headers.authorization, undefined);
@@ -162,4 +175,5 @@ test('JSON Schema itself closes all object boundaries and matches fixed workload
   assert.equal(schema.$defs.success.properties.workloads.minItems, 3);
   assert.deepEqual(schema.$defs.database.required, ['component', 'desired', 'ready']);
   assert.equal(schema.properties.latestAttempt.properties.errorCode.enum.includes('NONE'), true);
+  assert.deepEqual(schema.$defs.jenkins.properties.issuer, { enum: ['DevDooly', 'devdooly-platform-lab-ops[bot]'] });
 });

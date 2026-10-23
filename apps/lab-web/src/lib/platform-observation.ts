@@ -14,7 +14,7 @@ export interface JenkinsObservation {
   state: 'pending' | 'success' | 'failure' | 'error';
   createdAt: string;
   buildNumber: number;
-  issuer: 'DevDooly';
+  issuer: 'DevDooly' | 'devdooly-platform-lab-ops[bot]';
 }
 export interface ArgoObservation {
   revision: string;
@@ -66,7 +66,8 @@ function isJenkins(value: unknown): value is JenkinsObservation {
   return object(value) && exact(value, ['sourceCommit', 'statusId', 'state', 'createdAt', 'buildNumber', 'issuer'])
     && sha(value.sourceCommit) && integer(value.statusId, 1, Number.MAX_SAFE_INTEGER)
     && oneOf(value.state, ['pending', 'success', 'failure', 'error']) && utcNanoseconds(value.createdAt) !== null
-    && integer(value.buildNumber, 1, 2_147_483_647) && value.issuer === 'DevDooly';
+    && integer(value.buildNumber, 1, 2_147_483_647)
+    && oneOf(value.issuer, ['DevDooly', 'devdooly-platform-lab-ops[bot]']);
 }
 function isArgo(value: unknown): value is ArgoObservation {
   return object(value) && exact(value, ['revision', 'sync', 'health']) && sha(value.revision)

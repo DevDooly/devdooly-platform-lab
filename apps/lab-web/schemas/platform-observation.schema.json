@@ -159,7 +159,10 @@
           "maximum": 2147483647
         },
         "issuer": {
-          "const": "DevDooly"
+          "enum": [
+            "DevDooly",
+            "devdooly-platform-lab-ops[bot]"
+          ]
         }
       }
     },

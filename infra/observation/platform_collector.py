@@ -134,7 +134,7 @@ def latest_jenkins(get: Callable, source: str, ceiling: datetime) -> dict | None
             # back to an older success when a newer status fails verification.
             state = record.get('state')
             require(isinstance(state, str) and state in DESCRIPTIONS)
-            require(str(record.get('creator', {}).get('login', '')).lower() == 'devdooly')
+            require(record.get('creator', {}).get('login') == 'devdooly-platform-lab-ops[bot]')
             description = record.get('description')
             require(isinstance(description, str))
             match = re.fullmatch(r'Jenkins build #([1-9][0-9]*): ' + re.escape(DESCRIPTIONS[state]), description)
@@ -143,7 +143,7 @@ def latest_jenkins(get: Callable, source: str, ceiling: datetime) -> dict | None
             created = record.get('created_at')
             moment(created, ceiling)
             return {'sourceCommit':source, 'statusId':integer(record.get('id'), 1), 'state':state,
-                    'createdAt':created, 'buildNumber':number, 'issuer':'DevDooly'}
+                    'createdAt':created, 'buildNumber':number, 'issuer':'devdooly-platform-lab-ops[bot]'}
         if len(records) < 100:
             return None
     # Do not call a truncated search "not reported".
