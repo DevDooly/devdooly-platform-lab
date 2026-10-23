@@ -26,6 +26,16 @@ Kafka 본문 수신 중 일반 전송 오류를 INVALID_RECORD로 오분류하�
 
 [PR215](https://github.com/DevDooly/devdooly-platform-lab/pull/215)의 병합 main a523516342de5a20392f2aab07ffd1a42893a938에서 [Linux CI39959141358](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39959141358)의 verify·public-read-gateway가 성공했다. 실제 job 로그에서 웹262개·통과262·생략/실패0, Astro50파일 진단0·2페이지 빌드를 확인했으며 선택적 Spark/S3/Iceberg/Cloud 실증4개는 생략했다. push로 실행된 [Pages39959141505](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39959141505)의 build·deploy도 성공했다. 고정 공개 경로의 GET2회에서 현재 HTML의 KafkaObservationCard.C-s4sSuM.js 참조와 제공된9,520바이트·SHA-256 0fb64b71278da652c700caa5b763836a008e191359ec77a2384a5ce524a7c34a의 로컬 빌드 일치를 확인했고, 검사기는 exit0·PUBLIC_KAFKA_BUNDLE_MATCHED를 반환했다. 이 확인은 proxy 비사용·redirect/retry0의 HTML 참조·JS bytes 게시 근거이며 새 브라우저 실행이나 운영 장애 주입 검증과 구분한다.
 
-API·게시본이 모두 실패할 때 직전 API 기록까지 화면에서 사라지던 경계도 보완했다. 유효 게시본이 없고 live 오류·이전 기록 보존 표시가 있으며, loader가 검증해 돌려준 값이 null이 아닌 동일 previousLive 객체이고 acceptLive 조건도 통과한 경우에만 원 객체·수집 시각을 유지한다. 유효 게시본 우선·출처별 cache 분리는 유지하고 공통 source 선택 helper에만 추가했으며 UI·개별 loader는 바꾸지 않았다. sourceMode=api·retainedPrevious=true와 새 live 오류를 함께 표시하므로 새 API 성공으로 승격하지 않는다. fallbackUsed=false는 게시본 미사용을 뜻하며 조회 미시도라는 뜻은 아니고, 게시 조회 실패는 fallbackBrowserError에 따로 남긴다. 새 회귀4개 중 수정 전3개 실패·수정 후 관련11개 통과, 독립 경계8개·출처/객체 동일성11조합 통과를 확인했다. Node24.19의 로컬 전체 웹270개·통과270·생략/실패0, Astro50파일 진단0·프로젝트 경로2페이지 빌드가 통과했다. 이번 보존 후속의 main CI·Pages·공개 산출물 확인은 아직 대기 중이다.
+API·게시본이 모두 실패할 때 직전 API 기록까지 화면에서 사라지던 경계도 보완했다. 유효 게시본이 없고 live 오류·이전 기록 보존 표시가 있으며, loader가 검증해 돌려준 값이 null이 아닌 동일 previousLive 객체이고 acceptLive 조건도 통과한 경우에만 원 객체·수집 시각을 유지한다. 유효 게시본 우선·출처별 cache 분리는 유지하고 공통 source 선택 helper에만 추가했으며 UI·개별 loader는 바꾸지 않았다. sourceMode=api·retainedPrevious=true와 새 live 오류를 함께 표시하므로 새 API 성공으로 승격하지 않는다. fallbackUsed=false는 게시본 미사용을 뜻하며 조회 미시도라는 뜻은 아니고, 게시 조회 실패는 fallbackBrowserError에 따로 남긴다. 새 회귀4개 중 수정 전3개 실패·수정 후 관련11개 통과, 독립 경계8개·출처/객체 동일성11조합 통과를 확인했다. Node24.19의 로컬 전체 웹270개·통과270·생략/실패0, Astro50파일 진단0·프로젝트 경로2페이지 빌드가 통과했다.
+
+[PR219](https://github.com/DevDooly/devdooly-platform-lab/pull/219)의 병합 main7346fca821b79cdcc2ad25ed35055c3d3aa7f8a2에서 [Linux CI39962341443](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39962341443)의 verify·public-read-gateway가 성공했다. 실제 job 로그에서도 웹270개·통과270·생략/실패0, Astro50파일 진단0·2페이지 빌드를 확인했으며 선택적 Spark/S3/Iceberg/Cloud 실증4개는 생략했다. push로 실행된 [Pages39962341546](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39962341546)의 build·deploy도 성공했다. 고정 공개 경로의 GET4회에서 HTML이 Job·Kafka 카드를 모두 참조하고 두 카드가 같은 source helper를 참조하며, 아래 JS3개의 전체 bytes가 로컬 빌드와 일치함을 확인했다. 검사기는 exit0·PUBLIC_RETENTION_ASSETS_MATCHED를 반환했다.
+
+| 공개 파일 | bytes | 로컬·공개 일치 SHA-256 |
+| --- | --- | --- |
+| JobObservationCard.tio_kgC-.js | 19,210 | 0ca1ac451999cb175efd9d0a57253fbd546bc23a8682f90db02770bd955bdeb2 |
+| KafkaObservationCard.BFXMMWUf.js | 9,520 | 73935ee78e69dfb2105865404d1d7b8d4b0c34f180cca65683596db033d3e462 |
+| public-observation-source.CO7V-nKt.js | 959 | af89562a2871185fbca713b4e0604c8ed1daa13bd9c7960e65ffdf4e4a574dfc |
+
+이 확인은 HTML 참조·카드와 helper의 연결·JS bytes 게시 근거다. 새 브라우저 실행·운영 장애 주입·현재 health·전체 처리 시간의 hard deadline 검증과 구분하며 로그나 응답 원문은 공개하지 않는다.
 
 보호 범위는 한 브라우저 세션의 응답 적용이다. 서버·게시 순서·탭 간 영구 이력·운영 복구·장기 가용성은 보장하지 않는다. Pages 토큰 교체·별도 환경 기동 복원·자원 예산 정책·PR #102는 보류한다.
