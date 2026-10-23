@@ -5,6 +5,7 @@
 .policy-example-select { display:flex; flex-direction:column; gap:8px; max-width:620px; margin:24px 0 16px; }
 .policy-example-select label { font-weight:700; }
 .policy-example-select select { width:100%; min-height:48px; padding:10px; border:1px solid var(--muted); background:var(--surface); font-size:1rem; }
+.policy-example-select select:disabled { cursor:wait; opacity:.65; }
 .policy-example-policy,.policy-example-note { color:var(--muted); margin:16px 0; }
 .policy-example-outcome { padding:24px; background:var(--mint); margin:20px 0; }
 .policy-example-outcome p[role=status] { font-weight:700; margin-bottom:10px; }

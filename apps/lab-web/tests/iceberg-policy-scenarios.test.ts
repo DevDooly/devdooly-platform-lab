@@ -31,6 +31,9 @@ test('default rendering is labelled synthetic with a native labelled selector an
   const html = render();
   assert.ok(html.includes('합성 정책 예제'));
   assert.ok(html.includes('for="policy-example-choice"'));
+  assert.match(html, /<select\b[^>]*id="policy-example-choice"[^>]*disabled=""/);
+  assert.ok(html.includes('aria-busy="true"'));
+  assert.ok(html.includes('화면 조작 준비 중입니다.'));
   assert.equal((html.match(/<option\b/g) ?? []).length, 3);
   assert.ok(html.includes('CURRENT_ANCESTOR'));
   assert.ok(!/<details[^>]*\bopen(?:\s|=|>)/.test(html));

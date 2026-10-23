@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import '../styles/iceberg-policy-scenarios.css';
 
 type Action = 'KEEP' | 'EXPIRATION_CANDIDATE';
@@ -85,13 +85,16 @@ function ReasonRow({ row, title }: { row: Row; title: string }) {
 export default function IcebergPolicyScenarios({ bundle, initialScenarioId = 'current-ancestor' }: { bundle: unknown; initialScenarioId?: string }) {
   const data = useMemo(() => parsePolicyScenarios(bundle), [bundle]);
   const [selectedId, setSelectedId] = useState(initialScenarioId);
+  const [interactive, setInteractive] = useState(false);
+  useEffect(() => { setInteractive(true); }, []);
   const selected = data?.scenarios.find(item => item.id === selectedId) ?? data?.scenarios[0];
   return <section id="iceberg-policy-scenarios" className="section policy-examples" aria-labelledby="policy-examples-title">
     <div className="section-heading"><div><span className="eyebrow">SYNTHETIC / SAVED PYTHON RESULTS</span>
       <h2 id="policy-examples-title">보존 조건에 따른 판단을 살펴봅니다.</h2><p>공개 합성 입력으로 미리 계산한 세 결과를 선택합니다.</p></div><span className="tag">합성 정책 예제</span></div>
     <p id="policy-examples-hint">같은 정책에서 parent 연결 또는 가정 시각만 바꿨습니다. 개인 합성 snapshot9개·파일9개의 입력이며 기존 Cloud 검증 기록과 별도입니다.</p>
     {data && selected ? <>
-      <div className="policy-example-select"><label htmlFor="policy-example-choice">합성 조건</label><select id="policy-example-choice" value={selected.id} aria-describedby="policy-examples-hint" onChange={event => setSelectedId(event.target.value)}>{data.scenarios.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select></div>
+      <div className="policy-example-select" aria-busy={!interactive}><label htmlFor="policy-example-choice">합성 조건</label><select id="policy-example-choice" value={selected.id} disabled={!interactive} aria-describedby="policy-examples-hint policy-examples-input-help" onChange={event => setSelectedId(event.target.value)}>{data.scenarios.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select>
+        <p id="policy-examples-input-help" className="policy-example-note">{!interactive && '화면 조작 준비 중입니다. '}선택은 저장된 합성 결과만 바꿉니다. 새 계산·서버 작업을 실행하지 않습니다.</p></div>
       <p className="policy-example-policy">고정 정책 · 최소 경과7일 · 최소 보관1개 · 입력 유효300초</p>
       <div className={`policy-example-outcome${selected.plan.status === 'UNDETERMINED' ? ' policy-example-undetermined' : ''}`}>
         <p role="status" aria-live="polite" aria-atomic="true">{selected.label} · {selected.plan.status === 'UNDETERMINED' ? '판정 보류' : '보존 계획 확인'}</p>
