@@ -82,6 +82,10 @@ class JsonTransport:
         try:
             with self.opener.open(request, timeout=min(6, remaining)) as response:
                 body = response.read(MAX_BODY + 1)
+            # A completed body can arrive after the shared collection deadline.
+            # In particular, the final main check has no subsequent request guard.
+            if time.monotonic() >= self.deadline:
+                raise CollectionError('TIMEOUT')
             if len(body) > MAX_BODY:
                 raise CollectionError(error_code)
             return json.loads(body)
@@ -311,6 +315,52 @@ def atomic_save(path: Path, snapshot: dict, now: datetime) -> None:
             os.unlink(temporary)
 
 
+class CollectorLock:
+    """Keep the inode; the OS releases the writer lock on process death."""
+    def __init__(self, path: Path):
+        self.path = path
+        self.descriptor = None
+
+    def __enter__(self):
+        if self.path.is_symlink():
+            raise CollectionError('COLLECTION_FAILED')
+        try:
+            self.descriptor = os.open(self.path, os.O_RDWR | os.O_CREAT
+                                      | getattr(os, 'O_NOFOLLOW', 0)
+                                      | getattr(os, 'O_CLOEXEC', 0), 0o600)
+        except OSError:
+            raise CollectionError('COLLECTION_FAILED') from None
+        try:
+            info = os.fstat(self.descriptor)
+            if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1
+                    or (os.name == 'posix' and (info.st_uid != os.geteuid()
+                                               or stat.S_IMODE(info.st_mode) != 0o600))):
+                raise CollectionError('COLLECTION_FAILED')
+            try:
+                if os.name == 'posix':
+                    import fcntl
+                    fcntl.flock(self.descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                elif os.name == 'nt':
+                    import msvcrt
+                    if info.st_size == 0:
+                        os.write(self.descriptor, b'\0')
+                    os.lseek(self.descriptor, 0, os.SEEK_SET)
+                    msvcrt.locking(self.descriptor, msvcrt.LK_NBLCK, 1)
+                else:
+                    raise CollectionError('COLLECTION_FAILED')
+            except OSError:
+                raise CollectionError('COLLECTION_FAILED') from None
+        except BaseException:
+            self.__exit__()
+            raise
+        return self
+
+    def __exit__(self, *unused):
+        if self.descriptor is not None:
+            os.close(self.descriptor)
+            self.descriptor = None
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description='Read-only platform observer; endpoints and credentials are never printed.')
     parser.add_argument('--server', required=True)
@@ -325,7 +375,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         clock = datetime.now(timezone.utc)
         args.output.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-        lock = os.open(lock_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, 'O_NOFOLLOW', 0), 0o600)
+        lock = CollectorLock(lock_path)
+        lock.__enter__()
         previous = read_previous(args.previous or args.output, clock)
         completed_clock = lambda: datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
         deadline = time.monotonic() + args.deadline_seconds
@@ -355,11 +406,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     finally:
         if lock is not None:
-            try:
-                os.close(lock)
-                os.unlink(lock_path)
-            except OSError:
-                pass
+            lock.__exit__()
 
 
 if __name__ == '__main__':

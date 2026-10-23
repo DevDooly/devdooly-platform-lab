@@ -1,5 +1,7 @@
 # GitHub App 토큰 자연 만료 후 Jenkins 갱신
 
+README·공개 카드·Pages와 별도 컨테이너 검증의 상태는 [공개 반영 근거](PUBLICATION.md)를 따릅니다.
+
 2026-10-23 **19:19:30(KST)**에 Jenkins의 기본 자격증명 저장소에 있는 App credential을 사용해, 실제 만료한 토큰의 거부와 native 갱신 후 인증 성공을 한 주기 확인했습니다. 공개 기록은 [제한된 요약 JSON](natural-expiry-summary.json)이며, 토큰·개인키·관리 응답·캐시 원문·접속 정보는 포함하지 않습니다.
 
 ## 실제 관측 순서

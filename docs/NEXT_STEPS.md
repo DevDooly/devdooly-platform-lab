@@ -4,7 +4,9 @@
 
 [Jenkins GitHub App 연결](evidence/github-app-jenkins/README.md)에 이어 [설치 토큰의 자연 만료 후 갱신](evidence/github-app-jenkins/NATURAL_EXPIRY.md) 한 주기를 완료했습니다. 19:18:35 만료 → 19:19:28 기존 토큰 401 → native credential 접근 1회 → 19:19:30 새 토큰 200·정확한 저장소 일치 → 20:19:30 새 만료를 확인했습니다. 유효기간은 응답 시각부터 3,600초이고 credential 소속·job 구성과 상태·비밀 입력은 보존했습니다. 접근 시의 lazy refresh이며 선제·주기 발급, 키 교체·권한 철회 복구, 이번 갱신 뒤 새 전체 CI 실행은 미검증입니다. 앞선 첫 만료 시도는 UNVERIFIED로 유지합니다.
 
-다음은 [공개 요약 JSON](evidence/github-app-jenkins/natural-expiry-summary.json)과 포트폴리오의 갱신 흐름·범위·한계를 연결하고, 같은 소스의 웹 검증·CI·Pages 게시와 공개 데스크톱·모바일 반영을 확인하는 일입니다. 해당 게시 검증이 끝나기 전에는 공개 반영 완료로 표시하지 않습니다. 이후 작업도 새 토큰·별도 환경이 필요하지 않은 범위에서 진행하며, 계정 잔여 사용 한도가 60% 이하가 되면 중단합니다.
+[공개 요약·갱신 카드와 Pages 게시](evidence/github-app-jenkins/PUBLICATION.md)를 완료하고 공개 데스크톱·모바일의 시각·범위·링크·키보드 펼치기를 확인했습니다. Pages 성공과 별도 컨테이너 빌드 결과는 구분하며 웹 이미지의 JSON 누락은 PR #196에서 교정했습니다. 수정 브랜치의 실제 Linux 이미지 빌드·통합 verify와 별도 App Jenkins153 pending→success도 확인했으며, 운영 이미지 pin은 유지합니다.
+
+현재 후속은 [관측 응답 완료 시한·강제 종료 후 OS 잠금 복구](evidence/collector-completion-boundaries/README.md)입니다. 시한 초과 응답의 TIMEOUT·이전 성공 보존과 Linux173개·SIGKILL 뒤 같은 inode 재획득을 확인했습니다. 저장소 검증과 운영 설치를 구분하며 기존 O_EXCL 수집기 유휴·외부 cycle lock 아래 교체와 자연 관측/Pages 연결은 아직 후속입니다. 새 토큰·별도 환경이 필요하지 않은 범위에서 진행하고, 계정 잔여 사용 한도가 60% 이하가 되면 중단합니다.
 
 **보류:** Pages 토큰 교체·별도 환경의 K3s/Jenkins 실제 기동 복원·자원 예산 정책·[PR #102 접수 gate](https://github.com/DevDooly/devdooly-platform-lab/pull/102)는 재개하지 않습니다. 인증서 자연 갱신·현재 공개 경로의 재부팅은 여전히 미검증입니다. 이전 기록의 일반적인 “토큰 교체 보류” 표현은 당시 상태이며, 현재 보류하는 토큰 작업은 Pages 토큰 교체입니다.
 

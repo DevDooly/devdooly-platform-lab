@@ -1,5 +1,7 @@
 # 공개 플랫폼 수집기와 호스트 자동화
 
+2026-10-23 저장소 후속은 [응답 완료 시한·OS 잠금 회귀 근거](../../docs/evidence/collector-completion-boundaries/README.md)를 따릅니다. 시한 후 완료 응답은 TIMEOUT으로 처리하고, 잠금 파일은 유지하며 OS 잠금만 해제합니다. 구 O_EXCL 실행기와 동시에 사용하지 않으며 운영 교체는 외부 cycle lock 아래 유휴 상태에서 수행해야 합니다. 이 안내만으로 미니 PC 설치 반영을 주장하지 않습니다.
+
 작업·export의 실제 배포 기록은 선택적 [작업 관측 자동화](JOBS_AUTOMATION.md)로 같은 outbound Pages 주기에 연결한다. 기존 플랫폼 관측 계약과 파일은 별도로 보존한다.
 
 Python 표준 라이브러리만 사용하는 읽기 전용 수집기입니다. 공개 GitHub main의 Jenkins commit status와 K3s의 제한된 리소스를 읽고, platform-observation v1의 허용 필드만 저장합니다. 실제 RBAC 적용·수집·인증 실패 후 이전 성공 보존·Pages 게시를 검증했습니다. 전용 Pages 자격증명 등록 후 수동 host cycle·실제 systemd service·timer 최초 자동 실행의 게시와 전체 공개 JSON 일치도 확인했습니다. [실행 근거와 남은 범위](../../docs/evidence/platform-observation/README.md)를 함께 확인합니다.
