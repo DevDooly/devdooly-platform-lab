@@ -14,7 +14,7 @@
 
 다음 운영 검증은 인증서 자연 갱신 시점의 재관측입니다. 기존 유효기간 기록만으로 갱신 성공을 미리 판단하지 않으며 강제 갱신·서비스 재시작은 하지 않습니다. 현재 공개 경로의 재부팅 검증은 서비스 영향과 실행 시점 확인 후 별도로 진행합니다.
 
-**작업 수집기 배포 완료 / 자연 회차 PENDING:** [read·close 뒤 완료 시한 검사](evidence/job-response-deadline/README.md)의 Linux179개·skip0와 PR200 main 검증에 이어 **21:18:16(KST)** [job collector 한 파일의 운영 교체](evidence/job-response-deadline/DEPLOYED.md)를 완료했습니다. 새 코드4,147바이트·SHA·root0600과 다른 코드7개·unit2개 보존을 별도 사후 점검했습니다. 선택한 state projection은 교체 전 기록과 같으며 전체 본문 불변이나 새 수집 성공의 증명은 아닙니다. 다음 기존 자연 회차의 새 job 수집과 정확한 Pages 게시 연결은 아직 확인하지 않았습니다.
+**작업 수집기 배포·자연 회차 확인:** [read·close 뒤 완료 시한 검사](evidence/job-response-deadline/README.md)의 Linux179개·skip0와 PR200 main 검증에 이어 **21:18:16(KST)** [job collector 한 파일의 운영 교체](evidence/job-response-deadline/DEPLOYED.md)를 완료했습니다. 새 코드4,147바이트·SHA·root0600과 다른 코드7개·unit2개 보존을 별도 사후 점검했습니다. 선택한 state projection은 교체 전 기록과 같으며 전체 본문 불변이나 새 수집 성공의 증명은 아닙니다. 이후 [21:42:49–21:42:53(KST) 자연 회차](evidence/job-response-deadline/NATURAL_PUBLICATION.md)의 새 job 수집·Pages39955401692 attempt1 build·deploy와 공개 JSON3개·artifact 전체 bytes 일치를 별도로 연결했습니다. 한 회차의 결과이며 service 구간은 보고된 초, state/artifact 시각 일치는 nanosecond 정밀도로 구분합니다.
 
 **보류:** Pages 토큰 교체·별도 환경의 K3s/Jenkins 실제 기동 복원·자원 예산 정책·[PR #102 접수 gate](https://github.com/DevDooly/devdooly-platform-lab/pull/102)는 재개하지 않습니다. 인증서 자연 갱신·현재 공개 경로의 재부팅은 여전히 미검증입니다. 이전 기록의 일반적인 “토큰 교체 보류” 표현은 당시 상태이며, 현재 보류하는 토큰 작업은 Pages 토큰 교체입니다.
 

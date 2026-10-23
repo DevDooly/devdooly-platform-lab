@@ -1,6 +1,6 @@
 # 작업 수집기 한 파일의 운영 교체
 
-2026-10-23 **21:18:16(KST)**에 응답 read·close 뒤 완료 시한을 검사하는 작업 수집기 코드 한 파일을 반영했습니다. 실제 완료 시각은 2026-10-23T12:18:16.815632Z입니다. 교체 실행과 별도 읽기 전용 사후 점검에서 새 코드 pin·권한과 보존 항목을 확인했습니다. **새 작업 수집기의 자연 수집·Pages 게시 연결은 아직 PENDING**입니다.
+2026-10-23 **21:18:16(KST)**에 응답 read·close 뒤 완료 시한을 검사하는 작업 수집기 코드 한 파일을 반영했습니다. 실제 완료 시각은 2026-10-23T12:18:16.815632Z입니다. 교체 실행과 별도 읽기 전용 사후 점검에서 새 코드 pin·권한과 보존 항목을 확인했습니다. 이후 **[21:42 자연 회차의 새 job 수집·Pages 게시](NATURAL_PUBLICATION.md)**를 별도로 확인했습니다.
 
 ## 코드와 검증 출처
 
@@ -27,8 +27,8 @@
 
 별도 전후 점검의 선택된 state projection은 같았습니다. platform 마지막 성공은 2026-10-23T12:11:52.567902Z, job 관측은 2026-10-23T12:11:52.658291695Z, Kafka 관측은 2026-10-23T12:11:52.966210066Z였으며 모두 교체 전 기록입니다. platform main 6ed465ea6d6caf352988caad42b44af8f8a073b1과 배포 API 소스245d61a5749760a20918ab091d9410ce6735b1c0도 각각 보존됐습니다. 이는 선택한 시각·상태·출처의 동일성이며 전체 state 본문 바이트 불변이나 새 job 수집 성공의 증명이 아닙니다.
 
-## 남은 완료 조건 — PENDING
+## 배포 후 자연 회차와 Pages 연결
 
-다음 기존 자연 회차에서 교체 이후 시작한 실행·새 job 수집 완료 시각·성공 상태·API 출처를 확인해야 합니다. 이어 그 회차의 정확한 Pages run/attempt/head와 실제 build·deploy, 해당 job artifact와 공개 job JSON의 전체 bytes 일치를 연결해야 합니다. 수동 trigger·timer 주기 단축은 하지 않았습니다.
+[21:42:49–21:42:53(KST) 자연 회차](NATURAL_PUBLICATION.md)에서 새 job pin과 교체 뒤 전진한 수집 시각·API 출처를 확인했습니다. 같은 invocation의 Pages39955401692 attempt1·head571f0ba3의 build·deploy 성공, 공개 JSON3개와 대응 artifact의 전체 bytes 일치를 연결했습니다. state와 artifact의 platform·job 시각은 nanosecond 단위로 일치하며 service 구간 비교는 보고된 초 정밀도입니다. 수동 trigger·timer 주기 단축은 하지 않았습니다.
 
 job 단계가 실패해도 platform 게시가 성공할 수 있으므로 platform 성공만으로 새 job 성공을 주장하지 않습니다. 위 교체 전 기록이나 PR200의 Pages 성공으로 이 조건을 대신하지 않습니다. [read·close 완료 시한의 오프라인 한계](README.md)를 유지하며 전체 수집 시간의 hard deadline·장기 가용성을 검증한 결과로 확대하지 않습니다. Pages 토큰 교체·별도 K3s/Jenkins 기동 복원·자원 예산 정책·PR #102 보류는 유지합니다.
