@@ -121,6 +121,11 @@ export interface JobObservationLoad { record: JobObservationRecord | null; brows
 /** Match immutable capture evidence without treating object key order as a change. */
 function sameJobContent(left: unknown, right: unknown): boolean {
   if (left === right) return true;
+  // Closed-schema validation has already limited UTC strings to timestamp fields.
+  if (typeof left === 'string' && typeof right === 'string') {
+    const instant = utcNs(left);
+    return instant !== null && instant === utcNs(right);
+  }
   if (Array.isArray(left) || Array.isArray(right)) return Array.isArray(left) && Array.isArray(right)
     && left.length === right.length && left.every((item, index) => sameJobContent(item, right[index]));
   if (!object(left) || !object(right)) return false;
