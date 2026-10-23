@@ -1,3 +1,4 @@
+import { boundedObservationText, discardObservationBody, InvalidObservationBody } from './observation-response-body.ts';
 /** Public platform snapshot v1. No management endpoints or free-form errors. */
 export const PLATFORM_STALE_AFTER_MS = 2 * 60 * 60 * 1000;
 export const PLATFORM_ERROR_CODES = [
@@ -157,15 +158,18 @@ export async function loadPlatformObservation(options: {
   const failed = (browserError: BrowserObservationError): PlatformObservationLoad => ({ record: previous, browserError, retainedPrevious: previous !== null });
   try {
     const response = await (options.fetcher || fetch)(options.url, { signal: options.signal, headers: { Accept: 'application/json' }, cache: 'no-store', credentials: 'omit' });
-    if (!response.ok) return failed(response.status === 404 ? 'NOT_PUBLISHED' : 'HTTP_ERROR');
-    const text = await response.text();
-    if (new TextEncoder().encode(text).byteLength > MAX_PLATFORM_OBSERVATION_BYTES) return failed('INVALID_RECORD');
+    if (!response.ok) {
+      discardObservationBody(response);
+      return failed(response.status === 404 ? 'NOT_PUBLISHED' : 'HTTP_ERROR');
+    }
+    const text = await boundedObservationText(response, MAX_PLATFORM_OBSERVATION_BYTES);
     let payload: unknown;
     try { payload = JSON.parse(text); } catch { return failed('INVALID_RECORD'); }
     if (!validatePlatformObservation(payload)) return failed('INVALID_RECORD');
     return mergePlatformRecords(previous, payload);
-  } catch {
-    return failed(options.signal?.aborted ? 'ABORTED' : 'NETWORK_ERROR');
+  } catch (error) {
+    return failed(options.signal?.aborted ? 'ABORTED'
+      : error instanceof InvalidObservationBody ? 'INVALID_RECORD' : 'NETWORK_ERROR');
   }
 }
 
