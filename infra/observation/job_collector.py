@@ -54,6 +54,7 @@ def collect_jobs(get_kube, *, opener=None, deadline=None, now=None):
     with client.open(request, timeout=remaining) as response:
         require(response.status == 200)
         raw = response.read(MAX_JOB_SNAPSHOT + 1)
+    require(deadline is None or time.monotonic() < deadline)
     require(len(raw) <= MAX_JOB_SNAPSHOT)
     return validate_job_snapshot(json.loads(raw, object_pairs_hook=unique_object), now or datetime.now(timezone.utc))
 

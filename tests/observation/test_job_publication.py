@@ -114,6 +114,93 @@ class ReadResponse(io.BytesIO):
     def __enter__(self):return self
     def __exit__(self,*unused):self.close()
 
+class JobResponseDeadlineTests(unittest.TestCase):
+    """Synthetic application replies advance a local clock; no requests or sleeps."""
+
+    class Response:
+        status=200
+        def __init__(self,clock,completed,*,closed_at=None,close_error=None):
+            self.clock=clock;self.completed=completed;self.closed_at=closed_at
+            self.close_error=close_error;self.closed=False;self.reads=0
+        def __enter__(self):return self
+        def __exit__(self,*unused):
+            self.closed=True
+            if self.closed_at is not None:self.clock[0]=self.closed_at
+            if self.close_error is not None:raise self.close_error
+        def read(self,limit):
+            self.reads+=1;self.clock[0]=self.completed
+            return json.dumps(job_record()).encode()[:limit]
+
+    def collect(self,reply,clock,deadline=5.0):
+        with patch.object(job_collector.time,'monotonic',side_effect=lambda:clock[0]):
+            return job_collector.collect_jobs(lambda *unused:service(),
+                opener=SimpleNamespace(open=lambda *unused,**kwargs:reply),deadline=deadline,now=NOW)
+
+    def test_body_completed_before_deadline_is_accepted_and_closed(self):
+        clock=[1.0];reply=self.Response(clock,4.999)
+        self.assertEqual(self.collect(reply,clock),job_record())
+        self.assertEqual(reply.reads,1);self.assertTrue(reply.closed)
+
+    def test_body_completed_at_or_after_deadline_is_rejected_and_closed(self):
+        for completed in (5.0,9.0):
+            with self.subTest(completed=completed):
+                clock=[1.0];reply=self.Response(clock,completed)
+                with self.assertRaisesRegex(job_collector.JobCollectionError,'^JOB_CAPTURE_FAILED$'):
+                    self.collect(reply,clock)
+                self.assertEqual(reply.reads,1);self.assertTrue(reply.closed)
+
+    def test_close_completed_at_deadline_is_rejected(self):
+        clock=[1.0];reply=self.Response(clock,4.999,closed_at=5.0)
+        with self.assertRaisesRegex(job_collector.JobCollectionError,'^JOB_CAPTURE_FAILED$'):
+            self.collect(reply,clock)
+        self.assertTrue(reply.closed)
+
+    def test_expired_deadline_never_opens_application_request(self):
+        opened=[]
+        def open_request(*unused,**kwargs):opened.append(True);raise AssertionError
+        with patch.object(job_collector.time,'monotonic',return_value=5.0):
+            with self.assertRaisesRegex(job_collector.JobCollectionError,'^JOB_CAPTURE_FAILED$'):
+                job_collector.collect_jobs(lambda *unused:service(),
+                    opener=SimpleNamespace(open=open_request),deadline=5.0,now=NOW)
+        self.assertEqual(opened,[])
+
+    def run_main(self,reply,clock,output):
+        stdout=io.StringIO()
+        # Only the synthetic temporary path bypasses privileged-path checks.
+        with patch.object(job_collector.time,'monotonic',side_effect=lambda:clock[0]),\
+                patch.object(job_collector,'JsonTransport',return_value=lambda *unused:service()),\
+                patch.object(job_collector,'build_opener',return_value=SimpleNamespace(open=lambda *unused,**kwargs:reply)),\
+                patch.object(pages_uploader,'path_chain'),patch.object(pages_uploader,'regular_private'),\
+                patch('sys.stdout',stdout):
+            result=job_collector.main(['--server','https://127.0.0.1:6443',
+                '--token-file','unused','--ca-file','unused','--output',str(output),
+                '--deadline-seconds','15'])
+        return result,stdout.getvalue()
+
+    def test_late_body_preserves_previous_file_and_reports_failure(self):
+        with tempfile.TemporaryDirectory() as folder:
+            output=Path(folder)/'jobs.json'
+            previous=json.dumps(job_record('2000-01-01T00:00:05Z')).encode()
+            output.write_bytes(previous)
+            clock=[0.0];reply=self.Response(clock,16.0)
+            result,stdout=self.run_main(reply,clock,output)
+            self.assertEqual(result,1)
+            self.assertEqual(json.loads(stdout),{'status':'failure','errorCode':'JOB_CAPTURE_FAILED'})
+            self.assertEqual(output.read_bytes(),previous)
+            self.assertTrue(reply.closed)
+
+    def test_close_failure_preserves_previous_file_and_hides_details(self):
+        with tempfile.TemporaryDirectory() as folder:
+            output=Path(folder)/'jobs.json';previous=json.dumps(job_record()).encode()
+            output.write_bytes(previous)
+            clock=[0.0];reply=self.Response(clock,4.999,close_error=OSError('SYNTHETIC_PRIVATE_CANARY'))
+            result,stdout=self.run_main(reply,clock,output)
+            self.assertEqual(result,1)
+            self.assertEqual(json.loads(stdout),{'status':'failure','errorCode':'JOB_CAPTURE_FAILED'})
+            self.assertEqual(output.read_bytes(),previous)
+            self.assertNotIn('SYNTHETIC_PRIVATE_CANARY',stdout)
+            self.assertTrue(reply.closed)
+
 class CollectorTests(unittest.TestCase):
     def test_exact_service_identity_selector_cidr_port_are_required(self):
         self.assertEqual(job_collector.api_endpoint(service()),'http://10.43.1.2:8080/api/jobs/observation')
