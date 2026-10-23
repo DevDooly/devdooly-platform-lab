@@ -27,4 +27,4 @@ python -B -m unittest discover -s tests/observation -p 'test_*.py' -v
 
 이 검사는 read·close가 반환한 뒤 늦은 성공을 거부합니다. 본문 수신을 시한 즉시 중단하거나 JSON 파싱·파일 저장까지 전체 시간을 보장하지 않습니다. 플랫폼 collector의 [완료 시한·OS 잠금 검증](../collector-completion-boundaries/README.md)과 구분합니다.
 
-이번 변경은 저장소 코드와 오프라인 검사입니다. 운영 job collector 교체·실제 서비스 제어·수동 수집·토큰 발급은 수행하지 않았습니다. 자연 수집·Pages 연결은 [별도 운영 근거](../collector-completion-boundaries/DEPLOYED.md)의 실제 결과를 따릅니다. Pages 토큰 교체·별도 K3s/Jenkins 기동 복원·자원 예산 정책·PR #102 보류를 유지합니다.
+위 기록은 저장소 코드와 오프라인 검사의 범위입니다. 이후 **21:18:16(KST)의 [작업 수집기 한 파일 운영 교체](DEPLOYED.md)**와 별도 사후 점검에서 새 코드 pin·권한·다른 코드와 unit 보존을 확인했습니다. 새 job의 자연 수집·Pages 연결은 아직 PENDING이며, 기존 platform 수집기의 [별도 자연 회차](../collector-completion-boundaries/NATURAL_PUBLICATION.md)와 구분합니다. Pages 토큰 교체·별도 K3s/Jenkins 기동 복원·자원 예산 정책·PR #102 보류를 유지합니다.

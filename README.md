@@ -23,6 +23,8 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 - **수집기 완료 경계:** [응답 완료 시한·OS 잠금](docs/evidence/collector-completion-boundaries/README.md)의 Linux173개·SIGKILL 후 동일 inode 재획득을 확인하고, [collector 한 파일의 운영 교체](docs/evidence/collector-completion-boundaries/DEPLOYED.md)를 20:17:53(KST)에 마쳤습니다. 이어 [20:41 자연 수집·Pages39947822996](docs/evidence/collector-completion-boundaries/NATURAL_PUBLICATION.md)에서 새 코드 pin·수집 시각·같은 run의 build/deploy와 공개 JSON3개·artifact 전체 bytes 일치를 확인했습니다. 이는 자연 회차 한 번의 결과이며 운영 SIGKILL 복구·장기 가용성 검증과 구분합니다.
 
+- **작업 수집기 완료 시한:** [read·close 뒤 시한 검사](docs/evidence/job-response-deadline/README.md)의 Linux179개·skip0에 이어 [21:18:16(KST) 코드 한 파일 교체](docs/evidence/job-response-deadline/DEPLOYED.md)와 별도 사후 점검을 마쳤습니다. 새 코드 pin·root0600·다른 코드7개와 unit2개 보존을 확인했으며, 새 job의 자연 수집·Pages 연결은 아직 PENDING입니다.
+
 - **검색 초기 입력:** [준비 전 입력 보호](docs/evidence/evidence-input-readiness/README.md)로 이벤트 연결 전에 입력이 유실될 수 있는 구간을 막았습니다. 로컬 SSR 사본·준비 후 검색·19개 순차 표시·모바일 Tab 이동과 웹207검사·타입·빌드, 같은 main의 Pages·CI·공개 첫 접속 검색을 확인했습니다.
 
 - **키보드 탐색:** [실행 결과 탭](docs/evidence/lab-keyboard/README.md)의 양끝 방향키 순환과 Home·End 이동을 수정했습니다. 로컬 브라우저8가지·웹207검사·타입·빌드와 같은 main의 Pages·CI, 공개 데스크톱·모바일 반영을 확인했습니다.
