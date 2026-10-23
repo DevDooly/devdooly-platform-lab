@@ -15,6 +15,20 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 | 보존 계획·화면 | Iceberg 실제 metadata의 KEEP 계획, 기술별 근거 탐색·합성 정책 선택 UI의 로컬 검증 | [실측 기록](docs/evidence/iceberg-capture/ATTEMPT_9.md), [합성 예제](examples/iceberg-retention-scenarios/README.md) |
 | Java·AI 활용 | 합성 시간창 예제의 회귀 테스트와 Windows·Linux JMH 재현. 사람 검토는 대기 중 | [Java 예제](examples/java-window-analysis/PROVENANCE.md), [Linux 재현 결과](docs/evidence/ai-window-analysis/hosted-linux-20261018/README.md) |
 
+## 처음 방문했다면
+
+아래 순서로 대표 화면을 둘러보면 처리 결과부터 배포·개선의 근거까지 이어서 볼 수 있습니다. 화면의 출처와 관측 시각을 먼저 확인하고, 저장된 시험 기록과 현재 API 조회를 구분해 읽어주세요.
+
+| 순서 | 화면에서 해볼 것 | 확인할 근거와 범위 |
+| --- | --- | --- |
+| 1. Java 처리 결과 | [실행 결과](https://devdooly.github.io/devdooly-platform-lab/#lab)에서 입력 건수의 합을 확인하고, 실패 건수를 눌러 이벤트별 사유를 봅니다. | [worker 고정 입력 검증](docs/evidence/current-worker-fixture/README.md)은 특정 합성 작업의 처리·파일 저장·기존 자료 보존 기록입니다. 화면에서 선택한 실행 ID와 구분합니다. |
+| 2. Kafka 재개 | [소비자 복구 기록](https://devdooly.github.io/devdooly-platform-lab/#kafka-lag-recovery)의 3·4단계를 선택해 lag 14 → 0과 committed offset을 비교합니다. | [격리 검증](docs/evidence/kafka-lag-recovery/README.md)은 consumer 정상 종료 후 새 client가 이어 읽은 결과입니다. 운영 broker 장애나 HA 검증은 아닙니다. |
+| 3. CI/CD | [배포 상태](https://devdooly.github.io/devdooly-platform-lab/#platform)의 출처·시각을 확인하고, 옆 근거의 정상 배포와 실패 차단을 비교합니다. | [CI/CD 근거](docs/evidence/cicd-gate/README.md)는 같은 소스의 Jenkins·Actions, 이미지 게시·Argo 배포와 이전 이미지 복구 기록입니다. 현재 화면의 관측과 당시 배포 시험을 구분합니다. |
+| 4. AI와 Java 개선 | [시간창 예제](https://devdooly.github.io/devdooly-platform-lab/#ai-window)의 수정 전후 코드를 펼치고, 분포·세션 수를 바꿔 기대값과 측정 표를 비교합니다. | [AI 활용 범위](examples/java-window-analysis/PROVENANCE.md)와 [측정 근거](docs/evidence/ai-window-analysis/README.md)를 연결합니다. 선택은 저장된 기록 조회이며 새 Java·JMH 실행이 아닙니다. 사람 검토는 PENDING입니다. |
+| 5. 데이터 보존 | [Iceberg capture](https://devdooly.github.io/devdooly-platform-lab/#iceberg-capture)에서 snapshot·참조·객체 수와 KEEP 판정을 봅니다. | [9차 capture](docs/evidence/iceberg-capture/ATTEMPT_9.md)는 실제 metadata를 복사해 만든 삭제 없는 보존 계획입니다. 운영 객체의 만료·삭제를 실행한 결과는 아닙니다. |
+
+관심 기술의 다른 사례는 [공개 근거 검색](https://devdooly.github.io/devdooly-platform-lab/#evidence)에서 찾을 수 있습니다. 현재 완료·미검증·보류는 [현재 범위·다음 작업](docs/AUTONOMOUS_WORK.md)을 따릅니다.
+
 최근 완료한 범위는 다음과 같습니다. 실행별 소스·수치·실패 이력과 한계는 연결한 실제 근거를 따릅니다.
 
 - **Jenkins 인증:** [GitHub App 연결](docs/evidence/github-app-jenkins/README.md)로 수동 PAT 발급을 줄였습니다. 실제 build 151의 7개 단계·산출물·App pending→success와 같은 소스의 Actions 성공에 이어, [토큰 자연 만료 후 갱신](docs/evidence/github-app-jenkins/NATURAL_EXPIRY.md) 한 주기를 확인했습니다. 만료한 토큰의 401 → native 자격증명 접근 1회 → 새 토큰의 200·저장소 일치·유효기간 1시간을 검증했고 기존 job·설정·비밀 입력을 보존했습니다. 자격증명 사용 시의 갱신 결과이며, 접근 없이 주기적으로 미리 발급하거나 키 교체·권한 철회 복구를 검증한 결과는 아닙니다.
