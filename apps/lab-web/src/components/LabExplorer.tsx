@@ -10,6 +10,7 @@ import EventFlowInspector from './EventFlowInspector';
 import EventExportControls from './EventExportControls';
 import EventShareControls, { EventShareRequest } from './EventShareControls';
 import EventTablePagination from './EventTablePagination';
+import SensorOutcomeExplorer from './SensorOutcomeExplorer';
 import { eventPage, eventPageForSequence, type EventPageSize } from '../lib/event-pagination';
 import { parseEventShareSelection, resolveEventShareSelection, type EventShareParseResult } from '../lib/event-share';
 import { eventReasonOptions, filterEventOutcomes } from '../lib/event-search';
@@ -113,7 +114,7 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
   const [loading, setLoading] = useState(false);
   const [interactive, setInteractive] = useState(false);
   const [error, setError] = useState('');
-  const [tab, setTab] = useState<'chart' | 'events'>('chart');
+  const [tab, setTab] = useState<'chart' | 'events' | 'sensors'>('chart');
   const [filter, setFilter] = useState<OutcomeStatus | 'ALL'>('ALL');
   const [eventQuery, setEventQuery] = useState('');
   const [eventReason, setEventReason] = useState<string | null>(null);
@@ -187,8 +188,10 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
   function handleTabKey(event: KeyboardEvent<HTMLButtonElement>) {
     if (event.ctrlKey || event.altKey || event.metaKey) return;
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-    const next = event.key === 'Home' ? 'chart' : event.key === 'End' ? 'events'
-      : event.currentTarget.id === 'chart-tab' ? 'events' : 'chart';
+    const tabs = ['chart', 'events', 'sensors'] as const;
+    const index = tabs.findIndex(value => `${value}-tab` === event.currentTarget.id);
+    const next = event.key === 'Home' ? tabs[0] : event.key === 'End' ? tabs[2]
+      : tabs[(index + (event.key === 'ArrowRight' ? 1 : 2)) % tabs.length]!;
     event.preventDefault();
     setTab(next);
     document.getElementById(`${next}-tab`)?.focus();
@@ -273,8 +276,12 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
         <div className="metrics"><div className="metric metric-total"><span>입력 이벤트</span><strong>{detail.inputCount}<small>건</small></strong></div>{counts.map(([label, value, color]) => <button className={`metric ${color} ${filter === ({ 성공: 'SUCCESS', 실패: 'FAILED', 중복: 'DUPLICATE', 대기: 'PENDING' } as Record<string, string>)[label] && tab === 'events' ? 'metric-selected' : ''}`} key={label} disabled={!interactive || loading} onClick={() => { changeEventFilter(({ 성공: 'SUCCESS', 실패: 'FAILED', 중복: 'DUPLICATE', 대기: 'PENDING' } as Record<string, OutcomeStatus>)[label]!); setTab('events'); }} aria-label={`${label} ${value}건 상세 보기`}><span><i/>{label}</span><strong>{value}<small>건</small></strong></button>)}</div>
         <div className="count-bar" aria-label="입력 이벤트 처리 비율">{counts.filter(([, value]) => value > 0).map(([label, value, color]) => <span key={label} className={color} style={{ flex: value }} title={`${label} ${value}건`}/>)}</div>
         <p className="balance-note">입력 {detail.inputCount} = 성공 {detail.successCount} + 실패 {detail.failureCount} + 중복 {detail.duplicateCount} + 대기 {detail.pendingCount}</p>
-        <div className="tabs" role="tablist" aria-label="실행 결과 보기"><button disabled={!interactive} onKeyDown={handleTabKey} role="tab" tabIndex={tab === 'chart' ? 0 : -1} id="chart-tab" aria-controls="chart-panel" aria-selected={tab === 'chart'} onClick={() => setTab('chart')}>시계열 결과 <span>↗</span></button><button disabled={!interactive} onKeyDown={handleTabKey} role="tab" tabIndex={tab === 'events' ? 0 : -1} id="events-tab" aria-controls="events-panel" aria-selected={tab === 'events'} onClick={() => setTab('events')}>이벤트 상세 <span>{detail.outcomes.length}</span></button></div>
+        <div className="tabs" role="tablist" aria-label="실행 결과 보기"><button disabled={!interactive} onKeyDown={handleTabKey} role="tab" tabIndex={tab === 'chart' ? 0 : -1} id="chart-tab" aria-controls="chart-panel" aria-selected={tab === 'chart'} onClick={() => setTab('chart')}>시계열 결과 <span>↗</span></button><button disabled={!interactive} onKeyDown={handleTabKey} role="tab" tabIndex={tab === 'events' ? 0 : -1} id="events-tab" aria-controls="events-panel" aria-selected={tab === 'events'} onClick={() => setTab('events')}>이벤트 상세 <span>{detail.outcomes.length}</span></button><button disabled={!interactive} onKeyDown={handleTabKey} role="tab" tabIndex={tab === 'sensors' ? 0 : -1} id="sensors-tab" aria-controls="sensors-panel" aria-selected={tab === 'sensors'} onClick={() => setTab('sensors')}>센서별 결과</button></div>
         <div id="chart-panel" role="tabpanel" aria-labelledby="chart-tab" hidden={tab !== 'chart'}><SensorChart key={`${detail.id}-${mode}`} points={detail.series} interactive={interactive}/></div>
+        <div id="sensors-panel" role="tabpanel" aria-labelledby="sensors-tab" hidden={tab !== 'sensors'}>
+          <SensorOutcomeExplorer outcomes={detail.outcomes} runId={detail.id} mode={mode} observedAt={detail.observedAt}
+            capturedAt={detailCapturedAt} reportedInputCount={detail.inputCount} interactive={interactive && !loading} />
+        </div>
         <div id="events-panel" role="tabpanel" aria-labelledby="events-tab" hidden={tab !== 'events'}>
           <EventSearchControls status={filter} query={eventQuery} reason={eventReason} reasons={reasons}
             shown={outcomes.length} total={detail.outcomes.length} disabled={!interactive || loading}
