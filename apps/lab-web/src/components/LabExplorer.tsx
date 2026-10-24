@@ -8,6 +8,8 @@ import '../styles/api-connection-scope.css';
 import TourStepNavigation from './TourStepNavigation';
 import EventFlowInspector from './EventFlowInspector';
 import EventExportControls from './EventExportControls';
+import EventShareControls, { EventShareRequest } from './EventShareControls';
+import { parseEventShareSelection, resolveEventShareSelection, type EventShareParseResult } from '../lib/event-share';
 import { eventReasonOptions, filterEventOutcomes } from '../lib/event-search';
 import '../styles/event-search.css';
 
@@ -101,7 +103,7 @@ export function EventSearchControls({ status, query, reason, reasons, shown, tot
   </div>;
 }
 
-export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/lab-observation.json' }: { apiBase?: string; observationUrl?: string }) {
+export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/lab-observation.json', basePath = '/' }: { apiBase?: string; observationUrl?: string; basePath?: string }) {
   const [data, setData] = useState<LabData>(initial);
   const [mode, setMode] = useState<SourceMode>('fixture');
   const [observation, setObservation] = useState<ObservationRecord | null>(null);
@@ -114,10 +116,18 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
   const [eventQuery, setEventQuery] = useState('');
   const [eventReason, setEventReason] = useState<string | null>(null);
   const [eventSelection, setEventSelection] = useState<{ runId: string; mode: SourceMode; sequence: number } | null>(null);
+  const [shareRequest, setShareRequest] = useState<EventShareParseResult>({ kind: 'absent' });
+  const [shareNotice, setShareNotice] = useState('');
+  const shareInFlight = useRef(false);
   const controller = useRef<AbortController | null>(null);
   const mounted = useRef(true);
 
+  function markShareChanged() {
+    if (shareRequest.kind === 'valid') setShareNotice('화면을 변경했습니다. 링크의 실행·조건은 아래 버튼으로 다시 적용할 수 있습니다.');
+  }
+
   async function refresh() {
+    markShareChanged();
     controller.current?.abort();
     const request = new AbortController(); controller.current = request;
     setLoading(true); setError('');
@@ -129,15 +139,45 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
     catch (failure) { if (mounted.current && controller.current === request) { setData(initial); setMode('fixture'); setObservation(null); setError(describeLiveFailure(liveFailureOf(failure))); } }
     finally { clearTimeout(timer); if (mounted.current && controller.current === request) setLoading(false); }
   }
-  useEffect(() => { mounted.current = true; setInteractive(true); void refresh(); return () => { mounted.current = false; controller.current?.abort(); }; }, []);
+  useEffect(() => { mounted.current = true; setInteractive(true); setShareRequest(parseEventShareSelection(window.location.search)); void refresh(); return () => { mounted.current = false; controller.current?.abort(); }; }, []);
 
   async function selectRun(id: string) {
     if (mode !== 'live') return;
+    markShareChanged();
     controller.current?.abort(); const request = new AbortController(); controller.current = request;
     setLoading(true); setError(''); const timer = setTimeout(() => request.abort(), 8000);
-    try { const detail = await fetchRun(apiBase, id, request.signal); if (mounted.current) setData(previous => ({ ...previous, detail })); }
+    try { const detail = await fetchRun(apiBase, id, request.signal); if (mounted.current && controller.current === request) setData(previous => ({ ...previous, detail })); }
     catch (failure) { if (mounted.current && controller.current === request) setError(`선택한 결과를 불러오지 못했습니다. 이전 결과를 표시합니다. ${describeLiveFailure(liveFailureOf(failure))}`); }
     finally { clearTimeout(timer); if (mounted.current && controller.current === request) setLoading(false); }
+  }
+
+  async function applySharedSelection() {
+    if (!interactive || loading || mode !== 'live' || shareInFlight.current || shareRequest.kind !== 'valid') return;
+    const selection = shareRequest.selection;
+    shareInFlight.current = true;
+    controller.current?.abort(); const request = new AbortController(); controller.current = request;
+    setLoading(true); setError(''); setShareNotice('공유한 실행을 다시 조회하고 있습니다. 조회 완료까지 기존 화면을 유지합니다.');
+    const timer = setTimeout(() => request.abort(), 8000);
+    try {
+      // fetchRun validates the exact requested ID, including IDs outside the recent list.
+      const detail = await fetchRun(apiBase, selection.runId, request.signal);
+      if (!mounted.current || controller.current !== request) return;
+      const restored = resolveEventShareSelection(selection, detail.outcomes);
+      setData(previous => ({ ...previous, detail }));
+      setFilter(selection.filters.status); setEventQuery(selection.filters.query); setEventReason(selection.filters.reason);
+      setEventSelection(restored.sequence === null ? null : { runId: detail.id, mode: 'live', sequence: restored.sequence });
+      setTab('events');
+      const eventNotice = restored.eventState === 'selected' ? `${restored.sequence}번 이벤트를 선택했습니다.`
+        : restored.eventState === 'missing' ? '지정한 순서의 이벤트가 이번 응답에 없어 선택하지 않았습니다.'
+        : restored.eventState === 'filtered' ? '지정한 이벤트가 공유 검색·필터 조건에서 제외되어 선택하지 않았습니다.'
+        : '지정한 이벤트 선택 없이 검색·필터를 적용했습니다.';
+      setShareNotice(`공유한 실행과 조건을 다시 조회했습니다. ${eventNotice} 아래 출처·관측 시각은 이번 응답 기준이며, 원래 공유 시점의 결과를 고정하지 않습니다.`);
+    } catch (failure) {
+      if (mounted.current && controller.current === request) setShareNotice(`공유한 실행을 불러오지 못해 이전 실행·조건·선택을 유지합니다. ${describeLiveFailure(liveFailureOf(failure))}`);
+    } finally {
+      clearTimeout(timer); shareInFlight.current = false;
+      if (mounted.current && controller.current === request) setLoading(false);
+    }
   }
   function handleTabKey(event: KeyboardEvent<HTMLButtonElement>) {
     if (event.ctrlKey || event.altKey || event.metaKey) return;
@@ -150,25 +190,30 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
   }
   function changeEventFilter(next: OutcomeStatus | 'ALL') {
     if (!interactive || loading) return;
+    markShareChanged();
     setFilter(next);
     setEventSelection(null);
   }
   function changeEventQuery(value: string) {
     if (!interactive || loading) return;
+    markShareChanged();
     setEventQuery(value);
     setEventSelection(null);
   }
   function changeEventReason(value: string | null) {
     if (!interactive || loading) return;
+    markShareChanged();
     setEventReason(value);
     setEventSelection(null);
   }
   function resetEventSearch() {
     if (!interactive || loading) return;
+    markShareChanged();
     setFilter('ALL'); setEventQuery(''); setEventReason(null); setEventSelection(null);
   }
   function selectEvent(sequence: number | null) {
     if (!interactive || loading) return;
+    markShareChanged();
     if (sequence !== null && eventSelection?.runId === data.detail.id && eventSelection.mode === mode && eventSelection.sequence === sequence) {
       const heading = document.getElementById('event-flow-detail-title');
       heading?.focus({ preventScroll: true });
@@ -181,8 +226,9 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
   const platformSourceTime = mode === 'live' ? data.summary.observedAt : mode === 'recorded' ? observation?.capturedAt : initial.capturedAt;
   const detail = data.detail;
   const detailCapturedAt = mode === 'recorded' ? observation?.capturedAt ?? null : mode === 'fixture' ? initial.capturedAt ?? null : null;
-  const selectedEventSequence = eventSelection?.runId === detail.id && eventSelection.mode === mode ? eventSelection.sequence : null;
   const outcomes = filterEventOutcomes(detail.outcomes, { status: filter, query: eventQuery, reason: eventReason });
+  const selectedEventSequence = eventSelection?.runId === detail.id && eventSelection.mode === mode
+    && outcomes.some(row => row.sequence === eventSelection.sequence) ? eventSelection.sequence : null;
   const reasons = eventReasonOptions(detail.outcomes);
   const counts: [string, number, string][] = [['성공', detail.successCount, 'success'], ['실패', detail.failureCount, 'failed'], ['중복', detail.duplicateCount, 'duplicate'], ['대기', detail.pendingCount, 'pending']];
   return <>
@@ -192,9 +238,10 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
       {mode === 'fixture' && <p className="snapshot-note">이 화면은 고정 샘플의 기대 결과입니다. 미니 PC의 실제 결과가 연결되면 수집 시각과 출처를 함께 표시합니다.</p>}
       {mode === 'recorded' && observation && <div className="observation-note"><p>{error ? `${error}. ` : ''}수집 당시의 합성 데이터 처리 결과와 API 런타임입니다. 현재 상태나 CI/CD 배포 이력을 뜻하지 않습니다.</p><div><span>DEPLOYED SOURCE</span><code title={observation.provenance.sourceCommit}>{observation.provenance.sourceCommit.slice(0, 12)}</code>{observation.provenance.evidenceUrl && <a href={observation.provenance.evidenceUrl} target="_blank" rel="noreferrer">검증 기록 ↗</a>}</div></div>}
       {mode === 'live' && error && <p className="error-note" role="alert">{error}</p>}
+      <EventShareRequest request={shareRequest} disabled={!interactive || loading} live={mode === 'live'} notice={shareNotice} onApply={() => { void applySharedSelection(); }} />
       <div className="lab-workspace"><div className="run-main">
         <div className="run-title"><div><span className="code-label">SCENARIO / {detail.scenario}</span><h3>{detail.name}</h3></div><span className="tag tag-green">합성 데이터</span></div>
-        <div className="run-controls"><label htmlFor="run-select">실행 결과</label><select id="run-select" aria-describedby="selected-run-id" value={detail.id} onChange={event => void selectRun(event.target.value)} disabled={!interactive || loading || mode !== 'live'}>{data.runs.map(run => <option value={run.id} key={run.id}>{run.id} · {run.inputCount}건 · {run.name} / seed {run.seed}</option>)}</select><span className="code-label">SEED {detail.seed}</span></div>
+        <div className="run-controls"><label htmlFor="run-select">실행 결과</label><select id="run-select" aria-describedby="selected-run-id" value={detail.id} onChange={event => void selectRun(event.target.value)} disabled={!interactive || loading || mode !== 'live'}>{!data.runs.some(run => run.id === detail.id) && <option value={detail.id}>{detail.id} · 현재 상세 조회 · 최근 목록 밖</option>}{data.runs.map(run => <option value={run.id} key={run.id}>{run.id} · {run.inputCount}건 · {run.name} / seed {run.seed}</option>)}</select><span className="code-label">SEED {detail.seed}</span></div>
         <div className="metrics"><div className="metric metric-total"><span>입력 이벤트</span><strong>{detail.inputCount}<small>건</small></strong></div>{counts.map(([label, value, color]) => <button className={`metric ${color} ${filter === ({ 성공: 'SUCCESS', 실패: 'FAILED', 중복: 'DUPLICATE', 대기: 'PENDING' } as Record<string, string>)[label] && tab === 'events' ? 'metric-selected' : ''}`} key={label} disabled={!interactive || loading} onClick={() => { changeEventFilter(({ 성공: 'SUCCESS', 실패: 'FAILED', 중복: 'DUPLICATE', 대기: 'PENDING' } as Record<string, OutcomeStatus>)[label]!); setTab('events'); }} aria-label={`${label} ${value}건 상세 보기`}><span><i/>{label}</span><strong>{value}<small>건</small></strong></button>)}</div>
         <div className="count-bar" aria-label="입력 이벤트 처리 비율">{counts.filter(([, value]) => value > 0).map(([label, value, color]) => <span key={label} className={color} style={{ flex: value }} title={`${label} ${value}건`}/>)}</div>
         <p className="balance-note">입력 {detail.inputCount} = 성공 {detail.successCount} + 실패 {detail.failureCount} + 중복 {detail.duplicateCount} + 대기 {detail.pendingCount}</p>
@@ -207,6 +254,7 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
           <EventExportControls input={{ runId: detail.id, mode, observedAt: detail.observedAt, capturedAt: detailCapturedAt,
             reportedInputCount: detail.inputCount, filters: { status: filter, query: eventQuery, reason: eventReason }, outcomes: detail.outcomes }}
             matchedCount={outcomes.length} disabled={!interactive || loading} />
+          <EventShareControls selection={{ runId: detail.id, filters: { status: filter, query: eventQuery, reason: eventReason }, sequence: selectedEventSequence }} basePath={basePath} disabled={!interactive || loading} />
           <EventFlowInspector outcomes={outcomes} selectedSequence={selectedEventSequence} onSelect={selectEvent}
             runId={detail.id} mode={mode} observedAt={detail.observedAt}
             capturedAt={detailCapturedAt}
