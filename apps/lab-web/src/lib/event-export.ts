@@ -13,13 +13,18 @@ export interface EventExportInput {
   outcomes: readonly Outcome[];
 }
 
-export interface EventExportDocument {
-  schemaVersion: 1;
+interface EventExportBase {
   source: { runId: string; mode: SourceMode; observedAt: string | null; capturedAt: string | null };
-  filters: { status: EventSearchFilters['status']; query: string; reason: string | null };
   counts: { reportedInputCount: number; availableOutcomes: number; matchedOutcomes: number };
   outcomes: Outcome[];
 }
+
+type ExportFilters = { status: EventSearchFilters['status']; query: string; reason: string | null };
+
+export type EventExportDocument = EventExportBase & (
+  | { schemaVersion: 1; filters: ExportFilters }
+  | { schemaVersion: 2; filters: ExportFilters & { sensorId: string } }
+);
 
 /** Snapshot the current search result without fetching, reclassifying or forwarding unknown fields. */
 export function createEventExport(input: EventExportInput): EventExportDocument {
@@ -28,13 +33,12 @@ export function createEventExport(input: EventExportInput): EventExportDocument 
     sequence: row.sequence, eventId: row.eventId, sensorId: row.sensorId, eventTime: row.eventTime,
     value: row.value, status: row.status, reason: row.reason,
   }));
-  return {
-    schemaVersion: 1,
-    source: { runId, mode, observedAt, capturedAt },
-    filters: { status: filters.status, query: filters.query, reason: filters.reason },
-    counts: { reportedInputCount, availableOutcomes: input.outcomes.length, matchedOutcomes: outcomes.length },
-    outcomes,
-  };
+  const source = { runId, mode, observedAt, capturedAt };
+  const exportFilters = { status: filters.status, query: filters.query, reason: filters.reason };
+  const counts = { reportedInputCount, availableOutcomes: input.outcomes.length, matchedOutcomes: outcomes.length };
+  if (filters.sensorId != null) return { schemaVersion: 2, source,
+    filters: { ...exportFilters, sensorId: filters.sensorId }, counts, outcomes };
+  return { schemaVersion: 1, source, filters: exportFilters, counts, outcomes };
 }
 
 /** JSON retains the reported strings, numeric values and nulls without CSV display prefixes. */
@@ -56,11 +60,14 @@ export function eventExportCsv(document: EventExportDocument): string {
   const { source, filters, counts } = document;
   const header = ['recordType', 'schemaVersion', 'runId', 'sourceMode', 'observedAt', 'capturedAt',
     'reportedInputCount', 'availableOutcomes', 'matchedOutcomes', 'filterStatus', 'filterQuery',
-    'filterReasonIsAll', 'filterReason', 'sequence', 'eventId', 'sensorId', 'eventTime', 'value',
+    'filterReasonIsAll', 'filterReason',
+    ...(document.schemaVersion === 2 ? ['filterSensorIsAll', 'filterSensorId'] : []),
+    'sequence', 'eventId', 'sensorId', 'eventTime', 'value',
     'valueIsNull', 'status', 'reason'];
   const metadata: CsvCell[] = [document.schemaVersion, source.runId, source.mode, source.observedAt,
     source.capturedAt, counts.reportedInputCount, counts.availableOutcomes, counts.matchedOutcomes,
-    filters.status, filters.query, filters.reason === null, filters.reason];
+    filters.status, filters.query, filters.reason === null, filters.reason,
+    ...(document.schemaVersion === 2 ? [false, document.filters.sensorId] : [])];
   const rows: CsvCell[][] = [header, ['context', ...metadata, null, null, null, null, null, null, null, null]];
   for (const row of document.outcomes) rows.push(['event', ...metadata, row.sequence, row.eventId,
     row.sensorId, row.eventTime, row.value, row.value === null, row.status, row.reason]);

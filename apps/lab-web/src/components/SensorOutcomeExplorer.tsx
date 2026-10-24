@@ -12,6 +12,7 @@ export interface SensorOutcomeExplorerProps {
   capturedAt: string | null;
   reportedInputCount: number;
   interactive: boolean;
+  onViewEvents?: (sensorId: string, status: 'ALL' | 'FAILED') => void;
 }
 
 interface SensorView {
@@ -40,6 +41,22 @@ function FailureReasons({ group }: { group: SensorOutcomeGroup }) {
         <code>{raw(item.reason)}</code><span>{number(item.count)}건</span>
       </li>)}</ul>
     </details>;
+}
+
+function SensorEventActions({ group, interactive, onViewEvents }: {
+  group: SensorOutcomeGroup;
+  interactive: boolean;
+  onViewEvents: SensorOutcomeExplorerProps['onViewEvents'];
+}) {
+  if (!onViewEvents) return null;
+  return <div className="sensor-event-actions">
+    <button type="button" disabled={!interactive}
+      aria-label={`센서 ${JSON.stringify(group.sensorId)} 이벤트 전체 보기`}
+      onClick={() => onViewEvents(group.sensorId, 'ALL')}>이벤트 전체 보기</button>
+    {group.failure > 0 && <button type="button" disabled={!interactive}
+      aria-label={`센서 ${JSON.stringify(group.sensorId)} 실패 이벤트 보기`}
+      onClick={() => onViewEvents(group.sensorId, 'FAILED')}>실패 이벤트 보기</button>}
+  </div>;
 }
 
 export default function SensorOutcomeExplorer(props: SensorOutcomeExplorerProps) {
@@ -88,7 +105,9 @@ export default function SensorOutcomeExplorer(props: SensorOutcomeExplorerProps)
       <button type="button" disabled={!props.interactive || view.query === ''}
         onClick={() => update({ query: '', limit: 20 })}>센서 검색 지우기</button>
     </div>
-    <p id={`${id}-hint`} className="sensor-outcomes-hint">앞뒤 공백을 제외하고 대소문자 구분 없이 센서 ID 안에서 찾습니다. eventId는 검색하지 않으며 이벤트 탭의 필터는 바뀌지 않습니다.
+    <p id={`${id}-hint`} className="sensor-outcomes-hint">앞뒤 공백을 제외하고 대소문자 구분 없이 센서 ID 안에서 찾습니다. {props.onViewEvents
+      ? 'eventId는 검색하지 않습니다. 센서 목록의 검색·정렬은 이벤트 탭의 필터를 바꾸지 않습니다. 이벤트 보기 버튼은 센서 ID 원문이 정확히 일치하는 조건으로 이벤트 탭을 열며, 기존 검색어·사유·선택·페이지 조건을 초기화합니다.'
+      : 'eventId는 검색하지 않으며 이벤트 탭의 필터는 바뀌지 않습니다.'}
       센서 ID와 실패 사유는 JSON 문자열 표기로 보여 공백·빈 문자열·대소문자 차이를 구분합니다. 비율은 소수점 아래 두 자리까지 표시하며 정렬은 반올림 전 값으로 합니다. 같은 값은 응답 첫 등장순입니다.</p>
     <p className="sensor-outcomes-status" role="status" aria-live="polite" aria-atomic="true">
       전체 {number(summary.sensors.length)}개 센서 중 검색 {number(matching.length)}개 · 표시 {number(visible.length)}개
@@ -102,7 +121,7 @@ export default function SensorOutcomeExplorer(props: SensorOutcomeExplorerProps)
             <thead><tr><th scope="col">sensorId 원문</th><th scope="col">조회</th><th scope="col">성공</th><th scope="col">실패</th>
               <th scope="col">중복</th><th scope="col">대기</th><th scope="col">실패 비율</th><th scope="col">FAILED 사유 원문</th></tr></thead>
             <tbody>{visible.map(group => <tr key={group.sensorId}>
-              <th scope="row"><code>{raw(group.sensorId)}</code></th><td>{number(group.total)}</td>
+              <th scope="row"><code>{raw(group.sensorId)}</code><SensorEventActions group={group} interactive={props.interactive} onViewEvents={props.onViewEvents} /></th><td>{number(group.total)}</td>
               <td>{number(group.success)}</td><td>{number(group.failure)}</td><td>{number(group.duplicate)}</td><td>{number(group.pending)}</td>
               <td>{group.failureRate.toFixed(2)}%</td><td><FailureReasons group={group} /></td>
             </tr>)}</tbody>
@@ -110,6 +129,7 @@ export default function SensorOutcomeExplorer(props: SensorOutcomeExplorerProps)
         </div>
         <ul className="sensor-outcomes-mobile" aria-label="센서별 결과 카드">{visible.map(group => <li key={group.sensorId}>
           <h5><code>{raw(group.sensorId)}</code></h5>
+          <SensorEventActions group={group} interactive={props.interactive} onViewEvents={props.onViewEvents} />
           <dl><div><dt>조회</dt><dd>{number(group.total)}건</dd></div>
             <div><dt>성공 · SUCCESS</dt><dd>{number(group.success)}건</dd></div>
             <div><dt>실패 · FAILED</dt><dd>{number(group.failure)}건</dd></div>

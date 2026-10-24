@@ -68,6 +68,7 @@ interface EventSearchControlsProps {
   status: OutcomeStatus | 'ALL';
   query: string;
   reason: string | null;
+  sensorId?: string | null;
   reasons: string[];
   shown: number;
   total: number;
@@ -75,11 +76,12 @@ interface EventSearchControlsProps {
   onStatusChange: (value: OutcomeStatus | 'ALL') => void;
   onQueryChange: (value: string) => void;
   onReasonChange: (value: string | null) => void;
+  onSensorClear?: () => void;
   onReset: () => void;
 }
 
-export function EventSearchControls({ status, query, reason, reasons, shown, total, disabled,
-  onStatusChange, onQueryChange, onReasonChange, onReset }: EventSearchControlsProps) {
+export function EventSearchControls({ status, query, reason, sensorId, reasons, shown, total, disabled,
+  onStatusChange, onQueryChange, onReasonChange, onSensorClear, onReset }: EventSearchControlsProps) {
   return <div className="event-search" role="group" aria-label="이벤트 검색과 필터">
     <div className="event-search-fields">
       <div className="event-search-query"><label htmlFor="event-search-query">이벤트 ID·센서 검색</label>
@@ -99,6 +101,7 @@ export function EventSearchControls({ status, query, reason, reasons, shown, tot
           {reasons.map(value => <option key={value} value={`reason:${value}`}>{value === '' ? '빈 사유 (빈 문자열)' : JSON.stringify(value)}</option>)}
         </select></div>
     </div>
+    {typeof sensorId === 'string' && <div className="event-exact-sensor"><span>센서 ID 정확히 일치</span><code>{JSON.stringify(sensorId)}</code><button type="button" className="button button-small" disabled={disabled || !onSensorClear} onClick={onSensorClear}>센서 조건 해제</button></div>}
     <p className="event-search-hint" id="event-search-hint">이벤트 ID·센서의 일부를 대소문자 구분 없이 찾고, 처리 상태·사유 원문 조건을 함께 적용합니다. 위 건수는 전체 실행 결과이며 아래 표와 흐름 선택만 좁힙니다.</p>
     <p className="event-search-hint">검색·필터 조건은 실행을 바꿔도 유지되며 새 실행의 이벤트에 적용합니다.</p>
     <div className="event-search-summary"><p role="status" aria-live="polite" aria-atomic="true">결과 {shown}건 / 전체 {total}건</p>
@@ -118,6 +121,7 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
   const [filter, setFilter] = useState<OutcomeStatus | 'ALL'>('ALL');
   const [eventQuery, setEventQuery] = useState('');
   const [eventReason, setEventReason] = useState<string | null>(null);
+  const [eventSensorId, setEventSensorId] = useState<string | null>(null);
   const [eventSelection, setEventSelection] = useState<{ runId: string; mode: SourceMode; sequence: number } | null>(null);
   const [eventPageIndex, setEventPageIndex] = useState(0);
   const [eventPageSize, setEventPageSize] = useState<EventPageSize>(25);
@@ -170,6 +174,7 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
       const restored = resolveEventShareSelection(selection, detail.outcomes);
       setData(previous => ({ ...previous, detail }));
       setFilter(selection.filters.status); setEventQuery(selection.filters.query); setEventReason(selection.filters.reason);
+      setEventSensorId(selection.filters.sensorId ?? null);
       setEventSelection(restored.sequence === null ? null : { runId: detail.id, mode: 'live', sequence: restored.sequence });
       setEventPageIndex(eventPageForSequence(filterEventOutcomes(detail.outcomes, selection.filters), restored.sequence, eventPageSize) ?? 0);
       setTab('events');
@@ -220,8 +225,20 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
   function resetEventSearch() {
     if (!interactive || loading) return;
     markShareChanged();
-    setFilter('ALL'); setEventQuery(''); setEventReason(null); setEventSelection(null);
+    setFilter('ALL'); setEventQuery(''); setEventReason(null); setEventSensorId(null); setEventSelection(null);
     setEventPageIndex(0);
+  }
+  function clearEventSensor() {
+    if (!interactive || loading) return;
+    markShareChanged();
+    setEventSensorId(null); setEventSelection(null); setEventPageIndex(0);
+  }
+  function viewSensorEvents(sensorId: string, status: 'ALL' | 'FAILED') {
+    if (!interactive || loading) return;
+    markShareChanged();
+    setEventSensorId(sensorId); setFilter(status); setEventQuery(''); setEventReason(null);
+    setEventSelection(null); setEventPageIndex(0); setTab('events');
+    document.getElementById('events-tab')?.focus();
   }
   function selectEvent(sequence: number | null) {
     if (!interactive || loading) return;
@@ -255,7 +272,7 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
   const platformSourceTime = mode === 'live' ? data.summary.observedAt : mode === 'recorded' ? observation?.capturedAt : initial.capturedAt;
   const detail = data.detail;
   const detailCapturedAt = mode === 'recorded' ? observation?.capturedAt ?? null : mode === 'fixture' ? initial.capturedAt ?? null : null;
-  const outcomes = filterEventOutcomes(detail.outcomes, { status: filter, query: eventQuery, reason: eventReason });
+  const outcomes = filterEventOutcomes(detail.outcomes, { status: filter, query: eventQuery, reason: eventReason, sensorId: eventSensorId });
   const selectedEventSequence = eventSelection?.runId === detail.id && eventSelection.mode === mode
     && outcomes.some(row => row.sequence === eventSelection.sequence) ? eventSelection.sequence : null;
   const tablePage = eventPage(outcomes, eventPageIndex, eventPageSize);
@@ -280,16 +297,16 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
         <div id="chart-panel" role="tabpanel" aria-labelledby="chart-tab" hidden={tab !== 'chart'}><SensorChart key={`${detail.id}-${mode}`} points={detail.series} interactive={interactive}/></div>
         <div id="sensors-panel" role="tabpanel" aria-labelledby="sensors-tab" hidden={tab !== 'sensors'}>
           <SensorOutcomeExplorer outcomes={detail.outcomes} runId={detail.id} mode={mode} observedAt={detail.observedAt}
-            capturedAt={detailCapturedAt} reportedInputCount={detail.inputCount} interactive={interactive && !loading} />
+            capturedAt={detailCapturedAt} reportedInputCount={detail.inputCount} interactive={interactive && !loading} onViewEvents={viewSensorEvents} />
         </div>
         <div id="events-panel" role="tabpanel" aria-labelledby="events-tab" hidden={tab !== 'events'}>
-          <EventSearchControls status={filter} query={eventQuery} reason={eventReason} reasons={reasons}
+          <EventSearchControls status={filter} query={eventQuery} reason={eventReason} sensorId={eventSensorId} reasons={reasons}
             shown={outcomes.length} total={detail.outcomes.length} disabled={!interactive || loading}
-            onStatusChange={changeEventFilter} onQueryChange={changeEventQuery} onReasonChange={changeEventReason} onReset={resetEventSearch} />
+            onStatusChange={changeEventFilter} onQueryChange={changeEventQuery} onReasonChange={changeEventReason} onSensorClear={clearEventSensor} onReset={resetEventSearch} />
           <EventExportControls input={{ runId: detail.id, mode, observedAt: detail.observedAt, capturedAt: detailCapturedAt,
-            reportedInputCount: detail.inputCount, filters: { status: filter, query: eventQuery, reason: eventReason }, outcomes: detail.outcomes }}
+            reportedInputCount: detail.inputCount, filters: { status: filter, query: eventQuery, reason: eventReason, sensorId: eventSensorId }, outcomes: detail.outcomes }}
             matchedCount={outcomes.length} disabled={!interactive || loading} />
-          <EventShareControls selection={{ runId: detail.id, filters: { status: filter, query: eventQuery, reason: eventReason }, sequence: selectedEventSequence }} basePath={basePath} disabled={!interactive || loading} />
+          <EventShareControls selection={{ runId: detail.id, filters: { status: filter, query: eventQuery, reason: eventReason, sensorId: eventSensorId }, sequence: selectedEventSequence }} basePath={basePath} disabled={!interactive || loading} />
           <EventFlowInspector outcomes={outcomes} selectedSequence={selectedEventSequence} onSelect={selectEvent}
             runId={detail.id} mode={mode} observedAt={detail.observedAt}
             capturedAt={detailCapturedAt}

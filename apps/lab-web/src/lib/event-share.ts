@@ -13,7 +13,7 @@ export type EventShareParseResult =
   | { kind: 'invalid' }
   | { kind: 'valid'; selection: EventShareSelection };
 
-const keys = ['labRun', 'labStatus', 'labQuery', 'labReason', 'labEvent'] as const;
+const keys = ['labRun', 'labStatus', 'labQuery', 'labReason', 'labEvent', 'labSensor'] as const;
 const statuses = new Set(['ALL', 'SUCCESS', 'FAILED', 'DUPLICATE', 'PENDING']);
 
 /** Other page parameters can coexist; only this feature's namespace is interpreted. */
@@ -31,7 +31,8 @@ export function parseEventShareSelection(search: string): EventShareParseResult 
     || (rawSequence !== null && (!/^(0|[1-9]\d*)$/.test(rawSequence) || !Number.isSafeInteger(Number(rawSequence))))) return { kind: 'invalid' };
   return { kind: 'valid', selection: {
     runId,
-    filters: { status: status as EventSearchFilters['status'], query: params.get('labQuery')!, reason: params.get('labReason') },
+    filters: { status: status as EventSearchFilters['status'], query: params.get('labQuery')!, reason: params.get('labReason'),
+      ...(params.has('labSensor') ? { sensorId: params.get('labSensor')! } : {}) },
     sequence: rawSequence === null ? null : Number(rawSequence),
   } };
 }
@@ -41,11 +42,17 @@ export function eventSharePath(selection: EventShareSelection, basePath = '/'): 
   const { runId, filters, sequence } = selection;
   if (!isComparisonRunId(runId) || !statuses.has(filters.status) || typeof filters.query !== 'string'
     || (filters.reason !== null && typeof filters.reason !== 'string')
+    || (filters.sensorId != null && typeof filters.sensorId !== 'string')
     || (sequence !== null && (!Number.isSafeInteger(sequence) || sequence < 0))) return null;
   if (!/^\/(?:[a-z0-9._~-]+\/)*[a-z0-9._~-]*$/i.test(basePath)
     || basePath.split('/').some(part => part === '.' || part === '..')) return null;
   const params = new URLSearchParams({ labRun: runId, labStatus: filters.status, labQuery: filters.query });
   if (filters.reason !== null) params.set('labReason', filters.reason);
+  if (typeof filters.sensorId === 'string') {
+    params.set('labSensor', filters.sensorId);
+    // URLSearchParams normalizes lone UTF-16 surrogates; never share a different exact sensor.
+    if (params.get('labSensor') !== filters.sensorId) return null;
+  }
   if (sequence !== null) params.set('labEvent', String(sequence));
   return basePath.replace(/\/$/, '') + '/?' + params.toString() + '#lab';
 }
