@@ -1,0 +1,115 @@
+.event-export {
+  min-width:0;
+  margin:0 0 24px;
+  padding:22px 24px;
+  border:1px solid var(--line);
+  background:var(--paper);
+  font-size:1.0625rem;
+  line-height:1.75;
+}
+.event-export h4,.event-export p,.event-export dt,.event-export dd {
+  overflow-wrap:anywhere;
+}
+.event-export-heading h4 {
+  font-size:1.25rem;
+  line-height:1.5;
+}
+.event-export-heading p {
+  margin-top:8px;
+}
+.event-export-scope {
+  margin-top:14px;
+  color:var(--muted);
+}
+.event-export-actions {
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-top:18px;
+}
+.event-export-actions button {
+  min-width:0;
+  max-width:100%;
+  min-height:44px;
+  padding:10px 18px;
+  border:1px solid var(--green);
+  border-radius:0;
+  background:var(--surface);
+  color:var(--green);
+  font:inherit;
+  font-weight:600;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+.event-export-actions button:hover:not(:disabled) {
+  background:var(--cream);
+}
+.event-export-actions button:disabled {
+  opacity:.6;
+  cursor:default;
+}
+.event-export-actions button:focus-visible,.event-export-notes summary:focus-visible {
+  outline:3px solid var(--green);
+  outline-offset:4px;
+}
+.event-export-status {
+  min-height:1.75em;
+  margin-top:12px;
+  color:var(--green);
+}
+.event-export-status-error {
+  color:var(--ink);
+  font-weight:600;
+}
+.event-export-notes {
+  margin-top:10px;
+  border-top:1px solid var(--line);
+}
+.event-export-notes summary {
+  min-height:44px;
+  padding:12px 0;
+  cursor:pointer;
+  color:var(--green);
+  font-weight:600;
+  overflow-wrap:anywhere;
+}
+.event-export-notes p {
+  margin-top:14px;
+  color:var(--muted);
+}
+.event-export-provenance {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px 20px;
+  margin:4px 0 0;
+}
+.event-export-provenance > div,.event-export-provenance dd {
+  min-width:0;
+}
+.event-export-provenance dt {
+  color:var(--muted);
+}
+.event-export-provenance dd {
+  margin:2px 0 0;
+}
+.event-export-provenance code {
+  font:1.0625rem/1.65 var(--mono);
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+@media (max-width:700px) {
+  .event-export {
+    padding:20px 16px;
+  }
+  .event-export-provenance {
+    grid-template-columns:minmax(0,1fr);
+  }
+}
+@media (max-width:500px) {
+  .event-export-actions {
+    flex-direction:column;
+  }
+  .event-export-actions button {
+    width:100%;
+  }
+}
