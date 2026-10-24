@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { jobObservationView, loadJobObservation } from '../lib/job-observation';
 import type { JobBrowserError, JobFile, JobObservationRecord } from '../lib/job-observation';
 import '../styles/job-observation.css';
+import JobLifecycle from './JobLifecycle';
 import { publicReadUrl } from '../lib/public-api-base';
 import { loadLiveWithRecordedFallback } from '../lib/public-observation-source';
 
@@ -88,7 +89,7 @@ export default function JobObservationCard({ apiBase, observationUrl, mode, pref
       <div className="job-list-heading"><h3>최근 작업 · 최대 20개</h3><p>작업 상태와 export 상태를 구분합니다.</p></div>
       <div className="job-list">{record.jobs.map(job => <article className="job-record" key={job.runId}><div className="job-record-heading"><h3><code>{job.runId}</code></h3><div className="job-record-states"><span>{jobNames[job.status]}</span><span className={job.exportStatus === 'PENDING' ? 'job-pending' : ''}>{exportNames[job.exportStatus]}</span></div></div>
         {job.counts && <dl className="job-counts">{([['전체', job.counts.input], ['성공', job.counts.success], ['실패', job.counts.failure], ['중복', job.counts.duplicate], ['대기', job.counts.pending]] as const).map(([label, count]) => <div key={label}><dt>{label}</dt><dd>{count}</dd></div>)}</dl>}
-        <dl className="job-observation-details job-times"><div><dt>작업 생성</dt><dd>{time(job.createdAt)}</dd></div><div><dt>DB 처리 완료</dt><dd>{time(job.completedAt)}</dd></div><div><dt>저장 확인 commit</dt><dd>{time(job.exportCompletedAt)}</dd></div>{job.terminatedAt && <div><dt>명시적 종료</dt><dd>{time(job.terminatedAt)}</dd></div>}</dl>
+        <JobLifecycle job={job} />
         {job.files && <><p className="job-file-evidence">{job.fileEvidence === 'VERIFIED_AT_EXPORT_COMMIT' ? '두 파일의 저장 확인을 기록한 DB 시각이 있습니다.' : '아래는 DB 결과로 만든 예상 파일 정보입니다. 저장 확인은 아직 기록되지 않았습니다.'} SHA-256과 크기는 결정적인 DB snapshot에서 다시 계산한 값이며, 현재 저장소를 재조회한 결과가 아닙니다.</p><div className="job-files"><FileEvidence label="전체 처리 결과 JSON" file={job.files.result}/><FileEvidence label="실패 입력 JSON" file={job.files.failures}/></div></>}
       </article>)}</div>
       {record.jobs.length === 0 && <div className="job-observation-empty"><h3>아직 기록된 작업이 없습니다.</h3><p>고정 예제 실행 결과와 새 worker 작업 기록은 별도입니다. 공개 페이지에서는 작업을 생성하지 않습니다.</p></div>}

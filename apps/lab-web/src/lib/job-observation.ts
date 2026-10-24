@@ -49,6 +49,7 @@ function utcNs(value: unknown): bigint | null {
   if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month! - 1 || date.getUTCDate() !== day) return null;
   return BigInt(date.getTime()) * 1_000_000n + BigInt((match[7] || '').padEnd(9, '0'));
 }
+export { utcNs as jobObservationTimeNs };
 const time = (value: unknown): value is string => utcNs(value) !== null;
 const nullableTime = (value: unknown): value is string | null => value === null || time(value);
 const beforeOrEqual = (a: string, b: string) => utcNs(a)! <= utcNs(b)!;

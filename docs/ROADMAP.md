@@ -2,7 +2,7 @@
 
 ## 기능 개발 우선순위 — 2026-10-24 KST
 
-PR255까지 [비교 결과에서 이벤트 이어 보기](features/run-comparison.md#비교에서-이벤트-이어-보기)를 공개했습니다. 다음 우선순위는 **센서별 결과 분포 → 작업·export 수명주기**입니다. 이번에는 전체 조회 outcomes의 센서별 상태·실패 사유를 별도 탭에서 탐색하는 [센서별 결과](features/sensor-outcomes.md)를 구현합니다. [현재 우선순위](AUTONOMOUS_WORK.md#다음-작업의-우선순위)를 기준으로 하고, 아래 완료 기능을 다시 구현하지 않습니다.
+PR257까지 [센서별 결과](features/sensor-outcomes.md)를 공개했습니다. 이번에는 작업의 생성·대기 등록·DB 완료·저장 확인 기록과 두 시각의 간격을 연결하는 [작업·export 기록 흐름](features/job-lifecycle.md)을 구현합니다. 처리 시간이나 현재 상태를 추정하지 않으며 [현재 우선순위](AUTONOMOUS_WORK.md#다음-작업의-우선순위)를 기준으로 합니다. 이를 마친 뒤에는 실제 필요가 확인된 다음 기능만 선택하고 아래 완료 기능을 다시 구현하지 않습니다.
 
 1. [두 실행 결과 비교](features/run-comparison.md): 저장된 A·B의 건수·비율·실패 사유, 공유 링크와 CSV를 제공하는 웹 기능입니다. 기존 GET만 사용하며 운영 image/source pin은 유지합니다.
 2. [API 안내에서 목록 선택으로 상세 조회를 연결](features/api-run-selection.md)합니다. 목록을 불러오고 ID를 고르는 동작과 실제 상세 GET을 구분합니다.
