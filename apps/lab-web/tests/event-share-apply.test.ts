@@ -5,6 +5,9 @@ import { readFileSync } from 'node:fs';
 import type { LabData, RunDetail } from '../src/lib/api.ts';
 import { resolveEventShareSelection, type EventShareParseResult } from '../src/lib/event-share.ts';
 
+import { eventPageForSequence } from '../src/lib/event-pagination.ts';
+import { filterEventOutcomes } from '../src/lib/event-search.ts';
+
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
 const source = readFileSync(new URL('../src/components/LabExplorer.tsx', import.meta.url), 'utf8');
@@ -36,7 +39,7 @@ function harness(options: { interactive?: boolean; loading?: boolean; mode?: str
   const previous = structuredClone(fixture);
   const state = { data: previous, filter: 'SUCCESS', query: 'old-search', reason: 'ACCEPTED' as string | null,
     selection: { runId: previous.detail.id, mode: 'live', sequence: 1 } as { runId: string; mode: string; sequence: number } | null,
-    tab: 'chart', loading: options.loading ?? false, error: 'old-error', notice: 'old-notice' };
+    tab: 'chart', page: 3, loading: options.loading ?? false, error: 'old-error', notice: 'old-notice' };
   const calls: FetchCall[] = [], businessWrites: string[] = [], loadingWrites: boolean[] = [], timers: number[] = [], cleared: number[] = [];
   const oldController = new AbortController(), controller = { current: oldController }, mounted = { current: true };
   const shareInFlight = { current: options.inFlight ?? false };
@@ -44,7 +47,8 @@ function harness(options: { interactive?: boolean; loading?: boolean; mode?: str
     interactive: options.interactive ?? true, loading: options.loading ?? false, mode: options.mode ?? 'live', shareInFlight,
     shareRequest: options.request ?? request, controller, mounted, apiBase: '/public-api', AbortController,
     fetchRun: async (base: string, id: string, signal: AbortSignal) => { calls.push({ base, id, signal }); return options.fetch ? options.fetch() : response; },
-    resolveEventShareSelection,
+    resolveEventShareSelection, filterEventOutcomes, eventPageForSequence, eventPageSize: 25,
+    setEventPageIndex: (value: number) => { businessWrites.push('page'); state.page = value; },
     setLoading: (value: boolean) => { state.loading = value; loadingWrites.push(value); },
     setError: (value: string) => { state.error = value; },
     setShareNotice: (value: string) => { state.notice = value; },
@@ -77,8 +81,25 @@ test('explicit share apply loads an ID outside the recent list and commits exact
   assert.equal(h.state.data.detail, response); assert.equal(h.state.data.runs, h.previous.runs); assert.equal(h.state.data.summary, h.previous.summary);
   assert.equal(h.state.filter, 'DUPLICATE'); assert.equal(h.state.query, '  EVT-003  '); assert.equal(h.state.reason, 'DUPLICATE_EVENT_ID');
   assert.deepEqual(h.state.selection, { runId: response.id, mode: 'live', sequence: 4 }); assert.equal(h.state.tab, 'events');
+  assert.equal(h.state.page, 0);
   assert.match(h.state.notice, /4번 이벤트/); assert.match(h.state.notice, /원래 공유 시점의 결과를 고정하지 않습니다/);
   assert.deepEqual(h.loadingWrites, [true, false]); assert.equal(h.shareInFlight.current, false); assert.deepEqual(h.timers, [8000]); assert.deepEqual(h.cleared, [1]);
+});
+
+test('shared event restoration opens the page of its filtered position rather than sequence or raw position', async () => {
+  const base = fixture.detail.outcomes[3]!;
+  const outcomes = Array.from({ length: 130 }, (_, index) => ({ ...base,
+    sequence: index === 125 ? 4 : 1000 + index,
+    eventId: index % 2 === 1 ? 'evt-003' : 'other-event',
+    status: index % 2 === 1 ? 'DUPLICATE' as const : 'SUCCESS' as const,
+    reason: index % 2 === 1 ? 'DUPLICATE_EVENT_ID' : 'ACCEPTED',
+  }));
+  const detail = { ...response, inputCount: 130, successCount: 65, duplicateCount: 65,
+    failureCount: 0, pendingCount: 0, outcomes };
+  const h = harness({ fetch: async () => detail });
+  await h.apply();
+  assert.equal(h.state.data.detail, detail); assert.equal(h.state.selection?.sequence, 4);
+  assert.equal(h.state.page, 2, 'Sequence 4 is filtered position 62 and raw position 125');
 });
 
 test('missing and filtered shared sequences clear old selection without silently choosing another event', async () => {
@@ -86,15 +107,16 @@ test('missing and filtered shared sequences clear old selection without silently
     const h = harness({ request: { kind: 'valid', selection: { ...request.selection, sequence } } });
     await h.apply();
     assert.equal(h.state.data.detail, response); assert.equal(h.state.selection, null); assert.equal(h.state.tab, 'events');
+    assert.equal(h.state.page, 0);
     assert.equal(h.state.query, '  EVT-003  '); assert.match(h.state.notice, notice);
   }
 });
 
 test('failed shared read preserves previous data, filters and event selection', async () => {
   const h = harness({ fetch: async () => { throw new Error('network unavailable'); } });
-  const before = { data: h.state.data, filter: h.state.filter, query: h.state.query, reason: h.state.reason, selection: h.state.selection, tab: h.state.tab };
+  const before = { data: h.state.data, filter: h.state.filter, query: h.state.query, reason: h.state.reason, selection: h.state.selection, tab: h.state.tab, page: h.state.page };
   await h.apply();
-  for (const key of ['data', 'filter', 'query', 'reason', 'selection', 'tab'] as const) assert.equal(h.state[key], before[key]);
+  for (const key of ['data', 'filter', 'query', 'reason', 'selection', 'tab', 'page'] as const) assert.equal(h.state[key], before[key]);
   assert.deepEqual(h.businessWrites, []); assert.match(h.state.notice, /이전 실행·조건·선택을 유지/); assert.match(h.state.notice, /READ_FAILED/);
   assert.equal(h.state.loading, false); assert.equal(h.shareInFlight.current, false); assert.deepEqual(h.cleared, [1]);
 });

@@ -2,7 +2,7 @@
 
 ## 기능 개발 우선순위 — 2026-10-24 KST
 
-PR247 이후 [검색 결과 CSV·JSON 저장](features/event-export.md)은 PR249로 공개했습니다. 다음으로 [실행·검색·이벤트 공유 링크](features/event-share.md)를 구현하며 긴 이벤트 표의 행 수 조절은 후속 후보입니다. [현재 우선순위](AUTONOMOUS_WORK.md#다음-작업의-우선순위)를 기준으로 하고, 아래 완료 기능을 다시 구현하지 않습니다.
+PR247 이후 [검색 결과 CSV·JSON 저장](features/event-export.md)은 PR249, [실행·검색·이벤트 공유 링크](features/event-share.md)는 PR251로 공개했습니다. 이번에는 [이벤트 표의 행 수·페이지 조절](features/event-pagination.md)을 구현합니다. [현재 우선순위](AUTONOMOUS_WORK.md#다음-작업의-우선순위)를 기준으로 하고, 아래 완료 기능을 다시 구현하지 않습니다.
 
 1. [두 실행 결과 비교](features/run-comparison.md): 저장된 A·B의 건수·비율·실패 사유, 공유 링크와 CSV를 제공하는 웹 기능입니다. 기존 GET만 사용하며 운영 image/source pin은 유지합니다.
 2. [API 안내에서 목록 선택으로 상세 조회를 연결](features/api-run-selection.md)합니다. 목록을 불러오고 ID를 고르는 동작과 실제 상세 GET을 구분합니다.
