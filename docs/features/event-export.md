@@ -4,7 +4,7 @@
 
 ## 저장하는 범위
 
-ID·센서 검색과 상태·사유 조건을 함께 적용한 표의 모든 행을 담습니다. 흐름에서 선택한 한 건만 저장하는 기능은 아닙니다. 응답의 입력 순서와 같은 eventId의 개별 행, sequence·eventId·sensorId·eventTime·value·status·reason을 유지합니다. 다른 조건으로 판정하거나 합치지 않습니다.
+ID·센서 검색과 상태·사유 조건에 맞는 전체 검색 결과를 담습니다. [표의 페이지](event-pagination.md)와 관계없이 모든 일치 행을 저장합니다. 흐름에서 선택한 한 건만 저장하는 기능은 아닙니다. 응답의 입력 순서와 같은 eventId의 개별 행, sequence·eventId·sensorId·eventTime·value·status·reason을 유지합니다. 다른 조건으로 판정하거나 합치지 않습니다.
 
 출처는 live/API 조회, recorded/게시 관측, fixture/고정 샘플 기대값을 구분합니다. 실행 ID와 상세 결과의 observedAt 원문, 게시본·fixture의 capturedAt을 별도로 담습니다. 요약 API의 시각으로 상세 관측 시각을 대체하지 않으며 fixture를 운영 관측으로 표시하지 않습니다.
 

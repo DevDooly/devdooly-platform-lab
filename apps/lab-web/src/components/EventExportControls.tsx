@@ -63,9 +63,9 @@ export default function EventExportControls({ input, matchedCount, disabled }: E
   return <section className="event-export" aria-labelledby="event-export-title">
     <div className="event-export-heading">
       <h4 id="event-export-title">검색 결과 저장</h4>
-      <p>현재 표 조건 <strong>{matchedCount.toLocaleString('ko-KR')}건</strong> · 조회된 전체 {input.outcomes.length.toLocaleString('ko-KR')}건 · 보고된 입력 {input.reportedInputCount.toLocaleString('ko-KR')}건</p>
+      <p>검색 결과 전체 <strong>{matchedCount.toLocaleString('ko-KR')}건</strong> · 조회된 전체 {input.outcomes.length.toLocaleString('ko-KR')}건 · 보고된 입력 {input.reportedInputCount.toLocaleString('ko-KR')}건</p>
     </div>
-    <p className="event-export-scope">검색·처리 상태·사유 조건에 맞는 이벤트를 입력 순서로 저장합니다. 흐름 보기에서 선택한 한 건만 저장하는 기능은 아닙니다. 0건이어도 조건과 출처를 담은 파일을 만듭니다.</p>
+    <p className="event-export-scope">페이지와 관계없이 검색·처리 상태·사유 조건에 맞는 이벤트 전체를 입력 순서로 저장합니다. 흐름 보기에서 선택한 한 건만 저장하는 기능은 아닙니다. 0건이어도 조건과 출처를 담은 파일을 만듭니다.</p>
     <div className="event-export-actions" aria-label="검색 결과 파일 형식">
       <button type="button" disabled={disabled} onClick={() => prepareFile('csv')}>CSV 다운로드</button>
       <button type="button" disabled={disabled} onClick={() => prepareFile('json')}>JSON 다운로드</button>

@@ -9,6 +9,8 @@ import TourStepNavigation from './TourStepNavigation';
 import EventFlowInspector from './EventFlowInspector';
 import EventExportControls from './EventExportControls';
 import EventShareControls, { EventShareRequest } from './EventShareControls';
+import EventTablePagination from './EventTablePagination';
+import { eventPage, eventPageForSequence, type EventPageSize } from '../lib/event-pagination';
 import { parseEventShareSelection, resolveEventShareSelection, type EventShareParseResult } from '../lib/event-share';
 import { eventReasonOptions, filterEventOutcomes } from '../lib/event-search';
 import '../styles/event-search.css';
@@ -116,6 +118,8 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
   const [eventQuery, setEventQuery] = useState('');
   const [eventReason, setEventReason] = useState<string | null>(null);
   const [eventSelection, setEventSelection] = useState<{ runId: string; mode: SourceMode; sequence: number } | null>(null);
+  const [eventPageIndex, setEventPageIndex] = useState(0);
+  const [eventPageSize, setEventPageSize] = useState<EventPageSize>(25);
   const [shareRequest, setShareRequest] = useState<EventShareParseResult>({ kind: 'absent' });
   const [shareNotice, setShareNotice] = useState('');
   const shareInFlight = useRef(false);
@@ -134,9 +138,9 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
     const timer = setTimeout(() => request.abort(), 8000);
     try {
       const result = await loadLabSources({ apiBase, observationUrl, fixture: initial, signal: request.signal, preferredId: data.detail.id, previousObservation: cachedObservation.current });
-      if (mounted.current && controller.current === request) { setData(result.data); setMode(result.mode); setObservation(result.observation); cachedObservation.current = result.cachedObservation; setError(result.liveFailure ? describeLiveFailure(result.liveFailure) : ''); }
+      if (mounted.current && controller.current === request) { setData(result.data); setMode(result.mode); setObservation(result.observation); cachedObservation.current = result.cachedObservation; setError(result.liveFailure ? describeLiveFailure(result.liveFailure) : ''); setEventPageIndex(0); }
     }
-    catch (failure) { if (mounted.current && controller.current === request) { setData(initial); setMode('fixture'); setObservation(null); setError(describeLiveFailure(liveFailureOf(failure))); } }
+    catch (failure) { if (mounted.current && controller.current === request) { setData(initial); setMode('fixture'); setObservation(null); setError(describeLiveFailure(liveFailureOf(failure))); setEventPageIndex(0); } }
     finally { clearTimeout(timer); if (mounted.current && controller.current === request) setLoading(false); }
   }
   useEffect(() => { mounted.current = true; setInteractive(true); setShareRequest(parseEventShareSelection(window.location.search)); void refresh(); return () => { mounted.current = false; controller.current?.abort(); }; }, []);
@@ -146,7 +150,7 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
     markShareChanged();
     controller.current?.abort(); const request = new AbortController(); controller.current = request;
     setLoading(true); setError(''); const timer = setTimeout(() => request.abort(), 8000);
-    try { const detail = await fetchRun(apiBase, id, request.signal); if (mounted.current && controller.current === request) setData(previous => ({ ...previous, detail })); }
+    try { const detail = await fetchRun(apiBase, id, request.signal); if (mounted.current && controller.current === request) { setData(previous => ({ ...previous, detail })); setEventPageIndex(0); } }
     catch (failure) { if (mounted.current && controller.current === request) setError(`선택한 결과를 불러오지 못했습니다. 이전 결과를 표시합니다. ${describeLiveFailure(liveFailureOf(failure))}`); }
     finally { clearTimeout(timer); if (mounted.current && controller.current === request) setLoading(false); }
   }
@@ -166,6 +170,7 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
       setData(previous => ({ ...previous, detail }));
       setFilter(selection.filters.status); setEventQuery(selection.filters.query); setEventReason(selection.filters.reason);
       setEventSelection(restored.sequence === null ? null : { runId: detail.id, mode: 'live', sequence: restored.sequence });
+      setEventPageIndex(eventPageForSequence(filterEventOutcomes(detail.outcomes, selection.filters), restored.sequence, eventPageSize) ?? 0);
       setTab('events');
       const eventNotice = restored.eventState === 'selected' ? `${restored.sequence}번 이벤트를 선택했습니다.`
         : restored.eventState === 'missing' ? '지정한 순서의 이벤트가 이번 응답에 없어 선택하지 않았습니다.'
@@ -192,34 +197,55 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
     if (!interactive || loading) return;
     markShareChanged();
     setFilter(next);
+    setEventPageIndex(0);
     setEventSelection(null);
   }
   function changeEventQuery(value: string) {
     if (!interactive || loading) return;
     markShareChanged();
     setEventQuery(value);
+    setEventPageIndex(0);
     setEventSelection(null);
   }
   function changeEventReason(value: string | null) {
     if (!interactive || loading) return;
     markShareChanged();
     setEventReason(value);
+    setEventPageIndex(0);
     setEventSelection(null);
   }
   function resetEventSearch() {
     if (!interactive || loading) return;
     markShareChanged();
     setFilter('ALL'); setEventQuery(''); setEventReason(null); setEventSelection(null);
+    setEventPageIndex(0);
   }
   function selectEvent(sequence: number | null) {
     if (!interactive || loading) return;
     markShareChanged();
+    if (sequence !== null) setEventPageIndex(eventPageForSequence(outcomes, sequence, eventPageSize) ?? 0);
     if (sequence !== null && eventSelection?.runId === data.detail.id && eventSelection.mode === mode && eventSelection.sequence === sequence) {
       const heading = document.getElementById('event-flow-detail-title');
       heading?.focus({ preventScroll: true });
       heading?.scrollIntoView({ behavior: 'auto', block: 'start' });
     }
     setEventSelection(sequence === null ? null : { runId: data.detail.id, mode, sequence });
+  }
+  function focusEventTable() {
+    const heading = document.getElementById('event-table-title');
+    heading?.focus({ preventScroll: true });
+    heading?.scrollIntoView({ behavior: 'auto', block: 'start' });
+  }
+  function changeEventPage(next: number) {
+    if (!interactive || loading) return;
+    setEventPageIndex(eventPage(outcomes, next, eventPageSize).index);
+    focusEventTable();
+  }
+  function changeEventPageSize(next: EventPageSize) {
+    if (!interactive || loading) return;
+    setEventPageSize(next);
+    setEventPageIndex(eventPageForSequence(outcomes, selectedEventSequence, next) ?? 0);
+    focusEventTable();
   }
   const platformSourceMode = mode === 'live' ? '실시간 조회 API' : mode === 'recorded' ? '게시된 마지막 수집 기록' : '합성 샘플';
   const platformTimeLabel = mode === 'live' ? 'API 관측 시각' : mode === 'recorded' ? '기록 수집 시각' : '샘플 파일 생성 시각';
@@ -229,6 +255,8 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
   const outcomes = filterEventOutcomes(detail.outcomes, { status: filter, query: eventQuery, reason: eventReason });
   const selectedEventSequence = eventSelection?.runId === detail.id && eventSelection.mode === mode
     && outcomes.some(row => row.sequence === eventSelection.sequence) ? eventSelection.sequence : null;
+  const tablePage = eventPage(outcomes, eventPageIndex, eventPageSize);
+  const selectedEventPage = eventPageForSequence(outcomes, selectedEventSequence, eventPageSize);
   const reasons = eventReasonOptions(detail.outcomes);
   const counts: [string, number, string][] = [['성공', detail.successCount, 'success'], ['실패', detail.failureCount, 'failed'], ['중복', detail.duplicateCount, 'duplicate'], ['대기', detail.pendingCount, 'pending']];
   return <>
@@ -259,7 +287,16 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
             runId={detail.id} mode={mode} observedAt={detail.observedAt}
             capturedAt={detailCapturedAt}
             interactive={interactive && !loading} />
-          <div className="table-scroll" role="region" tabIndex={0} aria-label="이벤트 상세 표, 좌우 스크롤 가능"><table><caption className="sr-only">입력 순서별 이벤트 처리 결과</caption><thead><tr><th scope="col">순서 / ID</th><th scope="col">센서</th><th scope="col">입력 시간 (UTC)</th><th scope="col">값</th><th scope="col">결과 / 이유</th></tr></thead><tbody>{outcomes.map(row => <tr key={row.sequence}><td><button type="button" className="event-flow-open" disabled={!interactive || loading} aria-pressed={selectedEventSequence === row.sequence} aria-label={`${row.sequence}번 ${row.eventId} 판정 흐름 보기`} onClick={() => selectEvent(row.sequence)}><span className="muted">{String(row.sequence).padStart(2, '0')}</span> {row.eventId} · 흐름 보기</button></td><td>{row.sensorId}</td><td className="time-cell">{row.eventTime}</td><td>{row.value ?? '—'}</td><td><span className={`result-label ${row.status.toLowerCase()}`}>{statusLabel[row.status]}</span><small>{reasonLabel[row.reason] || row.reason}</small></td></tr>)}</tbody></table>{outcomes.length === 0 && <p className="empty-message">현재 검색·처리 상태·사유 조건에 맞는 이벤트가 없습니다. 조건을 바꾸거나 검색·필터를 초기화하세요.</p>}</div></div>
+          <section className="event-table-section" aria-labelledby="event-table-title">
+          <h4 id="event-table-title" tabIndex={-1}>이벤트 상세 표</h4>
+          <EventTablePagination page={tablePage} pageSize={eventPageSize} selectedSequence={selectedEventSequence}
+            selectedPage={selectedEventPage} disabled={!interactive || loading} position="top"
+            onPageChange={changeEventPage} onPageSizeChange={changeEventPageSize} />
+          <div className="table-scroll" role="region" tabIndex={0} aria-label="이벤트 상세 표, 좌우 스크롤 가능"><table><caption className="sr-only">입력 순서별 이벤트 처리 결과</caption><thead><tr><th scope="col">순서 / ID</th><th scope="col">센서</th><th scope="col">입력 시간 (UTC)</th><th scope="col">값</th><th scope="col">결과 / 이유</th></tr></thead><tbody>{tablePage.rows.map(row => <tr key={row.sequence}><td><button type="button" className="event-flow-open" disabled={!interactive || loading} aria-pressed={selectedEventSequence === row.sequence} aria-label={`${row.sequence}번 ${row.eventId} 판정 흐름 보기`} onClick={() => selectEvent(row.sequence)}><span className="muted">{String(row.sequence).padStart(2, '0')}</span> {row.eventId} · 흐름 보기</button></td><td>{row.sensorId}</td><td className="time-cell">{row.eventTime}</td><td>{row.value ?? '—'}</td><td><span className={`result-label ${row.status.toLowerCase()}`}>{statusLabel[row.status]}</span><small>{reasonLabel[row.reason] || row.reason}</small></td></tr>)}</tbody></table>{outcomes.length === 0 && <p className="empty-message">현재 검색·처리 상태·사유 조건에 맞는 이벤트가 없습니다. 조건을 바꾸거나 검색·필터를 초기화하세요.</p>}</div>
+          <EventTablePagination page={tablePage} pageSize={eventPageSize} selectedSequence={selectedEventSequence}
+            selectedPage={selectedEventPage} disabled={!interactive || loading} position="bottom"
+            onPageChange={changeEventPage} onPageSizeChange={changeEventPageSize} />
+          </section></div>
       </div><aside className="run-aside"><div className="aside-heading"><span className="eyebrow">WHY THESE RESULTS</span><h3>건수보다,<br/>처리한 이유까지.</h3></div><div className="reason-item"><span>01</span><div><h4>중복은 한 번만</h4><p>같은 이벤트 ID가 다시 들어와도 중복으로 분리합니다.</p></div></div><div className="reason-item"><span>02</span><div><h4>시간의 순서 확인</h4><p>잘못된 시간 형식과 센서별 과거 이벤트를 검증합니다.</p></div></div><div className="reason-item"><span>03</span><div><h4>실패도 결과에 남기기</h4><p>범위를 벗어난 값을 실패 사유와 함께 조회합니다.</p></div></div><div className="run-metadata"><p id="selected-run-id"><span>선택한 실행 ID</span><strong>{detail.id}</strong></p><p><span>실행 시작</span><strong>{formatTime(detail.startedAt)}</strong></p><p><span>실행 완료</span><strong>{formatTime(detail.completedAt)}</strong></p><p><span>결과 관측</span><strong>{formatTime(detail.observedAt)}</strong></p></div><p className="small-note">회사 데이터·코드를 사용하지 않는 개인 공개 예제입니다.</p></aside></div>
       <TourStepNavigation step={1}/>
     </section>
