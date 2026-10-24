@@ -7,6 +7,7 @@ import snapshot from '../data/snapshot.json';
 import '../styles/api-connection-scope.css';
 import TourStepNavigation from './TourStepNavigation';
 import EventFlowInspector from './EventFlowInspector';
+import EventExportControls from './EventExportControls';
 import { eventReasonOptions, filterEventOutcomes } from '../lib/event-search';
 import '../styles/event-search.css';
 
@@ -179,6 +180,7 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
   const platformTimeLabel = mode === 'live' ? 'API 관측 시각' : mode === 'recorded' ? '기록 수집 시각' : '샘플 파일 생성 시각';
   const platformSourceTime = mode === 'live' ? data.summary.observedAt : mode === 'recorded' ? observation?.capturedAt : initial.capturedAt;
   const detail = data.detail;
+  const detailCapturedAt = mode === 'recorded' ? observation?.capturedAt ?? null : mode === 'fixture' ? initial.capturedAt ?? null : null;
   const selectedEventSequence = eventSelection?.runId === detail.id && eventSelection.mode === mode ? eventSelection.sequence : null;
   const outcomes = filterEventOutcomes(detail.outcomes, { status: filter, query: eventQuery, reason: eventReason });
   const reasons = eventReasonOptions(detail.outcomes);
@@ -202,9 +204,12 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
           <EventSearchControls status={filter} query={eventQuery} reason={eventReason} reasons={reasons}
             shown={outcomes.length} total={detail.outcomes.length} disabled={!interactive || loading}
             onStatusChange={changeEventFilter} onQueryChange={changeEventQuery} onReasonChange={changeEventReason} onReset={resetEventSearch} />
+          <EventExportControls input={{ runId: detail.id, mode, observedAt: detail.observedAt, capturedAt: detailCapturedAt,
+            reportedInputCount: detail.inputCount, filters: { status: filter, query: eventQuery, reason: eventReason }, outcomes: detail.outcomes }}
+            matchedCount={outcomes.length} disabled={!interactive || loading} />
           <EventFlowInspector outcomes={outcomes} selectedSequence={selectedEventSequence} onSelect={selectEvent}
             runId={detail.id} mode={mode} observedAt={detail.observedAt}
-            capturedAt={mode === 'recorded' ? observation?.capturedAt ?? null : mode === 'fixture' ? initial.capturedAt ?? null : null}
+            capturedAt={detailCapturedAt}
             interactive={interactive && !loading} />
           <div className="table-scroll" role="region" tabIndex={0} aria-label="이벤트 상세 표, 좌우 스크롤 가능"><table><caption className="sr-only">입력 순서별 이벤트 처리 결과</caption><thead><tr><th scope="col">순서 / ID</th><th scope="col">센서</th><th scope="col">입력 시간 (UTC)</th><th scope="col">값</th><th scope="col">결과 / 이유</th></tr></thead><tbody>{outcomes.map(row => <tr key={row.sequence}><td><button type="button" className="event-flow-open" disabled={!interactive || loading} aria-pressed={selectedEventSequence === row.sequence} aria-label={`${row.sequence}번 ${row.eventId} 판정 흐름 보기`} onClick={() => selectEvent(row.sequence)}><span className="muted">{String(row.sequence).padStart(2, '0')}</span> {row.eventId} · 흐름 보기</button></td><td>{row.sensorId}</td><td className="time-cell">{row.eventTime}</td><td>{row.value ?? '—'}</td><td><span className={`result-label ${row.status.toLowerCase()}`}>{statusLabel[row.status]}</span><small>{reasonLabel[row.reason] || row.reason}</small></td></tr>)}</tbody></table>{outcomes.length === 0 && <p className="empty-message">현재 검색·처리 상태·사유 조건에 맞는 이벤트가 없습니다. 조건을 바꾸거나 검색·필터를 초기화하세요.</p>}</div></div>
       </div><aside className="run-aside"><div className="aside-heading"><span className="eyebrow">WHY THESE RESULTS</span><h3>건수보다,<br/>처리한 이유까지.</h3></div><div className="reason-item"><span>01</span><div><h4>중복은 한 번만</h4><p>같은 이벤트 ID가 다시 들어와도 중복으로 분리합니다.</p></div></div><div className="reason-item"><span>02</span><div><h4>시간의 순서 확인</h4><p>잘못된 시간 형식과 센서별 과거 이벤트를 검증합니다.</p></div></div><div className="reason-item"><span>03</span><div><h4>실패도 결과에 남기기</h4><p>범위를 벗어난 값을 실패 사유와 함께 조회합니다.</p></div></div><div className="run-metadata"><p id="selected-run-id"><span>선택한 실행 ID</span><strong>{detail.id}</strong></p><p><span>실행 시작</span><strong>{formatTime(detail.startedAt)}</strong></p><p><span>실행 완료</span><strong>{formatTime(detail.completedAt)}</strong></p><p><span>결과 관측</span><strong>{formatTime(detail.observedAt)}</strong></p></div><p className="small-note">회사 데이터·코드를 사용하지 않는 개인 공개 예제입니다.</p></aside></div>
