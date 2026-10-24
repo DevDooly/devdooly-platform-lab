@@ -25,7 +25,7 @@ const apiBase = publicApiConfiguration(import.meta.env.PUBLIC_API_BASE_URL).apiB
       <div class="run-comparison-intro">
         <span class="eyebrow">TWO RUNS / ONE VIEW</span>
         <h1>두 실행의 차이를<br />한 화면에서 봅니다.</h1>
-        <p>실행 목록을 읽고 A와 B를 선택하세요. 저장된 결과의 건수·비율·실패 사유를 비교하고, 같은 선택의 링크나 비교표 CSV를 저장할 수 있습니다.</p>
+        <p>실행 목록을 읽고 A와 B를 선택하세요. 저장된 결과의 건수·비율·실패 사유를 비교하고, 해당 이벤트로 이어 보거나 같은 선택의 링크와 비교표 CSV를 저장할 수 있습니다.</p>
         <p>기존 결과를 조회하는 화면입니다. 입력 조건이 다르면 결과도 달라질 수 있으며, 두 결과의 차이만으로 코드나 성능이 개선됐다고 판단하지 않습니다.</p>
       </div>
       <RunComparison client:load apiBase={apiBase} basePath={assetBase} />

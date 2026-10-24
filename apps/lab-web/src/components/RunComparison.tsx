@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ApiReadFailure, readPublicApi, type ApiReadResult } from '../data/public-api-reference';
 import { isRun, isRunDetail, type Run, type RunDetail } from '../lib/api';
 import { publicApiConfiguration } from '../lib/public-api-base';
+import { comparisonEventPath } from '../lib/comparison-drilldown';
 import { compareRuns, comparisonCsv, comparisonSharePath, isComparisonRunId, parseComparisonSelection, type RunComparison as ComparisonResult } from '../lib/run-comparison';
 import '../styles/run-comparison.css';
 
@@ -32,7 +33,9 @@ function Timestamp({ value }: { value: string | null }) {
   return value ? <time dateTime={value}>{value}</time> : <span>기록 없음</span>;
 }
 
-function RunRecord({ side, run, source }: { side: 'A' | 'B'; run: RunDetail; source: ReadSource }) {
+function RunRecord({ side, run, source, basePath }: { side: 'A' | 'B'; run: RunDetail; source: ReadSource; basePath: string }) {
+  const allEventsPath = comparisonEventPath(run.id, basePath);
+  const failedEventsPath = comparisonEventPath(run.id, basePath, { status: 'FAILED' });
   return <article className="rc-record" aria-labelledby={`rc-record-${side}`}>
     <div className="rc-record-heading"><span className="rc-side">{side}</span><h3 id={`rc-record-${side}`}>{run.name || '이름 없는 실행'}</h3></div>
     <code className="rc-record-id">{run.id}</code>
@@ -41,6 +44,10 @@ function RunRecord({ side, run, source }: { side: 'A' | 'B'; run: RunDetail; sou
       <div><dt>시나리오</dt><dd>{run.scenario || '기록 없음'}</dd></div>
       <div><dt>seed · 데이터</dt><dd>{count(run.seed)} · {run.synthetic ? '합성 데이터' : '합성 표시 없음'}</dd></div>
     </dl>
+    <div className="rc-event-actions" aria-label={`${side} 실행 이벤트로 이동`}>
+      {allEventsPath && <a className="rc-event-link" href={allEventsPath}>{side} 전체 이벤트 보기<span aria-hidden="true">↗</span></a>}
+      {failedEventsPath && <a className="rc-event-link" href={failedEventsPath}>{side} 실패 이벤트 보기<span aria-hidden="true">↗</span></a>}
+    </div>
     <details className="rc-record-details"><summary>기록 시각·조회 출처</summary><dl>
       <div><dt>원기록 시작 시각</dt><dd><Timestamp value={run.startedAt} /></dd></div>
       <div><dt>원기록 완료 시각</dt><dd><Timestamp value={run.completedAt} /></dd></div>
@@ -49,6 +56,13 @@ function RunRecord({ side, run, source }: { side: 'A' | 'B'; run: RunDetail; sou
       <div><dt>조회 경로</dt><dd><code>GET {source.path}</code></dd></div>
     </dl></details>
   </article>;
+}
+
+function FailureReasonCount({ side, runId, value, reason, basePath }: { side: 'A' | 'B'; runId: string; value: number; reason: string; basePath: string }) {
+  const path = value > 0 ? comparisonEventPath(runId, basePath, { status: 'FAILED', reason }) : null;
+  return path ? <a className="rc-event-link rc-reason-link" href={path} aria-label={`${side} 실행 · 실패 사유 ${reason === '' ? '빈 문자열' : JSON.stringify(reason)} · ${count(value)}건 이벤트 보기`}>
+    <span>{count(value)}건</span><span>이벤트 보기 <span aria-hidden="true">↗</span></span>
+  </a> : <span>{count(value)}건</span>;
 }
 
 function CountComparison({ result }: { result: ComparisonResult }) {
@@ -244,17 +258,18 @@ export default function RunComparison({ apiBase = '/api', basePath = '/' }: Prop
     {!displayed && <section className="rc-empty" aria-label="비교 결과 대기"><span className="rc-step">02</span><h2>두 실행을 조회하면 비교가 표시됩니다</h2><p>입력·성공·실패·중복·대기 건수와 실패 사유를 나란히 확인합니다. 이 화면에 저장된 비교 전적은 없습니다.</p></section>}
     {displayed && <section className="rc-results" aria-labelledby="rc-results-title" data-comparison-state={dirty ? 'previous-selection' : 'current-selection'}>
       <div className="rc-section-heading"><span className="rc-step">02</span><h2 id="rc-results-title" ref={resultHeading} tabIndex={-1}>표시 중인 비교</h2><span className="rc-result-label">두 응답 조회 완료</span></div>
-      {dirty && <div className="rc-dirty" role="status"><strong>선택이 바뀌었습니다. 아래 표는 이전 비교입니다.</strong><p>표시 중인 A: <code>{displayed.result.left.id}</code> · B: <code>{displayed.result.right.id}</code>. 새 선택은 두 실행 비교 버튼을 눌러 조회하세요.</p><p>공유 링크와 CSV도 아래에 표시된 실행을 기준으로 만듭니다.</p></div>}
+      {dirty && <div className="rc-dirty" role="status"><strong>선택이 바뀌었습니다. 아래 표는 이전 비교입니다.</strong><p>표시 중인 A: <code>{displayed.result.left.id}</code> · B: <code>{displayed.result.right.id}</code>. 새 선택은 두 실행 비교 버튼을 눌러 조회하세요.</p><p>이벤트 보기·공유 링크와 CSV도 아래에 표시된 실행을 기준으로 만듭니다.</p></div>}
       <p className="rc-note">아래 A·B는 각각 직접 수신한 응답입니다. 두 조회는 같은 순간의 관측이 아니며, 최신 상태가 계속 유지됨을 보장하지 않습니다.</p>
-      <div className="rc-records"><RunRecord side="A" run={displayed.result.left} source={displayed.sources.left} /><RunRecord side="B" run={displayed.result.right} source={displayed.sources.right} /></div>
+      <div className="rc-records"><RunRecord side="A" run={displayed.result.left} source={displayed.sources.left} basePath={basePath} /><RunRecord side="B" run={displayed.result.right} source={displayed.sources.right} basePath={basePath} /></div>
+      <p className="rc-note">이벤트 보기로 이동한 뒤 ‘공유한 실행·조건 조회’ 버튼을 누르면 해당 실행을 새 시각에 다시 조회합니다. 이 비교의 응답·시각을 고정한 결과는 아닙니다.</p>
       <div className="rc-interpretation"><h3>차이를 읽을 때</h3><ul><li>입력 건수: {displayed.result.differences.inputCount ? '서로 다릅니다. 건수 차이와 입력 대비 비율을 함께 확인하세요.' : '두 실행이 같습니다.'}</li><li>시나리오: {displayed.result.differences.scenario ? '서로 다릅니다. 같은 조건의 반복 실행으로 해석할 수 없습니다.' : '표시된 시나리오가 같습니다.'} seed: {displayed.result.differences.seed ? '서로 다릅니다.' : '같습니다.'}</li><li>숫자의 증감은 성능 향상·회귀나 설정 변경의 효과를 증명하지 않습니다.</li></ul>{displayed.result.warnings.length > 0 && <div className="rc-data-warning"><strong>응답 정합성 참고</strong><ul>{displayed.result.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul></div>}</div>
       <CountComparison result={displayed.result} />
 
-      <section className="rc-reasons" aria-labelledby="rc-reasons-title"><h3 id="rc-reasons-title">조회된 실패 이벤트 기준 사유 비교</h3><p>각 응답의 <code>outcomes</code> 중 FAILED인 이벤트를 사유별로 집계합니다. 보고된 요약과 일치하지 않으면 전체 실패 사유 분포로 단정할 수 없습니다.</p>
+      <section className="rc-reasons" aria-labelledby="rc-reasons-title"><h3 id="rc-reasons-title">조회된 실패 이벤트 기준 사유 비교</h3><p>각 응답의 <code>outcomes</code> 중 FAILED인 이벤트를 사유별로 집계합니다. 보고된 요약과 일치하지 않으면 전체 실패 사유 분포로 단정할 수 없습니다. 사유별 링크의 건수는 비교 당시 응답 기준이며, 다시 조회한 결과에는 같은 이벤트가 없을 수 있습니다.</p>
         <div className="rc-coverage">{(['left', 'right'] as const).map((side, index) => { const coverage = displayed.result.failureReasonCoverage[side]; return <p key={side}><strong>{index === 0 ? 'A' : 'B'}</strong> 조회된 실패 이벤트 {count(coverage.failedOutcomeCount)}건 / 보고된 실패 {count(coverage.reportedFailureCount)}건 · {coverage.complete ? '건수 일치' : '건수 불일치'}</p>; })}</div>
         {displayed.result.failureReasons.length === 0 ? <p className="rc-no-reasons">두 응답에서 조회된 실패 이벤트가 없습니다.</p> : <>
-          <div className="rc-table-scroll rc-wide" role="region" aria-label="실패 사유 비교 표, 가로로 스크롤할 수 있습니다" tabIndex={0}><table className="rc-table"><caption>실패 이벤트 사유별 건수 · 차이는 B − A</caption><thead><tr><th scope="col">조회된 실패 사유</th><th scope="col">A 건수</th><th scope="col">B 건수</th><th scope="col">차이 · B − A</th></tr></thead><tbody>{displayed.result.failureReasons.map(reason => <tr key={reason.reason}><th scope="row">{reason.reason || '사유 없음'}</th><td>{count(reason.left)}</td><td>{count(reason.right)}</td><td>{delta(reason.delta)}</td></tr>)}</tbody></table></div>
-          <div className="rc-mobile rc-mobile-metrics">{displayed.result.failureReasons.map(reason => <article className="rc-mobile-row" key={reason.reason}><h4>{reason.reason || '사유 없음'}</h4><dl><div><dt>A</dt><dd>{count(reason.left)}건</dd></div><div><dt>B</dt><dd>{count(reason.right)}건</dd></div><div><dt>차이 · B − A</dt><dd>{delta(reason.delta)}건</dd></div></dl></article>)}</div>
+          <div className="rc-table-scroll rc-wide" role="region" aria-label="실패 사유 비교 표, 가로로 스크롤할 수 있습니다" tabIndex={0}><table className="rc-table"><caption>실패 이벤트 사유별 건수 · 차이는 B − A</caption><thead><tr><th scope="col">조회된 실패 사유</th><th scope="col">A 건수</th><th scope="col">B 건수</th><th scope="col">차이 · B − A</th></tr></thead><tbody>{displayed.result.failureReasons.map(reason => <tr key={reason.reason}><th scope="row">{reason.reason || '사유 없음'}</th><td><FailureReasonCount side="A" runId={displayed.result.left.id} value={reason.left} reason={reason.reason} basePath={basePath} /></td><td><FailureReasonCount side="B" runId={displayed.result.right.id} value={reason.right} reason={reason.reason} basePath={basePath} /></td><td>{delta(reason.delta)}</td></tr>)}</tbody></table></div>
+          <div className="rc-mobile rc-mobile-metrics">{displayed.result.failureReasons.map(reason => <article className="rc-mobile-row" key={reason.reason}><h4>{reason.reason || '사유 없음'}</h4><dl><div><dt>A</dt><dd><FailureReasonCount side="A" runId={displayed.result.left.id} value={reason.left} reason={reason.reason} basePath={basePath} /></dd></div><div><dt>B</dt><dd><FailureReasonCount side="B" runId={displayed.result.right.id} value={reason.right} reason={reason.reason} basePath={basePath} /></dd></div><div><dt>차이 · B − A</dt><dd>{delta(reason.delta)}건</dd></div></dl></article>)}</div>
         </>}
       </section>
 
