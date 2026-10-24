@@ -1,6 +1,6 @@
 # 현재 범위와 다음 작업
 
-기준: 2026-10-24(KST). 개인 Lab에서 실제 확인한 결과와 남은 작업을 찾는 길잡이입니다. 각 근거는 실행 당시의 범위이며 현재 가용성을 보장하지 않습니다.
+기준: 2026-10-25(KST). 개인 Lab에서 실제 확인한 결과와 남은 작업을 찾는 길잡이입니다. 각 근거는 실행 당시의 범위이며 현재 가용성을 보장하지 않습니다.
 
 [프로젝트 소개](../README.md) · [시작 안내](START_HERE.md) · [상세 진행 기록](NEXT_STEPS.md) · [공개 근거 검색](https://devdooly.github.io/devdooly-platform-lab/#evidence)
 
@@ -33,13 +33,9 @@
 
 ## 다음 작업의 우선순위
 
-PR257까지 센서별 결과 탐색을 공개했습니다. 다음은 작업마다 흩어져 있던 기록 시각을 연결해 처리와 export 확인을 구분하는 기능입니다. 기존 운영 시험을 재수행하는 계획이 아닙니다.
+[PR259](https://github.com/DevDooly/devdooly-platform-lab/pull/259)에서 작업·export 기록 흐름을 공개해 계획했던 이용 기능을 마쳤습니다. 생성·원본 검증/대기 등록·DB 완료·저장 확인 기록과 두 기록 간격, 원시 시각 6개를 연결합니다. null은 미기록이며 취소/종료는 별도로 표시합니다. [시각의 의미·범위](features/job-lifecycle.md)를 따르며 처리 시간·Kafka/S3 지연·현재 worker 생존을 추정하지 않습니다.
 
-| 순서 | 기능과 필요한 이유 | 범위 |
-| --- | --- | --- |
-| 1 | **작업·export 기록 흐름:** 생성·원본 검증/대기 등록·DB 완료·저장 확인 기록 연결 | 이번 구현. 기존 공개 시각의 단계와 정확한 두 기록 간격을 표시하고 원문6개를 펼쳐 봅니다. null은 미기록, 취소/종료는 별도 표시하며 처리 시간·Kafka/S3 지연·현재 상태를 추정하지 않습니다. [시각의 의미·범위](features/job-lifecycle.md) |
-
-이 기능을 마친 뒤에는 새 이용 문제나 필요한 기능이 확인될 때 다음 범위를 정합니다. 완료한 기능·정상 운영 점검을 반복하거나 보류 작업을 자동으로 재개하지 않습니다.
+현재 확정한 다음 구현은 없습니다. 새 이용 문제나 필요한 기능이 확인되면 다른 작업과 범위를 조정해 하나씩 진행합니다. 완료한 기능·정상 운영 점검을 반복하거나 보류 작업을 자동으로 재개하지 않습니다.
 
 ### 완료한 이용 기능
 
@@ -54,6 +50,7 @@ PR257까지 센서별 결과 탐색을 공개했습니다. 다음은 작업마�
 | 7 | **이벤트 표의 행 수·페이지 조절** | [PR253](https://github.com/DevDooly/devdooly-platform-lab/pull/253) 공개 완료. 표만 25·50·100행으로 나누며 흐름·공유·내보내기는 전체 검색 결과를 유지합니다. 성능 개선 수치는 측정하지 않았습니다. [범위·검증](features/event-pagination.md) |
 | 8 | **비교 결과에서 이벤트 이어 보기** | [PR255](https://github.com/DevDooly/devdooly-platform-lab/pull/255) 공개 완료. 표시 중인 A·B의 전체·실패·사유별 링크로 상세에 이동하고 명시적 조회로 새 관측을 적용합니다. [사용법·범위](features/run-comparison.md#비교에서-이벤트-이어-보기) |
 | 9 | **센서별 결과 분포 탐색** | [PR257](https://github.com/DevDooly/devdooly-platform-lab/pull/257) 공개 완료. 전체 조회 outcomes의 센서별 집계·목록 검색/정렬·FAILED 사유를 별도 탭에서 확인하며 이벤트 조건·공유·저장은 유지합니다. [집계·범위](features/sensor-outcomes.md) |
+| 10 | **작업·export 기록 흐름** | [PR259](https://github.com/DevDooly/devdooly-platform-lab/pull/259) 공개 완료. [작업 관측](https://devdooly.github.io/devdooly-platform-lab/#job-observation)의 기록 단계·두 간격·원시 UTC 시각을 확인합니다. 같은 main의 CI·Pages와 공개 PC/모바일 확인을 마쳤습니다. 실제 공개 확인은 EXPORTED 9개이며, 나머지 상태·나노초 경계는 합성 검사로 구분합니다. [범위·검증](features/job-lifecycle.md) |
 
 반복 정상 점검보다 이용자가 직접 조작하는 기능을 우선합니다. 각 기능의 변경에 필요한 검사와 실제 공개 이용 흐름만 확인하며, 완료된 운영 시험을 반복하지 않습니다.
 
