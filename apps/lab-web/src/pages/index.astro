@@ -1,6 +1,7 @@
 ---
 import LabExplorer from '../components/LabExplorer';
 import FirstVisitTour from '../components/FirstVisitTour.astro';
+import ServiceDirectory from '../components/ServiceDirectory.astro';
 import TourStepNavigation from '../components/TourStepNavigation';
 import InitialFragment from '../components/InitialFragment.astro';
 import { publicApiConfiguration } from '../lib/public-api-base';
@@ -79,7 +80,7 @@ const steps = [
     <a href="#main" class="skip-link">본문으로 이동</a>
     <header class="site-header"><div class="header-inner">
       <a class="brand" href="#" aria-label="DevDooly Platform Lab 처음으로"><svg aria-hidden="true" viewBox="0 0 36 36"><path d="M18 0v36M0 18h36M5.3 5.3l25.4 25.4M5.3 30.7 30.7 5.3" stroke="currentColor" stroke-width="6"/></svg><span>DevDooly<strong>PLATFORM LAB</strong></span></a>
-      <nav aria-label="주 메뉴"><a href="#about">소개</a><a href="#lab">실행 결과</a><a href="#platform">배포 상태</a><a href="#ai-window">AI 개선 사례</a><a href="#progress">구축 기록</a></nav>
+      <nav aria-label="주 메뉴"><a href="#services">서비스 목차</a><a href="#lab">실행 결과</a><a href="#platform">배포 상태</a><a href="#ai-window">AI 개선 사례</a><a href="#progress">구축 기록</a></nav>
       <a class="header-github" href={github} target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>
     </div></header>
     <main id="main">
@@ -87,7 +88,7 @@ const steps = [
         <div class="hero-eyebrow"><span class="eyebrow">PERSONAL ENGINEERING LAB</span><span class="tag"><i/>구축·운영 검증 중</span></div>
         <h1 id="hero-title">만들고, 관찰하고.<br/><span>더 나은 코드로.</span></h1>
         <p class="hero-description">안녕하세요, 개발자 김선홍입니다.<br/>Java 서비스와 데이터 파이프라인을 다루며 쌓은 경험을<br class="desktop-break"/> 직접 동작하는 작은 플랫폼으로 풀어갑니다.</p>
-        <div class="hero-actions"><a class="button button-primary" href="#tour">5단계 관람 시작 <span aria-hidden="true">↓</span></a><a class="text-link" href="https://devdooly.github.io/TIL/" target="_blank" rel="noreferrer">문제로부터 배운 기록, TIL <span aria-hidden="true">↗</span></a></div>
+        <div class="hero-actions"><a class="button button-primary" href="#services">서비스 목차 열기 <span aria-hidden="true">↓</span></a><a class="text-link" href="#tour">5단계로 둘러보기 <span aria-hidden="true">↓</span></a></div>
         <div class="hero-footnote"><span class="line"/><span>BACKEND · DATA · PLATFORM</span><span class="edition">VOL. 01 / WORK IN PROGRESS</span></div>
       </div><div class="hero-visual" aria-label="소스 코드에서 관측 가능한 서비스로 이어지는 프로젝트 구조">
         <div class="visual-topline"><span>THE WORKBENCH</span><span>↗</span></div>
@@ -95,6 +96,7 @@ const steps = [
         <div class="system-diagram"><div class="system-node source-node"><span class="node-icon">&#123; &#125;</span><div><small>BUILD SOMETHING</small><strong>Java / Spring Boot</strong></div><span class="node-code">01</span></div><div class="node-connector"><span/>validate → persist → inspect</div><div class="diagram-branches"><div class="system-node mini-node"><span class="node-icon">≋</span><small>SYNTHETIC DATA</small><strong>결과와 실패 사유</strong></div><div class="system-node mini-node"><span class="node-icon">⌁</span><small>DELIVERY</small><strong>빌드와 배포 근거</strong></div></div><div class="node-connector bottom-connector"><span/></div><div class="system-node observe-node"><span class="node-icon">◎</span><div><small>MAKE IT VISIBLE</small><strong>Platform Lab</strong></div><span class="small-tag">READ ONLY</span></div></div>
         <div class="visual-bottom"><span class="bracket">[</span><p>결과뿐 아니라<br/>왜 그렇게 동작하는지까지.</p><span class="visual-star" aria-hidden="true">✳</span><span class="bracket">]</span></div>
       </div></section>
+      <ServiceDirectory adminUrls={{ jenkins: 'https://jenkins.devdooly-platform-lab.duckdns.org/', argocd: 'https://argocd.devdooly-platform-lab.duckdns.org/', kafka: 'https://kafka.devdooly-platform-lab.duckdns.org/' }} verifiedAt="2026-10-24 09:03 KST" />
       <FirstVisitTour />
       <section id="about" class="section experience-section" aria-labelledby="experience-title"><div class="section-heading"><div><span class="eyebrow">01 / EXPERIENCE INTO EVIDENCE</span><h2 id="experience-title">실무에서 다룬 기술, 직접 확인할 수 있는 기록.</h2></div><a class="text-link" href="https://github.com/DevDooly" target="_blank" rel="noreferrer">개발 기록 더 보기 ↗</a></div><div class="experience-grid">{skills.map(skill => <article class="experience-item"><span class="experience-number">{skill.index}</span><h3>{skill.title}</h3><p>{skill.description}</p><div class="skill-tags">{skill.tags.map(tag => <span>{tag}</span>)}</div></article>)}</div><div class="ai-note"><span class="ai-symbol" aria-hidden="true">✳</span><div><h3>AI와 함께 읽고, 개발자의 판단으로 개선합니다.</h3><p>LLM을 레거시 코드 분석과 버그 수정에 적극 활용합니다. 아래 개인 합성 예제에서는 시간대 오류 수정과 계산 복잡도 개선을 독립 테스트·JMH로 확인하며, 실무 성과와 구분합니다.</p><a class="text-link" href="#ai-window">개인 예제와 검증 기록 보기 ↗</a></div><span class="tag">개인 예제 · 사람 검토 대기</span></div></section>
       <EvidenceExplorer client:load />

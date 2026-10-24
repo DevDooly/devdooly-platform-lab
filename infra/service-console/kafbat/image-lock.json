@@ -1,0 +1,16 @@
+{
+  "checkedAtUtc": "2026-10-23T23:57:43.7785767Z",
+  "project": "kafbat/kafka-ui",
+  "release": "v1.5.0",
+  "releasePublishedAtUtc": "2026-04-20T18:11:44Z",
+  "releaseUrl": "https://github.com/kafbat/kafka-ui/releases/tag/v1.5.0",
+  "sourceCommit": "afc9c918e13c4422268a3a5b7933c7b448746c82",
+  "registry": "ghcr.io/kafbat/kafka-ui",
+  "mediaType": "application/vnd.oci.image.index.v1+json",
+  "digest": "sha256:7cda86a33344160309fdb65146332e4da65db81a945614f2fe32e210803f6fd1",
+  "registryHeaderMatchedBodySha256": true,
+  "linuxAmd64ManifestDigest": "sha256:2fc9a60b223de6d8cb45a64175afcbb79207ae19306a0b99c558aeaa1b22b6e9",
+  "linuxAmd64ConfigDigest": "sha256:ee565a1ebd5ef763f866db1e941f48fb5742285a5042e9ffc941f5c305736b01",
+  "declaredImageUser": "kafkaui",
+  "verificationScope": "Anonymous registry metadata GET and source/release lookup only. No image layer download, signature/provenance verification, vulnerability scan, container start, or cluster deployment."
+}

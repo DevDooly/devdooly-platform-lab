@@ -4,6 +4,10 @@
 
 [프로젝트 소개](../README.md) · [시작 안내](START_HERE.md) · [상세 진행 기록](NEXT_STEPS.md) · [공개 근거 검색](https://devdooly.github.io/devdooly-platform-lab/#evidence)
 
+## 서비스 화면 연결
+
+[서비스 목차](https://devdooly.github.io/devdooly-platform-lab/#services)와 [API 안내·실제 GET](https://devdooly.github.io/devdooly-platform-lab/api-guide/)를 추가했습니다. Jenkins·Argo CD는 기본 로그인, 새 Kafbat UI는 HTTPS BasicAuth를 사용합니다. 2026-10-24 09:04 KST에 외부 TLS·익명 차단과 인증 후 Kafka cluster/topic/group 조회를 확인했고 기존 workload와 라우트를 보존했습니다. 실제 확인과 첫 404 기록은 [서비스 접속 안내](runbooks/service-console.md)를 따릅니다. 네 보류와 기존 운영 pin은 유지합니다.
+
 ## 최근 확인한 범위
 
 | 항목 | 확인한 결과와 범위 |

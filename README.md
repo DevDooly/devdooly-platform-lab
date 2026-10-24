@@ -4,6 +4,12 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 [포트폴리오](https://devdooly.github.io/devdooly-platform-lab/) · [GitHub](https://github.com/DevDooly/devdooly-platform-lab) · [현재 범위·다음 작업](docs/AUTONOMOUS_WORK.md) · [시작 안내](docs/START_HERE.md) · [진행 목록](docs/ROADMAP.md) · [다음 개발 계획](docs/NEXT_STEPS.md)
 
+## 서비스 화면 바로가기
+
+[전체 서비스 목차](https://devdooly.github.io/devdooly-platform-lab/#services) · [Java API 명세·직접 조회](https://devdooly.github.io/devdooly-platform-lab/api-guide/) · [Jenkins](https://jenkins.devdooly-platform-lab.duckdns.org/login) · [Argo CD](https://argocd.devdooly-platform-lab.duckdns.org/) · [Kafka · Kafbat](https://kafka.devdooly-platform-lab.duckdns.org/)
+
+관리 UI는 외부 HTTPS에서 로그인 후 접근합니다. Kafka는 읽기 전용 Kafbat UI를 별도로 설치했고, Jenkins·Argo CD는 기존 계정을 사용합니다. [접속 방법·실제 확인·한계](docs/runbooks/service-console.md)에서 인증 범위와 설치 결과를 확인합니다.
+
 ## 현재 상태
 
 현재 목표는 기존 미니 PC의 서비스·자료를 보존하면서 Java·데이터 처리·배포·복구 경험과 공개 연결을 검증 기록으로 보여주는 것입니다.

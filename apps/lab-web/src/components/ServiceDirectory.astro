@@ -1,0 +1,117 @@
+---
+import '../styles/service-directory.css';
+
+interface Props {
+  base?: string;
+  apiGuideUrl?: string;
+  adminUrls?: Partial<Record<'jenkins' | 'argocd' | 'kafka', string>>;
+  verifiedAt?: string;
+}
+
+const { base = import.meta.env.BASE_URL, apiGuideUrl, adminUrls = {}, verifiedAt } = Astro.props;
+const assetBase = base.replace(/\/?$/, '/');
+const apiGuide = apiGuideUrl ?? `${assetBase}api-guide/`;
+const adminServices = [
+  {
+    key: 'jenkins' as const,
+    title: 'Jenkins',
+    role: 'CI / 빌드와 검증',
+    description: '파이프라인 단계와 테스트 결과, 빌드 이력을 Jenkins 화면에서 살펴봅니다.',
+    observation: '#github-app-renewal',
+    observationLabel: 'App 인증 갱신 근거',
+  },
+  {
+    key: 'argocd' as const,
+    title: 'Argo CD',
+    role: 'CD / 배포 상태',
+    description: 'Git에 선언한 구성과 실제 리소스의 동기화 상태를 Argo CD 화면에서 비교합니다.',
+    observation: '#platform-record',
+    observationLabel: '게시된 배포 관측',
+  },
+  {
+    key: 'kafka' as const,
+    title: 'Kafka · Kafbat',
+    role: 'MESSAGING / 읽기 전용 UI',
+    description: '토픽과 파티션, consumer group의 offset과 lag를 웹 화면으로 살펴봅니다.',
+    observation: '#kafka-lag-recovery',
+    observationLabel: '소비자 복구 기록',
+  },
+];
+---
+<section id="services" class="section service-directory" aria-labelledby="services-title">
+  <div class="service-directory-heading">
+    <span class="eyebrow">THE SERVICE DESK</span>
+    <h2 id="services-title">구축한 서비스를 한곳에서 봅니다.</h2>
+    <p>API를 직접 조회하고, 작업 결과를 살펴보고, 관리 화면으로 이동합니다. 공개 화면과 로그인 후 사용하는 도구를 구분했습니다.</p>
+  </div>
+
+  <nav class="service-directory-nav" aria-label="서비스 목차">
+    <a href="#services-public"><span class="service-nav-number" aria-hidden="true">01</span><span>API · 작업 조회</span><span aria-hidden="true">↓</span></a>
+    <a href="#services-admin"><span class="service-nav-number" aria-hidden="true">02</span><span>Jenkins · Argo CD · Kafka</span><span aria-hidden="true">↓</span></a>
+    <a href="#services-infrastructure"><span class="service-nav-number" aria-hidden="true">03</span><span>저장소 · HTTPS</span><span aria-hidden="true">↓</span></a>
+  </nav>
+
+  <div id="services-public" class="service-directory-group" aria-labelledby="services-public-title">
+    <div class="service-group-heading"><h3 id="services-public-title">바로 볼 수 있는 공개 화면</h3><p>조회 버튼으로 실제 응답을 확인하거나, 처리·저장 관측을 이어서 봅니다.</p></div>
+    <div class="service-card-grid service-card-grid-pair">
+      <article id="service-api" class="service-directory-card">
+        <div class="service-card-topline"><span class="service-card-role">BACKEND / HTTP API</span><span class="service-access-label service-access-public">공개 조회</span></div>
+        <h4>Java · Spring Boot</h4>
+        <p class="service-card-description">허용된 GET API의 경로와 응답을 확인합니다. 실행 목록, 작업·Kafka 관측, 플랫폼 요약을 한 페이지에서 조회할 수 있습니다.</p>
+        <div class="service-card-actions"><a class="service-primary-link" href={apiGuide}>API 명세 · 직접 조회 <span aria-hidden="true">↗</span></a><a class="service-secondary-link" href="#lab">처리 결과 화면 <span aria-hidden="true">↓</span></a></div>
+      </article>
+      <article id="service-worker" class="service-directory-card">
+        <div class="service-card-topline"><span class="service-card-role">WORKER / PROCESS & EXPORT</span><span class="service-access-label service-access-public">공개 관측</span></div>
+        <h4>worker · export</h4>
+        <p class="service-card-description">Kafka 수신 뒤의 처리 상태와 결과·실패 파일 저장, 실행 슬롯 해제를 확인합니다. 화면에 표시된 출처와 관측 시각을 함께 읽습니다.</p>
+        <div class="service-card-actions"><a class="service-primary-link" href="#job-observation">작업 · export 관측 <span aria-hidden="true">↓</span></a><a class="service-secondary-link" href="#export-integrity-runtime">손상 파일 복구 기록 <span aria-hidden="true">↓</span></a></div>
+      </article>
+    </div>
+  </div>
+
+  <div id="services-admin" class="service-directory-group" aria-labelledby="services-admin-title">
+    <div class="service-group-heading"><h3 id="services-admin-title">로그인 후 들어가는 관리 화면</h3><p>실제 서비스의 웹 UI입니다. 접속 링크가 준비된 도구부터 새 창에서 열 수 있습니다.</p></div>
+    <div class="service-card-grid service-card-grid-admin">
+      {adminServices.map(service => {
+        const href = adminUrls[service.key];
+        return <article id={`service-${service.key}`} class="service-directory-card">
+          <div class="service-card-topline"><span class="service-card-role">{service.role}</span><span class={`service-access-label ${href ? 'service-access-protected' : 'service-access-pending'}`}>{href ? '로그인 후 접근' : 'UI 연결 준비 중'}</span></div>
+          <h4>{service.title}</h4>
+          <p class="service-card-description">{service.description}</p>
+          {service.key === 'kafka' && <p class="service-card-note">읽기 전용은 UI 설정의 범위입니다. Kafka broker의 ACL 보장을 뜻하지 않습니다.</p>}
+          <div class="service-card-actions">
+            {href ? <a class="service-primary-link" href={href} target="_blank" rel="noreferrer">{service.title} 열기 <span aria-hidden="true">↗</span><span class="sr-only"> 새 창</span></a> : <span class="service-pending-action" aria-disabled="true">접속 링크 준비 중</span>}
+            <a class="service-secondary-link" href={service.observation}>{service.observationLabel} <span aria-hidden="true">↓</span></a>
+          </div>
+        </article>;
+      })}
+    </div>
+    <p class="service-directory-note">접속 링크와 서비스 정상 여부는 다릅니다. 현재 상태는 로그인한 UI에서, 과거 검증의 결과는 각 근거에서 확인합니다.{verifiedAt && <> 접속 점검 시각: <time>{verifiedAt}</time>.</>}</p>
+  </div>
+
+  <div id="services-infrastructure" class="service-directory-group" aria-labelledby="services-infrastructure-title">
+    <div class="service-group-heading"><h3 id="services-infrastructure-title">저장소와 외부 연결의 근거</h3><p>내부 저장소의 관리 권한을 공개하지 않고, 복원·전송·인증서 관측을 연결합니다.</p></div>
+    <div class="service-card-grid service-card-grid-pair">
+      <article id="service-storage" class="service-directory-card">
+        <div class="service-card-topline"><span class="service-card-role">DATA / PERSISTENCE</span><span class="service-access-label service-access-record">검증 기록</span></div>
+        <h4>MariaDB · Garage</h4>
+        <p class="service-card-description">작업 상태를 DB에 저장하고 결과 파일을 S3 호환 저장소에 보관합니다. DB 복원 비교와 실제 전송 코드의 파일 검증을 볼 수 있습니다.</p>
+        <div class="service-card-actions"><a class="service-primary-link" href="#db-restore">DB 복원 비교 <span aria-hidden="true">↓</span></a><a class="service-secondary-link" href="#s3-transport">S3 전송 검증 <span aria-hidden="true">↓</span></a></div>
+      </article>
+      <article id="service-gateway" class="service-directory-card">
+        <div class="service-card-topline"><span class="service-card-role">NETWORK / PUBLIC READ</span><span class="service-access-label service-access-record">관측 · 근거</span></div>
+        <h4>HTTPS · 공개 gateway</h4>
+        <p class="service-card-description">HTTPS로 공개한 조회 경로와 수집한 인증서 이력을 확인합니다. 인증서의 유효기간 관측과 자연 갱신 성공은 구분합니다.</p>
+        <div class="service-card-actions"><a class="service-primary-link" href="#tls-certificate">TLS 관측 이력 <span aria-hidden="true">↓</span></a><a class="service-secondary-link" href="#evidence">외부 조회 근거 찾기 <span aria-hidden="true">↓</span></a></div>
+      </article>
+    </div>
+  </div>
+
+  <details class="service-next-details">
+    <summary>진행 중인 확인 · 보류 항목</summary>
+    <div class="service-next-content">
+      <p><strong>후속 확인:</strong> 인증서 자연 갱신과 현재 공개 경로의 재부팅은 미검증이며, AI 예제의 사람 검토는 대기 중입니다.</p>
+      <p><strong>보류 유지:</strong> Pages 토큰 교체, 별도 환경의 K3s·Jenkins 기동 복원, 자원 예산 정책, PR #102 접수 gate 활성화.</p>
+    </div>
+  </details>
+</section>

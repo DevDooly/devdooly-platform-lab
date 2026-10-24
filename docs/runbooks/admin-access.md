@@ -1,6 +1,6 @@
 # Windows에서 Jenkins·Argo CD 관리 화면 접속
 
-관리 화면은 인증된 SSH 연결을 통해 접속합니다. [접속 도우미](../../infra/scripts/connect-admin.ps1)는 K3s의 현재 Service 주소를 읽고 Windows의 `127.0.0.1`에만 터널을 엽니다. 서버의 기존 프록시·포트·방화벽을 변경하지 않으며, NodePort·Ingress나 공유기의 관리 포트 공개가 필요하지 않습니다.
+관리 화면은 [외부 HTTPS 로그인 주소](service-console.md) 또는 아래 SSH 연결로 접속할 수 있습니다. 이 문서는 로컬 SSH 접속 방법을 설명합니다. [접속 도우미](../../infra/scripts/connect-admin.ps1)는 K3s의 현재 Service 주소를 읽고 Windows의 `127.0.0.1`에만 터널을 엽니다. 서버의 기존 프록시·포트·방화벽을 변경하지 않으며, NodePort·Ingress나 공유기의 관리 포트 공개가 필요하지 않습니다.
 
 ## 준비
 
