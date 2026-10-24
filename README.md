@@ -14,6 +14,8 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 [API 한 건 조회](https://devdooly.github.io/devdooly-platform-lab/api-guide/#api-detail)는 실행 목록을 불러와 ID를 선택한 뒤 상세 GET을 요청할 수 있습니다. ID 직접 입력도 유지하며, 선택만 바꾸었을 때는 이전 응답과 구분합니다. [목록 선택 안내](docs/features/api-run-selection.md)
 
+[Java 처리 결과](https://devdooly.github.io/devdooly-platform-lab/#lab)의 **이벤트 상세 → 흐름 보기**에서는 이벤트 하나의 응답 필드·판정 사유·결과 분류를 세 카드로 살펴봅니다. 같은 eventId의 반복도 입력 순서로 구분하고, 보고된 최종 결과와 고정 Java 규칙의 해설을 함께 보여줍니다. [이벤트 판정 흐름 안내](docs/features/event-flow.md)
+
 ## 현재 상태
 
 현재 목표는 기존 미니 PC의 서비스·자료를 보존하면서 Java·데이터 처리·배포·복구 경험과 공개 연결을 검증 기록으로 보여주는 것입니다.
