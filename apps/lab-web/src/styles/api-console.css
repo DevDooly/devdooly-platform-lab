@@ -22,11 +22,22 @@
 .api-parameter-note,.api-run-id { margin:20px 0; }
 .api-parameter-note,.api-run-id p { color:var(--muted); }
 .api-run-id label { display:block; font-weight:700; margin-bottom:8px; }
-.api-run-id input { width:100%; max-width:680px; background:var(--paper); color:var(--ink); border:1px solid var(--line); font:1.0625rem var(--mono); padding:13px 14px; border-radius:0; }
+.api-run-id input { width:100%; max-width:680px; min-height:44px; background:var(--paper); color:var(--ink); border:1px solid var(--line); font:1.0625rem var(--mono); padding:13px 14px; border-radius:0; }
 .api-run-id input:disabled { opacity:.65; }
 .api-run-id input[aria-invalid="true"] { border-color:var(--orange-ink); }
 .api-run-id input:focus-visible { outline:3px solid var(--green); outline-offset:4px; }
 .api-run-id p { margin-top:8px; }
+.api-run-picker { margin:20px 0; min-width:0; }
+.api-run-picker .api-load-runs { min-height:44px; max-width:100%; margin-bottom:18px; font-size:1.0625rem; white-space:normal; text-align:left; }
+.api-run-picker label { display:block; font-weight:700; margin-bottom:8px; }
+.api-run-picker select { width:100%; max-width:680px; min-width:0; min-height:44px; background:var(--paper); color:var(--ink); border:1px solid var(--line); font:1.0625rem var(--mono); padding:13px 14px; border-radius:0; text-overflow:ellipsis; }
+.api-run-picker select:disabled { opacity:.65; }
+.api-run-picker select:focus-visible { outline:3px solid var(--green); outline-offset:4px; }
+.api-run-picker p { margin-top:8px; overflow-wrap:anywhere; }
+.api-run-picker > p,.api-run-choice-status { color:var(--muted); }
+.api-run-choice-status { margin-top:12px; }
+.api-selection-changed { border-left:3px solid var(--green); background:var(--mint); padding:12px 14px; margin-bottom:16px; }
+.api-result-request { margin-bottom:8px; overflow-wrap:anywhere; }
 .api-field-details { border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin:20px 0; }
 .api-console summary { cursor:pointer; font-weight:600; padding:15px 0; }
 .api-console summary:focus-visible { outline:3px solid var(--green); outline-offset:5px; }
