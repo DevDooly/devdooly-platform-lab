@@ -96,7 +96,7 @@ assert.equal(compiled.diagnostics.length, 0);
 let output = compiled.outputText.replace(/^import ['"][^'"]+\.css['"];?\s*$/gm, '');
 output = output.replace(/from (['"])(react(?:\/jsx-runtime)?)\1/g,
   (_unused: string, _quote: string, name: string) => `from ${JSON.stringify(pathToFileURL(require.resolve(name)).href)}`);
-output = output.replace(/from ['"]\.\.\/(data\/public-api-reference|lib\/public-api-base)['"]/g,
+output = output.replace(/from ['"]\.\.\/(data\/public-api-reference|lib\/public-api-base|lib\/api-run-choices)['"]/g,
   (_unused: string, name: string) => `from ${JSON.stringify(new URL(`../src/${name}.ts`, import.meta.url).href)}`);
 const { default: Component } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
 
@@ -104,6 +104,8 @@ test('server rendering offers six accessible documents but no early input, respo
   const html = renderToStaticMarkup(createElement(Component, { apiBase: '/api' }));
   assert.equal((html.match(/class="button api-query"[^>]*disabled=""/g) ?? []).length, 6);
   assert.match(html, /<input[^>]*id="api-run-id"[^>]*disabled=""/);
+  assert.match(html, /<select[^>]*id="api-run-select"[^>]*disabled=""/);
+  assert.ok(html.includes('실행 목록 불러오기'));
   assert.equal((html.match(/아직 조회하지 않았습니다/g) ?? []).length, 6);
   assert.ok(html.includes('API 목차')); assert.ok(html.includes('화면 조작 준비 중입니다.'));
   assert.equal((html.match(/<details\b/g) ?? []).length, 6);

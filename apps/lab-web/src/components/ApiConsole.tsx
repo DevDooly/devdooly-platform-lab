@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { API_ENDPOINTS, ApiReadFailure, DEFAULT_RUN_ID, apiEndpointPath, readPublicApi, type ApiEndpointId, type ApiReadResult } from '../data/public-api-reference';
+import { parseApiRunChoices } from '../lib/api-run-choices';
 import { publicApiConfiguration } from '../lib/public-api-base';
 import '../styles/api-console.css';
 
 interface Props { apiBase?: string; }
-type Entry = { state: 'loading' } | { state: 'success'; result: ApiReadResult } | { state: 'error'; message: string };
+type Entry = { state: 'loading'; requestPath: string } | { state: 'success'; result: ApiReadResult } | { state: 'error'; message: string; requestPath: string };
+type RunChoices = NonNullable<ReturnType<typeof parseApiRunChoices>> & { path: string; receivedAt: string };
 const failureMessage = (error: unknown): string => {
   if (!(error instanceof ApiReadFailure)) return '응답을 확인하지 못했습니다. 새 요청은 조회 버튼으로 시작할 수 있습니다.';
   switch (error.code) {
@@ -21,21 +23,40 @@ export default function ApiConsole({ apiBase = '/api' }: Props) {
   const configuration = publicApiConfiguration(apiBase);
   const [ready, setReady] = useState(false);
   const [runId, setRunId] = useState(DEFAULT_RUN_ID);
+  const [runChoices, setRunChoices] = useState<RunChoices | null>(null);
+  const [runChoicesNotice, setRunChoicesNotice] = useState<'invalid' | 'error' | null>(null);
   const [entries, setEntries] = useState<Partial<Record<ApiEndpointId, Entry>>>({});
   const [busy, setBusy] = useState<ApiEndpointId | null>(null);
   const [copyStatus, setCopyStatus] = useState<Partial<Record<ApiEndpointId, string>>>({});
   const inFlight = useRef(false);
   const mounted = useRef(false);
+  const controlsDisabled = !ready || configuration.invalid || busy !== null;
   useEffect(() => { mounted.current = true; setReady(true); return () => { mounted.current = false; }; }, []);
+  function changeRunId(value: string) {
+    if (controlsDisabled || inFlight.current) return;
+    setRunId(value);
+  }
   async function query(id: ApiEndpointId) {
-    if (!ready || configuration.invalid || inFlight.current || !apiEndpointPath(id, runId)) return;
-    inFlight.current = true; setBusy(id); setEntries(previous => ({ ...previous, [id]: { state: 'loading' } }));
+    const requestPath = apiEndpointPath(id, runId);
+    if (!ready || configuration.invalid || inFlight.current || !requestPath) return;
+    inFlight.current = true; setBusy(id); setEntries(previous => ({ ...previous, [id]: { state: 'loading', requestPath } }));
+    if (id === 'runs') setRunChoicesNotice(null);
     setCopyStatus(previous => ({ ...previous, [id]: '' }));
     try {
       const result = await readPublicApi(configuration.apiBase, id, runId);
-      if (mounted.current) setEntries(previous => ({ ...previous, [id]: { state: 'success', result } }));
+      if (mounted.current) {
+        setEntries(previous => ({ ...previous, [id]: { state: 'success', result } }));
+        if (id === 'runs') {
+          const choices = parseApiRunChoices(result.json);
+          if (choices) setRunChoices({ ...choices, path: result.path, receivedAt: result.receivedAt });
+          else setRunChoicesNotice('invalid');
+        }
+      }
     } catch (error) {
-      if (mounted.current) setEntries(previous => ({ ...previous, [id]: { state: 'error', message: failureMessage(error) } }));
+      if (mounted.current) {
+        setEntries(previous => ({ ...previous, [id]: { state: 'error', message: failureMessage(error), requestPath } }));
+        if (id === 'runs') setRunChoicesNotice('error');
+      }
     } finally { inFlight.current = false; if (mounted.current) setBusy(null); }
   }
   async function copy(id: ApiEndpointId, json: string) {
@@ -56,23 +77,49 @@ export default function ApiConsole({ apiBase = '/api' }: Props) {
     <div className="api-endpoint-list">{API_ENDPOINTS.map(endpoint => {
       const entry = entries[endpoint.id];
       const invalidId = endpoint.id === 'detail' && apiEndpointPath('detail', runId) === null;
+      const displayedPath = entry?.state === 'success' ? entry.result.path : entry?.requestPath;
+      const selectionChanged = endpoint.id === 'detail' && displayedPath && displayedPath !== apiEndpointPath('detail', runId);
       return <article className="api-endpoint" id={`api-${endpoint.id}`} key={endpoint.id} aria-labelledby={`api-heading-${endpoint.id}`}>
         <div className="api-endpoint-heading"><span className="api-method">GET</span><h2 id={`api-heading-${endpoint.id}`}>{endpoint.title}</h2></div>
         <code className="api-path">/api{endpoint.path}</code>
         <p>{endpoint.description}</p>
-        {endpoint.id === 'detail' ? <div className="api-run-id">
+        {endpoint.id === 'detail' ? <>
+        <div className="api-run-picker">
+          <button className="button api-load-runs" type="button" disabled={controlsDisabled} onClick={() => { void query('runs'); }}>
+            {busy === 'runs' ? '실행 목록 불러오는 중…' : '실행 목록 불러오기'}
+          </button>
+          <label htmlFor="api-run-select">조회한 실행 목록에서 선택</label>
+          <select id="api-run-select" value={runId} disabled={controlsDisabled || !runChoices?.items.length}
+            aria-describedby="api-run-choice-hint api-run-choice-status" onChange={event => changeRunId(event.target.value)}>
+            {!runChoices?.items.some(run => run.id === runId) && <option value={runId}>{runId ? `${runId} · 현재 ID (목록 밖)` : '실행을 선택하거나 아래에서 ID를 입력하세요'}</option>}
+            {runChoices?.items.map(run => <option key={run.id} value={run.id}>{run.id} · 입력 {run.inputCount}건</option>)}
+          </select>
+          <p id="api-run-choice-hint">최근 최대 20개 실행입니다. 선택하면 아래 ID만 바뀌며, 상세 요청은 조회 버튼으로 시작합니다.</p>
+          <div className="api-run-choice-status" id="api-run-choice-status" role="status">
+            {busy === 'runs' && <p>실행 목록 응답을 기다립니다.{runChoices && ' 아래 선택 목록은 이전에 조회한 결과입니다.'}</p>}
+            {runChoicesNotice === 'invalid' && <p>이번 응답에서 선택할 실행 목록을 확인하지 못했습니다.{runChoices ? ' 이전 선택 목록을 유지합니다.' : ' 실행 ID를 직접 입력해 조회할 수 있습니다.'}</p>}
+            {runChoicesNotice === 'error' && <p>이번 실행 목록 요청에 실패했습니다.{runChoices ? ' 이전 선택 목록을 유지합니다.' : ' 실행 ID를 직접 입력해 조회할 수 있습니다.'}</p>}
+            {runChoices ? <>
+              <p>목록 출처: <code>GET /api{runChoices.path}</code> · 관측 시각 <time dateTime={runChoices.observedAt}>{runChoices.observedAt}</time> · 브라우저 수신 <time dateTime={runChoices.receivedAt}>{runChoices.receivedAt}</time></p>
+              {runChoices.items.length === 0 && <p>조회한 실행 목록이 비어 있습니다. 아래에서 실행 ID를 직접 입력해 조회할 수 있습니다.</p>}
+            </> : runChoicesNotice === null && busy !== 'runs' && <p>아직 선택할 목록을 불러오지 않았습니다. 실행 ID를 직접 입력해도 됩니다.</p>}
+          </div>
+        </div>
+        <div className="api-run-id">
           <label htmlFor="api-run-id">경로 파라미터 · 실행 ID</label>
           <input id="api-run-id" value={runId} maxLength={80} spellCheck={false} autoComplete="off" aria-invalid={invalidId || undefined}
-            aria-describedby="api-run-id-hint" disabled={!ready || busy !== null || configuration.invalid} onChange={event => setRunId(event.target.value)} />
-          <p id="api-run-id-hint">소문자·숫자로 시작하며 소문자·숫자·점·밑줄·하이픈으로 최대 80자입니다. 목록 응답의 id를 복사해 넣을 수 있습니다.{invalidId && ' 현재 ID 형식이 올바르지 않습니다.'}</p>
-        </div> : <p className="api-parameter-note">입력 파라미터 없음 · query string과 인증 정보는 전송하지 않습니다.</p>}
+            aria-describedby="api-run-id-hint" disabled={controlsDisabled} onChange={event => changeRunId(event.target.value)} />
+          <p id="api-run-id-hint">소문자·숫자로 시작하며 소문자·숫자·점·밑줄·하이픈으로 최대 80자입니다. 목록에 없는 ID도 입력할 수 있으며, 존재 여부는 상세 조회에서 확인합니다.{invalidId && ' 현재 ID 형식이 올바르지 않습니다.'}</p>
+        </div></> : <p className="api-parameter-note">입력 파라미터 없음 · query string과 인증 정보는 전송하지 않습니다.</p>}
         <details className="api-field-details"><summary>응답에서 볼 항목</summary><dl>{endpoint.fields.map(([field, description]) => <div key={field}><dt><code>{field}</code></dt><dd>{description}</dd></div>)}</dl></details>
         <p className="api-boundary">{endpoint.boundary}</p>
-        <button className="button api-query" type="button" disabled={!ready || configuration.invalid || busy !== null || invalidId} onClick={() => { void query(endpoint.id); }}>
+        <button className="button api-query" type="button" disabled={controlsDisabled || invalidId} onClick={() => { void query(endpoint.id); }}>
           {busy === endpoint.id ? '응답 기다리는 중…' : 'GET으로 직접 조회'}<span aria-hidden="true">↗</span>
         </button>
         <div className="api-result" aria-live="polite" aria-busy={entry?.state === 'loading'}>
+          {selectionChanged && <p className="api-selection-changed">선택이 바뀌었습니다. 아래는 이전 ID의 {entry?.state === 'success' ? '조회 결과' : '요청'}입니다. 새 ID는 조회 버튼을 눌러 확인하세요.</p>}
           {!entry && <p className="api-idle">아직 조회하지 않았습니다.</p>}
+          {(entry?.state === 'loading' || entry?.state === 'error') && <p className="api-result-request">요청: <code>GET /api{entry.requestPath}</code></p>}
           {entry?.state === 'loading' && <p>최대 8초 동안 응답을 기다립니다.</p>}
           {entry?.state === 'error' && <p className="api-error">{entry.message}</p>}
           {entry?.state === 'success' && <>

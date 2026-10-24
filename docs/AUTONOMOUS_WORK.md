@@ -35,8 +35,8 @@
 
 | 순서 | 기능과 필요한 이유 | 현재 범위 |
 | --- | --- | --- |
-| 1 | **두 실행 결과 비교:** 기존 단일 실행 화면을 오가며 계산하던 건수·비율·실패 사유 차이를 한 화면에서 확인 | [비교 화면](https://devdooly.github.io/devdooly-platform-lab/runs/compare/) 구현. 목록 선택·두 상세 GET·공유 링크·CSV. [사용법·검증 기록](features/run-comparison.md) |
-| 2 | **API 상세 조회 선택:** API 안내에서 실행 ID를 복사하지 않고 목록에서 고른 뒤 상세 조회 | 후속 개발. 기존 명세·직접 조회 화면의 선택 흐름을 개선하며 새 API나 쓰기 기능을 추가하지 않음 |
+| 1 | **두 실행 결과 비교:** 기존 단일 실행 화면을 오가며 계산하던 건수·비율·실패 사유 차이를 한 화면에서 확인 | [PR241](https://github.com/DevDooly/devdooly-platform-lab/pull/241) 공개 완료. [비교 화면](https://devdooly.github.io/devdooly-platform-lab/runs/compare/)의 목록 선택·두 상세 GET·공유 링크·CSV. [사용법·검증 기록](features/run-comparison.md) |
+| 2 | **API 상세 조회 선택:** API 안내에서 실행 ID를 복사하지 않고 목록에서 고른 뒤 상세 조회 | [API 안내](https://devdooly.github.io/devdooly-platform-lab/api-guide/#api-detail)에 목록 선택 구현. 명시적 목록 GET 후 ID를 고르고 상세 GET을 요청. 직접 입력과 선택/이전 응답 구분 유지. [사용법·검증 기록](features/api-run-selection.md) |
 | 3 | **이벤트 처리 흐름 탐색:** 입력 이벤트와 검증·중복 판정·저장 결과를 연결해 처리 규칙을 이해 | 후속 개발. 기존 DTO로 드러나는 단계와 실제 처리 근거의 범위를 먼저 확정 |
 
 반복 정상 점검보다 이용자가 직접 조작하는 기능을 우선합니다. 각 기능의 변경에 필요한 검사와 실제 공개 이용 흐름만 확인하며, 완료된 운영 시험을 반복하지 않습니다.
