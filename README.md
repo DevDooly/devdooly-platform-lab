@@ -6,9 +6,11 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 ## 서비스 화면 바로가기
 
-[전체 서비스 목차](https://devdooly.github.io/devdooly-platform-lab/#services) · [Java API 명세·직접 조회](https://devdooly.github.io/devdooly-platform-lab/api-guide/) · [Jenkins](https://jenkins.devdooly-platform-lab.duckdns.org/login) · [Argo CD](https://argocd.devdooly-platform-lab.duckdns.org/) · [Kafka · Kafbat](https://kafka.devdooly-platform-lab.duckdns.org/)
+[전체 서비스 목차](https://devdooly.github.io/devdooly-platform-lab/#services) · [두 실행 결과 비교](https://devdooly.github.io/devdooly-platform-lab/runs/compare/) · [Java API 명세·직접 조회](https://devdooly.github.io/devdooly-platform-lab/api-guide/) · [Jenkins](https://jenkins.devdooly-platform-lab.duckdns.org/login) · [Argo CD](https://argocd.devdooly-platform-lab.duckdns.org/) · [Kafka · Kafbat](https://kafka.devdooly-platform-lab.duckdns.org/)
 
 관리 UI는 외부 HTTPS에서 로그인 후 접근합니다. Kafka는 읽기 전용 Kafbat UI를 별도로 설치했고, Jenkins·Argo CD는 기존 계정을 사용합니다. [접속 방법·실제 확인·한계](docs/runbooks/service-console.md)에서 인증 범위와 설치 결과를 확인합니다.
+
+두 실행 결과 비교에서는 목록에서 A·B를 골라 입력·성공·실패·중복·대기 건수, 입력 대비 비율과 실패 사유를 나란히 봅니다. 표시된 비교는 ID 공유 링크와 출처·조회 시각을 포함한 CSV로 저장할 수 있습니다. 기존 공개 API를 읽으며 실행을 생성하지 않습니다. [사용법과 해석 범위](docs/features/run-comparison.md)를 확인하세요.
 
 ## 현재 상태
 
