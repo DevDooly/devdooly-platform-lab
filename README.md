@@ -12,6 +12,8 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 두 실행 결과 비교에서는 목록에서 A·B를 골라 입력·성공·실패·중복·대기 건수, 입력 대비 비율과 실패 사유를 나란히 봅니다. 표시된 비교는 ID 공유 링크와 출처·조회 시각을 포함한 CSV로 저장할 수 있습니다. 기존 공개 API를 읽으며 실행을 생성하지 않습니다. [사용법과 해석 범위](docs/features/run-comparison.md)를 확인하세요.
 
+비교의 A·B 카드와 실패 사유에서 **이벤트 보기**를 누르면 해당 실행·상태·사유 조건을 상세 화면으로 이어갑니다. 도착 화면에서 조회 버튼을 눌러 새 결과를 읽으며, 비교 당시의 응답을 고정하지 않습니다. [이어 보기 사용법](docs/features/run-comparison.md#비교에서-이벤트-이어-보기)
+
 [API 한 건 조회](https://devdooly.github.io/devdooly-platform-lab/api-guide/#api-detail)는 실행 목록을 불러와 ID를 선택한 뒤 상세 GET을 요청할 수 있습니다. ID 직접 입력도 유지하며, 선택만 바꾸었을 때는 이전 응답과 구분합니다. [목록 선택 안내](docs/features/api-run-selection.md)
 
 [Java 처리 결과](https://devdooly.github.io/devdooly-platform-lab/#lab)의 **이벤트 상세 → 흐름 보기**에서는 이벤트 하나의 응답 필드·판정 사유·결과 분류를 세 카드로 살펴봅니다. 같은 eventId의 반복도 입력 순서로 구분하고, 보고된 최종 결과와 고정 Java 규칙의 해설을 함께 보여줍니다. [이벤트 판정 흐름 안내](docs/features/event-flow.md). 최대 1,000건에서 ID·센서를 검색하고 사유·상태를 함께 고르면 표와 흐름 목록을 같은 조건으로 좁힙니다. [이벤트 검색 안내](docs/features/event-search.md)

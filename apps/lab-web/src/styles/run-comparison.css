@@ -50,6 +50,13 @@
 .rc-record-heading .rc-side { flex-shrink:0; }
 .rc-record-heading h3 { font-size:1.25rem; padding-top:2px; overflow-wrap:anywhere; }
 .rc-record-id { display:block; color:var(--green); }
+.rc-event-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
+.rc-event-link { display:inline-flex; align-items:center; gap:8px; min-height:44px; max-width:100%; padding:10px 12px; border:1px solid var(--green); color:var(--green); background:var(--paper); font-weight:600; text-decoration:none; overflow-wrap:anywhere; }
+.rc-event-link:hover { background:#edf5ee; text-decoration:underline; }
+.rc-event-link:focus-visible { outline:3px solid var(--green); outline-offset:4px; }
+.rc-event-actions .rc-event-link { flex:1 1 170px; }
+.rc-reason-link { display:flex; flex-direction:column; align-items:flex-start; gap:2px; }
+.rc-reason-link > span:last-child { font-size:1rem; }
 .rc-record dl { margin:18px 0 0; }
 .rc-record dl > div { display:grid; grid-template-columns:minmax(120px,.8fr) minmax(0,1.4fr); gap:8px 16px; padding:10px 0; border-top:1px solid var(--line); }
 .rc-record dt { color:var(--muted); }
