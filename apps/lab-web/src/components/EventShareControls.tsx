@@ -36,6 +36,7 @@ export function EventShareRequest({ request, disabled, live, notice, onApply }: 
       <div><dt>처리 상태</dt><dd>{eventShareStatusLabels[filters.status]} · <code>{filters.status}</code></dd></div>
       <div><dt>이벤트 ID·센서 검색어</dt><dd>{filters.query === '' ? '빈 검색어 · 전체 ID·센서' : <code>{JSON.stringify(filters.query)}</code>}</dd></div>
       <div><dt>사유 원문</dt><dd>{filters.reason === null ? '전체 사유 · 조건 없음' : filters.reason === '' ? '빈 사유 · 빈 문자열' : <code>{JSON.stringify(filters.reason)}</code>}</dd></div>
+      {filters.sensorId != null && <div><dt>센서 ID 정확히 일치</dt><dd><code>{JSON.stringify(filters.sensorId)}</code>{filters.sensorId === '' && ' · 빈 문자열'}</dd></div>}
       <div><dt>선택한 이벤트 · sequence</dt><dd>{sequence === null ? '미선택' : <code>{sequence}</code>}</dd></div>
     </dl>
     {!live && <p className="event-share-unavailable">현재 화면은 게시 관측 또는 고정 샘플입니다. 기존 ‘실시간 조회’로 API 연결을 복구한 뒤 공유한 실행·조건을 조회하세요. 다른 출처의 같은 번호 이벤트를 대신 선택하지 않습니다.</p>}
@@ -52,7 +53,7 @@ export default function EventShareControls({ selection, basePath, disabled }: Ev
   const shareUrl = origin && sharePath ? `${origin}${sharePath}` : '';
   const context = useMemo(() => ({}), [
     shareUrl, disabled, selection.runId, selection.filters.status,
-    selection.filters.query, selection.filters.reason, selection.sequence,
+    selection.filters.query, selection.filters.reason, selection.filters.sensorId, selection.sequence,
   ]);
   const latestContext = useRef(context);
   latestContext.current = context;
@@ -83,8 +84,9 @@ export default function EventShareControls({ selection, basePath, disabled }: Ev
 
   return <section className="event-share" aria-labelledby="event-share-title">
     <h4 id="event-share-title">실행·검색 조건 공유</h4>
-    <p>현재 실행 ID, 검색·처리 상태·사유 조건, 선택한 이벤트 번호를 링크에 담습니다. 링크를 연 화면에서 ‘공유한 실행·조건 조회’를 눌러야 적용됩니다. 응답과 관측 시각은 고정하지 않습니다.</p>
-    <p className="event-share-scope">검색어와 사유 원문은 URL에 포함됩니다. 현재 표시된 이벤트 행과 출처·시각을 보관하려면 CSV 또는 JSON 다운로드를 이용하세요.</p>
+    <p>현재 실행 ID, 검색·처리 상태·사유·센서 조건, 선택한 이벤트 번호를 링크에 담습니다. 링크를 연 화면에서 ‘공유한 실행·조건 조회’를 눌러야 적용됩니다. 응답과 관측 시각은 고정하지 않습니다.</p>
+    <p className="event-share-scope">센서 조건: {selection.filters.sensorId == null ? '전체 센서 · 정확 일치 조건 없음' : <>ID 정확히 일치 <code>{JSON.stringify(selection.filters.sensorId)}</code>{selection.filters.sensorId === '' && ' · 빈 문자열'}</>}.</p>
+    <p className="event-share-scope">검색어·사유·센서 ID 원문은 URL에 포함됩니다. 현재 표시된 이벤트 행과 출처·시각을 보관하려면 CSV 또는 JSON 다운로드를 이용하세요.</p>
     <div className="event-share-actions"><button type="button" disabled={disabled || !shareUrl} onClick={() => { void copyShare(); }}>실행·검색 링크 복사</button></div>
     <div className="event-share-url"><label htmlFor="event-share-url">실행·검색 공유 URL</label><input id="event-share-url" type="text" readOnly value={shareUrl} disabled={disabled || !shareUrl} autoComplete="off" spellCheck={false} onFocus={event => event.currentTarget.select()} aria-describedby="event-share-url-help" /></div>
     <p className="event-share-help" id="event-share-url-help">복사 버튼을 사용할 수 없으면 URL을 선택한 뒤 직접 복사하세요.</p>

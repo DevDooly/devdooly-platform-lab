@@ -40,6 +40,8 @@
 .sensor-outcomes-empty { background:var(--paper); border:1px solid var(--line); padding:22px; }
 .sensor-outcomes-more { display:flex; flex-wrap:wrap; gap:12px; margin-top:18px; }
 .sensor-outcomes-mobile { display:none; }
+.sensor-event-actions { display:flex; flex-direction:column; align-items:stretch; gap:8px; margin-top:12px; min-width:0; }
+.sensor-event-actions button { font-size:1.0625rem; line-height:1.5; min-height:44px; padding:10px 12px; }
 @media (max-width:960px) {
   .sensor-outcomes-desktop { display:none; }
   .sensor-outcomes-mobile { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; list-style:none; margin:0; padding:0; }

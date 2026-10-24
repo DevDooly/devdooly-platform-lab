@@ -61,3 +61,22 @@ test('conditions and an absent raw reason remain visible after changing the run'
   assert.match(html, /검색·필터 조건은 실행을 바꿔도 유지/);
   assert.match(html, /위 건수는 전체 실행 결과이며 아래 표와 흐름 선택만 좁힙니다/);
 });
+
+test('exact sensor is absent for all sensors and shows even an empty raw ID', () => {
+  assert.doesNotMatch(render(), /event-exact-sensor/);
+  assert.equal(render({ sensorId: null }), render());
+  const html = render({ sensorId: '', onSensorClear() {}, shown: 0 });
+  assert.match(html, /센서 ID 정확히 일치/);
+  assert.match(html, /<code>&quot;&quot;<\/code>/);
+  assert.match(html, /결과 0건 \/ 전체 1000건/);
+  assert.match(html, /<button[^>]*>센서 조건 해제<\/button>/);
+  assert.doesNotMatch(html, /disabled=""/);
+});
+
+test('exact sensor exposes spaces, case and markup safely and locks its clear action', () => {
+  const html = render({ sensorId: '  Sensor-<b>&  ', disabled: true, onSensorClear() {} });
+  assert.match(html, /<code>&quot;  Sensor-&lt;b&gt;&amp;  &quot;<\/code>/);
+  assert.doesNotMatch(html, /<b>/);
+  assert.match(html, /<button[^>]*disabled=""[^>]*>센서 조건 해제<\/button>/);
+  assert.match(render({ sensorId: 's' }), /<button[^>]*disabled=""[^>]*>센서 조건 해제<\/button>/);
+});

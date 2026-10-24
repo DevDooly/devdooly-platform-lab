@@ -38,6 +38,7 @@ function harness(options: { interactive?: boolean; loading?: boolean; mode?: str
   request?: EventShareParseResult; fetch?: () => Promise<RunDetail> } = {}) {
   const previous = structuredClone(fixture);
   const state = { data: previous, filter: 'SUCCESS', query: 'old-search', reason: 'ACCEPTED' as string | null,
+    sensorId: 'previous exact sensor' as string | null,
     selection: { runId: previous.detail.id, mode: 'live', sequence: 1 } as { runId: string; mode: string; sequence: number } | null,
     tab: 'chart', page: 3, loading: options.loading ?? false, error: 'old-error', notice: 'old-notice' };
   const calls: FetchCall[] = [], businessWrites: string[] = [], loadingWrites: boolean[] = [], timers: number[] = [], cleared: number[] = [];
@@ -56,6 +57,7 @@ function harness(options: { interactive?: boolean; loading?: boolean; mode?: str
     setFilter: (value: string) => { businessWrites.push('filter'); state.filter = value; },
     setEventQuery: (value: string) => { businessWrites.push('query'); state.query = value; },
     setEventReason: (value: string | null) => { businessWrites.push('reason'); state.reason = value; },
+    setEventSensorId: (value: string | null) => { businessWrites.push('sensor'); state.sensorId = value; },
     setEventSelection: (value: typeof state.selection) => { businessWrites.push('selection'); state.selection = value; },
     setTab: (value: string) => { businessWrites.push('tab'); state.tab = value; },
     describeLiveFailure: () => 'READ_FAILED', liveFailureOf: (failure: unknown) => failure,
@@ -80,6 +82,7 @@ test('explicit share apply loads an ID outside the recent list and commits exact
   assert.equal(h.calls[0]!.signal, h.controller.current.signal); assert.equal(h.oldController.signal.aborted, true);
   assert.equal(h.state.data.detail, response); assert.equal(h.state.data.runs, h.previous.runs); assert.equal(h.state.data.summary, h.previous.summary);
   assert.equal(h.state.filter, 'DUPLICATE'); assert.equal(h.state.query, '  EVT-003  '); assert.equal(h.state.reason, 'DUPLICATE_EVENT_ID');
+  assert.equal(h.state.sensorId, null, 'A legacy share without an exact sensor clears the previous sensor condition');
   assert.deepEqual(h.state.selection, { runId: response.id, mode: 'live', sequence: 4 }); assert.equal(h.state.tab, 'events');
   assert.equal(h.state.page, 0);
   assert.match(h.state.notice, /4번 이벤트/); assert.match(h.state.notice, /원래 공유 시점의 결과를 고정하지 않습니다/);
@@ -112,11 +115,38 @@ test('missing and filtered shared sequences clear old selection without silently
   }
 });
 
+test('shared raw exact sensor restores only its own rows and locates or rejects its selected sequence', async () => {
+  for (const sensorId of ['', ' ', 'SENSOR-A', ' sensor-a ']) {
+    const outcomes = Array.from({ length: 130 }, (_, index) => ({ ...fixture.detail.outcomes[0]!,
+      sequence: index === 125 ? 4 : 1000 + index,
+      sensorId: index % 2 === 1 ? sensorId : 'other-sensor',
+      eventId: `event-${index}`,
+    }));
+    const detail = { ...response, inputCount: 130, successCount: 130, duplicateCount: 0,
+      failureCount: 0, pendingCount: 0, outcomes };
+    for (const [sequence, expectedPage, selected, notice] of [
+      [4, 2, 4, /4번 이벤트/],
+      [1124, 0, null, /조건에서 제외/],
+      [9999, 0, null, /이번 응답에 없어/],
+    ] as const) {
+      const h = harness({ request: { kind: 'valid', selection: { ...request.selection,
+        filters: { status: 'ALL', query: '', reason: null, sensorId }, sequence } }, fetch: async () => detail });
+      await h.apply();
+      assert.equal(h.calls.length, 1); assert.equal(h.state.data.detail, detail);
+      assert.equal(h.state.sensorId, sensorId, 'Empty, whitespace and case remain raw exact conditions');
+      assert.equal(h.state.page, expectedPage);
+      assert.deepEqual(h.state.selection, selected === null ? null : { runId: detail.id, mode: 'live', sequence: selected });
+      assert.equal(h.state.tab, 'events'); assert.match(h.state.notice, notice);
+    }
+  }
+});
+
 test('failed shared read preserves previous data, filters and event selection', async () => {
   const h = harness({ fetch: async () => { throw new Error('network unavailable'); } });
-  const before = { data: h.state.data, filter: h.state.filter, query: h.state.query, reason: h.state.reason, selection: h.state.selection, tab: h.state.tab, page: h.state.page };
+  const before = { data: h.state.data, filter: h.state.filter, query: h.state.query, reason: h.state.reason, sensorId: h.state.sensorId,
+    selection: h.state.selection, tab: h.state.tab, page: h.state.page };
   await h.apply();
-  for (const key of ['data', 'filter', 'query', 'reason', 'selection', 'tab', 'page'] as const) assert.equal(h.state[key], before[key]);
+  for (const key of ['data', 'filter', 'query', 'reason', 'sensorId', 'selection', 'tab', 'page'] as const) assert.equal(h.state[key], before[key]);
   assert.deepEqual(h.businessWrites, []); assert.match(h.state.notice, /이전 실행·조건·선택을 유지/); assert.match(h.state.notice, /READ_FAILED/);
   assert.equal(h.state.loading, false); assert.equal(h.shareInFlight.current, false); assert.deepEqual(h.cleared, [1]);
 });

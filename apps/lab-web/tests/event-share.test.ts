@@ -98,3 +98,64 @@ test('shared filters use existing AND semantics and never reveal an excluded sel
   resolveEventShareSelection(target, rows);
   assert.equal(JSON.stringify(rows), raw); assert.equal(rows[0]!.value, 120); assert.equal(rows[0]!.eventTime, 'not-a-time');
 });
+
+test('optional exact sensor keeps legacy shared URLs byte-for-byte and their three-field filter shape', () => {
+  const legacy: EventShareSelection = { ...selection, filters: { status: 'FAILED', query: ' sensor-a ', reason: 'OUT_OF_RANGE' }, sequence: 5 };
+  const expected = '/devdooly-platform-lab/?labRun=lab-fixture-20261015-v2-deploy&labStatus=FAILED&labQuery=+sensor-a+&labReason=OUT_OF_RANGE&labEvent=5#lab';
+  assert.equal(eventSharePath(legacy, '/devdooly-platform-lab/'), expected);
+  for (const sensorId of [null, undefined]) {
+    assert.equal(eventSharePath({ ...legacy, filters: { ...legacy.filters, sensorId } }, '/devdooly-platform-lab/'), expected);
+  }
+  const parsed = parseEventShareSelection(new URL(expected, 'https://example.invalid').search);
+  assert.deepEqual(parsed, { kind: 'valid', selection: legacy });
+  assert.ok(parsed.kind === 'valid');
+  assert.deepEqual(Object.keys(parsed.selection.filters), ['status', 'query', 'reason']);
+});
+
+test('exact sensor shares roundtrip raw empty, whitespace, case, delimiters and Unicode without changing other filters', () => {
+  for (const sensorId of ['', ' ', 'SENSOR-A', ' sensor-a ', '센서 + & # = / ? %\n', 'sensor-😀']) {
+    const original = { ...selection, filters: { status: 'FAILED' as const, query: ' MIXED ', reason: '', sensorId }, sequence: 0 };
+    const path = eventSharePath(original, '/devdooly-platform-lab/');
+    assert.ok(path);
+    const url = new URL(path, 'https://example.invalid');
+    assert.equal(url.searchParams.get('labSensor'), sensorId);
+    assert.deepEqual(parseEventShareSelection(url.search), { kind: 'valid', selection: original });
+    assert.deepEqual([...url.searchParams.keys()], ['labRun', 'labStatus', 'labQuery', 'labReason', 'labSensor', 'labEvent']);
+  }
+  const empty = search({ ...selection, filters: { ...selection.filters, sensorId: '' } });
+  assert.ok(empty.endsWith('&labSensor='));
+  assert.deepEqual(parseEventShareSelection(search(selection) + '&labSensor'), {
+    kind: 'valid', selection: { ...selection, filters: { ...selection.filters, sensorId: '' } },
+  });
+});
+
+test('exact sensor namespace rejects duplicate keys and share generation refuses lossy UTF-16 conversion', () => {
+  for (const suffix of ['&labSensor=x&labSensor=y', '&labSensor=&labSensor=', '&labSensor=x&labSensor', '&lab%53ensor=x&labSensor=y']) {
+    assert.deepEqual(parseEventShareSelection(search(selection) + suffix), { kind: 'invalid' });
+  }
+  for (const sensorId of ['\ud800', '\udfff', 'prefix\ud800suffix', '\udc00\ud800', 1, false, {}]) {
+    assert.equal(eventSharePath({ ...selection, filters: { ...selection.filters, sensorId } } as EventShareSelection), null);
+  }
+  // A real replacement character is valid; it must not be confused with a normalized lone surrogate.
+  const replacement = { ...selection, filters: { ...selection.filters, sensorId: '\ufffd' } };
+  assert.deepEqual(parseEventShareSelection(search(replacement)), { kind: 'valid', selection: replacement });
+});
+
+test('shared sequence resolution uses exact sensor and existing AND filters without replacing an excluded row', () => {
+  const rows = [
+    { ...row(1, 'FAILED', 'OUT_OF_RANGE'), sensorId: 'sensor-1' },
+    { ...row(2, 'FAILED', 'OUT_OF_RANGE'), sensorId: 'sensor-10', eventId: 'sensor-1-event' },
+    { ...row(3, 'SUCCESS', 'ACCEPTED'), sensorId: '' },
+  ];
+  rows.forEach(Object.freeze); Object.freeze(rows);
+  const before = JSON.stringify(rows);
+  const target = { ...selection, filters: { ...selection.filters, sensorId: 'sensor-1' }, sequence: 1 };
+  assert.deepEqual(resolveEventShareSelection(target, rows), { sequence: 1, eventState: 'selected' });
+  assert.deepEqual(resolveEventShareSelection({ ...target, sequence: 2 }, rows), { sequence: null, eventState: 'filtered' });
+  assert.deepEqual(resolveEventShareSelection({ ...target, sequence: 999 }, rows), { sequence: null, eventState: 'missing' });
+  for (const filters of [{ ...target.filters, query: 'no-match' }, { ...target.filters, reason: '' }, { ...target.filters, status: 'SUCCESS' as const }]) {
+    assert.deepEqual(resolveEventShareSelection({ ...target, filters }, rows), { sequence: null, eventState: 'filtered' });
+  }
+  assert.deepEqual(resolveEventShareSelection({ ...target, sequence: 3, filters: { ...selection.filters, sensorId: '' } }, rows), { sequence: 3, eventState: 'selected' });
+  assert.equal(JSON.stringify(rows), before);
+});

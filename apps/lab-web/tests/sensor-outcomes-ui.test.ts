@@ -10,7 +10,7 @@ const ts = require('typescript');
 const { createElement } = require('react');
 const { renderToStaticMarkup } = require('react-dom/server');
 const source = readFileSync(new URL('../src/components/SensorOutcomeExplorer.tsx', import.meta.url), 'utf8');
-const compiled = ts.transpileModule(source, { compilerOptions: { jsx: ts.JsxEmit.ReactJSX,
+const compiled = ts.transpileModule(`${source}\nexport { SensorEventActions };`, { compilerOptions: { jsx: ts.JsxEmit.ReactJSX,
   module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 }, reportDiagnostics: true });
 assert.equal(compiled.diagnostics.length, 0);
 const output = compiled.outputText
@@ -19,7 +19,7 @@ const output = compiled.outputText
     (_unused: string, _quote: string, name: string) => `from ${JSON.stringify(pathToFileURL(require.resolve(name)).href)}`)
   .replace(/from (['"])\.\.\/lib\/sensor-outcomes\1/g,
     `from ${JSON.stringify(new URL('../src/lib/sensor-outcomes.ts', import.meta.url).href)}`);
-const { default: SensorOutcomeExplorer } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
+const { default: SensorOutcomeExplorer, SensorEventActions } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
 const event = (sensorId: string, status: Outcome['status'] = 'SUCCESS', reason = 'ok'): Outcome => ({
   sequence: 0, eventId: 'event', sensorId, eventTime: '2026-10-24T13:00:00Z', value: 1, status, reason,
 });
@@ -90,4 +90,60 @@ test('an empty response has no imaginary sensor rows, rate, or load-more action'
   assert.match(markup, /fixture · 고정 샘플 기대값/);
   assert.match(markup, /<code>null<\/code>/);
   assert.doesNotMatch(markup, /<table|0\.00%|센서 20개 더 보기/);
+});
+
+test('optional sensor event actions are present in both layouts and only failures get a failed action', () => {
+  const rows = [event('sensor-1', 'FAILED', 'outside'), event('sensor-10'), event('Sensor-1')];
+  const legacy = render(rows);
+  assert.doesNotMatch(legacy, /sensor-event-actions|이벤트 전체 보기|실패 이벤트 보기/);
+  const markup = render(rows, { onViewEvents() {} });
+  assert.equal((markup.match(/class="sensor-event-actions"/g) ?? []).length, 6);
+  assert.equal((markup.match(/>이벤트 전체 보기<\/button>/g) ?? []).length, 6);
+  assert.equal((markup.match(/>실패 이벤트 보기<\/button>/g) ?? []).length, 2);
+  assert.match(markup, /aria-label="센서 &quot;sensor-1&quot; 실패 이벤트 보기"/);
+  assert.doesNotMatch(markup, /aria-label="센서 &quot;sensor-10&quot; 실패 이벤트 보기"/);
+  assert.match(markup, /센서 목록의 검색·정렬은 이벤트 탭의 필터를 바꾸지 않습니다/);
+  assert.match(markup, /기존 검색어·사유·선택·페이지 조건을 초기화합니다/);
+  for (const text of ['조회된 outcomes</span><strong>3건', 'FAILED / 센서별 조회 건수 × 100',
+    '2026-10-24T13:00:00.123456789Z', '100.00%']) {
+    assert.ok(markup.includes(text));
+    assert.ok(legacy.includes(text));
+  }
+  assert.ok(markup.indexOf('&quot;sensor-1&quot;') < markup.indexOf('&quot;sensor-10&quot;'));
+  assert.ok(markup.indexOf('&quot;sensor-10&quot;') < markup.indexOf('&quot;Sensor-1&quot;'));
+});
+
+test('sensor actions preserve exact raw IDs in names and callbacks, including empty, whitespace, and markup', () => {
+  for (const sensorId of ['', ' ', 'Sensor', 'sensor', '  <script> & "  ']) {
+    const seen: [string, string][] = [];
+    const group = { sensorId, total: 1, success: 0, failure: 1, duplicate: 0, pending: 0,
+      failureRate: 100, failureReasons: [{ reason: 'outside', count: 1 }] };
+    const element = SensorEventActions({ group, interactive: true,
+      onViewEvents: (id: string, status: string) => seen.push([id, status]) });
+    const [all, failed] = element.props.children;
+    assert.equal(all.props['aria-label'], `센서 ${JSON.stringify(sensorId)} 이벤트 전체 보기`);
+    assert.equal(failed.props['aria-label'], `센서 ${JSON.stringify(sensorId)} 실패 이벤트 보기`);
+    all.props.onClick();
+    failed.props.onClick();
+    assert.deepEqual(seen, [[sensorId, 'ALL'], [sensorId, 'FAILED']]);
+  }
+  const markup = render([event('', 'FAILED'), event(' '), event('<script>', 'FAILED')], { onViewEvents() {} });
+  assert.match(markup, /aria-label="센서 &quot;&quot; 이벤트 전체 보기"/);
+  assert.match(markup, /aria-label="센서 &quot; &quot; 이벤트 전체 보기"/);
+  assert.match(markup, /aria-label="센서 &quot;&lt;script&gt;&quot; 실패 이벤트 보기"/);
+  assert.doesNotMatch(markup, /<script>/);
+});
+
+test('busy sensor drill actions are disabled without changing displayed rows or provenance', () => {
+  const markup = render([event('sensor-1', 'FAILED'), event('sensor-10')], {
+    onViewEvents() {}, interactive: false, mode: 'recorded', capturedAt: '2026-10-24T13:01:00.987654321Z',
+  });
+  const actions = markup.match(/<div class="sensor-event-actions">[\s\S]*?<\/div>/g) ?? [];
+  assert.equal(actions.length, 4);
+  assert.equal(actions.join('').match(/<button /g)?.length, 6);
+  assert.equal(actions.join('').match(/<button[^>]*disabled=""/g)?.length, 6);
+  assert.match(markup, /recorded · 게시 관측/);
+  assert.match(markup, /2026-10-24T13:00:00\.123456789Z/);
+  assert.match(markup, /2026-10-24T13:01:00\.987654321Z/);
+  assert.match(markup, /조회된 outcomes<\/span><strong>2건/);
 });

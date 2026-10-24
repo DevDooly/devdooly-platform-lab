@@ -76,3 +76,51 @@ test('event search finds the last row and final sensor of a 1000-row synthetic r
   assert.deepEqual(sequences(filterEventOutcomes(rows, { ...all, query: 'max-sensor-099' })), [991, 992, 993, 994, 995, 996, 997, 998, 999, 1000]);
   assert.equal(rows.length, 1000); assert.equal(rows[0]!.sequence, 1);
 });
+
+test('exact sensor excludes prefix collisions and event IDs that only contain another sensor name', () => {
+  const rows = [
+    { ...outcomes[0]!, sequence: 1, sensorId: 'sensor-1', eventId: 'first' },
+    { ...outcomes[0]!, sequence: 2, sensorId: 'sensor-10', eventId: 'second' },
+    { ...outcomes[0]!, sequence: 3, sensorId: 'other', eventId: 'sensor-1-event' },
+    { ...outcomes[0]!, sequence: 4, sensorId: 'sensor-1', eventId: 'last' },
+  ];
+  assert.deepEqual(sequences(filterEventOutcomes(rows, { ...all, query: 'sensor-1' })), [1, 2, 3, 4]);
+  const exact = filterEventOutcomes(rows, { ...all, sensorId: 'sensor-1' });
+  assert.deepEqual(sequences(exact), [1, 4]);
+  assert.equal(exact[0], rows[0]); assert.equal(exact[1], rows[3]);
+  assert.deepEqual(filterEventOutcomes(rows, { ...all, sensorId: 'missing' }), []);
+});
+
+test('exact sensor preserves empty, whitespace, case and punctuation IDs instead of normalizing them', () => {
+  const ids = ['', ' ', 'sensor-a', 'SENSOR-A', ' sensor-a ', '센서 + & # = / ? %', '\ud800'];
+  const rows = ids.map((sensorId, index) => ({ ...outcomes[0]!, sequence: index + 1, sensorId }));
+  for (const [index, sensorId] of ids.entries()) {
+    assert.deepEqual(sequences(filterEventOutcomes(rows, { ...all, sensorId })), [index + 1]);
+  }
+  for (const sensorId of [null, undefined]) assert.deepEqual(filterEventOutcomes(rows, { ...all, sensorId }), rows);
+});
+
+test('exact sensor combines with existing status, reason and normalized literal search conditions', () => {
+  const rows = [
+    { ...outcomes[0]!, sequence: 1, sensorId: 'sensor-1', eventId: 'Mixed[1].*', status: 'FAILED' as const, reason: 'OUT_OF_RANGE' },
+    { ...outcomes[0]!, sequence: 2, sensorId: 'sensor-1', eventId: 'Mixed[1].*', reason: 'ACCEPTED' },
+    { ...outcomes[0]!, sequence: 3, sensorId: 'sensor-10', eventId: 'Mixed[1].*', status: 'FAILED' as const, reason: 'OUT_OF_RANGE' },
+  ];
+  const filters: EventSearchFilters = { status: 'FAILED', query: '  mIXed[1].*  ', reason: 'OUT_OF_RANGE', sensorId: 'sensor-1' };
+  assert.deepEqual(sequences(filterEventOutcomes(rows, filters)), [1]);
+  for (const changed of [{ status: 'SUCCESS' as const }, { query: '^Mixed' }, { reason: '' }, { sensorId: '' }]) {
+    assert.deepEqual(filterEventOutcomes(rows, { ...filters, ...changed }), []);
+  }
+});
+
+test('exact sensor filtering preserves frozen input order, object identity and raw source fields', () => {
+  const rows = structuredClone(outcomes); rows.forEach(Object.freeze); Object.freeze(rows);
+  const before = JSON.stringify(rows);
+  const filters = Object.freeze({ ...all, sensorId: rows[0]!.sensorId });
+  const selected = filterEventOutcomes(rows, filters);
+  assert.deepEqual(selected, rows.filter(row => row.sensorId === rows[0]!.sensorId));
+  for (const result of selected) assert.equal(result, rows.find(row => row.sequence === result.sequence));
+  assert.equal(JSON.stringify(rows), before);
+  assert.equal(filters.sensorId, rows[0]!.sensorId);
+  assert.deepEqual(filterEventOutcomes([], filters), []);
+});

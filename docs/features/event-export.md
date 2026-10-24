@@ -4,7 +4,7 @@
 
 ## 저장하는 범위
 
-ID·센서 검색과 상태·사유 조건에 맞는 전체 검색 결과를 담습니다. [표의 페이지](event-pagination.md)와 관계없이 모든 일치 행을 저장합니다. 흐름에서 선택한 한 건만 저장하는 기능은 아닙니다. 응답의 입력 순서와 같은 eventId의 개별 행, sequence·eventId·sensorId·eventTime·value·status·reason을 유지합니다. 다른 조건으로 판정하거나 합치지 않습니다.
+ID·센서 부분 검색과 상태·사유·센서 정확 조건에 맞는 전체 검색 결과를 담습니다. [표의 페이지](event-pagination.md)와 관계없이 모든 일치 행을 저장합니다. 흐름에서 선택한 한 건만 저장하는 기능은 아닙니다. 응답의 입력 순서와 같은 eventId의 개별 행, sequence·eventId·sensorId·eventTime·value·status·reason을 유지합니다. 다른 조건으로 판정하거나 합치지 않습니다.
 
 출처는 live/API 조회, recorded/게시 관측, fixture/고정 샘플 기대값을 구분합니다. 실행 ID와 상세 결과의 observedAt 원문, 게시본·fixture의 capturedAt을 별도로 담습니다. 요약 API의 시각으로 상세 관측 시각을 대체하지 않으며 fixture를 운영 관측으로 표시하지 않습니다.
 
@@ -12,7 +12,7 @@ ID·센서 검색과 상태·사유 조건에 맞는 전체 검색 결과를 담
 
 ## JSON과 CSV
 
-JSON은 schemaVersion=1,source,filters,counts,outcomes로 구성합니다. 위에 명시한 원문 필드와 숫자·문자열·null을 보존하는 형식입니다. HTTP 응답 전체나 원 응답 바이트를 그대로 보관하는 기능은 아닙니다. 그 외 응답 필드나 보이지 않는 trace를 추가하지 않습니다.
+JSON은 source,filters,counts,outcomes로 구성합니다. 센서 정확 조건이 없으면 기존 schemaVersion=1과 세 필터(status/query/reason), CSV21열을 유지합니다. 센서 정확 조건이 있으면 schemaVersion=2이며 filters.sensorId에 원문 문자열(빈 문자열 포함)을 보존합니다. CSV는 filterReason 뒤에 filterSensorIsAll=false와 filterSensorId 두 열을 추가한23열입니다. 센서 ID의 공백·대소문자를 바꾸거나 부분 검색으로 대체하지 않습니다. 위에 명시한 원문 필드와 숫자·문자열·null을 보존하는 형식입니다. HTTP 응답 전체나 원 응답 바이트를 그대로 보관하는 기능은 아닙니다. 그 외 응답 필드나 보이지 않는 trace를 추가하지 않습니다.
 
 CSV는 UTF-8 BOM과 CRLF를 사용하며 모든 셀을 인용합니다. 같은 열 구조에서 recordType=context인 조회 조건 행 하나를 먼저 두고, 이어지는 recordType=event 행에 검색한 이벤트를 담습니다.0건이어도 context 행이 남습니다. 각 이벤트 행에도 출처·조건을 반복하므로 표에서 행을 따로 확인할 수 있습니다.
 

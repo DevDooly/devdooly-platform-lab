@@ -9,20 +9,17 @@ const ts = require('typescript');
 const { createElement } = require('react');
 const { renderToStaticMarkup } = require('react-dom/server');
 const source = readFileSync(new URL('../src/components/EventShareControls.tsx', import.meta.url), 'utf8');
-const parsed = ts.createSourceFile('EventShareControls.tsx', source, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TSX);
-// Render the real request banner without browser clipboard effects or the Lab's source loader.
-const statements = parsed.statements.filter((node: any) =>
-  (ts.isVariableStatement(node) && node.declarationList.declarations.some((declaration: any) => declaration.name.getText(parsed) === 'eventShareStatusLabels'))
-  || (ts.isInterfaceDeclaration(node) && node.name.text === 'EventShareRequestProps')
-  || (ts.isFunctionDeclaration(node) && node.name?.text === 'EventShareRequest'));
-assert.equal(statements.length, 3);
-const componentSource = ts.createPrinter().printFile(ts.factory.updateSourceFile(parsed, statements));
-const compiled = ts.transpileModule(componentSource, { compilerOptions: { jsx: ts.JsxEmit.ReactJSX,
+// SSR uses the real components; browser clipboard effects do not run here.
+const compiled = ts.transpileModule(source, { compilerOptions: { jsx: ts.JsxEmit.ReactJSX,
   module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 }, reportDiagnostics: true });
 assert.equal(compiled.diagnostics.length, 0);
-const output = compiled.outputText.replace(/from (['"])(react\/jsx-runtime)\1/g,
-  (_unused: string, _quote: string, name: string) => `from ${JSON.stringify(pathToFileURL(require.resolve(name)).href)}`);
-const { EventShareRequest } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
+const output = compiled.outputText
+  .replace(/import ['"]\.\.\/styles\/event-share\.css['"];?\s*/g, '')
+  .replace(/from (['"])(react(?:\/jsx-runtime)?)\1/g,
+    (_unused: string, _quote: string, name: string) => `from ${JSON.stringify(pathToFileURL(require.resolve(name)).href)}`)
+  .replace(/from (['"])\.\.\/lib\/event-share\1/g,
+    `from ${JSON.stringify(new URL('../src/lib/event-share.ts', import.meta.url).href)}`);
+const { EventShareRequest, default: EventShareControls } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
 
 function render(overrides: Record<string, unknown> = {}): string {
   return renderToStaticMarkup(createElement(EventShareRequest, {
@@ -72,4 +69,44 @@ test('fallback and busy states block apply, and the banner never calls a shared 
   const applied = render({ notice: '요청한 실행에 조건을 적용했습니다.' });
   assert.match(applied, /요청한 실행에 조건을 적용했습니다/);
   assert.doesNotMatch(applied, /공유한 조건을 아직 적용하지 않았습니다/);
+});
+
+test('shared request distinguishes absent sensor selection from exact empty and raw sensor values', () => {
+  const selection = { runId: 'test-run', filters: { status: 'ALL', query: '', reason: null }, sequence: null };
+  const old = render({ request: { kind: 'valid', selection } });
+  assert.doesNotMatch(old, /센서 ID 정확히 일치/);
+  assert.equal(render({ request: { kind: 'valid', selection: {
+    ...selection, filters: { ...selection.filters, sensorId: null },
+  } } }), old);
+  for (const sensorId of ['', ' ', 'Sensor-1', 'sensor-1', '  <script>  ']) {
+    const markup = render({ request: { kind: 'valid', selection: {
+      ...selection, filters: { ...selection.filters, sensorId },
+    } } });
+    assert.match(markup, /<dt>센서 ID 정확히 일치<\/dt>/);
+    const escaped = JSON.stringify(sensorId).replaceAll('&', '&amp;').replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#x27;');
+    assert.ok(markup.includes(`<code>${escaped}</code>`));
+    assert.doesNotMatch(markup, /<script>/);
+    assert.equal(markup.includes('· 빈 문자열'), sensorId === '');
+    assert.match(markup, /관측 시각을 고정한 결과는 아닙니다/);
+  }
+});
+
+test('share controls explain exact raw sensor URL scope while preserving the existing SSR copy boundary', () => {
+  const controls = (sensorId?: string | null) => renderToStaticMarkup(createElement(EventShareControls, {
+    selection: { runId: 'test-run', filters: { status: 'ALL', query: '', reason: null, sensorId }, sequence: null },
+    basePath: '/devdooly-platform-lab/', disabled: false,
+  }));
+  const old = controls();
+  assert.match(old, /전체 센서 · 정확 일치 조건 없음/);
+  assert.equal(controls(null), old);
+  const empty = controls('');
+  assert.match(empty, /ID 정확히 일치 <code>&quot;&quot;<\/code> · 빈 문자열/);
+  const raw = controls(' Sensor-1 <script> ');
+  assert.match(raw, /ID 정확히 일치 <code>&quot; Sensor-1 &lt;script&gt; &quot;<\/code>/);
+  assert.match(raw, /검색어·사유·센서 ID 원문은 URL에 포함됩니다/);
+  assert.match(raw, /응답과 관측 시각은 고정하지 않습니다/);
+  assert.match(raw, /<button type="button" disabled="">실행·검색 링크 복사<\/button>/);
+  assert.match(raw, /<input(?=[^>]*readOnly="")(?=[^>]*value="")(?=[^>]*disabled="")/);
+  assert.doesNotMatch(raw, /<script>|유효한 공유 링크를 만들 수 없습니다/);
 });
