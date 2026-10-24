@@ -2,7 +2,7 @@
 
 ## 기능 개발 우선순위 — 2026-10-25 KST
 
-[PR259](https://github.com/DevDooly/devdooly-platform-lab/pull/259)에서 [작업·export 기록 흐름](features/job-lifecycle.md)을 공개했습니다. [작업 관측 목록 탐색](features/job-list-filter.md)은 길게 나열된 카드에서 특정 ID·작업/Export 상태를 찾는 기능입니다. 이미 읽은 최대 20개 목록만 좁히고 기존 조회·원문 근거를 유지하며, 로컬·공개 검증 결과는 해당 변경의 PR 기록을 따릅니다. 다음 기능은 [센서 분포→정확 센서 이벤트 이동](features/sensor-outcomes.md#센서에서-이벤트로-이동)이며 공유 링크·CSV/JSON에 조건을 보존합니다. [현재 범위·완료 기능](AUTONOMOUS_WORK.md#다음-작업의-우선순위)을 기준으로 실제 필요가 확인될 때 다음 범위를 정하고, 완료 기능·운영 시험을 반복하거나 보류 항목을 재개하지 않습니다.
+[PR259](https://github.com/DevDooly/devdooly-platform-lab/pull/259)에서 [작업·export 기록 흐름](features/job-lifecycle.md)을 공개했습니다. [작업 관측 목록 탐색](features/job-list-filter.md)은 길게 나열된 카드에서 특정 ID·작업/Export 상태를 찾는 기능입니다. 이미 읽은 최대 20개 목록만 좁히고 기존 조회·원문 근거를 유지하며, 로컬·공개 검증 결과는 해당 변경의 PR 기록을 따릅니다. [PR264](https://github.com/DevDooly/devdooly-platform-lab/pull/264)의 [센서 분포→정확 센서 이벤트 이동](features/sensor-outcomes.md#센서에서-이벤트로-이동)은 공유 링크·CSV/JSON 조건 보존과 로컬·같은 main의 CI·Pages·실제 공개 검증을 마쳤습니다. [현재 범위·완료 기능](AUTONOMOUS_WORK.md#다음-작업의-우선순위)을 기준으로 실제 필요가 확인될 때 다음 범위를 정하고, 완료 기능·운영 시험을 반복하거나 보류 항목을 재개하지 않습니다.
 
 1. [두 실행 결과 비교](features/run-comparison.md): 저장된 A·B의 건수·비율·실패 사유, 공유 링크와 CSV를 제공하는 웹 기능입니다. 기존 GET만 사용하며 운영 image/source pin은 유지합니다.
 2. [API 안내에서 목록 선택으로 상세 조회를 연결](features/api-run-selection.md)합니다. 목록을 불러오고 ID를 고르는 동작과 실제 상세 GET을 구분합니다.
