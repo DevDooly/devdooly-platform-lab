@@ -1,0 +1,193 @@
+.event-flow {
+  min-width:0;
+  margin:0 0 28px;
+  padding:24px;
+  border:1px solid var(--line);
+  background:var(--paper);
+  font-size:1.0625rem;
+  line-height:1.75;
+}
+.event-flow p,.event-flow dd,.event-flow h4,.event-flow h5,.event-flow h6 {
+  overflow-wrap:anywhere;
+}
+.event-flow code {
+  font:1.0625rem/1.65 var(--mono);
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+.event-flow-heading h4 {
+  font-size:1.25rem;
+  line-height:1.5;
+}
+.event-flow-heading p {
+  margin-top:8px;
+  color:var(--muted);
+}
+.event-flow-picker {
+  display:grid;
+  gap:8px;
+  margin-top:20px;
+  min-width:0;
+}
+.event-flow-picker label {
+  font-weight:600;
+}
+.event-flow-picker select {
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  min-height:44px;
+  padding:10px 12px;
+  border:1px solid var(--line);
+  border-radius:0;
+  background:var(--surface);
+  color:var(--ink);
+  font:inherit;
+}
+.event-flow-picker select:disabled {
+  opacity:.6;
+  cursor:default;
+}
+.event-flow-picker select:focus-visible,.event-flow a:focus-visible,.event-flow-open:focus-visible {
+  outline:3px solid var(--green);
+  outline-offset:4px;
+}
+.event-flow-scope {
+  margin-top:18px;
+  color:var(--muted);
+}
+.event-flow-scope a {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  min-height:44px;
+  color:var(--green);
+  text-decoration:underline;
+  text-underline-offset:4px;
+}
+.event-flow-scope a[aria-disabled="true"] {
+  opacity:.6;
+  cursor:default;
+}
+.event-flow-provenance {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px 20px;
+  margin:16px 0 0;
+  padding-top:16px;
+  border-top:1px solid var(--line);
+}
+.event-flow-provenance > div,.event-flow-fields > div,.event-flow-raw > div {
+  min-width:0;
+}
+.event-flow-provenance dt,.event-flow-fields dt,.event-flow-raw dt {
+  color:var(--muted);
+}
+.event-flow-provenance dd,.event-flow-fields dd,.event-flow-raw dd {
+  margin:2px 0 0;
+  min-width:0;
+}
+.event-flow-detail {
+  margin-top:24px;
+}
+.event-flow-detail-title {
+  margin:0 0 16px;
+  font-size:1.125rem;
+  line-height:1.6;
+  scroll-margin-top:116px;
+}
+.event-flow-detail-title:focus {
+  outline:3px solid var(--green);
+  outline-offset:6px;
+}
+.event-flow-cards {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+}
+.event-flow-card {
+  min-width:0;
+  padding:18px;
+  border:1px solid var(--line);
+  background:var(--surface);
+}
+.event-flow-card-heading {
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  margin-bottom:18px;
+}
+.event-flow-card-heading > span {
+  flex-shrink:0;
+  color:var(--green);
+  font:500 1.0625rem/1.7 var(--mono);
+}
+.event-flow-card h6 {
+  font-size:1.0625rem;
+  line-height:1.7;
+  font-weight:700;
+}
+.event-flow-fields,.event-flow-raw {
+  margin:0;
+}
+.event-flow-fields > div + div {
+  margin-top:12px;
+}
+.event-flow-raw {
+  padding-bottom:16px;
+  border-bottom:1px solid var(--line);
+}
+.event-flow-explanation-title {
+  margin:16px 0 8px;
+  font-weight:700;
+}
+.event-flow-null-note {
+  margin-top:18px;
+  padding-top:14px;
+  border-top:1px solid var(--line);
+  color:var(--muted);
+}
+.event-flow-empty {
+  margin-top:20px;
+  color:var(--muted);
+}
+.event-flow-open {
+  display:block;
+  width:100%;
+  min-width:0;
+  min-height:44px;
+  padding:8px 10px;
+  border:1px solid var(--line);
+  background:var(--paper);
+  color:var(--green);
+  font:1.0625rem/1.65 var(--mono);
+  text-align:left;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+.event-flow-open:hover:not(:disabled) {
+  background:var(--cream);
+  border-color:var(--green);
+}
+.event-flow-open:disabled {
+  opacity:.6;
+  cursor:default;
+}
+@media (max-width:1050px) {
+  .event-flow-cards {
+    grid-template-columns:minmax(0,1fr);
+  }
+}
+@media (max-width:700px) {
+  .event-flow {
+    padding:20px 16px;
+  }
+  .event-flow-provenance,.event-flow-cards {
+    grid-template-columns:minmax(0,1fr);
+  }
+  .event-flow-card {
+    padding:18px;
+  }
+}
