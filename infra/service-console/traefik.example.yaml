@@ -1,0 +1,39 @@
+# Explanatory template only: replace private upstream IPs locally, do not publish them.
+# Existing Traefik v3.6 file provider; each router uses its own native login,
+# except Kafka, where BasicAuth is mandatory on EVERY path.
+http:
+  routers:
+    lab-console-kafka:
+      rule: Host(`kafka.YOUR_DOMAIN`)
+      entryPoints: [https]
+      service: lab-console-kafka
+      middlewares: [lab-console-kafka-auth]
+      tls:
+        certResolver: letsencrypt
+      observability:
+        accessLogs: false
+  middlewares:
+    lab-console-kafka-auth:
+      basicAuth:
+        usersFile: /traefik/lab-console/kafbat.htpasswd
+        removeHeader: true
+        realm: Platform Lab Kafka
+  services:
+    lab-console-kafka:
+      loadBalancer:
+        servers:
+          - url: http://KAFBAT_CLUSTER_IP:8080
+    lab-console-argocd:
+      loadBalancer:
+        serversTransport: lab-console-argo-tls
+        servers:
+          - url: https://ARGOCD_CLUSTER_IP:443
+    lab-console-jenkins:
+      loadBalancer:
+        servers:
+          - url: http://JENKINS_CLUSTER_IP:8080
+  serversTransports:
+    lab-console-argo-tls:
+      serverName: argocd-server
+      rootCAs:
+        - /traefik/lab-console/argocd-public-ca.crt
