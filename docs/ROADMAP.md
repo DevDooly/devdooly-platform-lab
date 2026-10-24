@@ -2,7 +2,7 @@
 
 ## 기능 개발 우선순위 — 2026-10-25 KST
 
-[PR259](https://github.com/DevDooly/devdooly-platform-lab/pull/259)에서 [작업·export 기록 흐름](features/job-lifecycle.md)까지 공개했습니다. 생성·대기 등록·DB 완료·저장 확인 기록과 두 시각의 간격을 연결하며 처리 시간이나 현재 상태를 추정하지 않습니다. 현재 확정한 다음 구현은 없으며, [현재 범위·완료 기능](AUTONOMOUS_WORK.md#다음-작업의-우선순위)을 기준으로 실제 이용 문제나 필요한 기능이 확인될 때 다음 범위를 정합니다. 아래 완료 기능과 기존 운영 시험을 반복하지 않으며 보류 항목도 유지합니다.
+[PR259](https://github.com/DevDooly/devdooly-platform-lab/pull/259)에서 [작업·export 기록 흐름](features/job-lifecycle.md)을 공개했습니다. [작업 관측 목록 탐색](features/job-list-filter.md)은 길게 나열된 카드에서 특정 ID·작업/Export 상태를 찾는 기능입니다. 이미 읽은 최대 20개 목록만 좁히고 기존 조회·원문 근거를 유지하며, 로컬·공개 검증 결과는 해당 변경의 PR 기록을 따릅니다. [현재 범위·완료 기능](AUTONOMOUS_WORK.md#다음-작업의-우선순위)을 기준으로 실제 필요가 확인될 때 다음 범위를 정하고, 완료 기능·운영 시험을 반복하거나 보류 항목을 재개하지 않습니다.
 
 1. [두 실행 결과 비교](features/run-comparison.md): 저장된 A·B의 건수·비율·실패 사유, 공유 링크와 CSV를 제공하는 웹 기능입니다. 기존 GET만 사용하며 운영 image/source pin은 유지합니다.
 2. [API 안내에서 목록 선택으로 상세 조회를 연결](features/api-run-selection.md)합니다. 목록을 불러오고 ID를 고르는 동작과 실제 상세 GET을 구분합니다.

@@ -1,0 +1,12 @@
+.job-list-controls { display:grid; grid-template-columns:minmax(12rem,1.2fr) minmax(11rem,1fr) minmax(14rem,1.4fr) auto; align-items:end; gap:14px; padding:20px; border:1px solid var(--line); background:var(--surface); }
+.job-list-controls label { display:flex; min-width:0; flex-direction:column; gap:8px; font-size:17px; line-height:1.6; }
+.job-list-controls input,.job-list-controls select,.job-list-reset { min-width:0; width:100%; min-height:48px; padding:10px 12px; border:1px solid var(--line); border-radius:0; background:var(--paper); color:var(--ink); font:inherit; font-size:17px; line-height:1.6; }
+.job-list-controls select { padding-right:30px; }
+.job-list-reset { width:auto; cursor:pointer; color:var(--green); font-weight:600; background:var(--mint); }
+.job-list-controls input:focus-visible,.job-list-controls select:focus-visible,.job-list-reset:focus-visible { outline:3px solid var(--green); outline-offset:3px; }
+.job-list-controls input:disabled,.job-list-controls select:disabled,.job-list-reset:disabled { cursor:wait; opacity:.65; }
+.job-list-filter-note { margin:12px 0; color:var(--muted); font-size:17px; line-height:1.8; overflow-wrap:anywhere; }
+.job-list-count { margin:18px 0 8px; font-size:17px; font-weight:600; line-height:1.8; }
+.job-list-count + .job-list-filter-note { margin-bottom:20px; }
+@media(max-width:1100px) { .job-list-controls { grid-template-columns:repeat(2,minmax(0,1fr)); } .job-list-reset { width:100%; } }
+@media(max-width:600px) { .job-list-controls { grid-template-columns:minmax(0,1fr); gap:16px; padding:18px; } }

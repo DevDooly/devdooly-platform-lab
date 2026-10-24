@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { jobObservationView, loadJobObservation } from '../lib/job-observation';
-import type { JobBrowserError, JobFile, JobObservationRecord } from '../lib/job-observation';
+import type { JobBrowserError, JobObservationRecord } from '../lib/job-observation';
 import '../styles/job-observation.css';
-import JobLifecycle from './JobLifecycle';
+import JobObservationList from './JobObservationList';
+import { DEFAULT_JOB_FILTERS } from '../lib/job-list';
+import type { JobListFilters } from '../lib/job-list';
 import { publicReadUrl } from '../lib/public-api-base';
 import { loadLiveWithRecordedFallback } from '../lib/public-observation-source';
 
 const repository = 'https://github.com/DevDooly/devdooly-platform-lab';
 const runtimeNames = { NOT_STARTED: '실행 기록 없음', RUNNING: '마지막 DB 신호: 실행 중', PAUSED_OPERATOR: '운영자 확인 대기 · 자동 재시작 차단', STOPPED: '종료 기록' };
 const stageNames = { IDLE: '작업 대기', PUBLISH: 'Kafka 발행', CONSUME: '수신·DB 처리', EXPORT: '결과·실패 파일 저장 확인', STOPPED: '종료' };
-const jobNames = { STAGING: '원본 준비', QUEUED: '처리 대기', COMPLETED: 'DB 처리 완료', TERMINATED: '명시적 종료' };
-const exportNames = { NOT_REQUESTED: 'export 요청 전', PENDING: 'export 대기 · 슬롯 유지', EXPORTED: '저장 확인 기록 · 슬롯 해제', CANCELLED: 'export 취소' };
 const environmentNames = { LOCAL: '로컬 검증', TEST: '자동 시험', ISOLATED_LAB: '격리 Lab 시험', MINI_PC: '배포 런타임', UNKNOWN: '환경 미분류' };
 const errorNames: Record<JobBrowserError, string> = {
   NOT_CONFIGURED: '작업 관측 연결 또는 게시 기록이 아직 없습니다.', HTTP_ERROR: '새 작업 관측을 조회하지 못했습니다.',
@@ -24,15 +24,12 @@ function time(value: string | null) {
 function Source({ label, sha }: { label: string; sha: string }) {
   return <div><dt>{label}</dt><dd>{sha === 'unknown' ? '소스 SHA 미기록' : <a href={`${repository}/commit/${sha}`} target="_blank" rel="noreferrer"><code>{sha}</code><span className="sr-only"> GitHub 소스 커밋, 새 창</span> ↗</a>}</dd></div>;
 }
-function FileEvidence({ label, file }: { label: string; file: JobFile }) {
-  return <div className="job-file"><h4>{label}</h4><p>{file.size.toLocaleString('ko-KR')} bytes</p><details><summary>예상 파일 SHA-256</summary><code>{file.sha256}</code></details></div>;
-}
-
 export default function JobObservationCard({ apiBase, observationUrl, mode, preferLive = false }: { apiBase: string; observationUrl: string; mode: 'api' | 'recorded'; preferLive?: boolean }) {
   const [record, setRecord] = useState<JobObservationRecord | null>(null);
   const [error, setError] = useState<JobBrowserError | null>(null);
   const [retained, setRetained] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [jobFilters, setJobFilters] = useState<JobListFilters>({ ...DEFAULT_JOB_FILTERS });
   const [now, setNow] = useState(0);
   const previous = useRef<JobObservationRecord | null>(null);
   const previousLive = useRef<JobObservationRecord | null>(null);
@@ -60,7 +57,7 @@ export default function JobObservationCard({ apiBase, observationUrl, mode, pref
     setRecord(result.record); setError(result.browserError); setRetained(result.retainedPrevious); setNow(Date.now()); setLoading(false);
   }
   useEffect(() => {
-    previous.current = null; previousLive.current = null; previousRecorded.current = null; setSourceMode(mode); setFallbackUsed(false); setFallbackError(null); setRecord(null); void refresh();
+    previous.current = null; previousLive.current = null; previousRecorded.current = null; setSourceMode(mode); setFallbackUsed(false); setFallbackError(null); setRecord(null); setJobFilters({ ...DEFAULT_JOB_FILTERS }); void refresh();
     const clock = window.setInterval(() => setNow(Date.now()), 1_000);
     const poll = mode === 'api' ? window.setInterval(() => void refresh(), 10_000) : null;
     return () => { active.current?.abort(); active.current = null; window.clearInterval(clock); if (poll !== null) window.clearInterval(poll); };
@@ -86,13 +83,7 @@ export default function JobObservationCard({ apiBase, observationUrl, mode, pref
         </article>
         <article className="job-runtime-card"><span className="code-label">ADMISSION / SINGLE SLOT</span><h3>{record.slot.occupiedRunId ? '실행 슬롯 점유 기록' : '실행 슬롯 비어 있음'}</h3><p>{record.slot.occupiedRunId ? <code>{record.slot.occupiedRunId}</code> : '마지막 DB snapshot에서 점유 작업이 없습니다.'}</p><p className="job-observation-note">DB 처리 완료만으로 슬롯을 해제하지 않습니다. 결과·실패 두 파일의 전체 내용·크기·SHA-256 검증 후 export 확인을 DB에 commit합니다. 운영자의 명시적 종료는 별도 경로입니다.</p><dl className="job-observation-details"><Source label="관측 API 소스 SHA" sha={record.sourceCommit}/></dl></article>
       </div>
-      <div className="job-list-heading"><h3>최근 작업 · 최대 20개</h3><p>작업 상태와 export 상태를 구분합니다.</p></div>
-      <div className="job-list">{record.jobs.map(job => <article className="job-record" key={job.runId}><div className="job-record-heading"><h3><code>{job.runId}</code></h3><div className="job-record-states"><span>{jobNames[job.status]}</span><span className={job.exportStatus === 'PENDING' ? 'job-pending' : ''}>{exportNames[job.exportStatus]}</span></div></div>
-        {job.counts && <dl className="job-counts">{([['전체', job.counts.input], ['성공', job.counts.success], ['실패', job.counts.failure], ['중복', job.counts.duplicate], ['대기', job.counts.pending]] as const).map(([label, count]) => <div key={label}><dt>{label}</dt><dd>{count}</dd></div>)}</dl>}
-        <JobLifecycle job={job} />
-        {job.files && <><p className="job-file-evidence">{job.fileEvidence === 'VERIFIED_AT_EXPORT_COMMIT' ? '두 파일의 저장 확인을 기록한 DB 시각이 있습니다.' : '아래는 DB 결과로 만든 예상 파일 정보입니다. 저장 확인은 아직 기록되지 않았습니다.'} SHA-256과 크기는 결정적인 DB snapshot에서 다시 계산한 값이며, 현재 저장소를 재조회한 결과가 아닙니다.</p><div className="job-files"><FileEvidence label="전체 처리 결과 JSON" file={job.files.result}/><FileEvidence label="실패 입력 JSON" file={job.files.failures}/></div></>}
-      </article>)}</div>
-      {record.jobs.length === 0 && <div className="job-observation-empty"><h3>아직 기록된 작업이 없습니다.</h3><p>고정 예제 실행 결과와 새 worker 작업 기록은 별도입니다. 공개 페이지에서는 작업을 생성하지 않습니다.</p></div>}
+      <JobObservationList jobs={record.jobs} filters={jobFilters} onFiltersChange={setJobFilters} disabled={loading} />
     </> : !loading && <div className="job-observation-empty"><h3>작업 관측 미연결 · NOT_CONFIGURED</h3><p>실제 DB 기록이 연결되면 실행기·슬롯·작업·export 정보를 표시합니다. 확인되지 않은 파일·시간·성공 상태를 대신 넣지 않습니다.</p></div>}
     <p className="job-observation-note">파일 원문·저장소 경로·호스트·자격증명은 공개하지 않습니다. <a href={`${repository}/blob/main/apps/lab-web/JOB_OBSERVATION.md`} target="_blank" rel="noreferrer">관측 범위와 한계 ↗</a></p>
   </section>;
