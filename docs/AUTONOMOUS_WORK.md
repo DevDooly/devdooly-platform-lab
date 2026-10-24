@@ -38,6 +38,7 @@
 | 1 | **두 실행 결과 비교:** 기존 단일 실행 화면을 오가며 계산하던 건수·비율·실패 사유 차이를 한 화면에서 확인 | [PR241](https://github.com/DevDooly/devdooly-platform-lab/pull/241) 공개 완료. [비교 화면](https://devdooly.github.io/devdooly-platform-lab/runs/compare/)의 목록 선택·두 상세 GET·공유 링크·CSV. [사용법·검증 기록](features/run-comparison.md) |
 | 2 | **API 상세 조회 선택:** API 안내에서 실행 ID를 복사하지 않고 목록에서 고른 뒤 상세 조회 | [PR243](https://github.com/DevDooly/devdooly-platform-lab/pull/243) 공개 완료. [API 안내](https://devdooly.github.io/devdooly-platform-lab/api-guide/#api-detail)에서 명시적 목록 GET 후 ID를 고르고 상세 GET을 요청. 직접 입력과 선택/이전 응답 구분 유지. [사용법·검증 기록](features/api-run-selection.md) |
 | 3 | **이벤트 처리 흐름 탐색:** 한 이벤트의 응답 필드·판정 사유·결과 분류를 연결해 처리 규칙을 이해 | 기존 이벤트 상세에 선택·세 카드 구현. runId·출처·sequence로 선택을 구분하고 원문·현재 참고 규칙을 함께 표시. 단계별 trace·당시 실행 코드 버전은 제공하지 않음. [사용법·검증 기록](features/event-flow.md) |
+| 4 | **이벤트 검색·사유 필터:** 이미 읽은 최대 1,000건에서 ID·센서 부분 검색과 원시 사유·상태 조건을 함께 적용해 필요한 행을 찾기 | 구현·로컬 웹310개·타입·빌드, 실제 저장된 1,000건 검색과 키보드·모바일을 확인했습니다. 표/흐름의 같은 결과·중복 행과 조건 유지·선택 해제·입력 잠금을 제공합니다. 같은 main의 CI·Pages·공개 결과는 PR 검증 기록으로 구분합니다. [범위·검증](features/event-search.md) |
 
 반복 정상 점검보다 이용자가 직접 조작하는 기능을 우선합니다. 각 기능의 변경에 필요한 검사와 실제 공개 이용 흐름만 확인하며, 완료된 운영 시험을 반복하지 않습니다.
 

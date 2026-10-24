@@ -94,7 +94,7 @@ export default function EventFlowInspector({
         </article>
       </div>
     </div> : <p className="event-flow-empty">{outcomes.length === 0
-      ? '현재 처리 상태 필터에 표시할 이벤트가 없습니다.'
+      ? '현재 검색·처리 상태·사유 조건에 표시할 이벤트가 없습니다.'
       : '이벤트를 선택하면 응답 필드, 판정 사유, 결과 분류를 볼 수 있습니다.'}</p>}
   </section>;
 }

@@ -5,6 +5,7 @@
 1. [두 실행 결과 비교](features/run-comparison.md): 저장된 A·B의 건수·비율·실패 사유, 공유 링크와 CSV를 제공하는 웹 기능입니다. 기존 GET만 사용하며 운영 image/source pin은 유지합니다.
 2. [API 안내에서 목록 선택으로 상세 조회를 연결](features/api-run-selection.md)합니다. 목록을 불러오고 ID를 고르는 동작과 실제 상세 GET을 구분합니다.
 3. [이벤트 판정 흐름 탐색](features/event-flow.md): 기존 이벤트 상세에서 응답 필드·판정 사유·결과 분류를 함께 봅니다. 원래 출처·시각을 유지하고 고정 Java 규칙 해설과 실제 단계별 trace를 구분합니다.
+4. [이벤트 검색·사유 필터](features/event-search.md): 이미 읽은 최대 1,000건의 eventId·sensorId 문자 부분 검색과 원시 reason 정확 선택을 기존 status 조건과 함께 적용합니다. 표·흐름 목록은 같은 결과와 입력 순서·중복 행을 유지합니다. 웹310개·타입·빌드와 로컬 실제 검색을 확인했으며 병합 main의 CI·Pages·공개 결과는 별도 기록합니다.
 
 현재 상태와 네 보류는 [현재 범위·다음 작업](AUTONOMOUS_WORK.md)을 따릅니다. 아래 역사적 검증·체크리스트를 재수행하는 계획이 아닙니다.
 
