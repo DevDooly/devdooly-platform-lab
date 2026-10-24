@@ -7,6 +7,8 @@ import snapshot from '../data/snapshot.json';
 import '../styles/api-connection-scope.css';
 import TourStepNavigation from './TourStepNavigation';
 import EventFlowInspector from './EventFlowInspector';
+import { eventReasonOptions, filterEventOutcomes } from '../lib/event-search';
+import '../styles/event-search.css';
 
 const initial = snapshot as LabData;
 const evidenceBase = 'https://github.com/DevDooly/devdooly-platform-lab/blob/main/docs/evidence';
@@ -56,6 +58,48 @@ function SensorChart({ points, interactive }: { points: Point[]; interactive: bo
   </div>;
 }
 
+interface EventSearchControlsProps {
+  status: OutcomeStatus | 'ALL';
+  query: string;
+  reason: string | null;
+  reasons: string[];
+  shown: number;
+  total: number;
+  disabled: boolean;
+  onStatusChange: (value: OutcomeStatus | 'ALL') => void;
+  onQueryChange: (value: string) => void;
+  onReasonChange: (value: string | null) => void;
+  onReset: () => void;
+}
+
+export function EventSearchControls({ status, query, reason, reasons, shown, total, disabled,
+  onStatusChange, onQueryChange, onReasonChange, onReset }: EventSearchControlsProps) {
+  return <div className="event-search" role="group" aria-label="이벤트 검색과 필터">
+    <div className="event-search-fields">
+      <div className="event-search-query"><label htmlFor="event-search-query">이벤트 ID·센서 검색</label>
+        <input id="event-search-query" type="search" value={query} disabled={disabled} autoComplete="off" spellCheck={false}
+          placeholder="예: evt-003 또는 sensor-a" aria-describedby="event-search-hint"
+          onChange={event => onQueryChange(event.target.value)} /></div>
+      <div><label htmlFor="event-filter">처리 상태</label>
+        <select id="event-filter" value={status} disabled={disabled} aria-describedby="event-search-hint"
+          onChange={event => onStatusChange(event.target.value as OutcomeStatus | 'ALL')}>
+          <option value="ALL">전체 이벤트</option>{Object.entries(statusLabel).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+        </select></div>
+      <div><label htmlFor="event-reason">사유 원문</label>
+        <select id="event-reason" value={reason === null ? 'all' : `reason:${reason}`} disabled={disabled} aria-describedby="event-search-hint"
+          onChange={event => onReasonChange(event.target.value === 'all' ? null : event.target.value.slice('reason:'.length))}>
+          <option value="all">전체 사유</option>
+          {reason !== null && !reasons.includes(reason) && <option value={`reason:${reason}`}>{JSON.stringify(reason)} · 이 실행에 없음</option>}
+          {reasons.map(value => <option key={value} value={`reason:${value}`}>{value === '' ? '빈 사유 (빈 문자열)' : JSON.stringify(value)}</option>)}
+        </select></div>
+    </div>
+    <p className="event-search-hint" id="event-search-hint">이벤트 ID·센서의 일부를 대소문자 구분 없이 찾고, 처리 상태·사유 원문 조건을 함께 적용합니다. 위 건수는 전체 실행 결과이며 아래 표와 흐름 선택만 좁힙니다.</p>
+    <p className="event-search-hint">검색·필터 조건은 실행을 바꿔도 유지되며 새 실행의 이벤트에 적용합니다.</p>
+    <div className="event-search-summary"><p role="status" aria-live="polite" aria-atomic="true">결과 {shown}건 / 전체 {total}건</p>
+      <button type="button" className="button button-small" disabled={disabled} onClick={onReset}>검색·필터 초기화</button></div>
+  </div>;
+}
+
 export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/lab-observation.json' }: { apiBase?: string; observationUrl?: string }) {
   const [data, setData] = useState<LabData>(initial);
   const [mode, setMode] = useState<SourceMode>('fixture');
@@ -66,6 +110,8 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
   const [error, setError] = useState('');
   const [tab, setTab] = useState<'chart' | 'events'>('chart');
   const [filter, setFilter] = useState<OutcomeStatus | 'ALL'>('ALL');
+  const [eventQuery, setEventQuery] = useState('');
+  const [eventReason, setEventReason] = useState<string | null>(null);
   const [eventSelection, setEventSelection] = useState<{ runId: string; mode: SourceMode; sequence: number } | null>(null);
   const controller = useRef<AbortController | null>(null);
   const mounted = useRef(true);
@@ -102,8 +148,23 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
     document.getElementById(`${next}-tab`)?.focus();
   }
   function changeEventFilter(next: OutcomeStatus | 'ALL') {
+    if (!interactive || loading) return;
     setFilter(next);
     setEventSelection(null);
+  }
+  function changeEventQuery(value: string) {
+    if (!interactive || loading) return;
+    setEventQuery(value);
+    setEventSelection(null);
+  }
+  function changeEventReason(value: string | null) {
+    if (!interactive || loading) return;
+    setEventReason(value);
+    setEventSelection(null);
+  }
+  function resetEventSearch() {
+    if (!interactive || loading) return;
+    setFilter('ALL'); setEventQuery(''); setEventReason(null); setEventSelection(null);
   }
   function selectEvent(sequence: number | null) {
     if (!interactive || loading) return;
@@ -119,7 +180,8 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
   const platformSourceTime = mode === 'live' ? data.summary.observedAt : mode === 'recorded' ? observation?.capturedAt : initial.capturedAt;
   const detail = data.detail;
   const selectedEventSequence = eventSelection?.runId === detail.id && eventSelection.mode === mode ? eventSelection.sequence : null;
-  const outcomes = detail.outcomes.filter(row => filter === 'ALL' || row.status === filter);
+  const outcomes = filterEventOutcomes(detail.outcomes, { status: filter, query: eventQuery, reason: eventReason });
+  const reasons = eventReasonOptions(detail.outcomes);
   const counts: [string, number, string][] = [['성공', detail.successCount, 'success'], ['실패', detail.failureCount, 'failed'], ['중복', detail.duplicateCount, 'duplicate'], ['대기', detail.pendingCount, 'pending']];
   return <>
     <section id="lab" className="section lab-section" aria-labelledby="lab-title" aria-busy={!interactive}>
@@ -131,17 +193,20 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
       <div className="lab-workspace"><div className="run-main">
         <div className="run-title"><div><span className="code-label">SCENARIO / {detail.scenario}</span><h3>{detail.name}</h3></div><span className="tag tag-green">합성 데이터</span></div>
         <div className="run-controls"><label htmlFor="run-select">실행 결과</label><select id="run-select" aria-describedby="selected-run-id" value={detail.id} onChange={event => void selectRun(event.target.value)} disabled={!interactive || loading || mode !== 'live'}>{data.runs.map(run => <option value={run.id} key={run.id}>{run.id} · {run.inputCount}건 · {run.name} / seed {run.seed}</option>)}</select><span className="code-label">SEED {detail.seed}</span></div>
-        <div className="metrics"><div className="metric metric-total"><span>입력 이벤트</span><strong>{detail.inputCount}<small>건</small></strong></div>{counts.map(([label, value, color]) => <button className={`metric ${color} ${filter === ({ 성공: 'SUCCESS', 실패: 'FAILED', 중복: 'DUPLICATE', 대기: 'PENDING' } as Record<string, string>)[label] && tab === 'events' ? 'metric-selected' : ''}`} key={label} disabled={!interactive} onClick={() => { changeEventFilter(({ 성공: 'SUCCESS', 실패: 'FAILED', 중복: 'DUPLICATE', 대기: 'PENDING' } as Record<string, OutcomeStatus>)[label]!); setTab('events'); }} aria-label={`${label} ${value}건 상세 보기`}><span><i/>{label}</span><strong>{value}<small>건</small></strong></button>)}</div>
+        <div className="metrics"><div className="metric metric-total"><span>입력 이벤트</span><strong>{detail.inputCount}<small>건</small></strong></div>{counts.map(([label, value, color]) => <button className={`metric ${color} ${filter === ({ 성공: 'SUCCESS', 실패: 'FAILED', 중복: 'DUPLICATE', 대기: 'PENDING' } as Record<string, string>)[label] && tab === 'events' ? 'metric-selected' : ''}`} key={label} disabled={!interactive || loading} onClick={() => { changeEventFilter(({ 성공: 'SUCCESS', 실패: 'FAILED', 중복: 'DUPLICATE', 대기: 'PENDING' } as Record<string, OutcomeStatus>)[label]!); setTab('events'); }} aria-label={`${label} ${value}건 상세 보기`}><span><i/>{label}</span><strong>{value}<small>건</small></strong></button>)}</div>
         <div className="count-bar" aria-label="입력 이벤트 처리 비율">{counts.filter(([, value]) => value > 0).map(([label, value, color]) => <span key={label} className={color} style={{ flex: value }} title={`${label} ${value}건`}/>)}</div>
         <p className="balance-note">입력 {detail.inputCount} = 성공 {detail.successCount} + 실패 {detail.failureCount} + 중복 {detail.duplicateCount} + 대기 {detail.pendingCount}</p>
         <div className="tabs" role="tablist" aria-label="실행 결과 보기"><button disabled={!interactive} onKeyDown={handleTabKey} role="tab" tabIndex={tab === 'chart' ? 0 : -1} id="chart-tab" aria-controls="chart-panel" aria-selected={tab === 'chart'} onClick={() => setTab('chart')}>시계열 결과 <span>↗</span></button><button disabled={!interactive} onKeyDown={handleTabKey} role="tab" tabIndex={tab === 'events' ? 0 : -1} id="events-tab" aria-controls="events-panel" aria-selected={tab === 'events'} onClick={() => setTab('events')}>이벤트 상세 <span>{detail.outcomes.length}</span></button></div>
         <div id="chart-panel" role="tabpanel" aria-labelledby="chart-tab" hidden={tab !== 'chart'}><SensorChart key={`${detail.id}-${mode}`} points={detail.series} interactive={interactive}/></div>
-        <div id="events-panel" role="tabpanel" aria-labelledby="events-tab" hidden={tab !== 'events'}><div className="event-filters"><label htmlFor="event-filter">처리 상태</label><select id="event-filter" value={filter} disabled={!interactive} onChange={event => changeEventFilter(event.target.value as OutcomeStatus | 'ALL')}><option value="ALL">전체 이벤트</option>{Object.entries(statusLabel).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select><span>{outcomes.length}건 표시</span></div>
+        <div id="events-panel" role="tabpanel" aria-labelledby="events-tab" hidden={tab !== 'events'}>
+          <EventSearchControls status={filter} query={eventQuery} reason={eventReason} reasons={reasons}
+            shown={outcomes.length} total={detail.outcomes.length} disabled={!interactive || loading}
+            onStatusChange={changeEventFilter} onQueryChange={changeEventQuery} onReasonChange={changeEventReason} onReset={resetEventSearch} />
           <EventFlowInspector outcomes={outcomes} selectedSequence={selectedEventSequence} onSelect={selectEvent}
             runId={detail.id} mode={mode} observedAt={detail.observedAt}
             capturedAt={mode === 'recorded' ? observation?.capturedAt ?? null : mode === 'fixture' ? initial.capturedAt ?? null : null}
             interactive={interactive && !loading} />
-          <div className="table-scroll" role="region" tabIndex={0} aria-label="이벤트 상세 표, 좌우 스크롤 가능"><table><caption className="sr-only">입력 순서별 이벤트 처리 결과</caption><thead><tr><th scope="col">순서 / ID</th><th scope="col">센서</th><th scope="col">입력 시간 (UTC)</th><th scope="col">값</th><th scope="col">결과 / 이유</th></tr></thead><tbody>{outcomes.map(row => <tr key={row.sequence}><td><button type="button" className="event-flow-open" disabled={!interactive || loading} aria-pressed={selectedEventSequence === row.sequence} aria-label={`${row.sequence}번 ${row.eventId} 판정 흐름 보기`} onClick={() => selectEvent(row.sequence)}><span className="muted">{String(row.sequence).padStart(2, '0')}</span> {row.eventId} · 흐름 보기</button></td><td>{row.sensorId}</td><td className="time-cell">{row.eventTime}</td><td>{row.value ?? '—'}</td><td><span className={`result-label ${row.status.toLowerCase()}`}>{statusLabel[row.status]}</span><small>{reasonLabel[row.reason] || row.reason}</small></td></tr>)}</tbody></table>{outcomes.length === 0 && <p className="empty-message">해당 상태의 이벤트가 없습니다.</p>}</div></div>
+          <div className="table-scroll" role="region" tabIndex={0} aria-label="이벤트 상세 표, 좌우 스크롤 가능"><table><caption className="sr-only">입력 순서별 이벤트 처리 결과</caption><thead><tr><th scope="col">순서 / ID</th><th scope="col">센서</th><th scope="col">입력 시간 (UTC)</th><th scope="col">값</th><th scope="col">결과 / 이유</th></tr></thead><tbody>{outcomes.map(row => <tr key={row.sequence}><td><button type="button" className="event-flow-open" disabled={!interactive || loading} aria-pressed={selectedEventSequence === row.sequence} aria-label={`${row.sequence}번 ${row.eventId} 판정 흐름 보기`} onClick={() => selectEvent(row.sequence)}><span className="muted">{String(row.sequence).padStart(2, '0')}</span> {row.eventId} · 흐름 보기</button></td><td>{row.sensorId}</td><td className="time-cell">{row.eventTime}</td><td>{row.value ?? '—'}</td><td><span className={`result-label ${row.status.toLowerCase()}`}>{statusLabel[row.status]}</span><small>{reasonLabel[row.reason] || row.reason}</small></td></tr>)}</tbody></table>{outcomes.length === 0 && <p className="empty-message">현재 검색·처리 상태·사유 조건에 맞는 이벤트가 없습니다. 조건을 바꾸거나 검색·필터를 초기화하세요.</p>}</div></div>
       </div><aside className="run-aside"><div className="aside-heading"><span className="eyebrow">WHY THESE RESULTS</span><h3>건수보다,<br/>처리한 이유까지.</h3></div><div className="reason-item"><span>01</span><div><h4>중복은 한 번만</h4><p>같은 이벤트 ID가 다시 들어와도 중복으로 분리합니다.</p></div></div><div className="reason-item"><span>02</span><div><h4>시간의 순서 확인</h4><p>잘못된 시간 형식과 센서별 과거 이벤트를 검증합니다.</p></div></div><div className="reason-item"><span>03</span><div><h4>실패도 결과에 남기기</h4><p>범위를 벗어난 값을 실패 사유와 함께 조회합니다.</p></div></div><div className="run-metadata"><p id="selected-run-id"><span>선택한 실행 ID</span><strong>{detail.id}</strong></p><p><span>실행 시작</span><strong>{formatTime(detail.startedAt)}</strong></p><p><span>실행 완료</span><strong>{formatTime(detail.completedAt)}</strong></p><p><span>결과 관측</span><strong>{formatTime(detail.observedAt)}</strong></p></div><p className="small-note">회사 데이터·코드를 사용하지 않는 개인 공개 예제입니다.</p></aside></div>
       <TourStepNavigation step={1}/>
     </section>
