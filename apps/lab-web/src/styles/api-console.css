@@ -61,6 +61,14 @@
 .api-json pre { margin:0 0 18px; max-height:480px; overflow:auto; padding:18px; background:var(--ink); color:var(--paper); white-space:pre; word-break:normal; }
 .api-json pre code { font-size:1.0625rem; line-height:1.75; }
 .api-back-index { display:inline-block; margin-top:24px; color:var(--green); text-decoration:underline; text-underline-offset:5px; }
+.api-command { border:1px solid var(--line); padding:0 18px; margin:20px 0; background:var(--cream); }
+.api-command label { display:block; font-weight:600; margin:18px 0 8px; }
+.api-command select { width:100%; max-width:480px; min-height:44px; padding:10px; font:inherit; background:var(--surface); color:var(--ink); border:1px solid var(--line); }
+.api-command pre { padding:18px; margin:18px 0; background:var(--ink); color:var(--paper); white-space:pre-wrap; overflow-wrap:anywhere; }
+.api-command pre code { line-height:1.75; }
+.api-command select:focus-visible,.api-command pre:focus-visible,.api-command button:focus-visible { outline:3px solid var(--green); outline-offset:4px; }
+.api-command button { min-height:44px; }
+.api-command-note,.api-command-unavailable { margin:16px 0; color:var(--muted); }
 .api-run-summary { margin-top:24px; padding:24px; background:var(--cream); border:1px solid var(--line); }
 .api-run-summary h3 { font-size:1.4rem; margin:0 0 12px; }
 .api-summary-id { overflow-wrap:anywhere; margin-bottom:16px; }
@@ -83,6 +91,8 @@
   .api-field-details dl > div,.api-result-meta > div { grid-template-columns:1fr; gap:4px; }
   .api-result-meta { gap:16px; }
   .api-json { padding:0 12px; }
+  .api-command { padding:0 12px; }
+  .api-command pre { padding:12px; }
   .api-json pre { padding:12px; }
   .api-run-summary { padding:16px; }
   .api-summary-counts { grid-template-columns:repeat(2,minmax(0,1fr)); }
