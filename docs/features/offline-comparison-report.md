@@ -32,6 +32,8 @@
 
 375px에서 전역 가로 넘침0·본문17px·저장 버튼51.75px를 확인했습니다. 비우기 뒤 입력 값·비교·보고서가 해제됐습니다. 이는 알려진 합성 파일의 새 보고서 기능 검증이며 실제 서버 파일의 진위나 패킷 캡처 시험이 아닙니다. URL/DOM 생성 실패의 유한 안내와 정리는 합성 handler 검사로 확인했습니다. 기존 파일 입력의 완료 검사나 PR271의 결과를 이번 다운로드 검증으로 바꾸지 않습니다.
 
-정확 source 독립 검토·같은 main의 CI·Pages·공개 실제 다운로드는 대기 중입니다. 완료한 범위만 후속 기록합니다.
+[PR274](https://github.com/DevDooly/devdooly-platform-lab/pull/274)의 정확 source `d701285f13d6d17556c2b7b6a3548bdf365cd101`를 독립 검토하고 main `39a74518fff16e37e9a2641f4068b6cd735a9510`에 병합했습니다. 두 전체 tree는 `e77db7fc859a806399cffbc8f8cc01f6495469db`로 같습니다. 같은 main의 [CI40189885696](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/40189885696)은 verify·public-read-gateway 성공·별도 환경 시험4개 skip, [Pages40189885714](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/40189885714)는 타입·기본 웹 검사·빌드와 build/deploy 성공입니다. 별도 운영 기동이나 현재 가용성의 증거로 확대하지 않습니다.
+
+공개 페이지에서도 알려진 합성 파일 두 개로 실제 보고서를 내려받아 JSON 내용을 확인했습니다. 전체 보고서는18,221bytes·25/25/20그룹, 모호 분류와 원문 검색 조건의 보고서는2,544bytes·25/1/1그룹이었으며 생성시각을 제외한 모든 필드가 로컬의 대응 보고서와 같았습니다. 모든 모호 후보·원메타데이터·원문 query와 전체 분류 수를 보존했습니다. 공개의 조건 변경 안내 해제·키보드 Enter 저장/범위 안내 펼침·375px 넘침0·본문17px·버튼51.75px도 확인했습니다. 0그룹·잘못된 새 파일 이후 저장은 로컬에서 확인한 범위로 유지합니다.
 
 Pages 토큰 교체·별도 환경 K3s/Jenkins 기동 복원·예산 정책·PR #102와 운영 image/source pin은 유지합니다.
