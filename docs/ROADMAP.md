@@ -2,9 +2,9 @@
 
 ## 기능 개발 우선순위 — 2026-10-25 KST
 
-[PR259](https://github.com/DevDooly/devdooly-platform-lab/pull/259)에서 [작업·export 기록 흐름](features/job-lifecycle.md)을 공개했습니다. [작업 관측 목록 탐색](features/job-list-filter.md)은 길게 나열된 카드에서 특정 ID·작업/Export 상태를 찾는 기능입니다. 이미 읽은 최대 20개 목록만 좁히고 기존 조회·원문 근거를 유지하며, 로컬·공개 검증 결과는 해당 변경의 PR 기록을 따릅니다. [PR264](https://github.com/DevDooly/devdooly-platform-lab/pull/264)의 [센서 분포→정확 센서 이벤트 이동](features/sensor-outcomes.md#센서에서-이벤트로-이동)은 공유 링크·CSV/JSON 조건 보존과 로컬·같은 main의 CI·Pages·실제 공개 검증을 마쳤습니다. 이후 [현재 우선순위](AUTONOMOUS_WORK.md#다음-작업의-우선순위)에 따라 **두 실행의 센서별 결과 비교**를 개발합니다. 완료 기능·운영 시험을 반복하거나 보류 항목을 재개하지 않습니다.
+[PR259](https://github.com/DevDooly/devdooly-platform-lab/pull/259)의 [작업·export 기록 흐름](features/job-lifecycle.md), [작업 목록 탐색](features/job-list-filter.md), [PR264](https://github.com/DevDooly/devdooly-platform-lab/pull/264)의 [센서 이벤트 연결](features/sensor-outcomes.md#센서에서-이벤트로-이동)에 이어 [PR267](https://github.com/DevDooly/devdooly-platform-lab/pull/267)의 **센서별 A·B 비교**를 공개했습니다. 로컬 웹439개·타입·빌드와 같은 main의 CI·Pages·실제 공개 비교·모바일·명시적 이벤트 이동을 확인했고 로컬 HTTP429는 별도 실패로 보존했습니다. [현재 우선순위](AUTONOMOUS_WORK.md#다음-작업의-우선순위)에 따라 다음은 **입력 순서별 이벤트 응답 비교**입니다. 완료 기능·운영 시험을 반복하거나 보류 항목을 재개하지 않습니다.
 
-이번 개발은 [센서 비교](features/sensor-comparison.md)의 원문 ID별 건수·실패 비율·차이와 미관측 구분, 목록 탐색·상세 연결입니다. 전체 실패 수가 같아도 센서별 실패가 바뀐 경우를 보여주며 기존 GET 응답·출처·시각·공유/CSV 형식을 유지합니다. 로컬 웹439개·타입·빌드와 실제 비교·탐색·모바일 조작을 확인했으며, 상세 이동 API429·공유 적용 제한과 같은 main의 공개 결과는 기능 문서·변경 PR에서 구분합니다. 개별 이벤트 판정 비교는 입력 동일성 기준, 저장 JSON 오프라인 비교는 파일 검증 범위를 먼저 정할 후속 후보입니다. 두 후보의 자동 실행은 예약하지 않습니다.
+이번 개발은 [이벤트 응답 비교](features/event-comparison.md)의 sequence별 대응과 입력4필드·판정2필드 차이, 미관측·중복 순서 모호성, 검색·분류·20개씩 보기·상세 이동입니다. 전체·센서별 집계가 같아도 다른 위치를 찾되 같은 원본 입력·코드나 수정 효과를 단정하지 않습니다. 기존 GET 응답·출처·시각·공유/CSV 형식을 유지합니다. 로컬 웹 직렬460개·타입·빌드와 실제 비교·검색·분류·모바일을 확인했고 최초 Kafka loopback1개 실패·단독23개 및 직렬 전체 통과는 기능 문서에 구분합니다. 정확 head·main CI/Pages·실제 공개 결과는 변경 PR에서 기록합니다. 저장 JSON 오프라인 비교는 파일 검증 범위를 먼저 정할 후속 후보이며 이번에는 착수하지 않습니다.
 
 아래 목록은 앞서 구현한 이용 기능이며 새로 재수행하는 순서가 아닙니다.
 
