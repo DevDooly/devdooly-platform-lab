@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 2,
+  "source": {
+    "runId": "offline-sample-b",
+    "mode": "fixture",
+    "observedAt": null,
+    "capturedAt": null
+  },
+  "filters": {
+    "status": "ALL",
+    "query": "",
+    "reason": null,
+    "sensorId": "sample-sensor"
+  },
+  "counts": {
+    "reportedInputCount": 6,
+    "availableOutcomes": 4,
+    "matchedOutcomes": 4
+  },
+  "outcomes": [
+    {
+      "sequence": 1,
+      "eventId": "sample-001",
+      "sensorId": "sample-sensor",
+      "eventTime": "2000-01-01T00:00:00Z",
+      "value": 25,
+      "status": "SUCCESS",
+      "reason": "ACCEPTED"
+    },
+    {
+      "sequence": 2,
+      "eventId": "sample-002",
+      "sensorId": "sample-sensor",
+      "eventTime": "2000-01-01T00:00:00Z",
+      "value": 30,
+      "status": "FAILED",
+      "reason": "SYNTHETIC_REVIEW"
+    },
+    {
+      "sequence": 3,
+      "eventId": "sample-003",
+      "sensorId": "sample-sensor",
+      "eventTime": "2000-01-01T00:00:00Z",
+      "value": 40,
+      "status": "SUCCESS",
+      "reason": "ACCEPTED"
+    },
+    {
+      "sequence": 5,
+      "eventId": "sample-005-a",
+      "sensorId": "sample-sensor",
+      "eventTime": "2000-01-01T00:00:00Z",
+      "value": 50,
+      "status": "SUCCESS",
+      "reason": "ACCEPTED"
+    }
+  ]
+}

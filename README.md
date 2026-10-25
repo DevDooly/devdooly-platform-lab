@@ -20,6 +20,8 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 파일 비교에서 찾은 차이는 **비교 보고서 JSON 저장**으로 남깁니다. 현재 검색·분류에 맞는 전체 그룹과 양쪽 후보, 원파일 출처·조건·건수를 함께 담으며 화면의 첫20개로 자르지 않습니다. 원래 이벤트 내보내기와 다른 검토자료입니다. [보고서 형식·검증 범위](docs/features/offline-comparison-report.md)를 확인하세요.
 
+저장 파일이 없다면 같은 화면의 **파일이 없다면 예제로 시작**에서 A·B 합성 JSON을 받아 선택합니다. 다섯 분류를 각각1개씩 확인하고 보고서 저장까지 체험할 수 있습니다. 실제 운영 기록과 구분한 [예제 내용·기대 결과](docs/features/offline-event-samples.md)를 확인하세요.
+
 비교의 A·B 카드와 실패 사유에서 **이벤트 보기**를 누르면 해당 실행·상태·사유 조건을 상세 화면으로 이어갑니다. 도착 화면에서 조회 버튼을 눌러 새 결과를 읽으며, 비교 당시의 응답을 고정하지 않습니다. [이어 보기 사용법](docs/features/run-comparison.md#비교에서-이벤트-이어-보기)
 
 [API 한 건 조회](https://devdooly.github.io/devdooly-platform-lab/api-guide/#api-detail)는 실행 목록을 불러와 ID를 선택한 뒤 상세 GET을 요청할 수 있습니다. ID 직접 입력도 유지하며, 선택만 바꾸었을 때는 이전 응답과 구분합니다. [목록 선택 안내](docs/features/api-run-selection.md)
