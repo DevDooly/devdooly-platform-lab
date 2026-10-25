@@ -3,7 +3,7 @@ import test from 'node:test';
 import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import type { LabData, RunDetail } from '../src/lib/api.ts';
-import { resolveEventShareSelection, type EventShareParseResult } from '../src/lib/event-share.ts';
+import { parseEventShareSelection, resolveEventShareSelection, type EventShareParseResult } from '../src/lib/event-share.ts';
 
 import { eventPageForSequence } from '../src/lib/event-pagination.ts';
 import { filterEventOutcomes } from '../src/lib/event-search.ts';
@@ -12,7 +12,7 @@ const require = createRequire(import.meta.url);
 const ts = require('typescript');
 const source = readFileSync(new URL('../src/components/LabExplorer.tsx', import.meta.url), 'utf8');
 const parsed = ts.createSourceFile('LabExplorer.tsx', source, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TSX);
-let handler: any, selectedInitializer: any;
+let handler: any, selectedInitializer: any, initialEffect: any;
 function visit(node: any) {
   if (ts.isFunctionDeclaration(node) && node.name?.text === 'applySharedSelection') {
     assert.equal(handler, undefined, 'Exactly one real apply handler is tested'); handler = node;
@@ -20,6 +20,8 @@ function visit(node: any) {
   if (ts.isVariableDeclaration(node) && node.name.getText(parsed) === 'selectedEventSequence') {
     assert.equal(selectedInitializer, undefined, 'Exactly one displayed selection initializer is tested'); selectedInitializer = node.initializer;
   }
+  if (ts.isCallExpression(node) && node.expression.getText(parsed) === 'useEffect'
+    && node.arguments[0]?.getText(parsed).includes('parseEventShareSelection')) initialEffect = node.arguments[0];
   ts.forEachChild(node, visit);
 }
 visit(parsed); assert.ok(handler, 'The actual component must define applySharedSelection');
@@ -35,19 +37,26 @@ const response: RunDetail = { ...fixture.detail, id: 'outside-recent-list', obse
 type FetchCall = { base: string; id: string; signal: AbortSignal };
 
 function harness(options: { interactive?: boolean; loading?: boolean; mode?: string; inFlight?: boolean;
-  request?: EventShareParseResult; fetch?: () => Promise<RunDetail> } = {}) {
+  request?: EventShareParseResult; fetch?: () => Promise<RunDetail>; fetchContext?: () => Promise<LabData> } = {}) {
   const previous = structuredClone(fixture);
   const state = { data: previous, filter: 'SUCCESS', query: 'old-search', reason: 'ACCEPTED' as string | null,
     sensorId: 'previous exact sensor' as string | null,
     selection: { runId: previous.detail.id, mode: 'live', sequence: 1 } as { runId: string; mode: string; sequence: number } | null,
+    mode: options.mode ?? 'live', observation: { capturedAt: 'previous-record' } as object | null,
     tab: 'chart', page: 3, loading: options.loading ?? false, error: 'old-error', notice: 'old-notice' };
-  const calls: FetchCall[] = [], businessWrites: string[] = [], loadingWrites: boolean[] = [], timers: number[] = [], cleared: number[] = [];
+  const calls: FetchCall[] = [], contextCalls: FetchCall[] = [], businessWrites: string[] = [], loadingWrites: boolean[] = [], timers: number[] = [], cleared: number[] = [];
   const oldController = new AbortController(), controller = { current: oldController }, mounted = { current: true };
   const shareInFlight = { current: options.inFlight ?? false };
   const dependencies = {
     interactive: options.interactive ?? true, loading: options.loading ?? false, mode: options.mode ?? 'live', shareInFlight,
     shareRequest: options.request ?? request, controller, mounted, apiBase: '/public-api', AbortController,
     fetchRun: async (base: string, id: string, signal: AbortSignal) => { calls.push({ base, id, signal }); return options.fetch ? options.fetch() : response; },
+    fetchLabForRun: async (base: string, id: string, signal: AbortSignal) => {
+      contextCalls.push({ base, id, signal });
+      return options.fetchContext ? options.fetchContext() : { ...fixture, detail: response };
+    },
+    setMode: (value: string) => { businessWrites.push('mode'); state.mode = value; },
+    setObservation: (value: object | null) => { businessWrites.push('observation'); state.observation = value; },
     resolveEventShareSelection, filterEventOutcomes, eventPageForSequence, eventPageSize: 25,
     setEventPageIndex: (value: number) => { businessWrites.push('page'); state.page = value; },
     setLoading: (value: boolean) => { state.loading = value; loadingWrites.push(value); },
@@ -65,7 +74,7 @@ function harness(options: { interactive?: boolean; loading?: boolean; mode?: str
     clearTimeout: (id: number) => { cleared.push(id); },
   };
   const apply: () => Promise<void> = new Function(...Object.keys(dependencies), compiled.outputText + '\nreturn applySharedSelection;')(...Object.values(dependencies));
-  return { apply, state, previous, calls, businessWrites, loadingWrites, timers, cleared, oldController, controller, mounted, shareInFlight };
+  return { apply, state, previous, calls, contextCalls, businessWrites, loadingWrites, timers, cleared, oldController, controller, mounted, shareInFlight };
 }
 
 function deferred() {
@@ -151,13 +160,79 @@ test('failed shared read preserves previous data, filters and event selection', 
   assert.equal(h.state.loading, false); assert.equal(h.shareInFlight.current, false); assert.deepEqual(h.cleared, [1]);
 });
 
-test('noninteractive, busy, nonlive and invalid requests cannot fetch or change displayed selection', async () => {
-  for (const options of [{ interactive: false }, { loading: true }, { inFlight: true }, { mode: 'fixture' }, { mode: 'recorded' },
+test('noninteractive, busy and invalid requests cannot fetch or change displayed selection', async () => {
+  for (const options of [{ interactive: false }, { loading: true }, { inFlight: true },
     { request: { kind: 'absent' } as const }, { request: { kind: 'invalid' } as const }]) {
     const h = harness(options); const before = structuredClone(h.state);
     await h.apply();
-    assert.deepEqual(h.calls, []); assert.deepEqual(h.businessWrites, []); assert.deepEqual(h.state, before);
+    assert.deepEqual(h.calls, []); assert.deepEqual(h.contextCalls, []); assert.deepEqual(h.businessWrites, []); assert.deepEqual(h.state, before);
     assert.deepEqual(h.timers, []); assert.equal(h.oldController.signal.aborted, false);
+  }
+});
+
+test('valid shared entry waits for explicit read while ordinary and invalid entry retain automatic refresh', () => {
+  assert.ok(initialEffect);
+  const printedEffect = ts.createPrinter().printNode(ts.EmitHint.Expression, initialEffect, parsed);
+  const code = ts.transpileModule('const initialize = ' + printedEffect + ';', {
+    compilerOptions: { target: ts.ScriptTarget.ES2022 }, reportDiagnostics: true,
+  });
+  assert.equal(code.diagnostics.length, 0);
+  for (const [search, expectedKind, refreshes] of [
+    ['?labRun=outside-recent-list&labStatus=FAILED&labQuery=', 'valid', 0],
+    ['', 'absent', 1], ['?labRun=broken', 'invalid', 1],
+  ] as const) {
+    let calls = 0, interactive = false, received: EventShareParseResult | null = null;
+    const mounted = { current: false }, controller = { current: new AbortController() };
+    const dependencies = { mounted, controller, window: { location: { search } }, parseEventShareSelection,
+      setInteractive: (value: boolean) => { interactive = value; },
+      setShareRequest: (value: EventShareParseResult) => { received = value; },
+      refresh: async () => { calls += 1; },
+    };
+    const initialize = new Function(...Object.keys(dependencies), code.outputText + '\nreturn initialize;')(...Object.values(dependencies));
+    const cleanup = initialize();
+    assert.equal(calls, refreshes); assert.equal((received as EventShareParseResult | null)?.kind, expectedKind);
+    assert.equal(interactive, true); assert.equal(mounted.current, true);
+    cleanup(); assert.equal(mounted.current, false); assert.equal(controller.current.signal.aborted, true);
+  }
+});
+
+test('fixture and recorded explicit reads commit a complete live context only after success', async () => {
+  for (const mode of ['fixture', 'recorded']) {
+    let resolve!: (data: LabData) => void;
+    const promise = new Promise<LabData>(done => { resolve = done; });
+    const h = harness({ mode, fetchContext: () => promise });
+    const context = { ...structuredClone(fixture), detail: response, observedAt: response.observedAt };
+    const task = h.apply(); await h.apply();
+    assert.equal(h.contextCalls.length, 1); assert.equal(h.contextCalls[0]!.id, response.id);
+    assert.equal(h.calls.length, 0); assert.equal(h.state.mode, mode);
+    assert.equal(h.state.data, h.previous); assert.deepEqual(h.businessWrites, []);
+    resolve(context); await task;
+    assert.equal(h.state.data, context); assert.equal(h.state.mode, 'live'); assert.equal(h.state.observation, null);
+    assert.equal(h.state.filter, 'DUPLICATE'); assert.equal(h.state.selection?.runId, response.id);
+    assert.equal(h.calls.length, 0, 'Full context already includes the exact detail, with no second detail read');
+  }
+});
+
+test('failed or superseded full-context reads preserve fallback provenance and conditions', async () => {
+  for (const mode of ['fixture', 'recorded']) {
+    for (const outcome of ['failure', 'superseded', 'unmounted']) {
+      let resolve!: (data: LabData) => void, reject!: (reason: Error) => void;
+      const promise = new Promise<LabData>((a, b) => { resolve = a; reject = b; });
+      const h = harness({ mode, fetchContext: () => promise });
+      const before = structuredClone(h.state);
+      const task = h.apply();
+      if (outcome === 'failure') reject(new Error('HTTP 429 or invalid response'));
+      else {
+        if (outcome === 'superseded') h.controller.current = new AbortController();
+        else h.mounted.current = false;
+        resolve({ ...fixture, detail: response });
+      }
+      await task;
+      assert.deepEqual(h.businessWrites, []); assert.equal(h.calls.length, 0);
+      for (const key of ['data', 'mode', 'observation', 'filter', 'query', 'reason', 'sensorId', 'selection', 'tab', 'page'] as const)
+        assert.deepEqual(h.state[key], before[key]);
+      assert.equal(h.shareInFlight.current, false); assert.deepEqual(h.cleared, [1]);
+    }
   }
 });
 

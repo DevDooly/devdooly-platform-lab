@@ -39,8 +39,8 @@ export function EventShareRequest({ request, disabled, live, notice, onApply }: 
       {filters.sensorId != null && <div><dt>센서 ID 정확히 일치</dt><dd><code>{JSON.stringify(filters.sensorId)}</code>{filters.sensorId === '' && ' · 빈 문자열'}</dd></div>}
       <div><dt>선택한 이벤트 · sequence</dt><dd>{sequence === null ? '미선택' : <code>{sequence}</code>}</dd></div>
     </dl>
-    {!live && <p className="event-share-unavailable">현재 화면은 게시 관측 또는 고정 샘플입니다. 기존 ‘실시간 조회’로 API 연결을 복구한 뒤 공유한 실행·조건을 조회하세요. 다른 출처의 같은 번호 이벤트를 대신 선택하지 않습니다.</p>}
-    <div className="event-share-actions"><button type="button" disabled={disabled || !live} onClick={onApply}>공유한 실행·조건 조회</button></div>
+    {!live && <p className="event-share-unavailable">현재 화면은 게시 관측 또는 고정 샘플입니다. 아래 버튼으로 요청한 실행과 API 정보를 함께 조회하고, 모두 확인된 뒤 실제 결과로 전환합니다. 다른 출처의 같은 번호 이벤트를 대신 선택하지 않습니다. 유효한 공유 링크로 들어오면 기본 실행의 자동 조회를 생략합니다.</p>}
+    <div className="event-share-actions"><button type="button" disabled={disabled} onClick={onApply}>공유한 실행·조건 조회</button></div>
     <p className="event-share-status" role="status" aria-live="polite" aria-atomic="true">{notice || '공유한 조건을 아직 적용하지 않았습니다. 조회 버튼을 눌러 적용하세요.'}</p>
   </section>;
 }

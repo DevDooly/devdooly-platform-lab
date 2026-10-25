@@ -58,12 +58,14 @@ test('valid request keeps raw text distinct from empty and absent conditions and
   assert.doesNotMatch(empty, /전체 사유 · 조건 없음/);
 });
 
-test('fallback and busy states block apply, and the banner never calls a shared response frozen', () => {
+test('fallback allows explicit complete-context read, busy blocks apply, and shared response is never called frozen', () => {
   assert.doesNotMatch(render(), /<button[^>]*disabled=""/);
-  for (const props of [{ live: false }, { disabled: true }]) {
+  assert.doesNotMatch(render({ live: false }), /<button[^>]*disabled=""/);
+  for (const props of [{ disabled: true }, { live: false, disabled: true }]) {
     assert.match(render(props), /<button[^>]*disabled=""[^>]*>공유한 실행·조건 조회<\/button>/);
   }
   assert.match(render({ live: false }), /다른 출처의 같은 번호 이벤트를 대신 선택하지 않습니다/);
+  assert.match(render({ live: false }), /모두 확인된 뒤 실제 결과로 전환/);
   assert.match(render(), /공유한 조건을 아직 적용하지 않았습니다/);
   assert.match(render(), /관측 시각을 고정한 결과는 아닙니다/);
   const applied = render({ notice: '요청한 실행에 조건을 적용했습니다.' });
