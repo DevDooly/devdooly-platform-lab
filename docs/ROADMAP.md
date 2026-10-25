@@ -2,9 +2,9 @@
 
 ## 기능 개발 우선순위 — 2026-10-25 KST
 
-[PR259](https://github.com/DevDooly/devdooly-platform-lab/pull/259)의 [작업·export 기록 흐름](features/job-lifecycle.md), [작업 목록 탐색](features/job-list-filter.md), [PR264](https://github.com/DevDooly/devdooly-platform-lab/pull/264)의 [센서 이벤트 연결](features/sensor-outcomes.md#센서에서-이벤트로-이동),[PR267](https://github.com/DevDooly/devdooly-platform-lab/pull/267)의 센서별 A·B 비교에 이어 [PR269](https://github.com/DevDooly/devdooly-platform-lab/pull/269)의 **입력 순서별 이벤트 응답 비교**를 공개했습니다. 직렬 웹460개·같은 main의 Linux 기본 웹 검사·Pages·실제 공개 비교/상세 이동을 확인했고 최초 로컬 병렬 Kafka1개 실패는 원인 미확정으로 보존했습니다. [현재 우선순위](AUTONOMOUS_WORK.md#다음-작업의-우선순위)에 따라 다음은 **저장 JSON 오프라인 이벤트 비교**입니다. 완료 기능·운영 시험을 반복하거나 보류 항목을 재개하지 않습니다.
+[PR259](https://github.com/DevDooly/devdooly-platform-lab/pull/259)의 [작업·export 기록 흐름](features/job-lifecycle.md), [작업 목록 탐색](features/job-list-filter.md), [PR264](https://github.com/DevDooly/devdooly-platform-lab/pull/264)의 [센서 이벤트 연결](features/sensor-outcomes.md#센서에서-이벤트로-이동), [PR267](https://github.com/DevDooly/devdooly-platform-lab/pull/267)의 센서별 A·B 비교에 이어 [PR269](https://github.com/DevDooly/devdooly-platform-lab/pull/269)의 **입력 순서별 이벤트 응답 비교**와 [PR271](https://github.com/DevDooly/devdooly-platform-lab/pull/271)의 **저장 JSON 오프라인 이벤트 비교**를 공개했습니다. 새 파일 비교의 웹490개·타입·빌드·같은 main CI/Pages·공개 실제 파일 조작/모바일은 [기능 문서](features/offline-event-comparison.md#검증-상태)에 구분했습니다. PR269의 최초 로컬 병렬 Kafka1개 실패는 원인 미확정으로 보존합니다. 완료 기능·운영 시험을 반복하거나 보류 항목을 재개하지 않습니다.
 
-이번 개발은 [저장 JSON 비교](features/offline-event-comparison.md)의 파일2개 선택·명시 읽기·v1/v2/UTF8/크기·행·필터·건수 검증, 파일 출처와 부분 결과의 순서별 비교입니다. 기존 pure 비교 모델만 재사용하고 API 상세·가짜 전체 실행 통계·서버 업로드·자동 GET·localStorage를 추가하지 않습니다. 실패하면 이전 유효 비교를 보존합니다. 기존 온라인 조회·공유·내보내기 형식과 운영 pin은 유지하며 새 기능의 검증을 마친 뒤 해당 PR에 구분해 기록합니다.
+다음1은 **현재 조건의 비교 보고서 JSON 저장**, 선택 후보2는 **합성 예제 파일 두 개 받기**입니다. [현재 우선순위](AUTONOMOUS_WORK.md#다음-작업의-우선순위)의 좁은 범위를 따릅니다. 보고서는 마지막 정상 파일 pair의 원출처/필터/건수와 화면 조건을 나누고 조건 일치 그룹·모든 모호 후보를 보존하는 검토자료이며, 기존 이벤트 v1/v2·원파일 bytes·진위 인증·세션 복원과 구분합니다. 두 후보 모두 아직 구현하지 않았습니다. 기존 온라인 조회·공유·내보내기 형식과 운영 pin·네 보류를 유지합니다.
 
 아래 목록은 앞서 구현한 이용 기능이며 새로 재수행하는 순서가 아닙니다.
 
