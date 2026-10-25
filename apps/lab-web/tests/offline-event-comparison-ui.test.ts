@@ -6,6 +6,7 @@ import { pathToFileURL } from 'node:url';
 import type { Outcome } from '../src/lib/api.ts';
 import type { EventExportDocument } from '../src/lib/event-export.ts';
 import type { OfflineEventFile, OfflineEventFileError } from '../src/lib/offline-event-file.ts';
+import { OFFLINE_COMPARISON_REPORT_FILENAME, createOfflineComparisonReport, offlineComparisonReportJson } from '../src/lib/offline-comparison-report.ts';
 
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
@@ -19,7 +20,7 @@ const output = compiled.outputText
   .replace(/import ['"]\.\.\/styles\/offline-event-comparison\.css['"];?\s*/g, '')
   .replace(/from (['"])(react(?:\/jsx-runtime)?)\1/g,
     (_unused: string, _quote: string, name: string) => `from ${JSON.stringify(pathToFileURL(require.resolve(name)).href)}`)
-  .replace(/from (['"])\.\.\/lib\/(event-comparison|offline-event-file)\1/g,
+  .replace(/from (['"])\.\.\/lib\/(event-comparison|offline-event-file|offline-comparison-report)\1/g,
     (_unused: string, _quote: string, name: string) => `from ${JSON.stringify(new URL(`../src/lib/${name}.ts`, import.meta.url).href)}`);
 const { default: OfflineEventComparison, OfflineComparisonResult } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
 const event = (sequence: number, overrides: Partial<Outcome> = {}): Outcome => ({ sequence,
@@ -36,7 +37,7 @@ const saved = (name: string, outcomes: Outcome[], overrides: Partial<EventExport
 });
 const pair = (left = saved('a.json', [event(0)]), right = saved('b.json', [event(0)])) => ({ left, right });
 function renderResult(value: ReturnType<typeof pair>, interactive = true) {
-  return renderToStaticMarkup(createElement(OfflineComparisonResult, { pair: value, interactive }));
+  return renderToStaticMarkup(createElement(OfflineComparisonResult, { pair: value, interactive, canSaveReport: () => true }));
 }
 const rows = (markup: string) => [...markup.matchAll(/<article aria-label="파일 입력 순서 (\d+) 비교">([\s\S]*?)<\/article>/g)]
   .map(match => ({ sequence: Number(match[1]), markup: match[2] }));
@@ -133,7 +134,7 @@ test('large offline lists show twenty complete cards with disabled busy controls
   const busy = renderResult(value, false);
   assert.match(busy, /<input(?=[^>]*type="search")(?=[^>]*disabled="")/);
   assert.match(busy, /<select[^>]*disabled=""/);
-  assert.equal((busy.match(/<button[^>]*disabled=""/g) ?? []).length, 2);
+  assert.equal((busy.match(/<button[^>]*disabled=""/g) ?? []).length, 3);
   assert.doesNotMatch(busy, /<a\b/);
 });
 
@@ -308,4 +309,208 @@ test('read exceptions become a finite message and retain the previous pair witho
   assert.equal(h.state.pair, h.previous);
   assert.deepEqual(h.pairWrites, []);
   assert.equal(h.state.busy, false);
+});
+
+test('only an existing displayed comparison offers the report with complete matching-group scope and a distinct file format', () => {
+  const initial = renderToStaticMarkup(createElement(OfflineEventComparison));
+  assert.doesNotMatch(initial, /비교 보고서 JSON 저장/);
+  const outcomes = Array.from({ length: 21 }, (_, sequence) => event(sequence));
+  const markup = renderResult(pair(saved('a.json', outcomes), saved('b.json', outcomes)));
+  assert.match(markup, /<button type="button" aria-describedby="[^"]+">비교 보고서 JSON 저장<\/button>/);
+  assert.match(markup, /화면에는 20개를 표시하지만 보고서는 현재 조건에 맞는 입력 순서 그룹 전체 21개/);
+  assert.match(markup, /양쪽의 모든 모호 후보를 담습니다/);
+  assert.match(markup, /조건 일치가 0개여도 보고서를 만듭니다/);
+  assert.match(markup, /원파일의 이름·크기·출처·원래 검색 조건·세 건수/);
+  assert.match(markup, /이 화면의 검색·분류·표시 개수를 나누어 담습니다/);
+  assert.match(markup, /보고서 생성 시각은 파일에 기록된 관측 시각과 별개/);
+  assert.match(markup, /기존 이벤트 내보내기 JSON schemaVersion 1·2와 다른 검토용 형식/);
+  assert.match(markup, /다시 불러올 수 없으며 원파일 bytes를 복원/);
+  assert.match(markup, /공유하기 전에 내용을 확인하세요/);
+  assert.match(markup, /class="oec-report-status" role="status" aria-live="polite" aria-atomic="true"><\/p>/);
+  assert.match(renderResult(pair(saved('a.json', []), saved('b.json', []))), /입력 순서 그룹 전체 0개/);
+});
+
+let reportHandler: any, currentNoticeExpression: any, updateInitializer: any, canSaveReportHandler: any;
+function findReportNodes(node: any) {
+  if (ts.isFunctionDeclaration(node) && node.name?.text === 'saveComparisonReport') reportHandler = node;
+  if (ts.isFunctionDeclaration(node) && node.name?.text === 'canSaveReport') canSaveReportHandler = node;
+  if (ts.isVariableDeclaration(node) && node.name.getText(parsed) === 'currentReportNotice') currentNoticeExpression = node.initializer;
+  if (ts.isVariableDeclaration(node) && node.name.getText(parsed) === 'update') updateInitializer = node.initializer;
+  ts.forEachChild(node, findReportNodes);
+}
+findReportNodes(parsed);
+assert.ok(reportHandler);
+assert.ok(currentNoticeExpression);
+assert.ok(updateInitializer);
+assert.ok(canSaveReportHandler);
+const reportHandlerCode = ts.transpileModule(printer.printNode(ts.EmitHint.Unspecified, reportHandler, parsed), {
+  compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext }, reportDiagnostics: true,
+});
+assert.equal(reportHandlerCode.diagnostics.length, 0);
+const capturedAt = '2026-10-25T05:06:07.123Z';
+function reportHarness(options: { interactive?: boolean; canSaveReport?: () => boolean; value?: ReturnType<typeof pair>; query?: string;
+  kind?: 'all' | 'ambiguous' | 'unobserved' | 'input-different' | 'verdict-different' | 'observed-equal'; limit?: number;
+  fail?: 'create' | 'url' | 'append' | 'click' } = {}) {
+  const value = options.value ?? pair();
+  const view = { pair: value, query: options.query ?? '', kind: options.kind ?? 'all', limit: options.limit ?? 20 };
+  const notices: { view: typeof view; text: string; failed: boolean }[] = [];
+  const blobs: Blob[] = [], revoked: string[] = [], timers: { callback: () => void; duration: number }[] = [];
+  const calls: string[] = [], reportInputs: unknown[][] = [];
+  const anchor = { href: '', download: '', hidden: false,
+    click: () => { calls.push('click'); if (options.fail === 'click') throw new Error('private failure body'); },
+    remove: () => { calls.push('remove'); },
+  };
+  const dependencies = {
+    interactive: options.interactive ?? true, canSaveReport: options.canSaveReport ?? (() => true), pair: value, view, OFFLINE_COMPARISON_REPORT_FILENAME,
+    createOfflineComparisonReport: (...args: Parameters<typeof createOfflineComparisonReport>) => {
+      calls.push('create'); reportInputs.push(args);
+      if (options.fail === 'create') throw new Error('private report data');
+      return createOfflineComparisonReport(...args);
+    },
+    offlineComparisonReportJson,
+    Date: class { toISOString() { return capturedAt; } }, Blob,
+    URL: {
+      createObjectURL: (blob: Blob) => { calls.push('url'); if (options.fail === 'url') throw new Error('private URL failure'); blobs.push(blob); return 'blob:test-offline-report'; },
+      revokeObjectURL: (url: string) => { revoked.push(url); },
+    },
+    document: {
+      createElement: (tag: string) => { assert.equal(tag, 'a'); calls.push('anchor'); return anchor; },
+      body: { appendChild: (element: typeof anchor) => { assert.equal(element, anchor); calls.push('append'); if (options.fail === 'append') throw new Error('private DOM failure'); } },
+    },
+    setReportNotice: (notice: typeof notices[number]) => notices.push(notice),
+    setTimeout: (callback: () => void, duration: number) => { timers.push({ callback, duration }); return timers.length; },
+  };
+  const save: () => void = new Function(...Object.keys(dependencies), reportHandlerCode.outputText + '\nreturn saveComparisonReport;')(...Object.values(dependencies));
+  return { value, view, save, notices, blobs, revoked, timers, calls, anchor, reportInputs };
+}
+
+test('report handler requests a JSON download for the displayed pair and current conditions with delayed object URL cleanup', async () => {
+  const outcomes = Array.from({ length: 21 }, (_, sequence) => event(sequence));
+  const value = pair(saved('<raw-a>.json', outcomes), saved('b.json', outcomes));
+  const before = structuredClone(value);
+  const h = reportHarness({ value, query: ' Sensor ', kind: 'all', limit: 20 });
+  assert.deepEqual(h.calls, []);
+  h.save();
+  assert.equal(h.reportInputs[0][0], value);
+  assert.deepEqual(h.reportInputs[0].slice(1), [{ query: ' Sensor ', kind: 'all', limit: 20 }, capturedAt]);
+  assert.deepEqual(h.calls, ['create', 'url', 'anchor', 'append', 'click', 'remove']);
+  assert.equal(h.anchor.hidden, true);
+  assert.equal(h.anchor.href, 'blob:test-offline-report');
+  assert.equal(h.anchor.download, 'devdooly-event-comparison-report.json');
+  assert.equal(h.blobs.length, 1);
+  assert.equal(h.blobs[0].type, 'application/json;charset=utf-8');
+  const content = JSON.parse(await h.blobs[0].text());
+  assert.equal(content.format, 'devdooly-offline-event-comparison-report');
+  assert.equal(content.capturedAt, capturedAt);
+  assert.deepEqual(content.view, { query: ' Sensor ', kind: 'all', displayLimit: 20 });
+  assert.deepEqual(content.counts, { totalGroups: 21, matchingGroups: 21, displayedGroups: 20 });
+  assert.equal(content.groups.length, 21);
+  assert.equal(h.notices.length, 1);
+  assert.equal(h.notices[0].view, h.view);
+  assert.equal(h.notices[0].failed, false);
+  assert.match(h.notices[0].text, /다운로드를 요청했습니다/);
+  assert.doesNotMatch(h.notices[0].text, /저장 완료|저장했습니다/);
+  assert.deepEqual(h.revoked, []);
+  assert.equal(h.timers.length, 1);
+  assert.equal(h.timers[0].duration, 1000);
+  h.timers[0].callback();
+  assert.deepEqual(h.revoked, ['blob:test-offline-report']);
+  assert.deepEqual(value, before);
+});
+
+test('report download supports zero matching groups and inactive views produce no file or notices', async () => {
+  const empty = reportHarness({ query: 'no-such-event' });
+  empty.save();
+  const content = JSON.parse(await empty.blobs[0].text());
+  assert.equal(content.counts.matchingGroups, 0);
+  assert.equal(content.counts.displayedGroups, 0);
+  assert.deepEqual(content.groups, []);
+  const locked = reportHarness({ interactive: false });
+  locked.save();
+  assert.deepEqual(locked.calls, []);
+  assert.deepEqual(locked.notices, []);
+  assert.deepEqual(locked.blobs, []);
+  assert.deepEqual(locked.timers, []);
+});
+
+test('generation and browser download failures keep the pair and view, emit finite notices and clean up created resources', () => {
+  for (const fail of ['create', 'url', 'append', 'click'] as const) {
+    const h = reportHarness({ fail, query: 'old-query', kind: 'ambiguous', limit: 40 });
+    const before = structuredClone({ value: h.value, view: h.view });
+    h.save();
+    assert.equal(h.notices.length, 1);
+    assert.equal(h.notices[0].failed, true);
+    assert.equal(h.notices[0].view, h.view);
+    assert.equal(h.notices[0].text, '비교 보고서 다운로드를 요청하지 못했습니다. 같은 비교 조건에서 다시 시도해주세요.');
+    assert.doesNotMatch(h.notices[0].text, /private|Error|raw-a/);
+    assert.deepEqual({ value: h.value, view: h.view }, before);
+    if (fail === 'append' || fail === 'click') {
+      assert.equal(h.calls.at(-1), 'remove');
+      assert.equal(h.timers.length, 1);
+      h.timers[0].callback();
+      assert.deepEqual(h.revoked, ['blob:test-offline-report']);
+    } else {
+      assert.equal(h.calls.includes('remove'), false);
+      assert.equal(h.timers.length, 0);
+    }
+  }
+});
+
+test('report request notices are tied to the exact displayed view and every local control update clears the old notice', () => {
+  const view = { pair: pair(), query: '', kind: 'all', limit: 20 };
+  const notice = { view, text: 'old request', failed: false };
+  const noticeCode = ts.transpileModule('const currentReportNotice = '
+    + printer.printNode(ts.EmitHint.Expression, currentNoticeExpression, parsed) + ';', {
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+  }).outputText;
+  const current = new Function('reportNotice', 'view', noticeCode + '\nreturn currentReportNotice;');
+  assert.equal(current(notice, view), notice);
+  for (const changed of [{ ...view, pair: pair() }, { ...view, query: 'new' }, { ...view, kind: 'ambiguous' }, { ...view, limit: 40 }]) {
+    assert.equal(current(notice, changed), null);
+  }
+  const updateCode = ts.transpileModule('const update = ' + printer.printNode(ts.EmitHint.Expression, updateInitializer, parsed) + ';', {
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+  }).outputText;
+  for (const change of [{ query: 'new', limit: 20 }, { kind: 'ambiguous', limit: 20 }, { limit: 40 }, { limit: 20 }]) {
+    const writes: unknown[] = [], notices: unknown[] = [];
+    const update = new Function('view', 'setView', 'setReportNotice', updateCode + '\nreturn update;')(
+      view, (next: unknown) => writes.push(next), (next: unknown) => notices.push(next));
+    update(change);
+    assert.deepEqual(writes, [{ ...view, ...change }]);
+    assert.deepEqual(notices, [null]);
+  }
+});
+
+test('a retained save closure reads the parent live gate before creating a report during import, unmount or initial readiness', () => {
+  const gateCode = ts.transpileModule(printer.printNode(ts.EmitHint.Unspecified, canSaveReportHandler, parsed), {
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext }, reportDiagnostics: true,
+  });
+  assert.equal(gateCode.diagnostics.length, 0);
+  const mounted = { current: true }, inFlight = { current: false };
+  const gate = new Function('mounted', 'ready', 'inFlight', gateCode.outputText + '\nreturn canSaveReport;')(mounted, true, inFlight);
+  const h = reportHarness({ canSaveReport: gate });
+  const retainedSave = h.save;
+  inFlight.current = true;
+  retainedSave();
+  assert.deepEqual(h.calls, []);
+  assert.deepEqual(h.blobs, []);
+  assert.deepEqual(h.notices, []);
+  assert.deepEqual(h.timers, []);
+  inFlight.current = false;
+  mounted.current = false;
+  retainedSave();
+  assert.deepEqual(h.calls, []);
+  assert.deepEqual(h.notices, []);
+  mounted.current = true;
+  retainedSave();
+  assert.deepEqual(h.calls, ['create', 'url', 'anchor', 'append', 'click', 'remove']);
+  assert.equal(h.notices.length, 1);
+  assert.equal(h.notices[0].failed, false);
+  const notReadyGate = new Function('mounted', 'ready', 'inFlight', gateCode.outputText + '\nreturn canSaveReport;')(mounted, false, inFlight);
+  const notReady = reportHarness({ canSaveReport: notReadyGate });
+  notReady.save();
+  assert.deepEqual(notReady.calls, []);
+  assert.deepEqual(notReady.blobs, []);
+  assert.deepEqual(notReady.notices, []);
+  assert.deepEqual(notReady.timers, []);
 });
