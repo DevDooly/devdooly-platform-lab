@@ -2,9 +2,9 @@
 
 ## 기능 개발 우선순위 — 2026-10-25 KST
 
-[PR259](https://github.com/DevDooly/devdooly-platform-lab/pull/259)의 [작업·export 기록 흐름](features/job-lifecycle.md), [작업 목록 탐색](features/job-list-filter.md), [PR264](https://github.com/DevDooly/devdooly-platform-lab/pull/264)의 [센서 이벤트 연결](features/sensor-outcomes.md#센서에서-이벤트로-이동)에 이어 [PR267](https://github.com/DevDooly/devdooly-platform-lab/pull/267)의 **센서별 A·B 비교**를 공개했습니다. 로컬 웹439개·타입·빌드와 같은 main의 CI·Pages·실제 공개 비교·모바일·명시적 이벤트 이동을 확인했고 로컬 HTTP429는 별도 실패로 보존했습니다. [현재 우선순위](AUTONOMOUS_WORK.md#다음-작업의-우선순위)에 따라 다음은 **입력 순서별 이벤트 응답 비교**입니다. 완료 기능·운영 시험을 반복하거나 보류 항목을 재개하지 않습니다.
+[PR259](https://github.com/DevDooly/devdooly-platform-lab/pull/259)의 [작업·export 기록 흐름](features/job-lifecycle.md), [작업 목록 탐색](features/job-list-filter.md), [PR264](https://github.com/DevDooly/devdooly-platform-lab/pull/264)의 [센서 이벤트 연결](features/sensor-outcomes.md#센서에서-이벤트로-이동),[PR267](https://github.com/DevDooly/devdooly-platform-lab/pull/267)의 센서별 A·B 비교에 이어 [PR269](https://github.com/DevDooly/devdooly-platform-lab/pull/269)의 **입력 순서별 이벤트 응답 비교**를 공개했습니다. 직렬 웹460개·같은 main의 Linux 기본 웹 검사·Pages·실제 공개 비교/상세 이동을 확인했고 최초 로컬 병렬 Kafka1개 실패는 원인 미확정으로 보존했습니다. [현재 우선순위](AUTONOMOUS_WORK.md#다음-작업의-우선순위)에 따라 다음은 **저장 JSON 오프라인 이벤트 비교**입니다. 완료 기능·운영 시험을 반복하거나 보류 항목을 재개하지 않습니다.
 
-이번 개발은 [이벤트 응답 비교](features/event-comparison.md)의 sequence별 대응과 입력4필드·판정2필드 차이, 미관측·중복 순서 모호성, 검색·분류·20개씩 보기·상세 이동입니다. 전체·센서별 집계가 같아도 다른 위치를 찾되 같은 원본 입력·코드나 수정 효과를 단정하지 않습니다. 기존 GET 응답·출처·시각·공유/CSV 형식을 유지합니다. 로컬 웹 직렬460개·타입·빌드와 실제 비교·검색·분류·모바일을 확인했고 최초 Kafka loopback1개 실패·단독23개 및 직렬 전체 통과는 기능 문서에 구분합니다. 정확 head·main CI/Pages·실제 공개 결과는 변경 PR에서 기록합니다. 저장 JSON 오프라인 비교는 파일 검증 범위를 먼저 정할 후속 후보이며 이번에는 착수하지 않습니다.
+이번 개발은 [저장 JSON 비교](features/offline-event-comparison.md)의 파일2개 선택·명시 읽기·v1/v2/UTF8/크기·행·필터·건수 검증, 파일 출처와 부분 결과의 순서별 비교입니다. 기존 pure 비교 모델만 재사용하고 API 상세·가짜 전체 실행 통계·서버 업로드·자동 GET·localStorage를 추가하지 않습니다. 실패하면 이전 유효 비교를 보존합니다. 기존 온라인 조회·공유·내보내기 형식과 운영 pin은 유지하며 새 기능의 검증을 마친 뒤 해당 PR에 구분해 기록합니다.
 
 아래 목록은 앞서 구현한 이용 기능이며 새로 재수행하는 순서가 아닙니다.
 
