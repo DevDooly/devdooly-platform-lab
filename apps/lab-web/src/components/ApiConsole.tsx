@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { API_ENDPOINTS, ApiReadFailure, DEFAULT_RUN_ID, apiEndpointPath, readPublicApi, type ApiEndpointId, type ApiReadResult } from '../data/public-api-reference';
 import { parseApiRunChoices } from '../lib/api-run-choices';
+import { parseApiRunResult } from '../lib/api-run-result';
+import { comparisonEventPath } from '../lib/comparison-drilldown';
 import { publicApiConfiguration } from '../lib/public-api-base';
 import '../styles/api-console.css';
 
-interface Props { apiBase?: string; }
+interface Props { apiBase?: string; basePath?: string; }
 type Entry = { state: 'loading'; requestPath: string } | { state: 'success'; result: ApiReadResult } | { state: 'error'; message: string; requestPath: string };
 type RunChoices = NonNullable<ReturnType<typeof parseApiRunChoices>> & { path: string; receivedAt: string };
 const failureMessage = (error: unknown): string => {
@@ -19,7 +21,42 @@ const failureMessage = (error: unknown): string => {
   }
 };
 
-export default function ApiConsole({ apiBase = '/api' }: Props) {
+export function ApiRunSummary({ result, basePath = '/' }: { result: ApiReadResult; basePath?: string }) {
+  const parsed = parseApiRunResult(result);
+  if (parsed.kind !== 'valid') return <p className="api-summary-unavailable">
+    {parsed.kind === 'id-mismatch'
+      ? '요청한 실행과 응답 ID가 달라 요약과 이벤트 링크를 표시하지 않습니다.'
+      : '응답의 실행 상세 형식을 확인하지 못해 요약과 이벤트 링크를 표시하지 않습니다.'}
+    {' '}수신한 JSON은 아래에서 확인할 수 있습니다.
+  </p>;
+  const { detail } = parsed;
+  const allEvents = comparisonEventPath(detail.id, basePath);
+  const failedEvents = comparisonEventPath(detail.id, basePath, { status: 'FAILED' });
+  const counts = [
+    ['입력', detail.inputCount], ['성공', detail.successCount], ['실패', detail.failureCount],
+    ['중복', detail.duplicateCount], ['대기', detail.pendingCount],
+  ] as const;
+  return <section className="api-run-summary" aria-label="수신한 실행 결과 요약">
+    <h3>수신한 실행 결과</h3>
+    <p className="api-summary-id">실행 ID <code>{detail.id}</code></p>
+    <dl className="api-summary-context">
+      <div><dt>이름</dt><dd>{detail.name}</dd></div>
+      <div><dt>시나리오</dt><dd><code>{detail.scenario}</code></dd></div>
+      <div><dt>보고된 상태</dt><dd><code>{detail.status}</code></dd></div>
+    </dl>
+    <dl className="api-summary-counts" aria-label="응답에 보고된 처리 건수">
+      {counts.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value.toLocaleString('ko-KR')}<span>건</span></dd></div>)}
+    </dl>
+    <p className="api-summary-note">위 수치는 응답의 처리 건수입니다. 이 응답에 포함된 이벤트 행은 {detail.outcomes.length.toLocaleString('ko-KR')}건이며, 입력 건수와 별도로 표시합니다.</p>
+    <div className="api-summary-actions">
+      {allEvents && <a className="button" href={allEvents}>전체 이벤트 보기 <span aria-hidden="true">↗</span></a>}
+      {failedEvents && <a className="button" href={failedEvents}>실패 이벤트 보기 <span aria-hidden="true">↗</span></a>}
+    </div>
+    <p className="api-summary-note">이벤트 화면에서는 ‘공유한 실행·조건 조회’를 눌러 같은 ID를 새로 읽습니다. 위 응답과 관측 시각이 달라질 수 있습니다.</p>
+  </section>;
+}
+
+export default function ApiConsole({ apiBase = '/api', basePath = '/' }: Props) {
   const configuration = publicApiConfiguration(apiBase);
   const [ready, setReady] = useState(false);
   const [runId, setRunId] = useState(DEFAULT_RUN_ID);
@@ -125,6 +162,7 @@ export default function ApiConsole({ apiBase = '/api' }: Props) {
           {entry?.state === 'success' && <>
             <p className="api-success">HTTP {entry.result.status} · JSON 응답 수신</p>
             <dl className="api-result-meta"><div><dt>요청</dt><dd><code>GET /api{entry.result.path}</code></dd></div><div><dt>출처</dt><dd>설정된 API에 직접 조회 · 스냅샷 아님</dd></div><div><dt>브라우저 수신 시각</dt><dd><time dateTime={entry.result.receivedAt}>{entry.result.receivedAt}</time></dd></div><div><dt>응답의 조회·관측 시각</dt><dd>{entry.result.responseTime ? <time dateTime={entry.result.responseTime}>{entry.result.responseTime}</time> : '응답에서 확인되지 않음'}</dd></div></dl>
+            {endpoint.id === 'detail' && <ApiRunSummary result={entry.result} basePath={basePath} />}
             <details className="api-json"><summary>실제 JSON 응답 펼치기</summary><div className="api-copy-row"><button type="button" onClick={() => { void copy(endpoint.id, entry.result.json); }}>JSON 복사</button><span role="status">{copyStatus[endpoint.id]}</span></div><pre tabIndex={0} aria-label={`${endpoint.title} JSON 응답`}><code>{entry.result.json}</code></pre></details>
           </>}
         </div>

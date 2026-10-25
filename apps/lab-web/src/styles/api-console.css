@@ -61,6 +61,20 @@
 .api-json pre { margin:0 0 18px; max-height:480px; overflow:auto; padding:18px; background:var(--ink); color:var(--paper); white-space:pre; word-break:normal; }
 .api-json pre code { font-size:1.0625rem; line-height:1.75; }
 .api-back-index { display:inline-block; margin-top:24px; color:var(--green); text-decoration:underline; text-underline-offset:5px; }
+.api-run-summary { margin-top:24px; padding:24px; background:var(--cream); border:1px solid var(--line); }
+.api-run-summary h3 { font-size:1.4rem; margin:0 0 12px; }
+.api-summary-id { overflow-wrap:anywhere; margin-bottom:16px; }
+.api-summary-id code { display:block; margin-top:4px; }
+.api-summary-context { display:grid; gap:8px; margin:0 0 20px; }
+.api-summary-context > div { display:grid; grid-template-columns:110px minmax(0,1fr); gap:12px; }
+.api-summary-counts { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; margin:20px 0; }
+.api-summary-counts > div { background:var(--surface); padding:14px; border:1px solid var(--line); }
+.api-summary-counts dd { font-size:1.6rem; font-weight:700; margin-top:6px; }
+.api-summary-counts dd span { margin-left:5px; font-size:1rem; font-weight:400; }
+.api-summary-actions { display:flex; flex-wrap:wrap; gap:12px; margin:20px 0; }
+.api-summary-actions a { min-height:44px; white-space:normal; }
+.api-summary-note { margin-top:12px; color:var(--muted); }
+.api-summary-unavailable { margin:20px 0; padding:16px; border-left:3px solid var(--orange-ink); }
 @media (max-width:700px) {
   .api-guide { padding:32px 20px 64px; }
   .api-endpoint-index { grid-template-columns:1fr; }
@@ -70,4 +84,8 @@
   .api-result-meta { gap:16px; }
   .api-json { padding:0 12px; }
   .api-json pre { padding:12px; }
+  .api-run-summary { padding:16px; }
+  .api-summary-counts { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .api-summary-context > div { grid-template-columns:1fr; gap:4px; }
+  .api-summary-actions a { width:100%; justify-content:space-between; }
 }
