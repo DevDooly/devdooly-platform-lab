@@ -4,7 +4,7 @@
 
 [PR259](https://github.com/DevDooly/devdooly-platform-lab/pull/259)의 [작업·export 기록 흐름](features/job-lifecycle.md), [작업 목록 탐색](features/job-list-filter.md), [PR264](https://github.com/DevDooly/devdooly-platform-lab/pull/264)의 [센서 이벤트 연결](features/sensor-outcomes.md#센서에서-이벤트로-이동), [PR267](https://github.com/DevDooly/devdooly-platform-lab/pull/267)의 센서별 A·B 비교에 이어 [PR269](https://github.com/DevDooly/devdooly-platform-lab/pull/269)의 **입력 순서별 이벤트 응답 비교**와 [PR271](https://github.com/DevDooly/devdooly-platform-lab/pull/271)의 **저장 JSON 오프라인 이벤트 비교**를 공개했습니다. 새 파일 비교의 웹490개·타입·빌드·같은 main CI/Pages·공개 실제 파일 조작/모바일은 [기능 문서](features/offline-event-comparison.md#검증-상태)에 구분했습니다. PR269의 최초 로컬 병렬 Kafka1개 실패는 원인 미확정으로 보존합니다. 완료 기능·운영 시험을 반복하거나 보류 항목을 재개하지 않습니다.
 
-다음1은 **현재 조건의 비교 보고서 JSON 저장**, 선택 후보2는 **합성 예제 파일 두 개 받기**입니다. [현재 우선순위](AUTONOMOUS_WORK.md#다음-작업의-우선순위)의 좁은 범위를 따릅니다. 보고서는 마지막 정상 파일 pair의 원출처/필터/건수와 화면 조건을 나누고 조건 일치 그룹·모든 모호 후보를 보존하는 검토자료이며, 기존 이벤트 v1/v2·원파일 bytes·진위 인증·세션 복원과 구분합니다. 두 후보 모두 아직 구현하지 않았습니다. 기존 온라인 조회·공유·내보내기 형식과 운영 pin·네 보류를 유지합니다.
+현재1인 **현재 조건의 비교 보고서 JSON 저장**은 로컬 최종505개·타입·빌드와 실제25/1/0그룹 다운로드 파일·모바일을 확인했고 정확 source·main CI/Pages·공개 다운로드를 기다립니다. 선택 후보2인 **합성 예제 파일 두 개 받기**는 미구현입니다. [현재 우선순위](AUTONOMOUS_WORK.md#다음-작업의-우선순위)의 좁은 범위를 따릅니다. [보고서](features/offline-comparison-report.md)는 정상 파일 pair의 원출처/필터/건수와 화면 조건을 나누고 전체 일치 그룹·모든 모호 후보를 보존하는 검토자료입니다. 기존 이벤트 v1/v2·원파일 bytes·진위 인증·세션 복원과 구분하며 새 다운로드 검증은 실제 수행한 범위만 기록합니다. 기존 온라인 조회·공유·내보내기 형식과 운영 pin·네 보류를 유지합니다.
 
 아래 목록은 앞서 구현한 이용 기능이며 새로 재수행하는 순서가 아닙니다.
 

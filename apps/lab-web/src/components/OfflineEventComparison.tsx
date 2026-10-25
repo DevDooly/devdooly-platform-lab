@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import type { Outcome } from '../lib/api';
 import { compareEventOutcomes, selectEventComparisons, type EventComparisonKind } from '../lib/event-comparison';
 import { MAX_OFFLINE_FILE_BYTES, MAX_OFFLINE_OUTCOMES, readOfflineEventFile, type OfflineEventFile, type OfflineEventFileError } from '../lib/offline-event-file';
+import { OFFLINE_COMPARISON_REPORT_FILENAME, createOfflineComparisonReport, offlineComparisonReportJson } from '../lib/offline-comparison-report';
 import '../styles/offline-event-comparison.css';
 
 export interface OfflineComparisonPair { left: OfflineEventFile; right: OfflineEventFile; }
@@ -85,15 +86,49 @@ function OutcomeSide({ rows, side, sequence }: { rows: Outcome[]; side: 'A' | 'B
   </section>;
 }
 
-export function OfflineComparisonResult({ pair, interactive }: { pair: OfflineComparisonPair; interactive: boolean }) {
+export function OfflineComparisonResult({ pair, interactive, canSaveReport }: {
+  pair: OfflineComparisonPair; interactive: boolean; canSaveReport: () => boolean;
+}) {
   const id = useId();
   const [savedView, setView] = useState(() => initialView(pair));
+  const [reportNotice, setReportNotice] = useState<{ view: OfflineComparisonView; text: string; failed: boolean } | null>(null);
   const view = savedView.pair === pair ? savedView : initialView(pair);
-  if (view !== savedView) setView(view);
+  if (view !== savedView) { setView(view); setReportNotice(null); }
+  const currentReportNotice = reportNotice?.view === view ? reportNotice : null;
   const comparison = compareEventOutcomes(pair.left.document.outcomes, pair.right.document.outcomes);
   const matching = selectEventComparisons(comparison.rows, view);
   const visible = matching.slice(0, view.limit);
-  const update = (change: Partial<Pick<OfflineComparisonView, 'query' | 'kind' | 'limit'>>) => setView({ ...view, ...change });
+  const update = (change: Partial<Pick<OfflineComparisonView, 'query' | 'kind' | 'limit'>>) => {
+    setView({ ...view, ...change });
+    setReportNotice(null);
+  };
+
+  function saveComparisonReport() {
+    if (!interactive || !canSaveReport()) return;
+    let objectUrl: string | null = null;
+    let anchor: HTMLAnchorElement | null = null;
+    try {
+      const report = createOfflineComparisonReport(pair, { query: view.query, kind: view.kind, limit: view.limit }, new Date().toISOString());
+      const content = offlineComparisonReportJson(report);
+      const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
+      objectUrl = URL.createObjectURL(blob);
+      anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = OFFLINE_COMPARISON_REPORT_FILENAME;
+      anchor.hidden = true;
+      document.body.appendChild(anchor);
+      anchor.click();
+      setReportNotice({ view, text: '비교 보고서 JSON 다운로드를 요청했습니다. 브라우저 다운로드 목록에서 저장 여부를 확인하세요.', failed: false });
+    } catch {
+      setReportNotice({ view, text: '비교 보고서 다운로드를 요청하지 못했습니다. 같은 비교 조건에서 다시 시도해주세요.', failed: true });
+    } finally {
+      anchor?.remove();
+      if (objectUrl !== null) {
+        const urlToRevoke = objectUrl;
+        setTimeout(() => URL.revokeObjectURL(urlToRevoke), 1000);
+      }
+    }
+  }
 
   return <section className="oec-result" aria-labelledby={`${id}-title`}>
     <h2 id={`${id}-title`}>표시 중인 파일 비교</h2>
@@ -115,6 +150,17 @@ export function OfflineComparisonResult({ pair, interactive }: { pair: OfflineCo
     <p id={`${id}-help`} className="oec-note">검색은 앞뒤 공백을 제외하고 대소문자 구분 없이 양쪽의 모든 eventId·sensorId에서 찾습니다.
       원문은 유지하며 sequence 숫자 오름차순으로 표시합니다. 이 검색·분류는 파일에 기록된 원래 검색 조건과 별개입니다.</p>
     <p className="oec-status" role="status" aria-live="polite" aria-atomic="true">파일의 입력 순서 {count(comparison.rows.length)}개 중 조건 일치 {count(matching.length)}개 · 표시 {count(visible.length)}개</p>
+    <section className="oec-report" aria-labelledby={`${id}-report-title`}>
+      <h3 id={`${id}-report-title`}>현재 조건의 비교 보고서</h3>
+      <p id={`${id}-report-scope`}>화면에는 {count(visible.length)}개를 표시하지만 보고서는 현재 조건에 맞는 입력 순서 그룹 전체 {count(matching.length)}개와 양쪽의 모든 모호 후보를 담습니다. 조건 일치가 0개여도 보고서를 만듭니다.</p>
+      <button type="button" disabled={!interactive} aria-describedby={`${id}-report-scope`} onClick={saveComparisonReport}>비교 보고서 JSON 저장</button>
+      <p className={`oec-report-status${currentReportNotice?.failed ? ' oec-report-error' : ''}`} role="status" aria-live="polite" aria-atomic="true">{currentReportNotice?.text ?? ''}</p>
+      <details><summary>보고서에 담는 내용·다시 불러오기 범위</summary>
+        <p>원파일의 이름·크기·출처·원래 검색 조건·세 건수와 이 화면의 검색·분류·표시 개수를 나누어 담습니다. 보고서 생성 시각은 파일에 기록된 관측 시각과 별개입니다.</p>
+        <p>이 보고서는 기존 이벤트 내보내기 JSON schemaVersion 1·2와 다른 검토용 형식입니다. 이 파일 비교 화면에 다시 불러올 수 없으며 원파일 bytes를 복원하는 자료도 아닙니다.</p>
+        <p>파일의 원문 필드가 보고서에 포함됩니다. 공유하기 전에 내용을 확인하세요.</p>
+      </details>
+    </section>
     {matching.length === 0 ? <p className="oec-empty">{comparison.rows.length === 0
       ? '두 파일에 비교할 이벤트 행이 없습니다.' : '현재 검색·분류 조건에 맞는 입력 순서가 없습니다.'}</p>
       : <ol className="oec-rows" aria-label="파일의 입력 순서별 A·B 비교">{visible.map(row => <li key={row.sequence}>
@@ -158,6 +204,10 @@ export default function OfflineEventComparison() {
   }, []);
 
   const locked = !ready || busy;
+
+  function canSaveReport() {
+    return mounted.current && ready && !inFlight.current;
+  }
 
   function selectFile(side: 'left' | 'right', file: File | null) {
     if (locked || inFlight.current) return;
@@ -217,6 +267,6 @@ export default function OfflineEventComparison() {
         페이지·정적 자산을 처음 받는 연결은 필요할 수 있으며, 오프라인 설치형 앱(PWA)을 뜻하지 않습니다.</p>
     </section>
     {pair === null ? <p className="oec-empty">아직 비교한 파일이 없습니다. A·B를 선택하고 비교 버튼을 눌러주세요.</p>
-      : <OfflineComparisonResult pair={pair} interactive={!locked} />}
+      : <OfflineComparisonResult pair={pair} interactive={!locked} canSaveReport={canSaveReport} />}
   </div>;
 }
