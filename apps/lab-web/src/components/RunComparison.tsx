@@ -4,6 +4,7 @@ import { isRun, isRunDetail, type Run, type RunDetail } from '../lib/api';
 import { publicApiConfiguration } from '../lib/public-api-base';
 import { comparisonEventPath } from '../lib/comparison-drilldown';
 import SensorRunComparison from './SensorRunComparison';
+import EventRunComparison from './EventRunComparison';
 import { compareRuns, comparisonCsv, comparisonSharePath, isComparisonRunId, parseComparisonSelection, type RunComparison as ComparisonResult } from '../lib/run-comparison';
 import '../styles/run-comparison.css';
 
@@ -266,6 +267,8 @@ export default function RunComparison({ apiBase = '/api', basePath = '/' }: Prop
       <div className="rc-interpretation"><h3>차이를 읽을 때</h3><ul><li>입력 건수: {displayed.result.differences.inputCount ? '서로 다릅니다. 건수 차이와 입력 대비 비율을 함께 확인하세요.' : '두 실행이 같습니다.'}</li><li>시나리오: {displayed.result.differences.scenario ? '서로 다릅니다. 같은 조건의 반복 실행으로 해석할 수 없습니다.' : '표시된 시나리오가 같습니다.'} seed: {displayed.result.differences.seed ? '서로 다릅니다.' : '같습니다.'}</li><li>숫자의 증감은 성능 향상·회귀나 설정 변경의 효과를 증명하지 않습니다.</li></ul>{displayed.result.warnings.length > 0 && <div className="rc-data-warning"><strong>응답 정합성 참고</strong><ul>{displayed.result.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul></div>}</div>
       <CountComparison result={displayed.result} />
       <SensorRunComparison left={displayed.result.left} right={displayed.result.right}
+        sources={displayed.sources} basePath={basePath} interactive={!locked} />
+      <EventRunComparison left={displayed.result.left} right={displayed.result.right}
         sources={displayed.sources} basePath={basePath} interactive={!locked} />
 
       <section className="rc-reasons" aria-labelledby="rc-reasons-title"><h3 id="rc-reasons-title">조회된 실패 이벤트 기준 사유 비교</h3><p>각 응답의 <code>outcomes</code> 중 FAILED인 이벤트를 사유별로 집계합니다. 보고된 요약과 일치하지 않으면 전체 실패 사유 분포로 단정할 수 없습니다. 사유별 링크의 건수는 비교 당시 응답 기준이며, 다시 조회한 결과에는 같은 이벤트가 없을 수 있습니다.</p>
