@@ -4,6 +4,7 @@ import { parseApiRunChoices } from '../lib/api-run-choices';
 import { parseApiRunResult } from '../lib/api-run-result';
 import { comparisonEventPath } from '../lib/comparison-drilldown';
 import { publicApiConfiguration } from '../lib/public-api-base';
+import { buildApiRequestCommand } from '../lib/api-request-command';
 import '../styles/api-console.css';
 
 interface Props { apiBase?: string; basePath?: string; }
@@ -56,9 +57,47 @@ export function ApiRunSummary({ result, basePath = '/' }: { result: ApiReadResul
   </section>;
 }
 
+export function ApiRequestCommand({ apiBase, endpointId, runId, siteOrigin, ready }: {
+  apiBase: string; endpointId: ApiEndpointId; runId: string; siteOrigin?: string; ready: boolean;
+}) {
+  const [shell, setShell] = useState<'posix' | 'powershell'>('posix');
+  const [notice, setNotice] = useState<{ command: string; message: string } | null>(null);
+  const mounted = useRef(false);
+  const attempt = useRef(0);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const command = buildApiRequestCommand(apiBase, endpointId, runId, shell, siteOrigin);
+  useEffect(() => { attempt.current++; setNotice(null); }, [command]);
+  async function copyCommand() {
+    if (!ready || !command) return;
+    const currentAttempt = ++attempt.current;
+    setNotice(null);
+    let message = '명령을 복사했습니다. 실행하려면 터미널에 붙여넣으세요.';
+    try { await navigator.clipboard.writeText(command); }
+    catch { message = '복사하지 못했습니다. 아래 명령을 직접 선택해 복사하세요.'; }
+    if (mounted.current && currentAttempt === attempt.current) setNotice({ command, message });
+  }
+  return <details className="api-command">
+    <summary>터미널용 GET 명령 보기·복사</summary>
+    <p>현재 선택한 요청 대상의 명령입니다. 아래에 남아 있는 이전 응답과 다를 수 있습니다. 펼치기·선택·복사만으로 API를 호출하지 않습니다.</p>
+    <label htmlFor={`api-shell-${endpointId}`}>사용할 터미널</label>
+    <select id={`api-shell-${endpointId}`} value={shell} disabled={!ready}
+      onChange={event => { attempt.current++; setNotice(null); setShell(event.target.value as 'posix' | 'powershell'); }}>
+      <option value="posix">macOS · Linux · Git Bash (curl)</option>
+      <option value="powershell">Windows PowerShell (curl.exe)</option>
+    </select>
+    {command ? <>
+      <pre tabIndex={0} aria-label={`${endpointId} GET 요청 명령`}><code>{command}</code></pre>
+      <div className="api-copy-row"><button type="button" disabled={!ready} onClick={() => { void copyCommand(); }}>GET 명령 복사</button>
+        <span role="status">{notice?.command === command ? notice.message : ''}</span></div>
+      <p className="api-command-note">curl이 설치된 터미널에서 직접 실행합니다. 로그인·토큰 없이 GET 1회를 요청하고 최대 8초 기다립니다. 새 응답은 지금 화면의 결과와 다를 수 있습니다. 브라우저의 응답 크기·JSON 형식 검사는 이 명령에 포함되지 않습니다.</p>
+    </> : <p className="api-command-unavailable">명령을 만들 수 없습니다. 공개 HTTPS API 주소와 실행 ID를 확인해주세요. 현재 사이트의 /api 설정은 HTTPS 사이트에서 화면 준비가 끝난 뒤 지원합니다.</p>}
+  </details>;
+}
+
 export default function ApiConsole({ apiBase = '/api', basePath = '/' }: Props) {
   const configuration = publicApiConfiguration(apiBase);
   const [ready, setReady] = useState(false);
+  const [siteOrigin, setSiteOrigin] = useState<string>();
   const [runId, setRunId] = useState(DEFAULT_RUN_ID);
   const [runChoices, setRunChoices] = useState<RunChoices | null>(null);
   const [runChoicesNotice, setRunChoicesNotice] = useState<'invalid' | 'error' | null>(null);
@@ -68,7 +107,7 @@ export default function ApiConsole({ apiBase = '/api', basePath = '/' }: Props) 
   const inFlight = useRef(false);
   const mounted = useRef(false);
   const controlsDisabled = !ready || configuration.invalid || busy !== null;
-  useEffect(() => { mounted.current = true; setReady(true); return () => { mounted.current = false; }; }, []);
+  useEffect(() => { mounted.current = true; setSiteOrigin(window.location.origin); setReady(true); return () => { mounted.current = false; }; }, []);
   function changeRunId(value: string) {
     if (controlsDisabled || inFlight.current) return;
     setRunId(value);
@@ -150,6 +189,7 @@ export default function ApiConsole({ apiBase = '/api', basePath = '/' }: Props) 
         </div></> : <p className="api-parameter-note">입력 파라미터 없음 · query string과 인증 정보는 전송하지 않습니다.</p>}
         <details className="api-field-details"><summary>응답에서 볼 항목</summary><dl>{endpoint.fields.map(([field, description]) => <div key={field}><dt><code>{field}</code></dt><dd>{description}</dd></div>)}</dl></details>
         <p className="api-boundary">{endpoint.boundary}</p>
+        <ApiRequestCommand apiBase={configuration.apiBase} endpointId={endpoint.id} runId={runId} siteOrigin={siteOrigin} ready={ready} />
         <button className="button api-query" type="button" disabled={controlsDisabled || invalidId} onClick={() => { void query(endpoint.id); }}>
           {busy === endpoint.id ? '응답 기다리는 중…' : 'GET으로 직접 조회'}<span aria-hidden="true">↗</span>
         </button>

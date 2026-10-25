@@ -32,6 +32,8 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 **API 상세 응답 요약:** [API 안내의 실행 한 건 조회](https://devdooly.github.io/devdooly-platform-lab/api-guide/#api-detail)에서 JSON을 펼치기 전에 실행 ID와 입력·성공·실패·중복·대기 건수를 봅니다. 수신한 응답에 연결된 전체·실패 이벤트 링크로 상세 화면을 이어 볼 수 있습니다. 입력칸만 바꾸면 기존 응답의 요약을 유지하며, 요청과 응답 ID가 다르거나 상세 형식을 확인하지 못하면 요약을 표시하지 않습니다. [동작·검증 범위](docs/features/api-result-summary.md)
 
+**공개 GET 요청 명령 복사:** 각 API의 접힌 명령 안내에서 macOS·Linux용 `curl` 또는 Windows PowerShell용 `curl.exe`를 선택해 복사합니다. 현재 선택 ID를 사용하며, 복사만으로 요청하지 않습니다. [사용법·범위](docs/features/api-request-command.md)
+
 **공유 링크로 바로 조회하기:** 작업 카드나 비교 화면에서 받은 유효한 링크는 기본 실행을 먼저 조회하지 않습니다. `공유한 실행·조건 조회`를 누르면 요청 ID와 API 정보를 모두 확인한 뒤 실제 결과로 전환합니다. 실패하면 이전 화면을 보존합니다. [첫 조회 동작과 한계](docs/features/event-share.md#공유-링크-첫-조회-개선)
 
 검색한 이벤트는 **이벤트 상세 → 검색 결과 저장**에서 CSV·JSON으로 내려받을 수 있습니다. 현재 조건에 맞는 행을 실행 ID·출처·원 관측 시각·필터와 함께 담고, 선택한 흐름 한 건과 구분합니다. [내보내기 형식과 해석 범위](docs/features/event-export.md)를 확인하세요.

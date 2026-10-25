@@ -96,9 +96,9 @@ assert.equal(compiled.diagnostics.length, 0);
 let output = compiled.outputText.replace(/^import ['"][^'"]+\.css['"];?\s*$/gm, '');
 output = output.replace(/from (['"])(react(?:\/jsx-runtime)?)\1/g,
   (_unused: string, _quote: string, name: string) => `from ${JSON.stringify(pathToFileURL(require.resolve(name)).href)}`);
-output = output.replace(/from ['"]\.\.\/(data\/public-api-reference|lib\/public-api-base|lib\/api-run-choices|lib\/api-run-result|lib\/comparison-drilldown)['"]/g,
+output = output.replace(/from ['"]\.\.\/(data\/public-api-reference|lib\/public-api-base|lib\/api-run-choices|lib\/api-run-result|lib\/comparison-drilldown|lib\/api-request-command)['"]/g,
   (_unused: string, name: string) => `from ${JSON.stringify(new URL(`../src/${name}.ts`, import.meta.url).href)}`);
-const { default: Component, ApiRunSummary } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
+const { default: Component, ApiRunSummary, ApiRequestCommand } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
 
 test('server rendering offers six accessible documents but no early input, response or automatic request', () => {
   const html = renderToStaticMarkup(createElement(Component, { apiBase: '/api' }));
@@ -108,9 +108,33 @@ test('server rendering offers six accessible documents but no early input, respo
   assert.ok(html.includes('실행 목록 불러오기'));
   assert.equal((html.match(/아직 조회하지 않았습니다/g) ?? []).length, 6);
   assert.ok(html.includes('API 목차')); assert.ok(html.includes('화면 조작 준비 중입니다.'));
-  assert.equal((html.match(/<details\b/g) ?? []).length, 6);
+  assert.equal((html.match(/<details\b/g) ?? []).length, 12);
   assert.ok(!/<details[^>]*\bopen(?:\s|=|>)/.test(html));
   assert.ok(!html.includes('JSON 응답 수신'));
+});
+
+test('command disclosure uses the selected request and stays inert before hydration', () => {
+  const html = renderToStaticMarkup(createElement(ApiRequestCommand, {
+    apiBase: 'https://example.test/platform-lab/api', endpointId: 'detail', runId: 'selected-run', ready: false,
+  }));
+  assert.match(html, /현재 선택한 요청 대상/);
+  assert.match(html, /아래에 남아 있는 이전 응답과 다를 수/);
+  assert.match(html, /https:\/\/example.test\/platform-lab\/api\/demo\/runs\/selected-run/);
+  assert.match(html, /<select[^>]*disabled=""/);
+  assert.match(html, /<button[^>]*disabled=""[^>]*>GET 명령 복사/);
+  assert.doesNotMatch(html, /<details[^>]*\bopen(?:\s|=|>)/);
+});
+
+test('unavailable command has no copy button and does not echo unsafe configuration or ID', () => {
+  for (const props of [
+    { apiBase: 'https://example.test/api?token=PRIVATE_CANARY', runId: 'valid-run' },
+    { apiBase: 'https://example.test/api', runId: 'bad;PRIVATE_CANARY' },
+    { apiBase: '/api', runId: 'valid-run', siteOrigin: 'http://127.0.0.1:4321' },
+  ]) {
+    const html = renderToStaticMarkup(createElement(ApiRequestCommand, { ...props, endpointId: 'detail', ready: true }));
+    assert.match(html, /명령을 만들 수 없습니다/);
+    assert.doesNotMatch(html, /GET 명령 복사|PRIVATE_CANARY|<pre/);
+  }
 });
 
 test('invalid configuration is visibly blocked before hydration', () => {
