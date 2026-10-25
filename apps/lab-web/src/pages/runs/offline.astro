@@ -1,7 +1,10 @@
 ---
+import { readFileSync } from 'node:fs';
 import OfflineEventComparison from '../../components/OfflineEventComparison';
 import '../../styles/global.css';
 const assetBase = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const sampleA = readFileSync(new URL('../../../public/examples/offline-events-a-v1.json', import.meta.url), 'utf8');
+const sampleB = readFileSync(new URL('../../../public/examples/offline-events-b-v2.json', import.meta.url), 'utf8');
 ---
 <!doctype html>
 <html lang="ko">
@@ -30,9 +33,10 @@ const assetBase = import.meta.env.BASE_URL.replace(/\/?$/, '/');
         <h2 id="offline-samples-title">파일이 없다면 예제로 시작</h2>
         <p>아래 두 파일은 비교 기능을 살펴보기 위해 만든 합성 예제입니다. 실제 운영 자료가 아니며, 원관측·내보내기 시각(observedAt·capturedAt)은 null입니다.</p>
         <div class="oec-samples-downloads" aria-label="합성 이벤트 예제 파일">
-          <a href={`${assetBase}examples/offline-events-a-v1.json`} download="offline-events-a-v1.json">A 예제 JSON 받기 (v1)</a>
-          <a href={`${assetBase}examples/offline-events-b-v2.json`} download="offline-events-b-v2.json">B 예제 JSON 받기 (v2)</a>
+          <a href={`${assetBase}examples/offline-events-a-v1.json`} download="offline-events-a-v1.json" data-offline-sample="a" data-sample-content={sampleA}>A 예제 JSON 받기 (v1)</a>
+          <a href={`${assetBase}examples/offline-events-b-v2.json`} download="offline-events-b-v2.json" data-offline-sample="b" data-sample-content={sampleB}>B 예제 JSON 받기 (v2)</a>
         </div>
+        <p id="offline-samples-download-status" class="oec-samples-download-status" role="status" aria-live="polite" aria-atomic="true"></p>
         <ol class="oec-samples-steps">
           <li>A·B 예제 파일을 각각 저장합니다.</li>
           <li>아래 A·B 파일 선택에 넣고 ‘선택한 파일 비교’를 누릅니다.</li>
@@ -56,3 +60,41 @@ const assetBase = import.meta.env.BASE_URL.replace(/\/?$/, '/');
   .offline-comparison-intro p { font-size:var(--font-body); line-height:1.85; margin-top:16px; }
   .offline-comparison-intro a { color:var(--green); text-decoration:underline; text-underline-offset:4px; }
 </style>
+<script>
+  const status = document.getElementById('offline-samples-download-status');
+  document.querySelectorAll<HTMLAnchorElement>('a[data-offline-sample]').forEach(link => {
+    link.addEventListener('click', event => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const content = link.dataset.sampleContent;
+      if (content === undefined) return;
+      event.preventDefault();
+      let objectUrl: string | null = null;
+      let anchor: HTMLAnchorElement | null = null;
+      try {
+        const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
+        objectUrl = URL.createObjectURL(blob);
+        anchor = document.createElement('a');
+        anchor.href = objectUrl;
+        anchor.download = link.download;
+        anchor.hidden = true;
+        document.body.appendChild(anchor);
+        anchor.click();
+        if (status !== null) {
+          status.classList.remove('oec-samples-download-error');
+          status.textContent = `${link.dataset.offlineSample === 'a' ? 'A' : 'B'} 예제 JSON 다운로드를 요청했습니다. 브라우저 다운로드 목록에서 저장 여부를 확인하세요.`;
+        }
+      } catch {
+        if (status !== null) {
+          status.classList.add('oec-samples-download-error');
+          status.textContent = '예제 JSON 다운로드를 요청하지 못했습니다. 같은 링크로 다시 시도해주세요.';
+        }
+      } finally {
+        anchor?.remove();
+        if (objectUrl !== null) {
+          const urlToRevoke = objectUrl;
+          setTimeout(() => URL.revokeObjectURL(urlToRevoke), 1000);
+        }
+      }
+    });
+  });
+</script>

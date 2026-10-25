@@ -5,6 +5,8 @@
 .oec-samples-downloads a { display:flex; align-items:center; min-height:44px; min-width:0; max-width:100%; padding:10px 14px; border:1px solid var(--green); color:var(--green); font-weight:600; overflow-wrap:anywhere; }
 .oec-samples-downloads a:hover { background:var(--cream); }
 .oec-samples-downloads a:focus-visible,.oec-samples-expectations summary:focus-visible { outline:3px solid var(--green); outline-offset:4px; }
+.oec-samples-download-status { margin:12px 0; color:var(--muted); }
+.oec-samples-download-error { color:var(--orange-ink); }
 .oec-samples-steps { margin:18px 0; padding-left:26px; }
 .oec-samples-steps li + li { margin-top:8px; }
 .oec-samples-expectations { margin-top:18px; border-top:1px solid var(--line); }
