@@ -16,6 +16,8 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 **입력 순서별 이벤트 응답 비교**에서는 같은 sequence의 A·B 행을 나란히 보고 응답 입력필드 차이와 판정 차이를 구분합니다. 전체·센서별 집계가 같아도 달라진 위치를 검색·분류해 찾을 수 있습니다. 반복 eventId를 합치지 않으며 중복 sequence는 대응 모호, 한쪽에 없는 위치는 미관측으로 남깁니다. [비교 기준·사용법](docs/features/event-comparison.md)을 확인하세요. 보고 필드 일치는 같은 원본 입력이나 코드의 증명이 아닙니다.
 
+**[저장한 이벤트 JSON 비교](https://devdooly.github.io/devdooly-platform-lab/runs/offline/)**에서는 ‘이벤트 상세 → 검색 결과 저장’의 JSON 두 개를 선택해 API 없이 저장된 행을 비교합니다. 파일은 브라우저 메모리에서 검증·처리하며 서버로 업로드하지 않습니다. 파일에 기록된 출처·필터·세 건수와 실제 저장 행의 차이를 구분합니다. [파일 형식·한도·해석 범위](docs/features/offline-event-comparison.md)를 확인하세요.
+
 비교의 A·B 카드와 실패 사유에서 **이벤트 보기**를 누르면 해당 실행·상태·사유 조건을 상세 화면으로 이어갑니다. 도착 화면에서 조회 버튼을 눌러 새 결과를 읽으며, 비교 당시의 응답을 고정하지 않습니다. [이어 보기 사용법](docs/features/run-comparison.md#비교에서-이벤트-이어-보기)
 
 [API 한 건 조회](https://devdooly.github.io/devdooly-platform-lab/api-guide/#api-detail)는 실행 목록을 불러와 ID를 선택한 뒤 상세 GET을 요청할 수 있습니다. ID 직접 입력도 유지하며, 선택만 바꾸었을 때는 이전 응답과 구분합니다. [목록 선택 안내](docs/features/api-run-selection.md)

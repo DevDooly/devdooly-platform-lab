@@ -1,0 +1,39 @@
+---
+import OfflineEventComparison from '../../components/OfflineEventComparison';
+import '../../styles/global.css';
+const assetBase = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+---
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f6f0" />
+    <title>저장한 이벤트 JSON 비교 — DevDooly Platform Lab</title>
+    <meta name="description" content="저장한 이벤트 내보내기 JSON 두 파일을 브라우저에서 읽고 입력 순서별 응답 필드와 판정 차이를 비교합니다. 파일을 서버에 업로드하지 않습니다." />
+    <link rel="icon" type="image/svg+xml" href={`${assetBase}favicon.svg`} />
+  </head>
+  <body>
+    <a href="#main" class="skip-link">본문으로 이동</a>
+    <header class="site-header"><div class="header-inner">
+      <a class="brand" href={assetBase} aria-label="DevDooly Platform Lab 처음으로"><svg aria-hidden="true" viewBox="0 0 36 36"><path d="M18 0v36M0 18h36M5.3 5.3l25.4 25.4M5.3 30.7 30.7 5.3" stroke="currentColor" stroke-width="6"/></svg><span>DevDooly<strong>PLATFORM LAB</strong></span></a>
+      <nav aria-label="저장 파일 비교 메뉴"><a href={`${assetBase}#services`}>서비스 목차</a><a href={`${assetBase}runs/compare/`}>API 실행 비교</a><a href={`${assetBase}#lab`}>이벤트 JSON 저장</a></nav>
+    </div></header>
+    <main id="main" class="section offline-comparison-page">
+      <div class="offline-comparison-intro">
+        <span class="eyebrow">SAVED JSON / LOCAL COMPARISON</span>
+        <h1>저장한 이벤트 JSON 비교</h1>
+        <p>예전에 저장한 검색 결과 두 파일을 선택해 입력 순서별로 나란히 봅니다. 이 화면은 파일의 기록을 비교하며 API의 현재 응답을 조회하지 않습니다.</p>
+        <p>새 API 조회가 필요하면 <a href={`${assetBase}runs/compare/`}>두 실행 결과 비교</a>를 사용하세요. 파일 비교는 서로 다른 시점·검색 조건의 부분 결과도 그대로 구분해 표시합니다.</p>
+      </div>
+      <OfflineEventComparison client:load />
+    </main>
+  </body>
+</html>
+<style>
+  .offline-comparison-page { padding-top:52px; padding-bottom:80px; }
+  .offline-comparison-intro { margin-bottom:32px; max-width:58rem; }
+  .offline-comparison-intro h1 { margin:18px 0 24px; font-size:clamp(2.25rem,5vw,3.75rem); line-height:1.3; }
+  .offline-comparison-intro p { font-size:var(--font-body); line-height:1.85; margin-top:16px; }
+  .offline-comparison-intro a { color:var(--green); text-decoration:underline; text-underline-offset:4px; }
+</style>
