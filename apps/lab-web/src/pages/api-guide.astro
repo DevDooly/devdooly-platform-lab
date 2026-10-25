@@ -33,7 +33,7 @@ const repo = 'https://github.com/DevDooly/devdooly-platform-lab';
         <div class="api-guide-source"><a href={`${assetBase}runs/compare/`}>두 실행 결과 비교</a><a href={`${assetBase}#lab`}>차트와 표로 결과 보기</a><a href={`${repo}/tree/main/apps/api/src/main/java/io/github/devdooly/platformlab`} target="_blank" rel="noreferrer">Spring Boot 소스 ↗</a></div>
       </div>
       <section id="api-list" aria-label="공개 API 설명과 직접 조회">
-        <ApiConsole apiBase={apiBase} client:load />
+        <ApiConsole apiBase={apiBase} basePath={assetBase} client:load />
       </section>
     </main>
   </body>
