@@ -3,9 +3,10 @@ import test from 'node:test';
 import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import type { JobObservation } from '../src/lib/job-observation.ts';
+import type { JobObservation, JobObservationRecord } from '../src/lib/job-observation.ts';
 import type { JobListFilters } from '../src/lib/job-list.ts';
 import { DEFAULT_JOB_FILTERS } from '../src/lib/job-list.ts';
+import { parseEventShareSelection } from '../src/lib/event-share.ts';
 
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
@@ -30,6 +31,7 @@ const lifecycle = component('../src/components/JobLifecycle.tsx', {
 });
 const { default: JobObservationList } = await import(component('../src/components/JobObservationList.tsx', {
   '../lib/job-list': new URL('../src/lib/job-list.ts', import.meta.url).href,
+  '../lib/job-event-navigation': new URL('../src/lib/job-event-navigation.ts', import.meta.url).href,
   './JobLifecycle': lifecycle,
 }));
 
@@ -51,9 +53,13 @@ const cancelled: JobObservation = { ...pending, runId: 'alpha-cancelled', export
   fileEvidence: 'NOT_AVAILABLE', terminatedAt: '2026-10-25T01:00:02Z' };
 const terminated: JobObservation = { ...queued, runId: 'beta-terminated', status: 'TERMINATED', terminatedAt: '2026-10-25T01:00:02Z' };
 const jobs = [exported, staged, cancelled, queued, pending, terminated];
-const render = (filters: JobListFilters = DEFAULT_JOB_FILTERS, values: readonly JobObservation[] = jobs, disabled = false): string =>
-  renderToStaticMarkup(createElement(JobObservationList, { jobs: values, filters, onFiltersChange: () => {}, disabled }));
+const basePath = '/devdooly-platform-lab/';
+const deployed = { environment: 'MINI_PC', scope: 'DEPLOYED_RUNTIME' } as const;
+const render = (filters: JobListFilters = DEFAULT_JOB_FILTERS, values: readonly JobObservation[] = jobs, disabled = false,
+  context: Pick<JobObservationRecord, 'environment' | 'scope'> = deployed): string =>
+  renderToStaticMarkup(createElement(JobObservationList, { jobs: values, context, basePath, filters, onFiltersChange: () => {}, disabled }));
 const displayed = (markup: string) => Array.from(markup.matchAll(/<article class="job-record"><div class="job-record-heading"><h3><code>([^<]+)<\/code>/g), match => match[1]);
+const hrefs = (markup: string) => Array.from(markup.matchAll(/<a\b[^>]*href="([^"]+)"/g), match => match[1]!.replaceAll('&amp;', '&'));
 
 test('default conditions show the fetched jobs in their original order with explicit list-only counts', () => {
   const markup = render();
@@ -123,4 +129,42 @@ test('narrowing and resetting preserve lifecycle nanoseconds, counts, file sizes
   assert.match(resetMarkup, /두 파일의 저장 확인을 기록한 DB 시각이 있습니다/);
   assert.match(resetMarkup, /명시적 종료|export 취소/);
   assert.equal((resetMarkup.match(/<summary>예상 파일 SHA-256<\/summary>/g) ?? []).length, 4);
+});
+
+test('rendered result links target only completed jobs and offer FAILED only for positive failure counts', () => {
+  const noFailures: JobObservation = { ...exported, counts: { ...counts, success: 10, failure: 0 } };
+  const markup = render(DEFAULT_JOB_FILTERS, [noFailures, staged, cancelled, queued, pending, terminated]);
+  const selections = hrefs(markup).map(href => {
+    const url = new URL(href, 'https://example.invalid');
+    assert.equal(url.pathname, basePath);
+    assert.equal(url.hash, '#lab');
+    const parsed = parseEventShareSelection(url.search);
+    assert.equal(parsed.kind, 'valid');
+    assert.equal(parsed.selection.sequence, null);
+    assert.equal(parsed.selection.filters.query, '');
+    assert.equal(parsed.selection.filters.reason, null);
+    return [parsed.selection.runId, parsed.selection.filters.status];
+  });
+  assert.deepEqual(selections, [
+    ['beta-exported', 'ALL'], ['alpha-cancelled', 'ALL'], ['alpha-cancelled', 'FAILED'],
+    ['alpha-pending', 'ALL'], ['alpha-pending', 'FAILED'],
+  ]);
+  assert.equal((markup.match(/>전체 이벤트 보기 /g) ?? []).length, 3);
+  assert.equal((markup.match(/>실패 이벤트 보기 /g) ?? []).length, 2);
+  assert.match(markup, /이 작업 ID의 이벤트를 새로 읽습니다/);
+  assert.match(markup, /위 관측 시각의 결과나 저장 파일을 여는 기능은 아닙니다/);
+});
+
+test('local and isolated observation cards keep their records without links to deployed event results', () => {
+  const contexts: Pick<JobObservationRecord, 'environment' | 'scope'>[] = [
+    { environment: 'LOCAL', scope: 'LOCAL_VALIDATION' },
+    { environment: 'ISOLATED_LAB', scope: 'ISOLATED_LAB' },
+  ];
+  for (const context of contexts) {
+    const markup = render(DEFAULT_JOB_FILTERS, jobs, false, context);
+    assert.deepEqual(hrefs(markup), [], context.environment);
+    assert.deepEqual(displayed(markup), jobs.map(job => job.runId));
+    assert.doesNotMatch(markup, /이벤트 결과 이동|전체 이벤트 보기|실패 이벤트 보기/);
+    assert.match(markup, /두 파일의 저장 확인을 기록한 DB 시각이 있습니다/);
+  }
 });

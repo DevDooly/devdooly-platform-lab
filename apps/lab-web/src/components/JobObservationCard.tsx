@@ -24,7 +24,7 @@ function time(value: string | null) {
 function Source({ label, sha }: { label: string; sha: string }) {
   return <div><dt>{label}</dt><dd>{sha === 'unknown' ? '소스 SHA 미기록' : <a href={`${repository}/commit/${sha}`} target="_blank" rel="noreferrer"><code>{sha}</code><span className="sr-only"> GitHub 소스 커밋, 새 창</span> ↗</a>}</dd></div>;
 }
-export default function JobObservationCard({ apiBase, observationUrl, mode, preferLive = false }: { apiBase: string; observationUrl: string; mode: 'api' | 'recorded'; preferLive?: boolean }) {
+export default function JobObservationCard({ apiBase, observationUrl, mode, preferLive = false, basePath = '/' }: { apiBase: string; observationUrl: string; mode: 'api' | 'recorded'; preferLive?: boolean; basePath?: string }) {
   const [record, setRecord] = useState<JobObservationRecord | null>(null);
   const [error, setError] = useState<JobBrowserError | null>(null);
   const [retained, setRetained] = useState(false);
@@ -83,7 +83,7 @@ export default function JobObservationCard({ apiBase, observationUrl, mode, pref
         </article>
         <article className="job-runtime-card"><span className="code-label">ADMISSION / SINGLE SLOT</span><h3>{record.slot.occupiedRunId ? '실행 슬롯 점유 기록' : '실행 슬롯 비어 있음'}</h3><p>{record.slot.occupiedRunId ? <code>{record.slot.occupiedRunId}</code> : '마지막 DB snapshot에서 점유 작업이 없습니다.'}</p><p className="job-observation-note">DB 처리 완료만으로 슬롯을 해제하지 않습니다. 결과·실패 두 파일의 전체 내용·크기·SHA-256 검증 후 export 확인을 DB에 commit합니다. 운영자의 명시적 종료는 별도 경로입니다.</p><dl className="job-observation-details"><Source label="관측 API 소스 SHA" sha={record.sourceCommit}/></dl></article>
       </div>
-      <JobObservationList jobs={record.jobs} filters={jobFilters} onFiltersChange={setJobFilters} disabled={loading} />
+      <JobObservationList jobs={record.jobs} context={record} basePath={basePath} filters={jobFilters} onFiltersChange={setJobFilters} disabled={loading} />
     </> : !loading && <div className="job-observation-empty"><h3>작업 관측 미연결 · NOT_CONFIGURED</h3><p>실제 DB 기록이 연결되면 실행기·슬롯·작업·export 정보를 표시합니다. 확인되지 않은 파일·시간·성공 상태를 대신 넣지 않습니다.</p></div>}
     <p className="job-observation-note">파일 원문·저장소 경로·호스트·자격증명은 공개하지 않습니다. <a href={`${repository}/blob/main/apps/lab-web/JOB_OBSERVATION.md`} target="_blank" rel="noreferrer">관측 범위와 한계 ↗</a></p>
   </section>;
