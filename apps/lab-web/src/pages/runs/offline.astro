@@ -26,6 +26,25 @@ const assetBase = import.meta.env.BASE_URL.replace(/\/?$/, '/');
         <p>예전에 저장한 검색 결과 두 파일을 선택해 입력 순서별로 나란히 봅니다. 이 화면은 파일의 기록을 비교하며 API의 현재 응답을 조회하지 않습니다.</p>
         <p>새 API 조회가 필요하면 <a href={`${assetBase}runs/compare/`}>두 실행 결과 비교</a>를 사용하세요. 파일 비교는 서로 다른 시점·검색 조건의 부분 결과도 그대로 구분해 표시합니다.</p>
       </div>
+      <section class="oec-samples" aria-labelledby="offline-samples-title">
+        <h2 id="offline-samples-title">파일이 없다면 예제로 시작</h2>
+        <p>아래 두 파일은 비교 기능을 살펴보기 위해 만든 합성 예제입니다. 실제 운영 자료가 아니며, 원관측·내보내기 시각(observedAt·capturedAt)은 null입니다.</p>
+        <div class="oec-samples-downloads" aria-label="합성 이벤트 예제 파일">
+          <a href={`${assetBase}examples/offline-events-a-v1.json`} download="offline-events-a-v1.json">A 예제 JSON 받기 (v1)</a>
+          <a href={`${assetBase}examples/offline-events-b-v2.json`} download="offline-events-b-v2.json">B 예제 JSON 받기 (v2)</a>
+        </div>
+        <ol class="oec-samples-steps">
+          <li>A·B 예제 파일을 각각 저장합니다.</li>
+          <li>아래 A·B 파일 선택에 넣고 ‘선택한 파일 비교’를 누릅니다.</li>
+          <li>검색·분류로 차이를 살펴본 뒤 ‘비교 보고서 JSON 저장’을 누릅니다.</li>
+        </ol>
+        <details class="oec-samples-expectations">
+          <summary>예제의 기대 결과와 해석 범위</summary>
+          <p>입력 순서는 총 5그룹입니다. ‘비교 필드 같음’·‘판정 필드 다름’·‘보고된 입력 필드 다름’·‘한쪽 미관측’·‘대응 모호’가 각 1그룹씩 나타납니다. 모호한 sequence 5는 A 후보 2건·B 후보 1건을 그대로 유지합니다.</p>
+          <p>A는 센서 정확 조건이 없는 v1 파일 6행, B는 sample-sensor 정확 조건이 있는 v2 파일 4행입니다. 파일에 기록된 reportedInputCount는 둘 다 6이며, 담긴 행 수와 구분합니다.</p>
+          <p>‘한쪽 미관측’은 한 파일에 해당 행이 없다는 뜻이며 처리 누락의 증거는 아닙니다. eventTime은 2000-01-01의 합성 시각입니다. 예제는 worker 실행·성능·수정 효과를 인증하지 않습니다.</p>
+        </details>
+      </section>
       <OfflineEventComparison client:load />
     </main>
   </body>
