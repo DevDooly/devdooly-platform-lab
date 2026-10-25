@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
-import { describeLiveFailure, fetchRun, liveFailureOf } from '../lib/api';
+import { describeLiveFailure, fetchLabForRun, fetchRun, liveFailureOf } from '../lib/api';
 import { loadLabSources } from '../lib/observation';
 import type { ObservationRecord, SourceMode } from '../lib/observation';
 import type { LabData, Point, OutcomeStatus } from '../lib/api';
@@ -148,7 +148,14 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
     catch (failure) { if (mounted.current && controller.current === request) { setData(initial); setMode('fixture'); setObservation(null); setError(describeLiveFailure(liveFailureOf(failure))); setEventPageIndex(0); } }
     finally { clearTimeout(timer); if (mounted.current && controller.current === request) setLoading(false); }
   }
-  useEffect(() => { mounted.current = true; setInteractive(true); setShareRequest(parseEventShareSelection(window.location.search)); void refresh(); return () => { mounted.current = false; controller.current?.abort(); }; }, []);
+  useEffect(() => {
+    mounted.current = true; setInteractive(true);
+    const shared = parseEventShareSelection(window.location.search);
+    setShareRequest(shared);
+    // A valid link waits for its explicit read instead of loading an unrelated default run first.
+    if (shared.kind !== 'valid') void refresh();
+    return () => { mounted.current = false; controller.current?.abort(); };
+  }, []);
 
   async function selectRun(id: string) {
     if (mode !== 'live') return;
@@ -161,18 +168,20 @@ export default function LabExplorer({ apiBase = '/api', observationUrl = '/data/
   }
 
   async function applySharedSelection() {
-    if (!interactive || loading || mode !== 'live' || shareInFlight.current || shareRequest.kind !== 'valid') return;
+    if (!interactive || loading || shareInFlight.current || shareRequest.kind !== 'valid') return;
     const selection = shareRequest.selection;
     shareInFlight.current = true;
     controller.current?.abort(); const request = new AbortController(); controller.current = request;
     setLoading(true); setError(''); setShareNotice('공유한 실행을 다시 조회하고 있습니다. 조회 완료까지 기존 화면을 유지합니다.');
     const timer = setTimeout(() => request.abort(), 8000);
     try {
-      // fetchRun validates the exact requested ID, including IDs outside the recent list.
-      const detail = await fetchRun(apiBase, selection.runId, request.signal);
+      // A fallback screen becomes live only after the complete API context is validated.
+      const context = mode === 'live' ? null : await fetchLabForRun(apiBase, selection.runId, request.signal);
+      const detail = context?.detail ?? await fetchRun(apiBase, selection.runId, request.signal);
       if (!mounted.current || controller.current !== request) return;
       const restored = resolveEventShareSelection(selection, detail.outcomes);
-      setData(previous => ({ ...previous, detail }));
+      setData(previous => context ?? ({ ...previous, detail }));
+      if (context) { setMode('live'); setObservation(null); }
       setFilter(selection.filters.status); setEventQuery(selection.filters.query); setEventReason(selection.filters.reason);
       setEventSensorId(selection.filters.sensorId ?? null);
       setEventSelection(restored.sequence === null ? null : { runId: detail.id, mode: 'live', sequence: restored.sequence });

@@ -110,15 +110,25 @@ export async function fetchRun(base: string, id: string, signal?: AbortSignal): 
   if (!isRunDetail(detail) || detail.id !== id) throw new LabReadError('실행 결과 형식을 확인할 수 없습니다.', 'INVALID_RESPONSE');
   return detail;
 }
-export async function fetchLab(base: string, signal?: AbortSignal, preferredId?: string): Promise<LabData> {
+async function fetchLabMetadata(base: string, signal?: AbortSignal): Promise<Pick<LabData, 'runs' | 'summary' | 'releases' | 'observedAt'>> {
   const [runsPayload, summary, releasePayload] = await Promise.all([
     getJson(base, '/demo/runs', signal), getJson(base, '/platform/summary', signal), getJson(base, '/platform/releases', signal),
   ]);
   if (!object(runsPayload) || !Array.isArray(runsPayload.items) || !runsPayload.items.every(isRun) || !timestamp(runsPayload.observedAt)) throw new LabReadError('실행 목록 형식을 확인할 수 없습니다.', 'INVALID_RESPONSE');
   if (!isSummary(summary) || !object(releasePayload) || !Array.isArray(releasePayload.items) || !releasePayload.items.every(isRelease) || !timestamp(releasePayload.observedAt)) throw new LabReadError('플랫폼 응답 형식을 확인할 수 없습니다.', 'INVALID_RESPONSE');
-  const runs = runsPayload.items;
-  const selected = runs.find(run => run.id === preferredId) || runs[0];
+  return { runs: runsPayload.items, summary, releases: releasePayload.items, observedAt: summary.observedAt };
+}
+export async function fetchLab(base: string, signal?: AbortSignal, preferredId?: string): Promise<LabData> {
+  const metadata = await fetchLabMetadata(base, signal);
+  const selected = metadata.runs.find(run => run.id === preferredId) || metadata.runs[0];
   if (!selected) throw new LabReadError('아직 저장된 실행 결과가 없습니다.', 'OTHER');
   const detail = await fetchRun(base, selected.id, signal);
-  return { runs, detail, summary, releases: releasePayload.items, observedAt: summary.observedAt };
+  return { ...metadata, detail };
+}
+
+/** Read the exact shared run after validating its full Lab context; never select a replacement. */
+export async function fetchLabForRun(base: string, id: string, signal?: AbortSignal): Promise<LabData> {
+  const metadata = await fetchLabMetadata(base, signal);
+  const detail = await fetchRun(base, id, signal);
+  return { ...metadata, detail };
 }
