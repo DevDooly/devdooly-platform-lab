@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import '../styles/kafka-recovery-case.css';
 
 export type RecoveryCase = {
@@ -22,20 +22,26 @@ type Props = { cases: RecoveryCase[] };
 export default function KafkaRecoveryExplorer({ cases }: Props) {
   const instanceId = useId();
   const [selectedId, setSelectedId] = useState(cases[0]?.id ?? '');
+  const [ready, setReady] = useState(false);
+  useEffect(() => { setReady(true); }, []);
   const selected = cases.find(item => item.id === selectedId) ?? cases[0];
   if (!selected) {
     return <p className="kafka-recovery-empty">표시할 격리 시험 기록이 없습니다.</p>;
   }
 
   const noteId = `${instanceId}-note`;
+  const readyId = `${instanceId}-ready`;
   const titleId = `${instanceId}-title`;
   return (
     <section className="kafka-recovery-explorer" aria-label="Kafka 중단 경계별 검증 기록">
       <p id={noteId} className="kafka-recovery-record-note">
         <strong>저장된 격리 시험 기록입니다.</strong> 중단 위치를 고르면 해당 시험의 결과를 보여줍니다. 새 작업이나 장애 시험을 실행하지 않습니다.
       </p>
+      <p id={readyId} className="kafka-recovery-metric-note" role="status" aria-live="polite">
+        {ready ? '중단 위치를 선택할 수 있습니다.' : '선택 화면을 준비 중입니다. 아래 첫 시험 기록은 읽을 수 있습니다.'}
+      </p>
 
-      <fieldset className="kafka-recovery-selector" aria-describedby={noteId}>
+      <fieldset className="kafka-recovery-selector" aria-describedby={`${noteId} ${readyId}`} disabled={!ready}>
         <legend>중단 위치 선택</legend>
         <div className="kafka-recovery-choices">
           {cases.map(item => (
