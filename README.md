@@ -16,6 +16,8 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구�
 
 **입력 순서별 이벤트 응답 비교**에서는 같은 sequence의 A·B 행을 나란히 보고 응답 입력필드 차이와 판정 차이를 구분합니다. 전체·센서별 집계가 같아도 달라진 위치를 검색·분류해 찾을 수 있습니다. 반복 eventId를 합치지 않으며 중복 sequence는 대응 모호, 한쪽에 없는 위치는 미관측으로 남깁니다. [비교 기준·사용법](docs/features/event-comparison.md)을 확인하세요. 보고 필드 일치는 같은 원본 입력이나 코드의 증명이 아닙니다.
 
+**[이벤트 JSON 한 개 다시 보기](https://devdooly.github.io/devdooly-platform-lab/runs/view/)**에서 저장 파일 하나를 열고 검색·상태·사유·센서 조건으로 행을 찾습니다. 원래 출처·필터·건수는 별도로 표시하고, 잘못된 새 파일을 열어도 마지막 성공 결과를 유지합니다. [사용법·검증 범위](docs/features/offline-event-viewer.md)를 확인하세요.
+
 **[저장한 이벤트 JSON 비교](https://devdooly.github.io/devdooly-platform-lab/runs/offline/)**에서는 ‘이벤트 상세 → 검색 결과 저장’의 JSON 두 개를 선택해 API 없이 저장된 행을 비교합니다. 파일은 브라우저 메모리에서 검증·처리하며 서버로 업로드하지 않습니다. 파일에 기록된 출처·필터·세 건수와 실제 저장 행의 차이를 구분합니다. [파일 형식·한도·해석 범위](docs/features/offline-event-comparison.md)를 확인하세요.
 
 파일 비교에서 찾은 차이는 **비교 보고서 JSON 저장**으로 남깁니다. 현재 검색·분류에 맞는 전체 그룹과 양쪽 후보, 원파일 출처·조건·건수를 함께 담으며 화면의 첫20개로 자르지 않습니다. 원래 이벤트 내보내기와 다른 검토자료입니다. [보고서 형식·검증 범위](docs/features/offline-comparison-report.md)를 확인하세요.

@@ -12,6 +12,7 @@ const { base = import.meta.env.BASE_URL, apiGuideUrl, adminUrls = {}, verifiedAt
 const assetBase = base.replace(/\/?$/, '/');
 const apiGuide = apiGuideUrl ?? `${assetBase}api-guide/`;
 const runComparison = `${assetBase}runs/compare/`;
+const offlineViewer = `${assetBase}runs/view/`;
 const adminServices = [
   {
     key: 'jenkins' as const,
@@ -59,7 +60,7 @@ const adminServices = [
         <div class="service-card-topline"><span class="service-card-role">BACKEND / HTTP API</span><span class="service-access-label service-access-public">공개 조회</span></div>
         <h4>Java · Spring Boot</h4>
         <p class="service-card-description">허용된 GET API의 경로와 응답을 확인합니다. 실행 목록, 작업·Kafka 관측, 플랫폼 요약을 한 페이지에서 조회할 수 있습니다.</p>
-        <div class="service-card-actions"><a class="service-primary-link" href={runComparison}>두 실행 결과 비교 <span aria-hidden="true">↗</span></a><a class="service-secondary-link" href={apiGuide}>API 명세 · 직접 조회 <span aria-hidden="true">↗</span></a><a class="service-secondary-link" href="#lab">처리 결과 화면 <span aria-hidden="true">↓</span></a></div>
+        <div class="service-card-actions"><a class="service-primary-link" href={runComparison}>두 실행 결과 비교 <span aria-hidden="true">↗</span></a><a class="service-secondary-link" href={apiGuide}>API 명세 · 직접 조회 <span aria-hidden="true">↗</span></a><a class="service-secondary-link" href={offlineViewer}>저장한 JSON 한 개 보기 <span aria-hidden="true">↗</span></a><a class="service-secondary-link" href="#lab">처리 결과 화면 <span aria-hidden="true">↓</span></a></div>
       </article>
       <article id="service-worker" class="service-directory-card">
         <div class="service-card-topline"><span class="service-card-role">WORKER / PROCESS & EXPORT</span><span class="service-access-label service-access-public">공개 관측</span></div>
