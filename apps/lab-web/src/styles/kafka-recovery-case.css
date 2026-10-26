@@ -1,0 +1,74 @@
+.kafka-recovery-explorer {
+  min-width: 0;
+  font-size: 1.0625rem;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.kafka-recovery-record-note {
+  padding: 20px 24px;
+  background: #edf3e9;
+  border-left: 4px solid var(--green);
+}
+
+.kafka-recovery-record-note strong { display: block; margin-bottom: 4px; }
+.kafka-recovery-selector { min-width: 0; margin: 28px 0; padding: 0; border: 0; }
+.kafka-recovery-selector legend { margin-bottom: 12px; padding: 0; font-weight: 700; font-size: 1.125rem; }
+.kafka-recovery-choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+
+.kafka-recovery-choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 64px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  cursor: pointer;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.kafka-recovery-choice:hover { border-color: var(--green); }
+.kafka-recovery-choice.is-selected { border-color: var(--green); background: #edf3e9; }
+.kafka-recovery-choice input { width: 20px; height: 20px; flex: 0 0 20px; margin: 0; accent-color: var(--green); }
+.kafka-recovery-choice input:focus-visible { outline: 3px solid var(--green); outline-offset: 4px; }
+.kafka-recovery-choice span { min-width: 0; }
+
+.kafka-recovery-detail { min-width: 0; padding: 28px; border: 1px solid var(--line); background: var(--surface); }
+.kafka-recovery-detail-heading { padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+.kafka-recovery-kicker { color: var(--green); font-weight: 600; margin-bottom: 8px; }
+.kafka-recovery-detail h3 { font-size: clamp(1.4rem, 2.7vw, 1.75rem); line-height: 1.45; }
+.kafka-recovery-detail h4 { font-size: 1.125rem; margin-bottom: 9px; }
+.kafka-recovery-stop,.kafka-recovery-resume,.kafka-recovery-preserved,.kafka-recovery-results { margin-top: 24px; }
+.kafka-recovery-stop p,.kafka-recovery-resume p,.kafka-recovery-states dd { color: var(--muted); }
+
+.kafka-recovery-states { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 24px 0 0; }
+.kafka-recovery-states > div { min-width: 0; padding: 20px; background: var(--paper); border: 1px solid var(--line); }
+.kafka-recovery-states dt { font-weight: 700; margin-bottom: 9px; }
+.kafka-recovery-states dd { margin: 0; }
+.kafka-recovery-preserved ul { margin: 0; padding-left: 22px; }
+.kafka-recovery-preserved li + li { margin-top: 7px; }
+.kafka-recovery-results { padding-top: 24px; border-top: 1px solid var(--line); }
+
+.kafka-recovery-metrics { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+.kafka-recovery-metrics > div { min-width: 0; padding: 15px; background: var(--paper); border: 1px solid var(--line); }
+.kafka-recovery-metrics dt { color: var(--muted); line-height: 1.6; }
+.kafka-recovery-metrics dd { margin: 9px 0 0; color: var(--green); font: 600 1.75rem/1.3 var(--mono); }
+.kafka-recovery-metric-note { color: var(--muted); }
+.kafka-recovery-empty { font-size: 1.0625rem; }
+
+@media (max-width: 900px) {
+  .kafka-recovery-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 600px) {
+  .kafka-recovery-choices,.kafka-recovery-states { grid-template-columns: minmax(0, 1fr); }
+  .kafka-recovery-choice { min-height: 58px; }
+  .kafka-recovery-record-note { padding: 17px 18px; }
+  .kafka-recovery-detail { padding: 20px 18px; }
+  .kafka-recovery-states > div { padding: 17px; }
+  .kafka-recovery-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .kafka-recovery-metrics > div { padding: 13px; }
+}
