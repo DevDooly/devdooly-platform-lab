@@ -24,6 +24,14 @@
 
 기술 페이지의 소스 링크는 설명 기준 `bb53eadf4d189ae1ff357493e194c24a91df70ad`에 고정했습니다. 스크린샷은 각자의 원 관측 시각을 유지합니다. Jenkins·Argo CD·Kafbat은 기존 로그인 링크로 연결하며 새 인증이나 권한을 추가하지 않습니다.
 
+## 대표 설계 사례: Kafka 재전달과 결과 보존
+
+[사례 페이지](https://devdooly.github.io/devdooly-platform-lab/cases/kafka-redelivery/)는 기술 목차·Kafka 상세에서 들어갑니다. 세 중단 지점의 DB/Kafka 상태·재개 동작·보존 조건을 선택해 비교하며, 최종 수치는 기존 `docs/evidence/kafka-redelivery/summary.json`의 해당 세 사례를 빌드 시 연결합니다. 별도 숫자 fixture나 새 장애 실행을 만들지 않습니다.
+
+DB의 완료 재호출 보호와 업무상 센서 `DUPLICATE` 판정은 다릅니다. DB commit·offset commit·export 확인의 완료 조건을 나누고, 상시 runner의 `EXPORT → PUBLISH → CONSUME` 반복 순서를 설명합니다. Kafka offset 성공이 파일 저장 완료를 의미하거나 export가 항상 재전달 뒤에만 실행된다고 표현하지 않습니다.
+
+당시 2026-10-15 격리 시험(Windows child JVM·단일 broker/partition/RF1)의 세 강제 종료 사례이며 네 번째 원본 손상 시험·후속 export/commit 실패 복구는 원 근거로 연결합니다. 소스 설명은 `2aae197`에 고정하며 당시 소스 지문과 현재 운영 pin을 구분합니다. 이 UI는 React의 선택 상태만 바꾸고 API·서버 실행·파일 저장을 추가하지 않습니다. 변경에 맞는 진단·빌드·실제 선택/키보드/모바일·독립 검토와 같은 main의 CI/Pages·공개 확인 결과는 해당 PR에 기록합니다.
+
 ## Kafbat 로그인 안내
 
 서비스 목차의 Kafka 카드와 Kafka 기술 페이지에서 기본 아이디 `lab-viewer`, 서버 소유자가 미니 PC의 `rudy` 계정에서 비밀번호를 확인하는 방법을 찾을 수 있습니다. 기존 [계정 확인 문서](../runbooks/service-console.md#계정-확인)를 연결하고, 그 문서의 명령을 접힌 안내로 제공합니다. 웹페이지는 파일을 읽거나 로그인 요청을 보내지 않습니다. 실제 비밀번호나 인증 파일 본문은 포함하지 않습니다.
