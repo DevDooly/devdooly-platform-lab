@@ -1,0 +1,54 @@
+.offline-event-viewer { min-width: 0; font-size: 1.0625rem; line-height: 1.75; }
+.offline-event-viewer * { box-sizing: border-box; }
+.offline-event-viewer section, .offline-event-viewer fieldset { min-width: 0; }
+.offline-event-viewer code { font-family: var(--mono); font-size: 1.0625rem; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+.offline-event-viewer h2 { font-size: 1.5rem; }
+.offline-event-viewer h3 { font-size: 1.2rem; }
+.oev-input-section, .oev-source, .oev-search, .oev-detail { padding: 1.25rem; border: 1px solid var(--line); background: var(--paper); border-radius: 1rem; }
+.oev-result { margin-top: 2rem; }
+.oev-source { margin-bottom: 1.5rem; }
+.oev-note { color: var(--muted); }
+.oev-draft { overflow-wrap: anywhere; }
+.offline-event-viewer label { display: block; font-weight: 700; margin-bottom: .35rem; }
+.offline-event-viewer input, .offline-event-viewer select, .offline-event-viewer button { min-height: 44px; font: inherit; color: var(--ink); border: 1px solid var(--line); border-radius: .5rem; }
+.offline-event-viewer input, .offline-event-viewer select { width: 100%; max-width: 100%; min-width: 0; padding: .5rem .65rem; background: var(--paper); }
+.offline-event-viewer input[type="file"] { padding: .35rem; }
+.offline-event-viewer input[type="file"]::file-selector-button { min-height: 44px; font: inherit; margin-right: .6rem; padding: .4rem .7rem; border: 1px solid var(--line); border-radius: .35rem; background: var(--cream); color: var(--ink); }
+.offline-event-viewer button { padding: .5rem .85rem; background: var(--cream); cursor: pointer; }
+.offline-event-viewer button:disabled, .offline-event-viewer input:disabled, .offline-event-viewer select:disabled, .offline-event-viewer fieldset:disabled { cursor: default; opacity: .65; }
+.offline-event-viewer :is(button, input, select, summary, [tabindex]):focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+.offline-event-viewer summary { min-height: 44px; padding-block: .5rem; font-weight: 700; cursor: pointer; overflow-wrap: anywhere; }
+.oev-search { margin: 0; }
+.oev-search legend { padding: 0 .4rem; font-weight: 700; font-size: 1.2rem; }
+.oev-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.oev-controls > div { min-width: 0; }
+.oev-actions { display: flex; flex-wrap: wrap; gap: .65rem; }
+.oev-status { font-weight: 700; overflow-wrap: anywhere; }
+.oev-error { border-left: 4px solid var(--orange-ink); padding: .8rem 1rem; color: var(--orange-ink); background: var(--cream); }
+.oev-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem 1.25rem; }
+.oev-fields > div { min-width: 0; }
+.oev-fields dt { color: var(--muted); overflow-wrap: anywhere; }
+.oev-fields dd { margin: .2rem 0 0; overflow-wrap: anywhere; }
+.oev-pagination { display: flex; align-items: end; flex-wrap: wrap; gap: .75rem 1.25rem; margin-block: 1rem; }
+.oev-pagination > p { margin: 0; padding-bottom: .5rem; }
+.oev-pagination > div:first-child { min-width: 8rem; }
+.oev-table-wrap { max-width: 100%; min-width: 0; overflow-x: auto; border: 1px solid var(--line); border-radius: .75rem; }
+.oev-table { border-collapse: collapse; width: 100%; min-width: 780px; table-layout: fixed; }
+.oev-table caption { padding: .75rem; text-align: left; background: var(--cream); }
+.oev-table th, .oev-table td { padding: .7rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.oev-table th { background: var(--cream); }
+.oev-table th:first-child { width: 5rem; }
+.oev-table th:nth-child(2) { width: 7rem; }
+.oev-table th:nth-child(5) { width: 8rem; }
+.oev-table th:last-child { width: 7rem; }
+.oev-table button { width: 100%; }
+.oev-row-selected td, .oev-row-selected th { background: var(--cream); box-shadow: inset 0 -2px var(--green); }
+.oev-detail { margin-top: 1.5rem; }
+.oev-empty { padding: 1rem; border: 1px dashed var(--line); border-radius: .75rem; background: var(--cream); }
+@media (max-width: 700px) {
+  .oev-controls, .oev-fields { grid-template-columns: minmax(0, 1fr); }
+  .oev-input-section, .oev-source, .oev-search, .oev-detail { padding: 1rem; }
+  .oev-actions > button { flex: 1 1 auto; }
+  .oev-pagination { align-items: stretch; }
+  .oev-pagination > div:first-child { flex: 1 1 100%; }
+}

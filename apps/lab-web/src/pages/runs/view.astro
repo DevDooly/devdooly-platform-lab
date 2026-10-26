@@ -1,0 +1,40 @@
+---
+import OfflineEventViewer from '../../components/OfflineEventViewer';
+import '../../styles/global.css';
+const assetBase = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+---
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f6f0" />
+    <title>이벤트 JSON 한 개 다시 보기 — DevDooly Platform Lab</title>
+    <meta name="description" content="저장한 이벤트 JSON 한 개를 브라우저에서 열어 검색하고 원문 행을 확인합니다. 원래 출처와 검색 조건을 보존하며 파일을 업로드하지 않습니다." />
+    <link rel="icon" type="image/svg+xml" href={`${assetBase}favicon.svg`} />
+  </head>
+  <body>
+    <a href="#main" class="skip-link">본문으로 이동</a>
+    <header class="site-header"><div class="header-inner">
+      <a class="brand" href={assetBase} aria-label="DevDooly Platform Lab 처음으로"><svg aria-hidden="true" viewBox="0 0 36 36"><path d="M18 0v36M0 18h36M5.3 5.3l25.4 25.4M5.3 30.7 30.7 5.3" stroke="currentColor" stroke-width="6"/></svg><span>DevDooly<strong>PLATFORM LAB</strong></span></a>
+      <nav aria-label="저장 파일 탐색 메뉴"><a href={`${assetBase}#services`}>서비스 목차</a><a href={`${assetBase}runs/offline/`}>두 파일 비교</a><a href={`${assetBase}#lab`}>이벤트 JSON 저장</a></nav>
+    </div></header>
+    <main id="main" class="section offline-viewer-page">
+      <div class="offline-viewer-intro">
+        <span class="eyebrow">SAVED JSON / ONE FILE</span>
+        <h1>이벤트 JSON 한 개 다시 보기</h1>
+        <p>‘이벤트 상세 → 검색 결과 저장’에서 받은 JSON 한 개를 선택하고 열어보세요. 저장된 행을 검색하고, 원하는 행의 원문 필드를 확인할 수 있습니다.</p>
+        <p>파일을 브라우저 메모리에서 읽으며 서버로 업로드하지 않습니다. 이 화면의 검색은 저장된 행만 좁힙니다. 파일에 없던 이벤트를 복구하거나 현재 API를 다시 조회하지 않습니다.</p>
+        <p>파일이 없다면 <a href={`${assetBase}runs/offline/#offline-samples-title`}>합성 예제 JSON 받기</a>에서 A 또는 B 한 개를 받아 열어보세요. 두 기록의 차이는 <a href={`${assetBase}runs/offline/`}>저장 파일 비교</a>에서 볼 수 있습니다.</p>
+      </div>
+      <OfflineEventViewer client:load />
+    </main>
+  </body>
+</html>
+<style>
+  .offline-viewer-page { padding-top:52px; padding-bottom:80px; }
+  .offline-viewer-intro { margin-bottom:32px; max-width:58rem; }
+  .offline-viewer-intro h1 { margin:18px 0 24px; font-size:clamp(2.25rem,5vw,3.75rem); line-height:1.3; }
+  .offline-viewer-intro p { font-size:var(--font-body); line-height:1.85; margin-top:16px; }
+  .offline-viewer-intro a { color:var(--green); text-decoration:underline; text-underline-offset:4px; }
+</style>
