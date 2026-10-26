@@ -2,6 +2,7 @@
 import GuideLayout from '../../layouts/GuideLayout.astro';
 import { technologies, type TechnologyGuide } from '../../data/technologyGuides';
 import { technologyScreens } from '../../data/technologyScreens';
+import KafbatLoginHelp from '../../components/KafbatLoginHelp.astro';
 export function getStaticPaths() { return technologies.map(tech => ({params:{slug:tech.slug},props:{tech}})); }
 interface Props { tech: TechnologyGuide; }
 const {tech} = Astro.props;
@@ -30,6 +31,7 @@ const consoleLink=consoles[tech.slug];
         {screen && <figure class="tech-screenshot"><a href={`${base}images/technologies/${screen.file}`} target="_blank" rel="noreferrer" aria-label={`${tech.title} 스크린샷 원본 크게 보기, 새 창`}><img src={`${base}images/technologies/${screen.file}`} alt={screen.caption} loading="lazy" width="1265" height="712" /></a><figcaption>{screen.caption} 이미지를 누르면 원본을 크게 볼 수 있습니다.</figcaption></figure>}
         <div class="guide-links">{screen && <a href={`${base}${screen.path}`}>해당 화면 직접 열기 →</a>}{consoleLink && <a href={consoleLink.url} target="_blank" rel="noreferrer">{consoleLink.label} ↗</a>}<a href={`${base}#services`}>전체 서비스 접속 목차 →</a></div>
         {consoleLink && <p class="section-lead">관리 UI에는 본인 계정으로 로그인합니다. 공개 관측 캡처와 관리 화면은 다르며, 링크 자체는 현재 접속 성공을 뜻하지 않습니다.</p>}
+        {tech.slug === 'kafka' && <KafbatLoginHelp />}
       </section>
       <section id="settings" class="guide-section" aria-labelledby="settings-title"><h2 id="settings-title">설정의 의미와 다른 환경으로 옮길 때</h2><p class="section-lead">핵심 설정을 먼저 이해하고 아래 소스에서 전체 구성을 확인하세요. 이 표만으로 새 운영 환경의 설치가 끝나지는 않습니다.</p><div class="tech-settings">{tech.settings.map(setting=><article class="tech-setting"><h3>{setting.name}</h3><p>{setting.purpose}</p><p><strong>이식할 때</strong> · {setting.portability}</p></article>)}</div><div class="guide-links"><a href={`${base}guides/rebuild/`}>실행 명령·환경별 변경표로 이어가기 →</a></div></section>
       <section id="learn" class="guide-section" aria-labelledby="learn-title"><h2 id="learn-title">직접 학습하는 순서</h2><ol class="guide-reading">{tech.learn.map(item=><li>{item}</li>)}</ol><div class="guide-links">{tech.related.map(slug=>{const item=technologies.find(candidate=>candidate.slug===slug);return item && <a href={`${base}technologies/${slug}/`}>{item.title} →</a>;})}</div></section>

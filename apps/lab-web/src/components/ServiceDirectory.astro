@@ -1,5 +1,6 @@
 ---
 import '../styles/service-directory.css';
+import KafbatLoginHelp from './KafbatLoginHelp.astro';
 
 interface Props {
   base?: string;
@@ -85,6 +86,7 @@ const adminServices = [
             {href ? <a class="service-primary-link" href={href} target="_blank" rel="noreferrer">{service.title} 열기 <span aria-hidden="true">↗</span><span class="sr-only"> 새 창</span></a> : <span class="service-pending-action" aria-disabled="true">접속 링크 준비 중</span>}
             <a class="service-secondary-link" href={service.observation}>{service.observationLabel} <span aria-hidden="true">↓</span></a>
           </div>
+          {service.key === 'kafka' && href && <KafbatLoginHelp />}
         </article>;
       })}
     </div>
