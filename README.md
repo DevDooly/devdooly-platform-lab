@@ -1,8 +1,25 @@
 # DevDooly Platform Lab
 
-Java 서비스 개발부터 데이터 처리, 배포와 운영까지 직접 구현하고 결과를 공개하는 개인 플랫폼 프로젝트입니다. 직접 만든 합성 센서 데이터로 처리 규칙과 오류 대응을 재현하고, [TIL](https://devdooly.github.io/TIL/)에 설계와 문제 해결 기록을 연결합니다.
+Java 서비스 개발부터 데이터 처리, 배포와 운영까지의 이해를 보여주는 **취업·이직용 개인 포트폴리오**입니다. 직접 만든 합성 센서 데이터로 처리 규칙과 오류 대응을 재현하고, 기술을 선택한 이유·구성·실제 검증 결과를 설명합니다. [TIL](https://devdooly.github.io/TIL/)에는 학습과 문제 해결 기록을 연결합니다. 개인 Lab의 검증 수치를 회사 업무 성과로 표현하지 않습니다.
 
 [포트폴리오](https://devdooly.github.io/devdooly-platform-lab/) · [GitHub](https://github.com/DevDooly/devdooly-platform-lab) · [현재 범위·다음 작업](docs/AUTONOMOUS_WORK.md) · [시작 안내](docs/START_HERE.md) · [진행 목록](docs/ROADMAP.md) · [다음 개발 계획](docs/NEXT_STEPS.md)
+
+## 기술을 이해하고 다시 구성하는 길잡이
+
+먼저 [기술 목차](https://devdooly.github.io/devdooly-platform-lab/technologies/)에서 전체 구성을 보고 관심 기술을 고릅니다. 각 안내는 **해결할 문제 → 설계와 데이터 흐름 → 화면·검증 근거 → 설정과 이식 시 변경점** 순서로 읽습니다. 직접 학습하거나 새 프로젝트를 시작할 때는 [다른 환경에서 구성하기](https://devdooly.github.io/devdooly-platform-lab/guides/rebuild/)를 따릅니다.
+
+| 기술 안내 | 살펴볼 설계 |
+| --- | --- |
+| [Java·Spring Boot](https://devdooly.github.io/devdooly-platform-lab/technologies/java/) | 입력 판정, DB 상태, 조회 API와 worker의 책임 분리 |
+| [Kafka·Kafbat](https://devdooly.github.io/devdooly-platform-lab/technologies/kafka/) | dispatch intent, 수동 offset commit, 중단 뒤 재전달 |
+| [MariaDB·Garage S3](https://devdooly.github.io/devdooly-platform-lab/technologies/storage/) | 작업 상태와 파일 저장, export 확인 후 슬롯 해제 |
+| [Jenkins·GitHub Actions](https://devdooly.github.io/devdooly-platform-lab/technologies/jenkins/) | 같은 소스의 검증, 이미지 게시, 실패 차단 |
+| [K3s·Helm·Argo CD](https://devdooly.github.io/devdooly-platform-lab/technologies/kubernetes/) | 환경별 선언, 이미지 digest, 배포 상태와 실제 결과 |
+| [Spark·Iceberg·Trino](https://devdooly.github.io/devdooly-platform-lab/technologies/lakehouse/) | JDBC catalog, snapshot, compaction, 시점 조회 |
+| [Astro·React·관측 화면](https://devdooly.github.io/devdooly-platform-lab/technologies/web/) | 정적 배포, 공개 조회, 출처·시각·실패 보존 |
+| [AI 활용·Java 검증·JMH](https://devdooly.github.io/devdooly-platform-lab/technologies/ai/) | 독립 기대값, 알고리즘 비교, 측정 범위와 오차 |
+
+기술 안내는 설명 기준 소스, 실제 화면 캡처의 시점, 운영 배포와 격리 실험의 범위를 함께 표시합니다. 학습 안내의 명령은 새 환경에서 실행하는 절차이며 이 문서가 현재 운영 환경을 변경하거나 새 환경의 기동 성공을 보장하지 않습니다. [구현·검증 범위](docs/features/technology-guide.md)를 참고하세요. 아래 기존 기능과 과거 검증 기록은 그대로 보존합니다.
 
 ## 서비스 화면 바로가기
 
