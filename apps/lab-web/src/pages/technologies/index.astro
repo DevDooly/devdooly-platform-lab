@@ -1,0 +1,24 @@
+---
+import GuideLayout from '../../layouts/GuideLayout.astro';
+import TechnologyMap from '../../components/TechnologyMap.astro';
+import { technologies } from '../../data/technologyGuides';
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+---
+<GuideLayout title="기술별 설계와 구현" description="Java·데이터·배포 기술이 하나의 시스템에서 맡는 역할을 소개합니다. 기술을 고르면 구성도, 실제 화면, 설정과 검증 근거로 이어집니다.">
+  <nav class="guide-toc" aria-label="기술 안내 목차"><a href="#catalog">8개 기술 안내</a><a href="#architecture">전체 구성도</a><a href="#reading">추천 읽기 순서</a><a href={`${base}guides/rebuild/`}>내 환경에 재구축하기 →</a></nav>
+  <section id="catalog" class="guide-section" aria-labelledby="catalog-title">
+    <h2 id="catalog-title">8개의 기술 가이드</h2>
+    <div class="technology-grid">{technologies.map((tech,i) => <a class="technology-card" href={`${base}technologies/${tech.slug}/`}>
+      <div class="technology-label"><span>{String(i+1).padStart(2,'0')} / {tech.category}</span><span aria-hidden="true">↗</span></div>
+      <h3>{tech.title}</h3><p>{tech.summary}</p><span class="technology-more">역할 · 구성 · 설정 · 근거 →</span>
+    </a>)}</div>
+  </section>
+  <TechnologyMap />
+  <section id="reading" class="guide-section" aria-labelledby="reading-title">
+    <p class="eyebrow">02 / TWO WAYS TO READ</p><h2 id="reading-title">목적에 맞게 둘러보세요</h2>
+    <div class="guide-two-column">
+      <article class="guide-panel"><h3>설계와 역량을 빠르게 이해하려면</h3><ol><li><a href={`${base}technologies/java/`}>Java: 처리 규칙과 작업 상태</a></li><li><a href={`${base}technologies/kafka/`}>Kafka: 중단 뒤 재수신과 중복 처리</a></li><li><a href={`${base}technologies/jenkins/`}>Jenkins: 소스 검증과 배포의 분리</a></li></ol><p>각 페이지의 ‘문제와 선택’을 읽고, 화면·검증 근거로 확인하세요.</p></article>
+      <article class="guide-panel"><h3>직접 학습하고 새 프로젝트를 시작하려면</h3><ol><li><a href={`${base}guides/rebuild/#local`}>로컬 최소 API·화면 실행</a></li><li><a href={`${base}guides/rebuild/#expand`}>DB·메시징·저장소 확장 순서</a></li><li><a href={`${base}guides/rebuild/#migrate`}>새 장비로 옮길 설정과 검증 기준</a></li></ol><p>전체 Lab을 한 번에 복제하기보다 필요한 경로부터 구성하세요.</p></article>
+    </div>
+  </section>
+</GuideLayout>

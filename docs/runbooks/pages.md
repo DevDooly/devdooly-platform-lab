@@ -14,7 +14,9 @@ Pages의 source는 GitHub Actions로 설정합니다. 업로드와 배포는 wor
 
 ## 공개 API 연결
 
-현재 공개 Lab API는 연결 전입니다. 사이트는 합성 데이터 샘플과 미관측 상태를 표시합니다. Ubuntu의 HTTPS 공개 API가 준비되면 저장소 변수 `LAB_PUBLIC_API_URL`에 `/api`까지 포함한 공개 주소를 지정하고 workflow를 다시 실행합니다.
+현재 포트폴리오는 공개 HTTPS API와 연결되어 있습니다. [공개 연결 근거](../evidence/public-read-https/README.md)에서 허용 GET 6개와 지정 거부 요청의 검증 범위를 확인할 수 있습니다. 이 기록은 해당 실행 시점의 결과이며 현재 가용성을 보장하지 않습니다.
+
+새 환경에서는 저장소 변수 `LAB_PUBLIC_API_URL`에 `/api`까지 포함한 공개 HTTPS 주소를 지정합니다. Pages workflow는 이를 빌드 환경의 `PUBLIC_API_BASE_URL`로 전달하며, 주소를 변경하면 다시 빌드·게시해야 합니다. 변수가 없을 때의 기본값 `/api`는 로컬 개발의 API proxy나 같은 origin의 API 배치를 위한 값입니다. GitHub Pages 자체가 API를 제공하는 것은 아니므로, 새 Pages 사이트를 게시하는 것만으로 공개 API 연결이 완성되지는 않습니다.
 
 그 주소는 프런트 번들에 포함되므로 인증 토큰이나 사설 접속 주소를 넣지 않습니다. API 서버는 실제 포트폴리오 origin에 필요한 CORS 정책을 설정해야 합니다. 관리자 API를 연결하지 않습니다.
 

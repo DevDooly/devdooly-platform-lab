@@ -1,0 +1,20 @@
+---
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const lanes = [
+  {name:'작업 처리', caption:'DB의 작업 상태를 기준으로 메시지를 처리하고 결과 파일을 보존합니다.', steps:[['java','Java · Spring Boot','입력 검증 / 작업·결과 API'],['kafka','Kafka + worker','전달 / 재수신 / 완료 기록'],['storage','MariaDB + Garage','업무 상태 / 결과·실패 파일']]},
+  {name:'빌드와 배포', caption:'소스 검증과 운영 배포의 책임을 분리합니다.', steps:[['jenkins','Jenkins + Actions','같은 소스 검증 / 이미지 게시'],['kubernetes','GitOps · Helm','검토한 이미지·설정 선언'],['kubernetes','Argo CD + K3s','선언 동기화 / Pod 상태']]},
+  {name:'데이터 확장 실험', caption:'격리 환경에서 확인한 경로입니다. 운영 작업에서 이어지는 상시 파이프라인은 아닙니다.', steps:[['lakehouse','Spark','합성 데이터 분류 / 재처리'],['lakehouse','Iceberg + S3','스냅샷 / 테이블 파일'],['lakehouse','Trino','SQL 조회 / 보존 결과 확인']]},
+];
+---
+<section id="architecture" class="guide-section" aria-labelledby="architecture-title">
+  <p class="eyebrow">SYSTEM MAP</p>
+  <h2 id="architecture-title">하나의 시스템, 세 가지 흐름</h2>
+  <p class="section-lead">상자는 해당 기술의 설계·설정 안내로 연결됩니다. 화살표는 역할의 흐름이며 모든 단계가 하나의 트랜잭션이라는 뜻은 아닙니다.</p>
+  <div class="architecture-lanes">
+    {lanes.map(lane => <article class="architecture-lane">
+      <header><h3>{lane.name}</h3><p>{lane.caption}</p></header>
+      <ol>{lane.steps.map(([slug,title,role]) => <li><a href={`${base}technologies/${slug}/`}><strong>{title}</strong><span>{role}</span></a></li>)}</ol>
+    </article>)}
+  </div>
+  <p class="guide-callout"><strong>화면은 별도의 읽기 경로입니다.</strong> Astro·React 포트폴리오가 공개 GET과 저장된 관측 기록을 읽습니다. Jenkins·Argo CD·Kafbat 관리 UI는 로그인이 필요합니다. <a href={`${base}technologies/web/`}>공개·관리 경계 보기 →</a></p>
+</section>

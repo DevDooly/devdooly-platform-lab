@@ -1,0 +1,43 @@
+---
+import '../styles/global.css';
+import '../styles/technology-guide.css';
+interface Props { title: string; description: string; eyebrow?: string; }
+const { title, description, eyebrow = 'TECHNOLOGY FIELD GUIDE' } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+---
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f6f0" />
+    <title>{title} — DevDooly Platform Lab</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+  </head>
+  <body>
+    <a href="#main" class="skip-link">본문으로 이동</a>
+    <header class="guide-header">
+      <a class="guide-brand" href={base}>DevDooly <span>PLATFORM LAB</span></a>
+      <nav aria-label="포트폴리오 메뉴">
+        <a href={`${base}technologies/`}>기술과 설계</a>
+        <a href={`${base}guides/rebuild/`}>학습·재구축</a>
+        <a href={`${base}#services`}>실제 서비스</a>
+        <a href="https://github.com/DevDooly/devdooly-platform-lab">GitHub ↗</a>
+      </nav>
+    </header>
+    <main id="main" class="guide-main">
+      <header class="guide-intro">
+        <p class="eyebrow">{eyebrow}</p>
+        <h1>{title}</h1>
+        <p class="guide-lead">{description}</p>
+      </header>
+      <slot />
+    </main>
+    <footer class="guide-footer">
+      <p>김선홍 · Java / Data / Platform</p>
+      <p>업무 경험에서 출발한 개인 재현 프로젝트입니다. 공개 예제와 수치는 합성 데이터 기반입니다.</p>
+      <a href={`${base}technologies/`}>기술 목차로 돌아가기 ↑</a>
+    </footer>
+  </body>
+</html>
