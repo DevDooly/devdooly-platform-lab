@@ -10,6 +10,8 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지의 이해�
 
 대표 사례 [메시지는 다시 와도, 결과는 지킨다](https://devdooly.github.io/devdooly-platform-lab/cases/kafka-redelivery/)에서는 Kafka·DB 사이의 세 중단 지점을 골라 남는 상태와 재개 동작을 비교합니다. 작업 재전달과 센서 중복 판정, offset commit과 파일 저장 완료의 차이도 설명합니다.
 
+[빌드부터 배포·롤백까지, Git으로 연결하기](https://devdooly.github.io/devdooly-platform-lab/cases/cicd-delivery/)에서는 Jenkins 검증·Actions 이미지 게시·Argo CD 배포의 선택 이유와 책임을 설명합니다. 실제 정상 배포·실패 차단·A → B → A 기록을 비교하고 핵심 설정·다른 환경 이식 순서로 이어집니다. 과거 실행과 현재 설정 기준을 구분한 [구현·검증 범위](docs/features/cicd-delivery-case.md)를 함께 읽습니다.
+
 | 기술 안내 | 살펴볼 설계 |
 | --- | --- |
 | [Java·Spring Boot](https://devdooly.github.io/devdooly-platform-lab/technologies/java/) | 입력 판정, DB 상태, 조회 API와 worker의 책임 분리 |
