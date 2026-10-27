@@ -6,17 +6,17 @@
 
 ## 목표 재정렬 — 기술을 설명하는 포트폴리오
 
-### 현재 우선순위 — 빌드·배포·롤백 대표 사례
+### 현재 우선순위 — 결과 저장·검증·복구 대표 사례
 
-사용자 요청에 따라 [Jenkins·Actions·Argo CD 대표 사례](https://devdooly.github.io/devdooly-platform-lab/cases/cicd-delivery/)를 구현합니다. root는 사례 페이지·진입 링크·통합·게시를, native 에이전트는 별도 설정/이식 컴포넌트를, 다른 채팅은 과거 실행과 현재 설정의 독립 검토를 맡습니다. 파일·Git·브라우저 작업은 겹치지 않습니다.
+Jenkins·Actions·Argo CD 대표 사례는 [PR #300 완료 기록](https://github.com/DevDooly/devdooly-platform-lab/pull/300#issuecomment-6442458687)에서 같은 main CI·Pages·공개 결과와 한계를 확인합니다. 그다음 사용자 요청인 [MariaDB·Garage S3 대표 사례](https://devdooly.github.io/devdooly-platform-lab/cases/storage-recovery/)를 구현합니다. root는 사례·진입 링크·통합·Git·브라우저를, native 에이전트는 별도 설정/이식 컴포넌트를, 다른 채팅은 DB/S3 경계·과거 실행·현재 설정의 읽기 전용 독립 검토를 맡습니다. 파일 소유와 실행 담당은 겹치지 않습니다.
 
 | 우선순위 | 범위 | 상태 |
 | --- | --- | --- |
-| 1 | 검증·게시·배포 책임과 기술 선택 이유, 정상·실패·A → B → A를 설명하는 대표 사례 | 구현·로컬 확인 완료. 과거 summary를 직접 읽고 소스·이미지·GitOps revision과 관측 시각을 구분합니다. PR의 같은 main CI/Pages·공개 완료 기록을 따릅니다. |
+| 1 | DB 결과 저장·두 파일 검증·export 완료·슬롯 해제와 복구 대표 사례 | 구현·로컬 확인 완료. 원 summary와 기존 손상 수리 모델을 재사용해 Windows 내부 exporter와 Linux 실행기 시험을 구분합니다. 같은 main CI/Pages·공개 결과는 PR 완료 기록을 따르며 새 실험·운영 복구와 구분합니다. |
 | 2 | 핵심 설정·새 환경 이식과 실제 화면으로 이어지는 길 | 같은 변경에 포함. 새 환경 기동·DB 복원 성공은 주장하지 않습니다. |
 | 다음 | 추가 대표 사례나 기능 | 이번 변경의 공개 결과를 마친 뒤 실제 설명·이용 공백이 확인될 때 하나씩 선정합니다. 반복 점검·근거 없는 파생 기능은 만들지 않습니다. |
 
-[기능 범위와 검증 기록](features/cicd-delivery-case.md)을 따릅니다. Pages 토큰·별도 환경 K3s/Jenkins 기동 복원·예산 정책·PR #102와 운영 image/source pin·기존 서비스/데이터·자동 이미지 제안 PR·다른 PAUSED 자동화는 유지합니다.
+[기능 범위와 검증 기록](features/storage-recovery-case.md)을 따릅니다. Pages 토큰·별도 환경 K3s/Jenkins 기동 복원·예산 정책·PR #102와 운영 image/source pin·기존 서비스/데이터·자동 이미지 제안 PR·다른 PAUSED 자동화는 유지합니다.
 
 이 프로젝트의 우선 목표는 **취업·이직 과정에서 Java·데이터·플랫폼 기술의 이해와 설계 판단을 보여주는 것**입니다. 화면의 세부 기능 수를 늘리기보다, 어떤 문제를 해결하고 기술이 어떻게 연결되며 어디까지 검증했는지 읽을 수 있게 만듭니다. 개인 학습과 다른 시스템 이식을 위해 실제 설정 위치·변경 항목도 연결합니다.
 

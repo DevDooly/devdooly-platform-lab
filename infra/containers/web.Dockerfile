@@ -6,6 +6,7 @@ COPY apps/lab-web/ ./
 COPY docs/evidence/github-app-jenkins/natural-expiry-summary.json /docs/evidence/github-app-jenkins/natural-expiry-summary.json
 COPY docs/evidence/kafka-redelivery/summary.json /docs/evidence/kafka-redelivery/summary.json
 COPY docs/evidence/cicd-gate/summary.json /docs/evidence/cicd-gate/summary.json
+COPY docs/evidence/result-export/summary.json /docs/evidence/result-export/summary.json
 RUN npm run check && npm run build
 
 FROM nginx:stable-alpine@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94

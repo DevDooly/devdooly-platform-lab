@@ -1,0 +1,94 @@
+---
+import GuideLayout from '../../../layouts/GuideLayout.astro';
+import StorageSetupGuide from '../../../components/StorageSetupGuide.astro';
+import exportRecord from '../../../../../../docs/evidence/result-export/summary.json';
+import integrityRecord from '../../../data/export-integrity-runtime.generated.json';
+import { parseExportIntegrity, exportIntegrityPhases } from '../../../lib/export-integrity-runtime';
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const reference = 'a652293e70cae4fbbf4f584c16f313c6941a5a05';
+const github = 'https://github.com/DevDooly/devdooly-platform-lab';
+const repo = `${github}/blob/${reference}/`;
+const verified = parseExportIntegrity(integrityRecord)!;
+const integrity = verified.summary.integrityResult;
+const phases = exportIntegrityPhases(verified);
+const normal = exportRecord.actualServiceIt.finalCases.find(item => item.case === 'verified-export-and-repeat')!;
+const failureCases = [
+  { record: exportRecord.actualServiceIt.finalCases.find(item => item.case === 'second-file-storage-failure-retry')!, title: '첫 파일만 확인하고 두 번째 경계에서 실패하면?', before: '첫 파일의 실제 GET 확인 뒤, 두 번째 S3 adapter 호출 전에 의도적인 경계 예외를 발생시켰습니다. 네트워크·Garage 장애를 주입한 시험은 아닙니다.', recovery: 'DB의 처리 결과·완료 시각과 export PENDING·점유 슬롯을 보존하고 다음 작업 접수를 거부했습니다. 재시도는 첫 객체를 다시 검증하고 두 번째 파일을 저장·확인한 뒤 완료했습니다.' },
+  { record: exportRecord.actualServiceIt.finalCases.find(item => item.case === 'database-ack-slot-release-rollback-retry')!, title: '두 파일은 정상인데 DB 완료 처리가 실패하면?', before: 'EXPORT ACK·EXPORTED 갱신 SQL 뒤 슬롯 해제 SQL에서 실제 MariaDB trigger가 SQLSTATE 45000을 발생시켰습니다. 외부 파일 검증은 이미 끝난 상태였습니다.', recovery: '하나의 DB 완료 트랜잭션이 rollback되어 PENDING·미확인 outbox·점유 슬롯이 유지됐고, S3 객체는 남았습니다. 시험 trigger를 제거한 뒤 같은 객체를 재검증하고 완료했습니다.' },
+  { record: exportRecord.actualServiceIt.finalCases.find(item => item.case === 'exporter-first-object-kill-recovery')!, title: '첫 파일을 확인한 프로세스가 종료되면?', before: '실제 GET 확인의 atomic checkpoint와 DB PENDING·점유 슬롯을 대조한 뒤 Windows child JVM을 강제 종료했습니다. 고정 sleep이나 예외 주입만으로 종료를 대신하지 않았습니다.', recovery: '새 exporter가 기존 결과를 다시 계산하지 않고 저장된 DB snapshot에서 같은 파일을 만들었습니다. 남아 있는 첫 객체와 두 번째 파일을 확인한 뒤 DB 완료·슬롯 해제를 확정했습니다.' },
+];
+---
+<GuideLayout title="처리는 끝나도, 저장 확인은 남아 있다" description="MariaDB의 처리 결과와 Garage S3의 파일은 언제 함께 완료될까요? 결과·실패 파일을 검증한 뒤 슬롯을 해제하는 설계와 중단·손상 뒤 복구 기록, 설정·이식 방법을 설명합니다." eyebrow="DESIGN CASE / MARIADB · GARAGE S3">
+  <nav class="guide-toc" aria-label="결과 저장·검증·복구 사례 목차"><a href="#choices">문제와 기술 선택</a><a href="#flow">저장·검증 흐름</a><a href="#files">두 파일의 의미</a><a href="#boundaries">실패·중단 경계</a><a href="#repair">손상 발견·명시 수리</a><a href="#screen">실제 화면</a><a href="#settings">핵심 설정</a><a href="#migrate">다른 환경에 이식</a><a href="#evidence">근거와 한계</a></nav>
+
+  <section id="choices" class="guide-section" aria-labelledby="choices-title">
+    <h2 id="choices-title">DB 처리 성공만으로 파일 보관을 완료할 수 없었습니다.</h2>
+    <p>DB commit 뒤 프로세스가 멈추거나 파일 하나만 남을 수 있습니다. 이 Lab은 <strong>업무 상태 COMPLETED</strong>와 <strong>파일 상태 EXPORTED</strong>를 나눕니다. 파일 확인이 끝날 때까지 export 요청과 점유 슬롯을 유지해 다음 작업이 완료되지 않은 저장을 지나치지 않도록 합니다.</p>
+    <div class="storage-three">
+      <article class="guide-panel"><p class="eyebrow">STATE / MARIADB</p><h3>결과와 다음 할 일을 함께 저장합니다.</h3><p>작업·순번별 처리 결과·원본 bytes를 보관하고, 처리 완료와 EXPORT intent를 같은 DB 트랜잭션으로 남깁니다. export 완료·ACK·슬롯 해제도 함께 확정합니다.</p><p><strong>선택 이유:</strong> 부분 갱신을 막고 중단 뒤에도 재개할 근거를 DB에 두기 위해서입니다.</p></article>
+      <article class="guide-panel"><p class="eyebrow">DOCUMENT / GARAGE S3</p><h3>파일 보관을 별도 경계로 둡니다.</h3><p>Garage의 S3 호환 API와 AWS SDK로 원본·결과·실패 문서를 다룹니다. DB 상태와 파일 내용을 각각 확인할 수 있습니다. 이 Lab은 단일 노드·RF1 구성입니다.</p><p><strong>선택 이유:</strong> 직접 구성한 저장소에서 S3 연동과 오류 대응을 학습하기 위해서입니다. 성능 우위나 HA를 검증한 선택은 아닙니다.</p></article>
+      <article class="guide-panel"><p class="eyebrow">PROOF / FULL GET</p><h3>있다는 응답보다 내용을 확인합니다.</h3><p>버전·run·원본 SHA·문서 SHA가 포함된 경로를 사용하고 전체 GET의 크기·bytes·SHA-256을 비교합니다. 같은 크기의 다른 내용도 거부합니다.</p><p><strong>선택 이유:</strong> 재시도가 같은 결과 파일을 식별하고 잘못된 기존 파일을 조용히 덮어쓰지 않게 하기 위해서입니다.</p></article>
+    </div>
+  </section>
+
+  <section id="flow" class="guide-section" aria-labelledby="flow-title">
+    <h2 id="flow-title">짧은 DB 트랜잭션 사이에서 파일을 확인합니다.</h2>
+    <ol class="storage-flow">
+      <li><span class="step-tag">01 / DB COMMIT</span><h3>처리 결과 + EXPORT intent</h3><p><code>COMPLETED / PENDING</code>. 결과·처리 시각은 확정하지만 슬롯은 계속 점유합니다.</p></li>
+      <li><span class="step-tag">02 / DB SNAPSHOT</span><h3>저장된 결과에서 두 문서 생성</h3><p>짧은 트랜잭션으로 원본·작업·run·순번별 outcome을 읽고 버전이 고정된 문서를 만듭니다.</p></li>
+      <li><span class="step-tag">03 / S3 · DB TX 밖</span><h3>result → failures 전체 검증</h3><p>각 문서를 먼저 GET합니다. 정확한 404/NoSuchKey만 PUT 후 다시 GET하며, 충돌·권한 오류는 그대로 실패합니다.</p></li>
+      <li><span class="step-tag">04 / DB COMMIT</span><h3>EXPORT ACK + EXPORTED + 슬롯 해제</h3><p>두 파일을 확인한 뒤 하나의 짧은 DB 트랜잭션으로 완료 시각과 슬롯 해제를 확정합니다.</p></li>
+    </ol>
+    <p class="guide-callout"><strong>DB와 두 객체를 묶는 분산 트랜잭션은 아닙니다.</strong>파일이 남아도 DB 완료가 실패할 수 있습니다. export coordinator와 S3 adapter는 바깥 DB 트랜잭션 안에서의 호출을 거부합니다. 느린 외부 I/O 동안 DB 트랜잭션을 계속 열어 두지 않습니다.</p>
+    <div class="guide-links"><a href={`${repo}apps/api/src/main/java/io/github/devdooly/platformlab/jobs/LabJobService.java`}>process·exportSnapshot·completeExport 읽기 ↗</a><a href={`${repo}apps/api/src/main/java/io/github/devdooly/platformlab/jobs/exporting/ResultExportService.java`}>파일 확인 순서와 완료 호출 ↗</a></div>
+  </section>
+
+  <section id="files" class="guide-section" aria-labelledby="files-title">
+    <h2 id="files-title">결과와 실패 입력을 서로 다른 문서로 보관합니다.</h2>
+    <p>2026-10-15 KST의 정상 격리 시험은 run <strong>{normal.runRows}개</strong>·outcome <strong>{normal.outcomeRows}개</strong>와 두 문서를 확인했습니다. 아래 크기·SHA는 그 시험의 저장 파일이며, 모든 입력이나 현재 운영 파일의 고정 크기가 아닙니다.</p>
+    <div class="guide-two-column storage-documents">
+      <article class="guide-panel"><span class="step-tag">RESULT</span><h3>result-v1-…json</h3><p>순번별 전체 outcome, 입력/성공/실패/중복/대기 건수와 저장된 처리 시각을 담습니다.</p><dl><div><dt>당시 크기</dt><dd>{normal.resultSize.toLocaleString('ko-KR')} bytes</dd></div><div><dt>용도</dt><dd>전체 처리 결과 재확인</dd></div></dl><details><summary>당시 파일 SHA-256 보기</summary><code>{normal.resultSha256}</code></details></article>
+      <article class="guide-panel"><span class="step-tag">FAILURES</span><h3>failures-v1-…json</h3><p>실패 입력·이유·순번과 원래 line text를 담습니다. 업무상 중복 판정은 실패 입력과 구분합니다.</p><dl><div><dt>당시 크기</dt><dd>{normal.failuresSize.toLocaleString('ko-KR')} bytes</dd></div><div><dt>용도</dt><dd>실패한 원본과 판정 이유 연결</dd></div></dl><details><summary>당시 파일 SHA-256 보기</summary><code>{normal.failuresSha256}</code></details></article>
+    </div>
+    <pre class="storage-key" tabindex="0" aria-label="실제 export key 구조의 자리표시자 예시"><code>{'result/{runId}/{scenarioVersion}/{sourceSha256}/\n{result|failures}-v1-{documentSha256}.json'}</code></pre>
+    <p>경로의 원본 SHA와 문서 SHA는 서로 다른 대상의 hash입니다. 문서는 현재 시각이나 임의 UUID를 넣지 않고 저장된 DB snapshot으로 재생성합니다. 별도의 DB pair manifest·파일 영수증을 추가한 설계는 아닙니다.</p>
+    <p>정상 완료 후 같은 작업을 명시적으로 다시 export해도 두 파일을 재검증합니다. 기존 완료 시각과 이후 작업이 점유한 슬롯은 바꾸지 않습니다. 상시 실행기가 완료 파일의 이후 유실을 자동 감시·복원한다는 뜻은 아닙니다.</p>
+  </section>
+
+  <section id="boundaries" class="guide-section" aria-labelledby="boundaries-title">
+    <h2 id="boundaries-title">실패 위치가 달라도, 남은 결과를 다시 확인합니다.</h2>
+    <p class="section-lead">다음은 2026-10-15 KST의 실제 MariaDB·Garage IT {exportRecord.actualServiceIt.totals.tests}개 중 세 사례입니다. Java는 Windows에서 실행했고 전체 시험의 child JVM 강제 종료는 {exportRecord.actualServiceIt.forcedChildJvmTerminations}회입니다. Kafka·상시 worker의 시험과 구분합니다.</p>
+    <div class="storage-failures">{failureCases.map((item,i) => <details class="storage-record" open={i===1} data-case={item.record.case}><summary><span>0{i+1} / 경계</span><strong>{item.title}</strong></summary><div class="storage-record-body"><p><strong>실패·중단.</strong> {item.before}</p><p><strong>재개.</strong> {item.recovery}</p><dl class="storage-metrics"><div><dt>최종 run / outcome</dt><dd>{item.record.runRows} / {item.record.outcomeRows}</dd></div><div><dt>최종 확인 문서</dt><dd>{item.record.objectsVerified}개</dd></div><div><dt>이 사례의 JVM kill</dt><dd>{item.record.forcedKills}회</dd></div><div><dt>export / 슬롯</dt><dd>{item.record.exported ? 'EXPORTED' : '미확인'} / {item.record.slotFree ? '해제' : '점유'}</dd></div></dl></div></details>)}</div>
+    <p>문서 2개는 최종 정상 상태에서 확인한 서로 다른 파일 수이며 GET 전체 호출 수가 아닙니다. 실제 DB rollback은 DB 갱신에만 적용되고 S3에 이미 저장한 파일은 남습니다. Windows child JVM 종료를 Linux Pod SIGKILL이나 호스트·디스크 장애 복구와 같게 보지 않습니다.</p>
+  </section>
+
+  <section id="repair" class="guide-section" aria-labelledby="repair-title">
+    <h2 id="repair-title">손상된 객체는 resume만으로 고쳐지지 않습니다.</h2>
+    <p><time datetime={verified.completedAt}>{verified.completedAt.replace('T',' ').replace('Z',' UTC')}</time>의 별도 Linux 격리 시험입니다. 최초 업무 완료는 consumer가 아닌 직접 DB fixture로 준비했습니다. 아래 네 단계는 <strong>지정 IT {verified.summary.verifiedTests}개</strong>의 관측이며 네 번의 독립 시험이 아닙니다.</p>
+    <ol class="storage-repair">{phases.map((phase,i) => <li class="guide-panel" data-phase={phase.id}><span class="step-tag">0{i+1} / {phase.domain}</span><h3>{phase.title}</h3><p>{phase.description}</p><dl class="phase-state"><div><dt>{phase.domain === 'JOB' ? '업무 상태' : '실행기 상태'}</dt><dd><code>{phase.status}</code></dd></div><div><dt>파일 / 슬롯</dt><dd><code>{phase.exportStatus}</code> / {phase.slot}</dd></div></dl></li>)}</ol>
+    <div class="storage-preserved"><h3>수리 전후 무엇을 보존했나</h3><p>업무 행·처리 시각 <strong>{integrity.businessRowsAndTimesUnchanged ? '보존' : '미확인'}</strong> · 원본 source/raw <strong>{integrity.sourceAndRawUnchanged ? '보존' : '미확인'}</strong> · DISPATCH/EXPORT identity <strong>{integrity.dispatchAndExportIdentityUnchanged ? '보존' : '미확인'}</strong>. 최종 두 파일 검증·EXPORTED·슬롯 해제를 확인했습니다.</p><p>업무 입력 {integrity.fixtureInput} = 성공 {integrity.successCount} + 실패 {integrity.failureCount} + 중복 {integrity.duplicateCount} + 대기 {integrity.pendingCount}. 마지막에는 완료 메시지 replay {integrity.completedReplays}회와 end {integrity.finalEndOffset}·commit {integrity.finalCommittedOffset}·lag {integrity.finalLag}을 확인했습니다. 최초 직접 DB 처리와 마지막 consumer replay는 별도 관측입니다.</p></div>
+    <p class="guide-callout"><strong>명시 수리는 시험 소유 fixture 한 개에 한정했습니다.</strong>child 종료·lease 해제·소유 key·손상 bytes를 확인한 시험 코드가 해당 객체 하나만 삭제했습니다. resume는 journal을 STOPPED로 바꾸며 파일 수리나 daemon 재시작을 대신하지 않습니다. 운영 객체 자동 삭제·수리 기능의 검증이 아닙니다.</p>
+    <p>상시 실행기는 pending export를 먼저 확인할 수 있습니다. 남은 export를 진행하려면 반드시 완료 메시지가 다시 와야 하는 구조는 아닙니다.</p>
+    <div class="guide-links"><a href={verified.runUrl}>실제 Linux IT 실행 ↗</a><a href={`${repo}docs/evidence/export-integrity-runtime/README.md`}>손상·재중지·수리의 원 근거 ↗</a></div>
+  </section>
+
+  <section id="screen" class="guide-section" aria-labelledby="screen-title">
+    <h2 id="screen-title">공개 화면에서 DB와 실행기 상태를 나란히 읽습니다.</h2>
+    <figure class="tech-screenshot"><a href={`${base}images/technologies/export-record.jpg`} target="_blank" rel="noreferrer" aria-label="손상 export 관측 캡처 크게 보기, 새 창"><img src={`${base}images/technologies/export-record.jpg`} alt="공개 포트폴리오의 손상 export 실험 기록에서 단계와 작업·실행기 상태를 비교하는 화면" loading="lazy" width="1265" height="712" /></a><figcaption>2026-10-26 KST에 캡처한 공개 실험 기록 화면입니다. 원 시험 완료는 {verified.completedAt}이며, MariaDB·Garage 관리자 UI나 현재 운영 상태의 캡처가 아닙니다.</figcaption></figure>
+    <div class="guide-links"><a href={`${base}#export-integrity-runtime`}>기존 단계별 관측 화면 →</a><a href={`${base}#job-observation`}>실제 배포의 작업·export 관측 →</a><a href={`${base}technologies/storage/`}>MariaDB·Garage S3 기술 안내 →</a></div>
+    <p class="section-lead">격리 실험 기록과 미니 PC 배포 관측은 출처·시각이 다릅니다. 공개 화면은 관리 credential을 받아 저장소를 수리하는 도구가 아닙니다.</p>
+  </section>
+
+  <StorageSetupGuide sourceRef={reference} />
+
+  <section id="evidence" class="guide-section" aria-labelledby="evidence-title">
+    <h2 id="evidence-title">실행 시점과 설명 기준, 보장 범위를 함께 봅니다.</h2>
+    <p>10월 15일의 Windows 내부 exporter 시험과 10월 20일의 Linux 상시 실행기 시험은 별개입니다. 설정·코드 설명은 <a href={`${github}/tree/${reference}`}>소스 a652293</a> 기준이며 운영 image/source pin과 같다는 뜻은 아닙니다. 정적 페이지 작성으로 새 DB·Garage를 기동하거나 운영 복구를 실행하지 않았습니다.</p>
+    <p>이 설계는 단일 신뢰 writer의 확인·재시도 계약입니다. 조건부 생성·다중 writer 잠금·WORM·이후 객체 삭제 방지·HA·디스크 손실 복원이나 시스템 전체 exactly-once를 보장하지 않습니다. SDK 요청별 대기 제한은 전체 두 파일 export의 총 소요 시간 보장이 아닙니다.</p>
+    <div class="tech-sources"><div><h3>실제 시험과 원 수치</h3><ul><li><a href={`${repo}docs/evidence/result-export/README.md`}>Windows·MariaDB·Garage 6개 IT의 범위 ↗</a></li><li><a href={`${repo}docs/evidence/result-export/summary.json`}>문서 크기·hash·최종 상태의 원 summary ↗</a></li><li><a href={`${repo}docs/evidence/result-export/source-fingerprint.json`}>당시 실행 소스의 지문 ↗</a></li><li><a href={`${repo}docs/evidence/export-integrity-runtime/summary.json`}>Linux 손상·수리 IT 원 summary ↗</a></li><li><a href={`${repo}docs/evidence/export-integrity-runtime/run-metadata.json`}>Linux source·실행·시각 연결 ↗</a></li></ul></div><div><h3>구현과 기술 결정</h3><ul><li><a href={`${repo}docs/adr/0007-verified-result-export.md`}>두 파일 검증과 완료 경계의 결정 ↗</a></li><li><a href={`${repo}apps/api/src/main/java/io/github/devdooly/platformlab/jobs/exporting/ExportBundle.java`}>버전·경로·문서 생성 ↗</a></li><li><a href={`${repo}apps/api/src/main/java/io/github/devdooly/platformlab/jobs/exporting/S3ResultExportStore.java`}>전체 GET·정확한 NoSuchKey·충돌 거부 ↗</a></li><li><a href={`${repo}apps/api/src/main/java/io/github/devdooly/platformlab/jobs/runtime/RuntimeStateStore.java`}>resume와 실행 journal ↗</a></li></ul></div><div><h3>일반 동작의 공식 설명</h3><ul><li><a href="https://mariadb.com/docs/server/reference/sql-statements/transactions/start-transaction">MariaDB 트랜잭션·COMMIT·ROLLBACK ↗</a></li><li><a href="https://garagehq.deuxfleurs.fr/documentation/reference-manual/configuration/">Garage 저장 경로·region·복제 설정 ↗</a></li><li><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/checking-object-integrity.html">S3 checksum과 객체 무결성 ↗</a></li></ul></div></div>
+  </section>
+  <div class="guide-links"><a href={`${base}cases/kafka-redelivery/`}>Kafka 재전달 사례 →</a><a href={`${base}cases/cicd-delivery/`}>빌드·배포·롤백 사례 →</a><a href={`${base}technologies/`}>기술 전체 목차 →</a></div>
+</GuideLayout>
+<style>
+  .storage-three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin:25px 0}.storage-three .guide-panel{padding:24px}.storage-three h3{font-size:1.23rem;line-height:1.6}.storage-flow{list-style:none;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:17px;margin:28px 0}.storage-flow li{border-top:3px solid var(--green);background:var(--surface);padding:22px 19px;min-width:0}.storage-flow h3{font-size:1.14rem;line-height:1.6;margin:12px 0}.storage-flow li+li:before{content:'→';color:var(--green);display:block;margin-bottom:9px}.step-tag{font:12px/1.6 var(--mono);letter-spacing:.06em;color:var(--green)}.storage-documents{margin:25px 0}.storage-documents h3{margin-top:12px}.storage-documents dl>div{display:flex;justify-content:space-between;gap:15px;margin:12px 0;font-size:15px}.storage-documents dd{margin:0}.storage-documents details{margin-top:24px;font-size:14px}.storage-documents details code{display:block;margin-top:15px}.storage-key{background:var(--surface);border:1px solid var(--line);padding:23px;font:14px/1.9 var(--mono);overflow-x:auto;max-width:100%}.storage-failures{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin:25px 0}.storage-record{border:1px solid var(--line);background:var(--surface);min-width:0}.storage-record summary{padding:22px;cursor:pointer}.storage-record summary span{font:13px/1.6 var(--mono);color:var(--green);margin-right:18px}.storage-record summary strong{font-size:1.1rem}.storage-record-body{padding:0 24px 24px}.storage-record-body p{margin:0 0 15px}.storage-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;border-top:1px solid var(--line);padding-top:18px;margin-bottom:0}.storage-metrics dt{font-size:13px;color:var(--muted)}.storage-metrics dd{margin:7px 0 0;font-size:15px}.storage-repair{list-style:none;margin:25px 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.storage-repair li{min-width:0;overflow-wrap:anywhere}.storage-repair h3{margin-top:12px}.storage-repair p{line-height:1.9}.phase-state{margin:20px 0 0;border-top:1px solid var(--line);padding-top:15px;font-size:14px}.phase-state>div{display:grid;grid-template-columns:100px minmax(0,1fr);gap:10px;margin:9px 0}.phase-state dd{margin:0}.storage-preserved{background:var(--cream);padding:23px}.storage-preserved h3{font-size:1.15rem}.storage-preserved p{margin-top:14px}.guide-section code{overflow-wrap:anywhere}.storage-key code{overflow-wrap:normal}summary:focus-visible,.storage-key:focus-visible{outline:3px solid var(--green);outline-offset:4px}@media(max-width:1050px){.storage-three{grid-template-columns:1fr}.storage-flow{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:760px){.storage-flow,.storage-repair{grid-template-columns:minmax(0,1fr)}.storage-flow li+li:before{content:'↓'}.storage-record summary span{display:block;margin:0 0 6px}.storage-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.storage-documents dl>div{display:block}.storage-documents dd{margin-top:5px}.storage-record-body{padding:0 20px 20px}}
+</style>

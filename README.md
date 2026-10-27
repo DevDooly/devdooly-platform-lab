@@ -12,6 +12,8 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지의 이해�
 
 [빌드부터 배포·롤백까지, Git으로 연결하기](https://devdooly.github.io/devdooly-platform-lab/cases/cicd-delivery/)에서는 Jenkins 검증·Actions 이미지 게시·Argo CD 배포의 선택 이유와 책임을 설명합니다. 실제 정상 배포·실패 차단·A → B → A 기록을 비교하고 핵심 설정·다른 환경 이식 순서로 이어집니다. 과거 실행과 현재 설정 기준을 구분한 [구현·검증 범위](docs/features/cicd-delivery-case.md)를 함께 읽습니다.
 
+[처리는 끝나도, 저장 확인은 남아 있다](https://devdooly.github.io/devdooly-platform-lab/cases/storage-recovery/)에서는 MariaDB 처리 완료와 Garage S3 결과·실패 파일의 전체 검증을 구분합니다. DB 완료 실패·프로세스 중단·손상 객체의 명시 수리 기록을 비교하고 핵심 설정·새 환경 이식 방법을 설명합니다. [구현·검증 범위](docs/features/storage-recovery-case.md)를 함께 읽습니다.
+
 | 기술 안내 | 살펴볼 설계 |
 | --- | --- |
 | [Java·Spring Boot](https://devdooly.github.io/devdooly-platform-lab/technologies/java/) | 입력 판정, DB 상태, 조회 API와 worker의 책임 분리 |

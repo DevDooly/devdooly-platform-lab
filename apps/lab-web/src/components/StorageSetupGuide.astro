@@ -1,0 +1,220 @@
+---
+interface Props { sourceRef: string; }
+interface Setting {
+  title: string;
+  fields: [string, string][];
+  meaning: string;
+  move: string;
+  sources: [string, string][];
+}
+interface MigrationStep {
+  title: string;
+  prepare: string;
+  check: string;
+  sources: [string, string][];
+}
+const { sourceRef } = Astro.props;
+const repo = `https://github.com/DevDooly/devdooly-platform-lab/blob/${sourceRef}/`;
+const source = (path: string) => `${repo}${path}`;
+const java = 'apps/api/src/main/java/io/github/devdooly/platformlab/jobs/';
+
+const settings: Setting[] = [
+  {
+    title: 'DB 이름과 migration 책임을 함께 맞춘다',
+    fields: [
+      ['DB_URL / DB_USERNAME', '대상 MariaDB JDBC URL / platform_lab'],
+      ['chart의 DB schema / 사용자', 'platform_lab / platform_lab'],
+      ['API / 상시 worker', 'Flyway enabled / Flyway disabled·V4 필수'],
+      ['Hibernate / JDBC 시각', 'ddl-auto: validate / UTC'],
+    ],
+    meaning: 'MariaDB는 작업·outbox·처리 결과·실행 슬롯을 트랜잭션으로 묶습니다. API가 Flyway migration을 적용하고, 별도 CLI인 worker는 현재 V4 schema를 확인한 뒤 실행합니다. local-dev의 H2 결과는 MariaDB 호환성 증거와 구분합니다.',
+    move: 'DB 이름은 values의 독립 설정이 아닙니다. 바꾸려면 DB StatefulSet의 초기 schema·사용자와 API·worker의 JDBC URL·사용자를 함께 수정합니다. migration용 schema 권한과 앱 접근 범위를 정하고, 기존 DB에는 migration 이력·이전 이미지의 읽기 호환성을 먼저 확인합니다.',
+    sources: [
+      ['apps/api/src/main/resources/application.yml', 'DB·Flyway·시각 설정'],
+      ['apps/api/src/main/resources/application-local-dev.yml', 'H2 profile의 범위'],
+      [`${java}runtime/RuntimeMain.java`, 'worker의 V4 요구·migration 비활성'],
+      ['infra/charts/platform-lab/templates/database-statefulset.yaml', '초기 schema·사용자'],
+      ['infra/charts/platform-lab/templates/api-deployment.yaml', 'API의 DB 연결'],
+    ],
+  },
+  {
+    title: 'Secret은 대상 환경의 관리자가 먼저 준비한다',
+    fields: [
+      ['database.existingSecret', 'platform-lab-db → app-password·root-password'],
+      ['runtime.garage.existingConfigSecret', 'platform-lab-garage-config → garage.toml'],
+      ['runtime.worker.existingS3Secret', 'platform-lab-runtime-s3 → access-key-id·secret-access-key'],
+    ],
+    meaning: '위 이름은 설명 기준 환경의 참조이며 chart는 Secret을 만들지 않습니다. DB root 비밀번호는 DB 초기화에만 사용하고 API·worker에는 앱 계정만 전달합니다. Garage 전체 설정의 RPC secret과 S3 key도 별도로 관리하며 worker key는 해당 bucket의 read/write만 허용하고 owner 권한은 주지 않습니다.',
+    move: '클러스터 관리자는 같은 namespace에 Secret을 만들고, DB·Garage 관리자는 계정·bucket 권한과 비공개 원본을 관리합니다. 새 환경의 이름·key 참조를 맞추되 운영 자격증명을 복사하지 않습니다. 기존 DB PVC를 재사용할 때 Secret만 바꾸어도 DB 계정 비밀번호가 갱신되지는 않습니다.',
+    sources: [
+      ['infra/charts/platform-lab/README.md', 'Secret 계약·권한·bootstrap'],
+      ['gitops/environments/home-lab/runtime.yaml', '환경별 runtime 참조'],
+      ['gitops/environments/home-lab/values.yaml', 'DB Secret 참조'],
+      ['infra/charts/platform-lab/templates/runtime-worker.yaml', 'worker에 전달하는 설정'],
+    ],
+  },
+  {
+    title: 'S3 endpoint·region·SDK 호환성을 함께 확인한다',
+    fields: [
+      ['LAB_RUNTIME_S3_ENDPOINT', 'HTTPS origin / 숫자 loopback HTTP / service.namespace.svc.cluster.local의 명시 포트 HTTP'],
+      ['runtime.worker.region / bucket', 'garage / platform-lab-synthetic'],
+      ['pathStyleAccessEnabled / Garage 요청 checksum', 'true / WHEN_REQUIRED'],
+      ['SDK 호출 / attempt / connect / read', '30초 / 10초 / 3초 / 8초·최대 3회 시도'],
+    ],
+    meaning: 'RuntimeMain은 환경변수에서 endpoint·region·bucket과 명시적 credentials를 읽습니다. endpoint에는 사용자정보·query·fragment·하위 경로를 넣지 않습니다. createGarage()는 실제 PUT 호환 실패 후 선택한 요청 checksum 정책만 바꾸며, 응답 checksum과 TLS 검증은 기본값을 유지합니다. 시간 제한은 SDK 호출별이며 export 전체 제한과 다릅니다.',
+    move: '새 namespace의 Service DNS와 포트 또는 새 HTTPS origin을 정하고 Garage의 s3_region과 client region을 맞춥니다. 내부 HTTP는 service.namespace.svc.cluster.local만 허용하므로 임의 내부 DNS·다른 클러스터 도메인을 그대로 쓸 수 없습니다. chart는 내부 endpoint를 생성하고 region=garage를 강제합니다. 다른 region·S3 제품으로 바꾸려면 schema·template의 endpoint 생성·factory 선택과 실제 PUT/GET 호환성 검증을 함께 바꾸고 TLS 검증을 끄지 않습니다.',
+    sources: [
+      [`${java}S3ClientFactory.java`, 'endpoint·path style·checksum·timeout'],
+      [`${java}runtime/RuntimeMain.java`, '실제 환경변수·client 구성'],
+      ['infra/charts/platform-lab/templates/runtime-worker.yaml', 'namespace별 endpoint 생성'],
+      ['docs/runbooks/s3-source-storage.md', '첫 실패와 호환성 교정'],
+    ],
+  },
+  {
+    title: 'raw와 결과 두 파일의 key를 구분한다',
+    fields: [
+      ['원본 key', 'raw/{runId}/{sourceSha256}.ndjson'],
+      ['결과 공통 prefix', 'result/{runId}/{scenarioVersion}/{sourceSha256}/'],
+      ['prefix 아래 파일', 'result-v1-{내용SHA256}.json / failures-v1-{내용SHA256}.json'],
+      ['문서 상한', 'raw 1 MiB / export 파일 각각 4 MiB'],
+    ],
+    meaning: 'raw는 worker가 다시 읽을 입력이고, result는 확정된 DB snapshot의 전체 판정입니다. failures 파일에는 실패 사유와 해당 원본 입력·rawLine을 남깁니다. 내용 hash가 들어간 버전별 key를 사용해 같은 확정 결과를 다시 확인할 수 있게 했습니다.',
+    move: 'bucket은 환경값으로 바꿀 수 있지만 raw/·result/ prefix와 파일 형식은 Java 코드의 계약입니다. prefix 변경은 단순 values 수정으로 끝나지 않으며 읽기·쓰기 코드, 검증과 기존 객체 이식 계획을 함께 바꿉니다. bucket 정책이나 별도 writer가 이 경로를 수정·삭제하지 않도록 소유 범위를 정합니다.',
+    sources: [
+      [`${java}LabJobService.java`, '원본 key·DB snapshot'],
+      [`${java}exporting/ExportBundle.java`, '결과·실패 파일 형식과 상한'],
+      ['docs/adr/0007-verified-result-export.md', '내용 hash 경로의 선택 이유'],
+    ],
+  },
+  {
+    title: '두 파일을 실제로 읽은 뒤 DB 완료를 기록한다',
+    fields: [
+      ['DB 연산 완료 / 파일 확인 완료', 'COMPLETED·PENDING / EXPORTED'],
+      ['보관 확인', '전체 GET bytes·선언 길이·SHA-256 일치'],
+      ['새 PUT을 허용하는 부재 판정', '정확한 404 / NoSuchKey'],
+    ],
+    meaning: '짧은 DB snapshot 조회를 끝내고 트랜잭션 밖에서 결과·실패 파일을 각각 확인합니다. 두 확인이 끝나야 completeExport가 export·outbox·슬롯을 한 DB 트랜잭션으로 갱신합니다. ETag를 SHA-256으로 간주하지 않으며 S3 확인과 DB commit은 원자적 외부 트랜잭션이 아닙니다.',
+    move: '403·NoSuchBucket·알 수 없는 오류와 관측한 충돌 객체는 실패로 남깁니다. 자동 덮어쓰기·삭제로 복구하지 않고 PENDING·슬롯과 기존 결과를 보존한 뒤 원인을 확인합니다. 재시도는 기존 파일도 다시 읽으며, 정확히 없는 파일만 같은 DB bytes로 보관할 수 있습니다. 외부 writer·확인 이후 유실·WORM 보장은 별도입니다.',
+    sources: [
+      [`${java}exporting/ResultExportService.java`, '확인 뒤 DB 완료 순서'],
+      [`${java}exporting/S3ResultExportStore.java`, '전체 GET·오류 분류·충돌 보존'],
+      ['docs/runbooks/result-export.md', '중단·DB 오류·재시도 기준'],
+    ],
+  },
+  {
+    title: '단일 노드의 영속 경로와 백업을 구분한다',
+    fields: [
+      ['DB / Garage replica·저장소', '각 1 / local-path·ReadWriteOnce'],
+      ['DB / Garage metadata·data 요청', '10Gi / 2Gi·10Gi'],
+      ['Garage metadata_dir / data_dir', '/var/lib/garage/meta / /var/lib/garage/data'],
+      ['Garage db_engine / replication_factor', 'sqlite / 1'],
+    ],
+    meaning: 'Garage template은 metadata·data를 각각 PVC에 마운트하고 Secret의 TOML을 읽습니다. Service는 S3 포트만 열며 RPC는 private 설정에서 loopback으로 제한합니다. DB·Garage PVC는 StatefulSet 삭제·축소 시 Retain이지만 PVC·namespace 직접 삭제까지 막지 않습니다. RF1·local-path는 다른 노드의 복제나 백업이 아닙니다.',
+    move: 'metadata와 data, node identity·layout·관련 Secret을 함께 보존합니다. 새 디스크·StorageClass·다중 노드로 바꾸려면 현재 replica=1·local-path schema 제약과 Garage 구성을 함께 수정해야 합니다. PVC 요청량은 실제 디스크 강제 상한이 아니며 기존 claim을 지워 새 환경을 만드는 방식으로 이식하지 않습니다.',
+    sources: [
+      ['infra/charts/platform-lab/values.yaml', '용량·단일 노드 기본값'],
+      ['infra/charts/platform-lab/values.schema.json', 'replica·StorageClass·region 제약'],
+      ['infra/charts/platform-lab/templates/runtime-garage.yaml', '두 PVC·Secret·S3 Service'],
+      ['infra/charts/platform-lab/README.md', 'private TOML·초기 layout 계약'],
+      ['docs/runbooks/runtime-pvc-recovery.md', 'metadata·data의 일관된 복원'],
+    ],
+  },
+];
+
+const migrationSteps: MigrationStep[] = [
+  {
+    title: '대상 환경과 보존 기준을 먼저 정한다',
+    prepare: '새 namespace·별도 DB와 bucket·새 PVC를 정하고 OS/CPU·이미지 호환성·디스크와 inode 여유를 확인합니다. 기존 데이터가 있다면 DB 상태·Flyway history·객체 목록과 전체 GET 비교 기준, 외부 백업·키 보관 위치를 먼저 확보합니다.',
+    check: '실제 PVC/PV UID·claimRef·저장 경로가 원본과 다르고 겹치지 않는지 확인합니다. 운영 runtime values·Secret·저장 경로를 그대로 복제하지 않습니다.',
+    sources: [['docs/runbooks/runtime-pvc-recovery.md', '격리·소유권·경로 확인'], ['infra/charts/platform-lab/values.yaml', '준비할 저장소·이미지 조건']],
+  },
+  {
+    title: '계정·Secret·Garage의 빈 저장소를 준비한다',
+    prepare: 'DB schema 전용 계정과 migration 권한, 새 Garage RPC 설정·bucket·read/write key를 준비합니다. namespace의 Secret 참조를 맞추고 관리자 토큰과 DB root를 worker에 전달하지 않습니다. 신규 layout은 비어 있음을 확인한 경우에만 최초 bootstrap을 적용합니다.',
+    check: '비밀값을 출력하지 않고 Secret 이름·key 존재·namespace, bucket 권한과 region을 확인합니다. 복원한 layout이나 기존 bucket을 발견하면 최초 생성 명령을 반복하지 않습니다.',
+    sources: [['infra/charts/platform-lab/README.md', 'Secret·layout·bucket 준비 순서'], ['infra/charts/platform-lab/templates/runtime-garage.yaml', 'Garage 설정 마운트']],
+  },
+  {
+    title: '설정을 검토하고 API migration 후 worker를 켠다',
+    prepare: '새 DB URL·schema·계정, endpoint·region·bucket, Secret·스토리지 참조와 검증한 이미지 digest·sourceCommit을 작성합니다. Helm schema·렌더링과 생성 리소스를 검토하고 API가 현재 V4까지 적용한 뒤 worker를 활성화합니다. 기본 runtime은 비활성이며 worker는 별도 이미지 pin이 필요합니다.',
+    check: 'Flyway 성공·Hibernate validate와 실제 DB product, PVC Bound·Pod Ready·실행 이미지를 대조합니다. TCP probe 성공만으로 bucket 권한이나 export 성공을 판단하지 않습니다.',
+    sources: [['infra/charts/platform-lab/values.schema.json', '입력 제약'], [`${java}runtime/RuntimeMain.java`, '현재 V4 선행 조건'], ['infra/charts/platform-lab/README.md', '렌더링·단계별 활성화']],
+  },
+  {
+    title: '작은 합성 작업으로 저장과 재시도를 확인한다',
+    prepare: '전용 환경에서 선택한 합성 원본을 등록하고 raw 확인 → QUEUED → DB 처리 완료 → 두 export 파일 확인 순서로 관측합니다. 실제 MariaDB·Garage 시험은 runbook의 명시적 opt-in과 전용 자원 조건을 따릅니다.',
+    check: '원본·결과·실패 파일의 전체 bytes·길이·hash와 DB 분류를 비교하고 EXPORTED·outbox ACK·슬롯 해제를 확인합니다. 충돌·연결 실패에는 PENDING·슬롯·기존 객체가 남는지 확인합니다. 기본 verify 통과는 외부 서비스 시험 통과와 구분합니다.',
+    sources: [['docs/runbooks/s3-source-storage.md', '원본·실제 MariaDB 결합 시험'], ['docs/runbooks/result-export.md', '두 파일·DB 실패·JVM 중단 시험']],
+  },
+  {
+    title: '백업은 다른 저장소에 복원해 읽어 본다',
+    prepare: 'DB 논리 dump와 migration·업무 행 기준을 보관하고 Garage는 정상 종료한 cold checkpoint에서 metadata·data·설정·identity를 함께 확보합니다. 외부 PC의 암호화 파일을 인증·복호화한 뒤 원본과 분리된 새 저장소에 복원합니다.',
+    check: 'DB 행·시각·Flyway 이력과 Garage 객체의 새 GET 전체 bytes·크기·SHA를 비교합니다. 객체를 다시 PUT해 복원 성공을 만들지 않습니다. 작은 inline 객체 확인과 data block 복원, 앱 재시작과 호스트 전체 기동 복원은 각각 검증합니다.',
+    sources: [['docs/runbooks/lab-recovery.md', 'DB 복원 CLI의 대상·범위'], ['docs/runbooks/encrypted-backup.md', '암호화 백업 인증·복호화'], ['docs/runbooks/runtime-pvc-recovery.md', '새 PVC의 Garage 복원·GET 검증']],
+  },
+];
+---
+
+<section id="settings" class="guide-section storage-setup" aria-labelledby="storage-settings-title">
+  <p class="eyebrow">CONFIGURATION / STORAGE CONTRACT</p>
+  <h2 id="storage-settings-title">설정은 DB 상태와 실제 파일을 연결한다</h2>
+  <p class="section-lead">아래는 설명 기준 소스의 계약입니다. DB와 S3의 역할, 누가 Secret을 준비하는지, 확인에 실패했을 때 무엇을 남기는지까지 함께 읽습니다. 현재 운영값을 새 환경에 복제하는 배포 예시는 아닙니다.</p>
+  <div class="tech-settings">
+    {settings.map((setting, index) => <article class="tech-setting">
+      <p class="setting-number">{String(index + 1).padStart(2, '0')} / 06</p>
+      <h3>{setting.title}</h3>
+      <dl class="setting-fields">
+        {setting.fields.map(([key, value]) => <div><dt><code>{key}</code></dt><dd><code>{value}</code></dd></div>)}
+      </dl>
+      <p><strong>현재 의미.</strong> {setting.meaning}</p>
+      <p><strong>새 환경에서.</strong> {setting.move}</p>
+      <div class="guide-links" aria-label={`${setting.title}의 고정 소스`}>
+        {setting.sources.map(([path, label]) => <a href={source(path)}>{label} ↗</a>)}
+      </div>
+    </article>)}
+  </div>
+</section>
+
+<section id="migrate" class="guide-section storage-setup" aria-labelledby="storage-migrate-title">
+  <p class="eyebrow">REBUILD / VERIFY IN YOUR ENVIRONMENT</p>
+  <h2 id="storage-migrate-title">새 환경에서는 준비와 검증을 다섯 단계로 나눈다</h2>
+  <p class="section-lead">각 단계의 확인 결과를 새 환경에서 남깁니다. 기존 Lab의 통과 기록은 이식 후 기동·재해 복구 성공을 대신하지 않습니다. 명령과 세부 전제는 각 단계의 고정 runbook 링크에서 확인합니다.</p>
+  <ol class="migration-steps">
+    {migrationSteps.map((step, index) => <li class="guide-panel">
+      <p class="setting-number">STEP {String(index + 1).padStart(2, '0')}</p>
+      <h3>{step.title}</h3>
+      <p><strong>준비.</strong> {step.prepare}</p>
+      <p><strong>새 환경의 완료 확인.</strong> {step.check}</p>
+      <div class="guide-links">
+        {step.sources.map(([path, label]) => <a href={source(path)}>{label} ↗</a>)}
+      </div>
+    </li>)}
+  </ol>
+  <aside class="guide-callout">
+    <strong>이미지 복귀·데이터 복원·전체 기동은 각각 확인합니다.</strong>
+    <p>이전 이미지로 돌아가도 DB schema와 객체가 과거로 돌아가지는 않습니다. 백업 인증 성공, 일부 DB·PVC의 격리 복원과 K3s·Jenkins를 포함한 전체 기동 복원도 별도 결과입니다. RF1 단일 노드의 저장 확인을 호스트·디스크 장애에 대한 가용성 보장으로 확장하지 않습니다.</p>
+  </aside>
+</section>
+
+<style>
+  .storage-setup,.storage-setup .tech-setting,.storage-setup .guide-panel { min-width:0; overflow-wrap:anywhere; }
+  .storage-setup .tech-settings { grid-template-columns:minmax(0,1fr); }
+  .setting-number { margin:0 0 10px; color:var(--green); font:500 .8rem var(--mono); letter-spacing:.06em; }
+  .storage-setup .tech-setting h3 { font:700 1.25rem/1.6 var(--sans); margin-bottom:18px; }
+  .setting-fields { min-width:0; margin:0 0 20px; border-top:1px solid var(--line); }
+  .setting-fields > div { display:grid; grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr); gap:10px 24px; padding:12px 0; border-bottom:1px solid var(--line); }
+  .setting-fields dt,.setting-fields dd { min-width:0; overflow-wrap:anywhere; }
+  .setting-fields dt { color:var(--muted); }
+  .setting-fields dd { margin:0; }
+  .setting-fields code { font:.85rem/1.75 var(--mono); overflow-wrap:anywhere; white-space:pre-wrap; }
+  .storage-setup .tech-setting p,.migration-steps p { line-height:1.85; }
+  .storage-setup .guide-links { min-width:0; margin-top:15px; gap:4px 22px; font-size:.95rem; }
+  .storage-setup .guide-links a { min-width:0; overflow-wrap:anywhere; }
+  .migration-steps { list-style:none; display:grid; grid-template-columns:minmax(0,1fr); gap:18px; margin:0; padding:0; }
+  .migration-steps p+p { margin-top:13px; }
+  .migration-steps strong { color:var(--green); }
+  @media (max-width:760px) {
+    .setting-fields > div { grid-template-columns:minmax(0,1fr); gap:4px; }
+    .setting-fields code { font-size:.8rem; }
+  }
+</style>
