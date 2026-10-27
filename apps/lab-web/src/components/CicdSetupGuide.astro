@@ -1,0 +1,254 @@
+---
+interface Props { sourceRef: string; }
+interface Setting {
+  title: string;
+  fields: [string, string][];
+  meaning: string;
+  move: string;
+  sources: [string, string][];
+}
+interface MigrationStep {
+  title: string;
+  prepare: string;
+  check: string;
+  sources: [string, string][];
+}
+const { sourceRef } = Astro.props;
+const repo = `https://github.com/DevDooly/devdooly-platform-lab/blob/${sourceRef}/`;
+const source = (path: string) => `${repo}${path}`;
+
+const settings: Setting[] = [
+  {
+    title: 'Jenkins는 controller 밖에서 한 번에 한 작업을 검증한다',
+    fields: [
+      ['controller.numExecutors', '0'],
+      ['agent.containerCap / agent.instanceCap', '1 / 1'],
+      ['Pipeline options', 'disableConcurrentBuilds()'],
+      ['agent.websocket / serviceAccount', 'true / jenkins-build-agent'],
+    ],
+    meaning: 'controller의 내장 executor로 빌드하지 않고 Kubernetes agent Pod를 사용합니다. agent의 ServiceAccount token 자동 mount는 꺼져 있고 Docker socket도 연결하지 않습니다. controller·연결용 jnlp는 JDK 25, 실제 API 검증은 별도 Java 21 container, 웹 검증은 Node 24 container가 맡습니다. 동시성 제한은 같은 SHA의 순차 중복 빌드까지 제거하지는 않습니다.',
+    move: '새 클러스터의 CPU·메모리와 agent Pod 생성 권한을 먼저 확인합니다. cap만 올리지 말고 job 동시성·캐시·서비스 계정 권한을 함께 검토합니다. 기존 PVC에서는 initializeOnce=true·overwritePlugins=false 때문에 values 변경만으로 플러그인이 다시 설치된다고 가정하지 않습니다.',
+    sources: [
+      ['infra/platform/jenkins-values.yaml', 'controller·agent 설정'],
+      ['infra/jenkins/agent-pod.yaml', '실제 빌드 Pod'],
+      ['Jenkinsfile', 'job 동시성·container 선택'],
+    ],
+  },
+  {
+    title: 'GitHub App의 신원과 저장소 범위를 맞춘다',
+    fields: [
+      ['GITHUB_STATUS_CREDENTIAL_ID', 'platform-lab-github-app'],
+      ['commit status context', 'ci/jenkins-test'],
+      ['JENKINS_STATUS_ISSUER', 'devdooly-platform-lab-ops[bot]'],
+      ['status client repository', 'DevDooly/devdooly-platform-lab'],
+    ],
+    meaning: '전용 App은 선택한 Lab 저장소 한 개의 Commit statuses 읽기·쓰기와 필수 Metadata 읽기 권한을 사용합니다. Jenkinsfile의 usernamePassword 바인딩이 필요한 단계에서만 설치 토큰을 꺼냅니다. issuer 값은 2026-10-23 App 연결 기록의 값이며 Actions는 같은 SHA의 최신 status 작성자까지 확인합니다.',
+    move: '새 저장소 소유자가 App ID·설치 대상·개인키와 Jenkins credential을 준비하고, 실제 status 작성자에 맞춰 저장소 변수 JENKINS_STATUS_ISSUER를 설정합니다. 공개 SCM은 credential 없이 clone합니다. 비공개 저장소에는 Jenkins SCM·Argo CD의 읽기 자격증명도 필요하지만 현재 게시 gate는 public 저장소만 허용합니다. 비공개 이식은 이 정책과 검증을 재설계하기 전에는 지원하지 않습니다. App의 상태 쓰기 권한을 registry·PR 권한으로 대신 쓰지 않습니다.',
+    sources: [
+      ['Jenkinsfile', 'credential 바인딩'],
+      ['infra/scripts/github-commit-status.mjs', 'repository·context 상수'],
+      ['docs/runbooks/jenkins-ci.md', 'App 권한·실측 issuer'],
+    ],
+  },
+  {
+    title: '검증 결과는 checkout한 정확한 main SHA에 연결한다',
+    fields: [
+      ['Jenkins job / Script Path', 'platform-lab-ci / Jenkinsfile'],
+      ['SCM branch / pollSCM', 'main / H/5 * * * *'],
+      ['SOURCE_COMMIT', 'checkout scm이 반환한 소문자 40자리 SHA'],
+      ['Actions validation workflow', 'Validate Lab containers'],
+    ],
+    meaning: 'Jenkins는 API·독립 Java 예제·웹을 검증하고 JUnit과 필수 jar·web dist·ci-build-info.txt·pending 기록을 보관한 뒤 success를 전달합니다. Actions 게시 gate는 현재 main의 같은 SHA에서 통합 검증 성공과 Jenkins의 최신 success·예상 issuer·산출물 확인 메타데이터를 함께 요구하며, 게시 직전에도 다시 확인합니다.',
+    move: 'SCM URL·branch·Script Path와 workflow 이름을 새 저장소에 맞춥니다. github-commit-status.mjs의 repository/context, ci_publication_gate.py의 저장소·main 제한을 함께 바꾸고 실패·다른 SHA·다른 작성자를 거부하는지 검증합니다. Argo repoURL만 바꿔서는 CI 연결이 이식되지 않습니다.',
+    sources: [
+      ['Jenkinsfile', '검증·산출물·SHA 계약'],
+      ['.github/workflows/publish-images.yml', '게시 전 gate 재확인'],
+      ['infra/scripts/ci_publication_gate.py', '저장소·main·최신 status 검사'],
+    ],
+  },
+  {
+    title: '게시한 이미지의 digest와 소스 SHA를 따로 보존한다',
+    fields: [
+      ['api.image.repository', 'ghcr.io/devdooly/devdooly-platform-lab-api'],
+      ['api.image.digest', 'sha256:9e81facc7365161fbc6a2e5a4b92f76f3787bc91c73bda7e6c51b5f1a90a2395'],
+      ['api.sourceCommit', '245d61a5749760a20918ab091d9410ce6735b1c0'],
+      ['web.image.repository', 'ghcr.io/devdooly/devdooly-platform-lab-web'],
+      ['web.image.digest', 'sha256:029c07bfcf9f872315ecf8307d8aec22425b23d9467492c62bb810420395e376'],
+    ],
+    meaning: '위 값은 이 페이지 기준 소스의 home-lab 선언입니다. Actions만 GITHUB_TOKEN의 packages:write로 linux/amd64 이미지를 게시합니다. registry의 실제 digest를 재확인해 image-manifest.json과 helm-image-values.yaml에 sourceCommit·CI 식별자를 남깁니다. 게시 성공은 배포나 익명 pull 성공을 뜻하지 않습니다.',
+    move: '새 GHCR 소유자·이미지 repository와 대상 CPU 아키텍처를 결정하고 실제 앱 이미지 digest를 사용합니다. private package라면 대상 namespace에 imagePullSecrets를 준비합니다. draft PR 제안을 쓰려면 LAB_GITOPS_PR_ENABLED와 Actions의 PR 생성 권한을 준비합니다. propose_gitops_pr.py의 게시 URL 검사, gitops_values.py의 허용 이미지 저장소, validate_gitops_pr.py의 VALUES_PATH도 함께 수정합니다. 검토 후 main에 반영하는 단계는 별도입니다.',
+    sources: [
+      ['gitops/environments/home-lab/values.yaml', '현재 API·웹 pin'],
+      ['.github/workflows/publish-images.yml', 'GHCR 게시·manifest·draft PR 조건'],
+      ['infra/scripts/propose_gitops_pr.py', '제안 대상·허용 이미지 검사'],
+      ['infra/scripts/gitops_values.py', '허용 이미지 저장소 정의'],
+      ['infra/scripts/validate_gitops_pr.py', 'GitOps values 경로 정의'],
+    ],
+  },
+  {
+    title: 'Argo CD가 읽는 chart와 두 values 파일을 함께 지정한다',
+    fields: [
+      ['Application / repoURL', 'platform-lab-home / https://github.com/DevDooly/devdooly-platform-lab.git'],
+      ['targetRevision / path', 'main / infra/charts/platform-lab'],
+      ['helm.releaseName', 'lab'],
+      ['helm.valueFiles', '../../../gitops/environments/home-lab/values.yaml\n../../../gitops/environments/home-lab/runtime.yaml'],
+    ],
+    meaning: 'values.yaml은 API·웹 이미지와 DB Secret 참조를, runtime.yaml은 Kafka·Garage·worker·관측 설정을 담습니다. 뒤 파일이 chart 기본값과 앞 파일 위에 적용됩니다. 이미지 게시 제안이 runtime 설정이나 별도로 고정한 worker 이미지를 자동 갱신하지는 않습니다.',
+    move: '새 환경 디렉터리에 이미지 values와 runtime values를 나누고 Application의 repoURL·targetRevision·chart 경로·상대 valueFiles 경로를 모두 맞춥니다. 처음부터 기존 home-lab의 worker·관측·gateway 활성값을 복사하지 말고 필요한 Secret·bootstrap·호환성 확인 뒤 단계적으로 켭니다.',
+    sources: [
+      ['gitops/bootstrap/application.yaml', 'Application source'],
+      ['gitops/environments/home-lab/runtime.yaml', '현재 runtime 선언'],
+      ['infra/charts/platform-lab/README.md', '두 values 파일·worker pin 계약'],
+    ],
+  },
+  {
+    title: '배포 목적지와 AppProject의 허용 범위를 같이 바꾼다',
+    fields: [
+      ['spec.project / destination.namespace', 'platform-lab / platform-lab'],
+      ['destination.server', 'https://kubernetes.default.svc'],
+      ['AppProject.sourceRepos', 'https://github.com/DevDooly/devdooly-platform-lab.git'],
+      ['AppProject.clusterResourceWhitelist', '[]'],
+    ],
+    meaning: 'AppProject는 같은 클러스터의 platform-lab namespace만 허용합니다. namespace 리소스도 Deployment·StatefulSet·Service·ConfigMap·PVC·ServiceAccount·NetworkPolicy로 제한합니다. 이 앱이 namespace나 Secret을 생성하도록 허용한 구성은 아닙니다.',
+    move: '새 namespace를 먼저 준비하고 Application의 project·destination과 AppProject의 sourceRepos·destinations를 함께 수정합니다. 다른 클러스터라면 Argo CD의 클러스터 등록과 destination.server도 필요합니다. 필요한 리소스 종류만 허용하고 기존 namespace를 이식 시험 대상으로 재사용하지 않습니다.',
+    sources: [
+      ['gitops/bootstrap/application.yaml', '배포 project·destination'],
+      ['gitops/bootstrap/project.yaml', '저장소·목적지·리소스 허용 목록'],
+    ],
+  },
+  {
+    title: '자동 동기화의 복구와 삭제 정책을 구분한다',
+    fields: [
+      ['syncPolicy.automated.prune', 'false'],
+      ['syncPolicy.automated.selfHeal', 'true'],
+      ['syncPolicy.automated.allowEmpty', 'false'],
+      ['syncOptions / retry.limit', 'PruneLast=true / 3'],
+    ],
+    meaning: 'Git과 달라진 실제 리소스는 selfHeal 대상이지만 Git에서 사라진 리소스를 자동으로 삭제하도록 켜지는 않았습니다. allowEmpty도 false입니다. PruneLast=true는 prune 작업의 순서를 지정하는 옵션이며 prune=false를 자동 삭제로 바꾸지 않습니다.',
+    move: '새 환경에서도 어떤 Git 변경이 자동 반영되고 어떤 삭제가 별도 검토 대상인지 정합니다. 수동 kubectl 변경은 selfHeal로 되돌아갈 수 있으므로 정상 복귀는 이전 digest·sourceCommit을 Git에 반영하는 방식으로 설계합니다. 같은 앱에 Jenkins helm upgrade를 중복 연결하지 않습니다.',
+    sources: [
+      ['gitops/bootstrap/application.yaml', '자동 sync·retry·prune 설정'],
+      ['AGENTS.md', 'Jenkins CI·Argo 배포 책임 분리'],
+    ],
+  },
+  {
+    title: 'Secret과 영속 데이터는 이미지 선언 밖에서 준비한다',
+    fields: [
+      ['database.existingSecret / password keys', 'platform-lab-db / app-password·root-password'],
+      ['runtime Secret 참조', 'platform-lab-kafka / platform-lab-garage-config / platform-lab-runtime-s3'],
+      ['database.persistence / Jenkins persistence', 'local-path·10Gi / local-path·10Gi·ReadWriteOnce'],
+      ['values.schema.json 제약', 'API·웹·DB replicaCount=1 / sha256 digest / DB storageClass=local-path'],
+    ],
+    meaning: 'chart는 Secret을 생성하지 않습니다. DB 비밀번호, Kafka cluster ID, Garage 설정·S3 자격증명은 대상 namespace에 미리 있어야 합니다. chart 기본값의 앱 이미지와 DB Secret 이름은 비어 있어 그대로 배포할 수 없습니다. worker 활성화에는 별도 이미지·40자리 sourceCommit과 단일 replica 등 추가 schema 조건이 적용됩니다.',
+    move: 'Secret 소유자·key 이름·백업/복원 책임과 새 StorageClass의 제공 방식을 먼저 정합니다. 다른 StorageClass를 쓸 경우 values만 바꾸면 현재 schema가 거부하므로 chart·schema·검증을 함께 수정해야 합니다. local-path PVC는 다른 PC의 백업이 아니며 DB migration·데이터 복원은 이미지 rollback과 별도 절차입니다.',
+    sources: [
+      ['infra/charts/platform-lab/values.yaml', '기본 Secret·storage·runtime 값'],
+      ['infra/charts/platform-lab/values.schema.json', '배포 입력의 실제 제약'],
+      ['gitops/environments/home-lab/runtime.yaml', '현재 runtime Secret 참조'],
+      ['infra/platform/jenkins-values.yaml', 'Jenkins PVC·초기화 보호값'],
+    ],
+  },
+];
+
+const migrationSteps: MigrationStep[] = [
+  {
+    title: '도구와 격리할 환경을 준비한다',
+    prepare: '대상 OS·CPU·디스크·기존 서비스와 백업 범위를 확인하고 새 namespace를 정합니다. 저장소 고정값은 K3s v1.36.5+k3s1·Helm v4.3.0·Jenkins chart 5.9.68/core 2.580.1·Argo CD chart 10.10.2/app v3.5.4입니다. versions.lock.json의 SHA256으로 도구·chart archive를 확인한 뒤 설치합니다. clone만으로 .local/tools나 chart 원본이 생기지는 않습니다.',
+    check: '도구 checksum·버전, Node·DNS·스토리지 준비 상태와 기존 서비스 보존을 새 환경에서 확인합니다.',
+    sources: [['infra/platform/versions.lock.json', '고정 도구·checksum'], ['docs/runbooks/platform-install.md', '새 환경 설치 전제']],
+  },
+  {
+    title: 'App·Secret·저장소 자격증명의 소유자를 정한다',
+    prepare: 'GitHub 저장소 소유자는 전용 App 설치와 Actions 변수·권한을, Jenkins 관리자는 credential·SCM job을, 클러스터 관리자는 DB·Kafka·Garage·S3 Secret과 필요한 imagePullSecrets를 준비합니다. 현재 게시 gate는 public Git만 지원합니다. private Git은 읽기 자격증명뿐 아니라 gate의 public-only 정책·검증을 재설계해야 합니다.',
+    check: '토큰 원문을 출력하지 않고 대상 저장소·status 작성자·Secret 이름과 key 존재·namespace 일치를 확인합니다.',
+    sources: [['docs/runbooks/jenkins-ci.md', 'App 연결·권한 범위'], ['infra/charts/platform-lab/README.md', '기존 Secret 계약']],
+  },
+  {
+    title: '새 저장소의 검증과 registry 게시를 연결한다',
+    prepare: 'status client의 repository/context, publication gate의 저장소·main 제한과 issuer를 새 저장소에 맞춥니다. PR 제안기의 게시 URL 검사와 함께 gitops_values.py의 이미지 repository, validate_gitops_pr.py의 VALUES_PATH도 바꿉니다. 실제 CI와 산출물을 먼저 확인한 뒤 GHCR 게시 경로를 연결합니다.',
+    check: '같은 SHA의 두 CI 성공·최신 issuer·manifest의 registry digest를 대조합니다. 실패한 SHA나 오래된 success로 게시가 진행되지 않는지도 확인합니다. 게시와 대상 환경의 pull·배포 검증은 따로 기록합니다.',
+    sources: [['infra/scripts/github-commit-status.mjs', 'status 대상 상수'], ['infra/scripts/ci_publication_gate.py', '게시 제한'], ['infra/scripts/propose_gitops_pr.py', 'PR 대상 검사'], ['infra/scripts/gitops_values.py', '이미지 허용 목록'], ['infra/scripts/validate_gitops_pr.py', 'values 경로']],
+  },
+  {
+    title: '새 환경 values와 Argo CD 선언을 검토한다',
+    prepare: '새 namespace에 Secret을 준비하고 환경 values의 repository·digest·sourceCommit·storage 참조를 작성합니다. Application의 repoURL·revision·chart·valueFiles·destination과 AppProject 허용 범위를 맞춥니다. runtime은 필요한 bootstrap과 DB migration 호환성을 확인한 뒤 켭니다.',
+    check: 'Helm lint/render·schema와 생성 리소스를 검토한 뒤 Git 변경을 반영합니다. Argo revision·Synced/Healthy, 실제 Pod Ready·실행 digest와 sourceCommit, PVC 상태를 대조합니다.',
+    sources: [['gitops/bootstrap/application.yaml', 'Application'], ['gitops/bootstrap/project.yaml', 'AppProject'], ['infra/charts/platform-lab/values.schema.json', '입력 검증']],
+  },
+  {
+    title: '실제 HTTP 경로와 데이터 보존을 관측한다',
+    prepare: '새 환경의 공개 또는 내부 HTTP 경로·TLS·인증·읽기 관측 방법을 정합니다. 관리 UI의 자격증명을 공개 웹에 넣지 않습니다.',
+    check: '웹에서 API까지의 실제 요청 결과·관측 시각·응답 sourceCommit을 확인하고 예상 데이터·DB·PVC 보존을 대조합니다. Argo Healthy나 이미지 게시 성공만으로 HTTP 조회 성공을 대신하지 않습니다.',
+    sources: [['docs/runbooks/platform-install.md', '배포·HTTP·복구 검증의 구분'], ['infra/charts/platform-lab/README.md', '앱 배포와 HTTP 확인 범위']],
+  },
+  {
+    title: '이전 정상 digest를 Git에 반영해 복귀한다',
+    prepare: '배포 전 정상 이미지 repository·digest·대응 sourceCommit과 GitOps revision을 남깁니다. 문제가 있으면 검토한 Git 변경으로 이전 API·웹 pin과 sourceCommit을 복원하고 Argo가 반영하도록 합니다. worker를 변경한 배포라면 그 별도 pin도 검토합니다.',
+    check: '되돌린 GitOps revision·실제 실행 이미지·HTTP 결과·데이터 보존을 다시 확인합니다. DB migration을 이전 이미지가 읽을 수 있는지 먼저 판단하며, DB rollback이나 복원은 따로 검증합니다.',
+    sources: [['gitops/environments/home-lab/values.yaml', 'API·웹 pin 형식'], ['gitops/environments/home-lab/runtime.yaml', '별도 worker pin'], ['docs/runbooks/platform-install.md', '데이터 백업·복원 범위']],
+  },
+];
+---
+
+<section id="settings" class="guide-section cicd-setup" aria-labelledby="cicd-settings-title">
+  <p class="eyebrow">CONFIGURATION / SOURCE CONTRACT</p>
+  <h2 id="cicd-settings-title">설정은 이름보다 연결 관계를 확인한다</h2>
+  <p class="section-lead">Jenkins의 검증 결과, Actions의 게시 이미지, Argo CD가 읽는 Git 선언이 같은 소스를 가리켜야 합니다. 아래는 설명 기준 소스에 고정한 현재 설정이며 실시간 운영 조회값은 아닙니다.</p>
+  <div class="tech-settings">
+    {settings.map((setting, index) => <article class="tech-setting">
+      <p class="setting-number">{String(index + 1).padStart(2, '0')} / 08</p>
+      <h3>{setting.title}</h3>
+      <dl class="setting-fields">
+        {setting.fields.map(([key, value]) => <div><dt><code>{key}</code></dt><dd><code>{value}</code></dd></div>)}
+      </dl>
+      <p><strong>현재 의미.</strong> {setting.meaning}</p>
+      <p><strong>새 환경에서.</strong> {setting.move}</p>
+      <div class="guide-links" aria-label={`${setting.title}의 고정 소스`}>
+        {setting.sources.map(([path, label]) => <a href={source(path)}>{label} ↗</a>)}
+      </div>
+    </article>)}
+  </div>
+</section>
+
+<section id="migrate" class="guide-section cicd-setup" aria-labelledby="cicd-migrate-title">
+  <p class="eyebrow">REBUILD / VERIFY IN YOUR ENVIRONMENT</p>
+  <h2 id="cicd-migrate-title">다른 환경에서는 이 순서로 준비한다</h2>
+  <p class="section-lead">이 절차는 새 환경의 준비와 확인 항목입니다. 이 페이지 작성만으로 새 K3s·Jenkins가 기동했거나 복원이 성공했다고 판단하지 않습니다. 기존 운영 환경을 복제해 덮어쓰는 실행 기능은 제공하지 않습니다.</p>
+  <ol class="migration-steps">
+    {migrationSteps.map((step, index) => <li class="guide-panel">
+      <p class="setting-number">STEP {String(index + 1).padStart(2, '0')}</p>
+      <h3>{step.title}</h3>
+      <p><strong>준비.</strong> {step.prepare}</p>
+      <p><strong>새 환경의 완료 확인.</strong> {step.check}</p>
+      <div class="guide-links">
+        {step.sources.map(([path, label]) => <a href={source(path)}>{label} ↗</a>)}
+      </div>
+    </li>)}
+  </ol>
+  <aside class="guide-callout">
+    <strong>이미지 복귀와 데이터 복구는 별도입니다.</strong>
+    <p>이전 digest로 돌아가도 DB schema와 저장 데이터가 이전 상태로 돌아가지는 않습니다. migration 호환성, DB 백업·복원과 K3s/Jenkins 전체 기동 복원은 각각 확인해야 합니다. 기존 기록에서 검증한 범위를 새 환경의 성공으로 옮겨 적지 않습니다.</p>
+  </aside>
+</section>
+
+<style>
+  .cicd-setup .tech-settings { grid-template-columns:minmax(0,1fr); }
+  .cicd-setup .tech-setting { min-width:0; overflow-wrap:anywhere; }
+  .setting-number { margin:0 0 10px; color:var(--green); font:500 .8rem var(--mono); letter-spacing:.06em; }
+  .cicd-setup .tech-setting h3 { font:700 1.25rem/1.6 var(--sans); margin-bottom:18px; }
+  .setting-fields { margin:0 0 20px; border-top:1px solid var(--line); }
+  .setting-fields > div { display:grid; grid-template-columns:minmax(180px,.8fr) minmax(0,1.2fr); gap:10px 24px; padding:12px 0; border-bottom:1px solid var(--line); }
+  .setting-fields dt { color:var(--muted); }
+  .setting-fields dd { margin:0; min-width:0; }
+  .setting-fields code { font:.85rem/1.75 var(--mono); overflow-wrap:anywhere; white-space:pre-wrap; }
+  .cicd-setup .tech-setting p,.migration-steps p { line-height:1.85; }
+  .cicd-setup .guide-links { margin-top:15px; gap:4px 22px; font-size:.95rem; }
+  .migration-steps { list-style:none; display:grid; grid-template-columns:minmax(0,1fr); gap:18px; margin:0; padding:0; }
+  .migration-steps > li { min-width:0; overflow-wrap:anywhere; }
+  .migration-steps p+p { margin-top:13px; }
+  .migration-steps strong { color:var(--green); }
+  @media (max-width:760px) {
+    .setting-fields > div { grid-template-columns:minmax(0,1fr); gap:4px; }
+    .setting-fields code { font-size:.8rem; }
+  }
+</style>

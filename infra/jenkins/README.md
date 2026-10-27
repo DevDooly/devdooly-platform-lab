@@ -1,8 +1,8 @@
 # Jenkins CI 정의
 
-[Jenkinsfile](../../Jenkinsfile)은 Kubernetes plugin의 `yamlFile`로 [agent-pod.yaml](agent-pod.yaml)을 사용합니다. 실제 서버와 Jenkins 설치 이후 [운영 절차](../../docs/runbooks/jenkins-ci.md)에 따라 첫 실행을 검증합니다.
+[Jenkinsfile](../../Jenkinsfile)은 Kubernetes plugin의 `yamlFile`로 [agent-pod.yaml](agent-pod.yaml)을 사용합니다. 현재 연결·검증 범위는 [운영 절차](../../docs/runbooks/jenkins-ci.md)를 따릅니다.
 
-현재 저장소에는 CI 정의가 있으며 Jenkins 빌드 이력은 아직 없습니다. API와 화면의 실제 로컬 검증 결과를 Jenkins 실행 결과로 바꾸어 표시하지 않습니다.
+실제 [agent 실행](../../docs/evidence/jenkins-ci/README.md), [정상 배포·실패 차단·이전 이미지 복귀](../../docs/evidence/cicd-gate/README.md), [2026-10-23 GitHub App 연결](../../docs/evidence/github-app-jenkins/README.md)을 각각 기록했습니다. 로컬 검증을 Jenkins 결과로 대체하거나 이 기록을 새 환경 전체 기동 복원 성공으로 해석하지 않습니다. [대표 사례 페이지](https://devdooly.github.io/devdooly-platform-lab/cases/cicd-delivery/)에서 역할·설정·이식 방법을 함께 읽을 수 있습니다.
 
 chart의 `default` Pod template과 `jenkins-build-agent` ServiceAccount를 전제로 합니다. controller executor 수와 cloud 전체 agent 수는 `infra/platform/`의 chart 설정에서 각각 0과 1로 맞춥니다. `disableConcurrentBuilds()`는 이 job의 중복 실행을 순서대로 대기시킵니다.
 

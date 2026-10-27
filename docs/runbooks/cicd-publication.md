@@ -6,14 +6,13 @@
 
 ## 전용 credential과 권한
 
-1. GitHub에서 전용 fine-grained PAT를 만든다. Resource owner는 DevDooly, Repository access는 **Only select repositories → devdooly-platform-lab**만 선택한다. Repository permissions는 **Commit statuses: Read and write**, 필수 **Metadata: Read-only**만 사용한다. Contents·Actions·Packages·관리자 권한을 추가하지 않는다. [Fine-grained PAT 안내](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)
-2. 인증된 Jenkins 관리 화면에서 **Secret text** credential로 등록한다. ID는 `platform-lab-github-status`로 맞춘다. 토큰 원문은 채팅·Git·스크린샷·console에 넣지 않는다. GitHub repository variable은 `JENKINS_STATUS_ISSUER=DevDooly`로 맞춘다.
+현재는 2026-10-23에 연결한 **GitHub App**을 사용한다. [현재 App 설정·실행·만료 후 갱신 범위](jenkins-ci.md#github-app-연결-확인--2026-10-23-utc)와 [실행 근거](../evidence/github-app-jenkins/README.md)를 따른다.
 
-권장 첫 만료 기간은 30일이다. 운영 안내에는 원문 대신 credential ID·권한·만료일·담당자만 기록한다. 만료 전에 새 토큰을 생성해 같은 ID의 Secret을 교체하고, 실제 pending·success 전달을 확인한 뒤 이전 토큰을 폐기한다. 만료·전달 실패 시 게시를 차단하는 것이 정상이다. 기존 CLI 로그인 토큰을 복사하는 우회는 사용하지 않는다.
+1. App 설치 대상을 Lab 저장소 한 개로 제한하고 **Commit statuses: Read and write**, 필수 **Metadata: Read-only**만 부여한다. 공개 SCM clone 방식은 유지하며 이 credential에 Packages·PR 쓰기 권한을 추가하지 않는다.
+2. Jenkins App credential ID는 `platform-lab-github-app`이다. Jenkinsfile은 필요한 단계에서 native `usernamePassword`로 설치 토큰을 바인딩한다. 개인키·토큰 원문을 채팅·Git·스크린샷·console에 넣지 않는다.
+3. repository variable `JENKINS_STATUS_ISSUER`는 실측한 `devdooly-platform-lab-ops[bot]`과 맞춘다. 새 환경에서는 그 환경의 실제 App 작성자를 확인하고 status client·게시 gate의 저장소 제한도 함께 맞춘다.
 
-전용 Secret text와 issuer variable은 등록됐고 실제 pending·success·failure 전달을 확인했다. 이 성공만으로 토큰의 만료·회전까지 검증됐다고 표시하지 않는다.
-
-현재 Pipeline은 GitHub App 설치 토큰 자동 발급을 구현하지 않았다. 추후 App을 사용할 경우 설치 저장소 한정·Commit statuses: write·단기 token 갱신을 별도로 구성하고 실제 issuer를 variable에 맞춘다.
+2026-10-11 정상·실패·롤백 실험은 이전 PAT credential과 `DevDooly` issuer로 실행한 과거 기록이다. 원 [cicd-gate 근거](../evidence/cicd-gate/README.md)는 당시 값으로 보존하며 현재 App 설정으로 소급 변경하지 않는다. 기존 PAT는 보존했고 fallback은 시험하지 않았다. App의 한 차례 자연 만료 후 lazy refresh 확인을 개인키 회전·권한 철회 복구·갱신 뒤 전체 CI의 성공으로 확대하지 않는다.
 
 ## 코드와 문법 재검증
 

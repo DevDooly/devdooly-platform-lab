@@ -1,0 +1,94 @@
+---
+import GuideLayout from '../../../layouts/GuideLayout.astro';
+import CicdSetupGuide from '../../../components/CicdSetupGuide.astro';
+import recorded from '../../../../../../docs/evidence/cicd-gate/summary.json';
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const reference = '05f2aab596d98f08f432b2b31e2cc382bc851c31';
+const github = 'https://github.com/DevDooly/devdooly-platform-lab';
+const repo = `${github}/blob/${reference}/`;
+const short = (value: string) => value.slice(0, 7);
+const phases = [
+  { name: 'A · 배포 전', description: '기존 정상 이미지와 데이터를 먼저 기록합니다.' },
+  { name: 'B · 새 이미지', description: '검토한 GitOps PR #2를 반영해 새 이미지로 바꿉니다.' },
+  { name: 'A · 이전 이미지로 복귀', description: 'GitOps PR #3으로 이전 digest·소스 선언을 복원합니다.' },
+];
+const counts = [['inputCount','입력'],['successCount','성공'],['failureCount','실패'],['duplicateCount','중복'],['pendingCount','대기']] as const;
+---
+<GuideLayout title="빌드부터 배포·롤백까지, Git으로 연결하기" description="어떤 소스를 검증했고, 어떤 이미지를 게시했으며, 무엇을 실제로 배포했을까요? Jenkins·GitHub Actions·Argo CD의 책임을 나누고, 정상 배포·실패 차단·이전 이미지 복귀 기록으로 설명합니다." eyebrow="DESIGN CASE / JENKINS · ACTIONS · ARGO CD">
+  <nav class="guide-toc" aria-label="빌드·배포·롤백 사례 목차"><a href="#choices">기술 선택 이유</a><a href="#flow">연결 흐름</a><a href="#cases">실제 세 사례</a><a href="#rollback">A → B → A</a><a href="#screen">화면 보기</a><a href="#settings">핵심 설정</a><a href="#migrate">다른 환경에 이식</a><a href="#evidence">근거와 한계</a></nav>
+
+  <section id="choices" class="guide-section" aria-labelledby="choices-title">
+    <h2 id="choices-title">검증·게시·배포에 각각 한 책임을 둡니다.</h2>
+    <p>빌드 성공을 배포 완료로 읽으면 실패 위치와 되돌릴 대상을 찾기 어렵습니다. 이 Lab은 검증 결과를 소스 SHA에, 실행 대상을 이미지 digest에, 배포 의도를 Git 변경에 연결합니다.</p>
+    <div class="delivery-three">
+      <article class="guide-panel"><p class="eyebrow">VERIFY / JENKINS</p><h3>빌드 환경을 분리합니다.</h3><p>Kubernetes agent가 API·웹을 검증하고 결과를 보관합니다. controller의 executor는 0이며, agent에 Docker socket이나 registry 쓰기 credential을 두지 않습니다.</p><p><strong>선택 이유:</strong> 빌드 작업과 Jenkins 관리 프로세스를 분리하고 검증 결과의 출처를 남기기 위해서입니다.</p></article>
+      <article class="guide-panel"><p class="eyebrow">PUBLISH / ACTIONS</p><h3>이미지 게시자는 하나입니다.</h3><p>같은 main SHA의 Actions 검증과 최신 Jenkins success·작성자·산출물 확인을 통과한 경우에 GHCR에 게시하고 draft GitOps PR을 제안합니다.</p><p><strong>선택 이유:</strong> 두 CI가 각각 이미지를 만들거나 서로 다른 소스의 성공을 합치는 일을 막기 위해서입니다.</p></article>
+      <article class="guide-panel"><p class="eyebrow">RECONCILE / ARGO CD</p><h3>Git이 배포 선언을 보관합니다.</h3><p>검토·병합한 환경 values를 읽고 클러스터 상태를 맞춥니다. Jenkins에서 같은 앱에 <code>helm upgrade</code>를 실행하는 배포 경로를 겹치지 않습니다.</p><p><strong>선택 이유:</strong> 변경 검토와 이전 이미지 복귀를 Git 이력으로 설명하기 위해서입니다.</p></article>
+    </div>
+  </section>
+
+  <section id="flow" class="guide-section" aria-labelledby="flow-title">
+    <h2 id="flow-title">같은 소스에서 출발하고, 별도의 조건을 통과합니다.</h2>
+    <div class="delivery-pipeline" aria-label="동일 소스에서 Jenkins와 Actions가 각각 검증한 뒤 게시 gate, 이미지, GitOps 검토, Argo 동기화, 실제 관측으로 연결">
+      <div class="pipeline-source"><span class="pipeline-label">01 / SOURCE</span><h3>main의 소스 SHA</h3><p>검증 대상 버전을 고정합니다.</p></div>
+      <div class="pipeline-fork"><article><span class="pipeline-label">02A / JENKINS</span><h3>테스트 + 산출물 보관</h3><p>checkout SHA에 pending → success / failure</p></article><article><span class="pipeline-label">02B / ACTIONS</span><h3>컨테이너 통합 검증</h3><p>같은 SHA의 Validate Lab containers</p></article></div>
+      <ol class="pipeline-rest"><li><span class="pipeline-label">03 / GATE</span><h3>최신 두 결과 확인</h3><p>현재 main·동일 SHA·Jenkins issuer·산출물 메타데이터를 확인하고 게시 직전에도 재확인합니다.</p></li><li><span class="pipeline-label">04 / PUBLISH</span><h3>GHCR 이미지 + manifest</h3><p>registry digest와 sourceCommit을 남깁니다. 여기까지는 배포가 아닙니다.</p></li><li><span class="pipeline-label">05 / REVIEW</span><h3>draft GitOps PR → 검토·병합</h3><p>API·웹 digest와 API sourceCommit 변경을 검토합니다. workflow는 자동 병합하지 않습니다.</p></li><li><span class="pipeline-label">06 / DEPLOY</span><h3>Argo CD → 실제 관측</h3><p>GitOps revision·Synced/Healthy·Pod Ready·실행 이미지·HTTP 결과와 데이터 보존을 대조합니다.</p></li></ol>
+    </div>
+    <p class="section-lead">Jenkins와 Actions 검증은 같은 소스에서 각각 실행됩니다. 위 흐름은 성공 조건의 연결이며, 두 CI의 고정 실행 순서나 하나의 원자적 트랜잭션을 뜻하지 않습니다.</p>
+    <div class="delivery-identities"><p><strong>소스 SHA</strong><span>무엇을 검증했나</span></p><p><strong>이미지 digest</strong><span>어떤 실행 파일인가</span></p><p><strong>GitOps revision</strong><span>무엇을 배포하도록 선언했나</span></p></div>
+  </section>
+
+  <section id="cases" class="guide-section" aria-labelledby="cases-title">
+    <h2 id="cases-title">실제로 확인한 세 사례</h2>
+    <p class="section-lead">2026-10-11 UTC의 단일 미니 PC 시험 기록입니다. 아래의 정상·실패·복귀는 서로 다른 소스와 Git 변경을 사용했습니다. 현재 빌드 이력이나 오늘의 운영 상태로 바꾸어 읽지 않습니다.</p>
+    <details class="delivery-record" open><summary><span>01 · 정상 배포</span><strong>같은 소스의 검증 → 새 이미지 B</strong></summary><div class="record-body">
+      <p>소스 <code>{short(recorded.normal.sourceCommit)}</code>의 Jenkins Build {recorded.normal.jenkins.buildNumber}는 <strong>API JUnit {recorded.normal.jenkins.apiTests.totalCount}개·실패 {recorded.normal.jenkins.apiTests.failCount}개</strong>, 별도 웹 테스트 <strong>{recorded.normal.jenkins.webTestsPassed}개</strong>를 통과했습니다. 웹 테스트 수를 JUnit 합계로 표시하지 않습니다.</p>
+      <p>같은 소스의 Actions 검증과 게시 gate를 통과해 API·웹 이미지를 게시했습니다. draft PR #{recorded.normal.draftPr}의 변경 범위 검사에 더해 registry 내용·OCI 소스 label·Helm lint/render를 확인한 뒤 병합하고, Argo와 실제 실행 결과를 대조했습니다.</p>
+      <div class="guide-links"><a href={`${github}/actions/runs/${recorded.normal.actionsValidationRunId}`}>당시 Actions 검증 ↗</a><a href={`${github}/actions/runs/${recorded.normal.publicationRunId}`}>당시 게시 실행 ↗</a><a href={`${github}/pull/${recorded.normal.draftPr}`}>배포 변경 PR #2 ↗</a></div>
+    </div></details>
+    <details class="delivery-record"><summary><span>02 · 실패 차단</span><strong>의도한 테스트 실패 → 게시·배포 변경 없음</strong></summary><div class="record-body">
+      <p>별도 소스 <code>7710a39</code>에서 테스트 기대값만 성공 7 → 8로 바꿨습니다. <strong>Jenkins Build 6과 Actions 모두 API 테스트 15개 중 1개가 실패</strong>했습니다. Actions는 성공하고 Jenkins만 실패한 실험은 아닙니다.</p>
+      <p>Jenkins의 웹 검증·archive·success 기록 단계는 앞선 실패로 건너뛰었습니다. 세 게시 시도의 publish·proposal도 건너뛰어 게시 artifact 0개·실패 SHA tag 0개·GitOps 제안 PR 0개를 확인했습니다. 이미 배포한 B의 이미지·values와 데이터는 유지됐습니다.</p>
+      <p>workflow의 전체 상태가 success라도 publish가 skipped라면 게시 성공으로 세지 않습니다. 최신 pending을 이전 success로 대체하지 않은 차단과 metadata HTTP 403 실패 기록도 원 근거에 남겼습니다.</p>
+      <a class="text-link" href={`${repo}docs/evidence/cicd-gate/README.md`}>실패·skipped·원래 오류 기록 읽기 ↗</a>
+    </div></details>
+    <details class="delivery-record"><summary><span>03 · 이전 이미지 복귀</span><strong>Git의 이전 digest 복원 → A 재관측</strong></summary><div class="record-body">
+      <p><strong>PR #3</strong>으로 이전 API·웹 digest와 API sourceCommit을 Git에 복원했습니다. Argo가 새 GitOps revision <code>651e5c3</code>을 반영한 뒤 이전 이미지 A와 HTTP 결과·DB·PVC 보존을 확인했습니다. 직접 <code>helm upgrade</code>나 Argo의 명령형 rollback을 실행한 사례가 아닙니다.</p>
+      <p>테스트 기대값을 원복한 별도 소스 <code>c741bb7</code>의 Jenkins Build 7·8과 draft PR #4는 <strong>게시 경로 회복</strong> 기록입니다. PR #4는 배포하지 않고 닫았으며 실제 A 복귀 PR #3과 다릅니다.</p>
+      <div class="guide-links"><a href={`${github}/pull/3`}>실제 A 복귀 PR #3 ↗</a><a href={`${github}/pull/4`}>배포하지 않은 테스트 회복 PR #4 ↗</a></div>
+    </div></details>
+  </section>
+
+  <section id="rollback" class="guide-section" aria-labelledby="rollback-title">
+    <h2 id="rollback-title">이전 이미지는 같아도, 복귀를 선언한 Git 변경은 새롭습니다.</h2>
+    <div class="delivery-three rollout-grid">{recorded.rolloutSequence.map((phase, i) => <article class="guide-panel" data-phase={phase.phase}>
+      <p class="eyebrow">{phases[i].name}</p><h3>{phases[i].description}</h3>
+      <p class="record-time"><time datetime={phase.observedAt}>{phase.observedAt.replace('T',' ').replace('+00:00',' UTC')}</time></p>
+      <dl class="rollout-ids"><div><dt>API 소스</dt><dd><a href={`${github}/tree/${phase.sourceCommit}`}><code>{short(phase.sourceCommit)}</code></a></dd></div><div><dt>GitOps revision</dt><dd><a href={`${github}/commit/${phase.gitopsRevision}`}><code>{short(phase.gitopsRevision)}</code></a></dd></div><div><dt>Argo / Pod</dt><dd>{phase.checks.argoSyncedHealthyAtExpectedRevision ? 'Synced · Healthy' : '미확인'} / {phase.checks.threeLabPodsReady ? `${phase.labPodCount}개 Ready` : '미확인'}</dd></div></dl>
+      <dl class="rollout-counts">{counts.map(([key,label]) => <div><dt>{label}</dt><dd>{phase.counts[key]}</dd></div>)}</dl>
+      <details class="digest-details"><summary>정확한 소스·이미지 digest 보기</summary><dl><dt>API sourceCommit</dt><dd><code>{phase.sourceCommit}</code></dd><dt>API digest</dt><dd><code>{phase.apiImageDigest}</code></dd><dt>Web digest</dt><dd><code>{phase.webImageDigest}</code></dd><dt>GitOps revision</dt><dd><code>{phase.gitopsRevision}</code></dd></dl></details>
+    </article>)}</div>
+    <p>세 카드의 시각·SHA·digest·건수는 원 <code>summary.json</code>에서 직접 읽습니다. 당시 OCI index·amd64 manifest·CRI config의 관계까지 대조했으며 서로 다른 종류의 digest를 문자열만으로 동일시하지 않았습니다.</p>
+    <p class="guide-callout"><strong>이미지 복귀와 데이터 복원은 별도입니다.</strong>당시 DB 행·Flyway·PVC와 기존 서비스가 보존된 것을 관측했습니다. 새 이미지가 적용한 DB migration을 이전 이미지가 읽을 수 있는지는 별도 판단이 필요합니다. 이 기록은 무중단·HA·새 장비에서 전체 기동 복원을 증명하지 않습니다.</p>
+  </section>
+
+  <section id="screen" class="guide-section" aria-labelledby="screen-title">
+    <h2 id="screen-title">화면에서 같은 소스와 배포 선언을 찾아보세요.</h2>
+    <figure class="tech-screenshot"><a href={`${base}images/technologies/delivery-record.jpg`} target="_blank" rel="noreferrer" aria-label="공개 배포 관측 캡처 크게 보기, 새 창"><img src={`${base}images/technologies/delivery-record.jpg`} alt="공개 포트폴리오에서 Jenkins의 검증 SHA와 Argo CD 배포 선언을 나란히 표시한 관측 기록" loading="lazy" width="1265" height="712" /></a><figcaption>2026-10-26 KST에 캡처한 공개 관측 화면입니다. 원 수집 시각은 2026-10-26 07:45 UTC이며, 위 10월 11일 실험 당시의 화면이나 관리자 UI 캡처가 아닙니다.</figcaption></figure>
+    <ol class="guide-reading"><li><strong>Jenkins:</strong> 빌드 번호·checkout SHA·각 테스트·archive 결과를 읽습니다. 전체 SUCCESS와 테스트·산출물의 근거를 함께 확인합니다.</li><li><strong>Actions:</strong> gate·publish·proposal의 개별 job과 sourceCommit·image digest를 확인합니다. 실행 전체의 녹색 표시만으로 게시를 판단하지 않습니다.</li><li><strong>Argo CD:</strong> GitOps revision과 Synced/Healthy를 읽고, 실제 Pod 이미지·API sourceCommit·HTTP 응답과 대조합니다.</li></ol>
+    <div class="guide-links"><a href={`${base}#platform-record`}>공개 배포 관측 보기 →</a><a href="https://jenkins.devdooly-platform-lab.duckdns.org/" target="_blank" rel="noreferrer">Jenkins · 로그인 필요 ↗</a><a href="https://argocd.devdooly-platform-lab.duckdns.org/" target="_blank" rel="noreferrer">Argo CD · 로그인 필요 ↗</a></div>
+    <p class="section-lead">관리 화면에는 본인 계정으로 로그인합니다. 링크와 저장 캡처는 현재 접속 성공을 보장하지 않습니다.</p>
+  </section>
+
+  <CicdSetupGuide sourceRef={reference} />
+
+  <section id="evidence" class="guide-section" aria-labelledby="evidence-title">
+    <h2 id="evidence-title">과거 실행 기록과 현재 설정의 기준을 나눕니다.</h2>
+    <p>사례 수치는 2026-10-11 UTC 실행 기록입니다. 설정 설명은 <a href={`${github}/tree/${reference}`}>소스 05f2aab</a> 기준이며 운영 image/source pin과 같다는 뜻은 아닙니다. 현재 GitHub App 연결은 2026-10-23의 별도 기록으로, 과거 PAT 기반 빌드와 합치지 않습니다.</p>
+    <div class="tech-sources"><div><h3>실제 실행과 한계</h3><ul><li><a href={`${repo}docs/evidence/cicd-gate/README.md`}>정상·실패·A → B → A 실행 근거 ↗</a></li><li><a href={`${repo}docs/evidence/cicd-gate/summary.json`}>세 관측 카드의 원 summary ↗</a></li><li><a href={`${repo}docs/evidence/github-app-jenkins/README.md`}>별도로 확인한 GitHub App 연결 ↗</a></li></ul></div><div><h3>구현과 운영 안내</h3><ul><li><a href={`${repo}Jenkinsfile`}>Jenkins 검증·status·archive ↗</a></li><li><a href={`${repo}.github/workflows/publish-images.yml`}>게시 gate·단일 게시자·PR 제안 ↗</a></li><li><a href={`${repo}gitops/bootstrap/application.yaml`}>Argo CD의 source·destination·sync ↗</a></li><li><a href={`${repo}docs/adr/0004-jenkins-gated-actions-publication.md`}>검증과 게시를 연결한 기술 결정 ↗</a></li></ul></div><div><h3>일반 동작의 공식 설명</h3><ul><li><a href="https://www.jenkins.io/doc/book/managing/nodes/">Jenkins controller·agent·executor ↗</a></li><li><a href="https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/choosing-permissions-for-a-github-app">GitHub App 최소 권한 ↗</a></li><li><a href="https://argo-cd.readthedocs.io/en/stable/user-guide/auto_sync/">Argo CD 자동 동기화·selfHeal·prune ↗</a></li></ul></div></div>
+  </section>
+  <div class="guide-links"><a href={`${base}cases/kafka-redelivery/`}>← Kafka 대표 사례</a><a href={`${base}technologies/jenkins/`}>Jenkins 기술 안내 →</a><a href={`${base}technologies/kubernetes/`}>K3s·Argo CD 기술 안내 →</a><a href={`${base}technologies/`}>기술 전체 목차 →</a></div>
+</GuideLayout>
+<style>
+  .delivery-three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin:25px 0}.delivery-three .guide-panel{padding:24px}.delivery-three h3{font-size:1.24rem;line-height:1.5}.delivery-pipeline{margin:28px 0;background:var(--surface);border:1px solid var(--line);padding:26px}.pipeline-label{font:12px/1.5 var(--mono);letter-spacing:.08em;color:var(--green)}.delivery-pipeline h3{font-size:1.16rem;line-height:1.5;margin:8px 0}.delivery-pipeline p{margin:7px 0 0}.pipeline-source{text-align:center;padding-bottom:24px}.pipeline-fork{display:grid;grid-template-columns:1fr 1fr;gap:18px;position:relative}.pipeline-fork article{border-top:3px solid var(--green);background:var(--paper);padding:20px}.pipeline-source:after{content:'↓';display:block;margin-top:18px;color:var(--green);font-size:24px}.pipeline-rest{list-style:none;padding:0;margin:24px 0 0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;border-top:1px solid var(--line)}.pipeline-rest li{padding-top:20px}.pipeline-rest li:before{content:'↓';display:block;color:var(--green);margin-bottom:12px}.delivery-identities{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.delivery-identities p{border-left:3px solid var(--green);padding:10px 15px}.delivery-identities span{display:block;font-size:15px;margin-top:5px}.delivery-record{border:1px solid var(--line);margin:16px 0;background:var(--surface)}.delivery-record>summary{padding:22px;cursor:pointer;font-size:1.1rem}.delivery-record>summary span{display:inline-block;color:var(--green);font-size:.9rem;margin-right:18px}.delivery-record>summary strong{font-weight:650}.record-body{padding:0 25px 22px}.record-body p:first-child{margin-top:0}.record-time{font:12px/1.7 var(--mono);overflow-wrap:anywhere}.rollout-ids{font-size:15px}.rollout-ids>div{display:flex;justify-content:space-between;gap:10px;margin:11px 0}.rollout-ids dd{margin:0;text-align:right}.rollout-counts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));text-align:center;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:14px 0;gap:5px}.rollout-counts dt{font-size:12px}.rollout-counts dd{margin:5px 0 0;font:22px/1.4 var(--mono)}.digest-details{font-size:14px}.digest-details summary{cursor:pointer}.digest-details dd{margin:4px 0 14px;overflow-wrap:anywhere}.digest-details dt{color:var(--green)}code{overflow-wrap:anywhere}summary:focus-visible{outline:3px solid var(--green);outline-offset:4px}@media(max-width:1050px){.pipeline-rest{grid-template-columns:repeat(2,minmax(0,1fr))}.delivery-three{grid-template-columns:1fr}.rollout-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.rollout-grid .guide-panel{padding:17px}.rollout-ids>div{display:block}.rollout-ids dd{text-align:left}}@media(max-width:760px){.pipeline-fork,.pipeline-rest,.delivery-identities,.rollout-grid{grid-template-columns:1fr}.delivery-pipeline{padding:18px}.delivery-record>summary span{display:block;margin:0 0 6px}.rollout-ids>div{display:flex}.rollout-ids dd{text-align:right}.record-body{padding:0 20px 18px}}
+</style>
