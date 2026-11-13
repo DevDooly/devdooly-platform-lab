@@ -1,22 +1,17 @@
 # 현재 범위와 다음 작업
 
-기준: 2026-10-27(KST). 개인 Lab에서 실제 확인한 결과와 남은 작업을 찾는 길잡이입니다. 각 근거는 실행 당시의 범위이며 현재 가용성을 보장하지 않습니다.
+기준: 2026-11-13(KST). 개인 Lab에서 실제 확인한 결과와 남은 작업을 찾는 길잡이입니다. 각 근거는 실행 당시의 범위이며 현재 가용성을 보장하지 않습니다.
 
 [프로젝트 소개](../README.md) · [시작 안내](START_HERE.md) · [상세 진행 기록](NEXT_STEPS.md) · [공개 근거 검색](https://devdooly.github.io/devdooly-platform-lab/#evidence)
 
 ## 목표 재정렬 — 기술을 설명하는 포트폴리오
 
-### 현재 우선순위 — 결과 저장·검증·복구 대표 사례
+### 공개 완료 — MariaDB·Garage S3 저장·검증·복구 사례
 
-Jenkins·Actions·Argo CD 대표 사례는 [PR #300 완료 기록](https://github.com/DevDooly/devdooly-platform-lab/pull/300#issuecomment-6442458687)에서 같은 main CI·Pages·공개 결과와 한계를 확인합니다. 그다음 사용자 요청인 [MariaDB·Garage S3 대표 사례](https://devdooly.github.io/devdooly-platform-lab/cases/storage-recovery/)를 구현합니다. root는 사례·진입 링크·통합·Git·브라우저를, native 에이전트는 별도 설정/이식 컴포넌트를, 다른 채팅은 DB/S3 경계·과거 실행·현재 설정의 읽기 전용 독립 검토를 맡습니다. 파일 소유와 실행 담당은 겹치지 않습니다.
+[PR #302](https://github.com/DevDooly/devdooly-platform-lab/pull/302)를 `main`의 `422f15d`에 병합해 [대표 사례](https://devdooly.github.io/devdooly-platform-lab/cases/storage-recovery/)를 공개했습니다. MariaDB 처리 완료와 S3 결과·실패 파일의 검증, export 완료 후 슬롯 해제를 구분합니다. Windows exporter 시험과 Linux 손상 수리 기록을 바탕으로 중단 뒤 남은 상태를 설명하며, 핵심 설정과 다른 환경에 이식할 때 확인할 항목을 안내합니다.
 
-| 우선순위 | 범위 | 상태 |
-| --- | --- | --- |
-| 1 | DB 결과 저장·두 파일 검증·export 완료·슬롯 해제와 복구 대표 사례 | 구현·로컬 확인 완료. 원 summary와 기존 손상 수리 모델을 재사용해 Windows 내부 exporter와 Linux 실행기 시험을 구분합니다. 같은 main CI/Pages·공개 결과는 PR 완료 기록을 따르며 새 실험·운영 복구와 구분합니다. |
-| 2 | 핵심 설정·새 환경 이식과 실제 화면으로 이어지는 길 | 같은 변경에 포함. 새 환경 기동·DB 복원 성공은 주장하지 않습니다. |
-| 다음 | 추가 대표 사례나 기능 | 이번 변경의 공개 결과를 마친 뒤 실제 설명·이용 공백이 확인될 때 하나씩 선정합니다. 반복 점검·근거 없는 파생 기능은 만들지 않습니다. |
-
-[기능 범위와 검증 기록](features/storage-recovery-case.md)을 따릅니다. Pages 토큰·별도 환경 K3s/Jenkins 기동 복원·예산 정책·PR #102와 운영 image/source pin·기존 서비스/데이터·자동 이미지 제안 PR·다른 PAUSED 자동화는 유지합니다.
+- 같은 커밋에서 [CI의 verify·public-read-gateway](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/40521940285)와 [Pages의 build·deploy](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/40521941042)가 성공했습니다. CI의 선택 격리 작업 4개는 실행하지 않았습니다.
+- 공개 화면에서 기술 목차와 저장소 안내를 통한 이동, 키보드로 실패 경계와 SHA 펼치기, 모바일 표시를 확인했습니다. [공개 완료 기록](https://github.com/DevDooly/devdooly-platform-lab/pull/302#issuecomment-6444826265)과 [원 시험·구현·검증 범위](features/storage-recovery-case.md)에 근거를 연결했습니다. 이 검증 범위는 공개 사례와 기존 CI에 한정됩니다.
 
 이 프로젝트의 우선 목표는 **취업·이직 과정에서 Java·데이터·플랫폼 기술의 이해와 설계 판단을 보여주는 것**입니다. 화면의 세부 기능 수를 늘리기보다, 어떤 문제를 해결하고 기술이 어떻게 연결되며 어디까지 검증했는지 읽을 수 있게 만듭니다. 개인 학습과 다른 시스템 이식을 위해 실제 설정 위치·변경 항목도 연결합니다.
 
@@ -51,15 +46,9 @@ Jenkins·Actions·Argo CD 대표 사례는 [PR #300 완료 기록](https://githu
 
 ## 다음 작업의 우선순위
 
-**사용자 피드백으로 확인한 공백:** Kafbat 로그인 계정의 확인 위치를 찾기 어려워 서비스 목차와 Kafka 기술 페이지의 로그인 링크 가까이에 기존 계정 안내를 연결했습니다. 기본 아이디·미니 PC 소유자 확인 절차만 표시하며 비밀번호 조회나 운영 변경은 하지 않습니다. [안내 범위](features/technology-guide.md#kafbat-로그인-안내)와 해당 변경 PR의 공개 결과를 따릅니다. 이 접근성 보완은 실제 피드백 한 건에 한정합니다.
+현재 착수할 새 기능은 정해지지 않았습니다. 포트폴리오를 읽거나 로컬 학습·재구축 안내를 따라가는 과정에서 구체적인 누락, 재현된 문제 또는 사용자 요구가 확인되면 그중 한 항목을 선정합니다. 별도 환경의 실제 기동 복원은 위 보류 목록을 따릅니다.
 
-이번 변경에서 **기술 목차·8개 상세 안내·전체 구성도·학습 및 재구축 안내**를 구현했습니다. [구현과 검증 범위](features/technology-guide.md)를 기준으로 공개 반영을 마무리하며, 이 안내를 매번 다시 구현하거나 검증하지 않습니다.
-
-1. **대표 사례의 설명 깊이:** 사용자의 다음 진행 요청에 따라 [Kafka 재전달 사례](https://devdooly.github.io/devdooly-platform-lab/cases/kafka-redelivery/)를 보완합니다. 기존 안내에서 압축된 세 중단 지점·DB 완료 재호출 보호·offset과 export의 차이를 선택해 읽습니다. 기존 실제 시험 수치와 소스를 사용하며 새 운영 시험은 추가하지 않습니다. 변경의 공개 완료·검증 범위는 해당 PR 결과를 따릅니다. 이 한 범위가 끝나면 실제 이해 공백이 확인될 때만 다음 사례를 선정합니다.
-2. **재구축 안내의 실제 사용 공백:** 로컬 학습이나 다른 환경으로 옮기는 과정에서 확인된 누락을 고칩니다. 별도 환경의 실제 기동 복원은 기존 보류에 따르며 안내 작성만으로 실행 성공을 주장하지 않습니다.
-3. **새 기능 선택:** 취업 포트폴리오의 기술 이해나 학습을 직접 돕는 요구가 있을 때 선정합니다. 현재 안내의 반복 점검이나 세부 조회 기능 추가를 자동으로 다음 목표로 삼지 않습니다.
-
-root는 첫 화면·기술 페이지·통합·공개 확인을, native 에이전트는 기술 내용·재구축 안내를, 다른 채팅은 기술 사실과 범위의 독립 검토를 맡습니다. 같은 checkout의 담당 파일을 겹치지 않게 나누며 검토가 끝난 변경만 반영합니다. 반복 점검이나 작은 조회 기능 추가를 기본 다음 작업으로 선택하지 않습니다. 아래 항목은 이미 완료한 기능 이력입니다.
+기술 목차·8개 상세 안내·전체 구성도·재구축 안내와 세 대표 사례는 공개했습니다. Kafbat 로그인 옆에 계정 확인 안내를 추가한 작업도 완료했습니다. [기술 안내의 구현·검증 범위](features/technology-guide.md) · [Kafka 재전달 사례](https://devdooly.github.io/devdooly-platform-lab/cases/kafka-redelivery/) · [Jenkins·Actions·Argo CD 완료 기록](https://github.com/DevDooly/devdooly-platform-lab/pull/300#issuecomment-6442458687)
 
 ### 이전 완료 기능 — PR #289까지
 
