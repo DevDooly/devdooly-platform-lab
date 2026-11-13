@@ -1,6 +1,8 @@
 ---
 import HandbookLayout from '../../layouts/HandbookLayout.astro';
+import HandbookFigure from '../../components/HandbookFigure.astro';
 import { handbookHref, technologySections } from '../../data/handbook';
+import { chapterFigures } from '../../data/handbookFigures';
 import { handbookPractice } from '../../data/handbookPractice';
 import { technologies, type TechnologyGuide } from '../../data/technologyGuides';
 
@@ -11,6 +13,7 @@ export function getStaticPaths() {
 interface Props { tech: TechnologyGuide; }
 const { tech } = Astro.props;
 const practice = handbookPractice[tech.slug];
+const figure = chapterFigures[tech.slug];
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const sourceHref = (path: string) => `https://github.com/DevDooly/devdooly-platform-lab/blob/main/${path}`;
 ---
@@ -24,6 +27,7 @@ const sourceHref = (path: string) => `https://github.com/DevDooly/devdooly-platf
     <h2>이 Lab의 동작 흐름</h2>
     <ol>{tech.flow.map(step => <li>{step}</li>)}</ol>
     <p>{tech.scope}</p>
+    {figure?.section === 'flow' && <HandbookFigure {figure} />}
   </section>
   <section id="apply">
     <h2>다른 프로젝트에 적용하기</h2>
@@ -53,11 +57,14 @@ const sourceHref = (path: string) => `https://github.com/DevDooly/devdooly-platf
   <section id="verify">
     <h2>변경 후 검증</h2>
     <ol>{practice.verify.map(step => <li>{step}</li>)}</ol>
+    {figure?.section === 'verify' && <HandbookFigure {figure} />}
   </section>
   <section id="evidence">
     <h2>소스와 검증 근거</h2>
+    {figure?.section === 'evidence' && <HandbookFigure {figure} />}
     <ul>
       {practice.caseLink && <li><a href={`${base}${practice.caseLink.path}`}>{practice.caseLink.label}</a></li>}
+      {tech.slug === 'ai' && <li><a href={`${handbookHref(base, 'lakehouse')}#evidence`}>그림 5에서 Lakehouse·AI 검증 요약 보기</a></li>}
       {tech.evidence.map(link => <li><a href={sourceHref(link.path)}>{link.label}</a></li>)}
       <li><a href={`${base}technologies/${tech.slug}/`}>기술 안내에서 구성과 실제 화면 보기</a></li>
     </ul>

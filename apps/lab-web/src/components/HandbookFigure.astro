@@ -1,0 +1,25 @@
+---
+import type { HandbookFigureData } from '../data/handbookFigures';
+
+interface Props { figure: HandbookFigureData; }
+const { figure } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const src = `${base}images/handbook/${figure.file}`;
+---
+
+<figure class="book-figure">
+  <img src={src} alt={figure.alt} width="1440" height="900" loading="lazy" decoding="async" />
+  <figcaption>{figure.caption} <a href={src}>원본 이미지 보기</a></figcaption>
+</figure>
+
+<style>
+  .book-figure { margin: 1.25rem 0 1.5rem; }
+  img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #d5dfd9;
+    border-radius: 6px;
+  }
+  figcaption { margin-top: .45rem; color: #465b51; font-size: .875rem; }
+</style>
