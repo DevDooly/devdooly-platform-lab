@@ -1,0 +1,61 @@
+---
+import HandbookContents from '../components/HandbookContents.astro';
+import { handbookChapters, handbookHref } from '../data/handbook';
+import '../styles/global.css';
+import '../styles/handbook.css';
+
+interface Props {
+  current: string;
+  title: string;
+  description: string;
+  sections: { id: string; title: string }[];
+}
+const { current, title, description, sections } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const index = handbookChapters.findIndex(chapter => chapter.slug === current);
+const previous = handbookChapters[index - 1];
+const next = handbookChapters[index + 1];
+---
+<!doctype html>
+<html lang="ko" class="handbook-page">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#f8f9f8" />
+    <title>{title} — DevDooly Platform Lab 기술 문서</title>
+    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+  </head>
+  <body>
+    <a class="book-skip" href="#main">본문으로 이동</a>
+    <header class="book-header">
+      <a class="book-brand" href={handbookHref(base, '')}>DevDooly Platform Lab <span>기술 문서</span></a>
+      <nav aria-label="관련 사이트">
+        <a href={base}>포트폴리오</a>
+        <a href={`${base}technologies/`}>기술 사례</a>
+        <a href="https://github.com/DevDooly/devdooly-platform-lab">GitHub</a>
+      </nav>
+    </header>
+    <div class="book-shell">
+      <aside class="book-sidebar">
+        <p class="book-toc-title">목차</p>
+        <HandbookContents {base} {current} {sections} />
+      </aside>
+      <details class="book-mobile">
+        <summary>목차</summary>
+        <HandbookContents {base} {current} {sections} />
+      </details>
+      <main id="main" tabindex="-1" class="book-main">
+        <header class="book-heading">
+          <h1>{title}</h1>
+          <p>{description}</p>
+        </header>
+        <div class="book-prose"><slot /></div>
+        <nav class="book-pagination" aria-label="이전·다음 장">
+          {previous && <a rel="prev" href={handbookHref(base, previous.slug)}><span>← 이전 장</span>{previous.title}</a>}
+          {next && <a rel="next" href={handbookHref(base, next.slug)}><span>다음 장 →</span>{next.title}</a>}
+        </nav>
+      </main>
+    </div>
+  </body>
+</html>
