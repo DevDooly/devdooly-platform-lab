@@ -1,0 +1,41 @@
+---
+import HandbookLayout from '../../layouts/HandbookLayout.astro';
+import { handbookHref, overviewSections } from '../../data/handbook';
+
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const repository = 'https://github.com/DevDooly/devdooly-platform-lab';
+const api = 'cd apps/api\n./mvnw spring-boot:run -Dspring-boot.run.profiles=local-dev';
+const web = 'cd apps/lab-web\nnpm ci\nnpm run dev';
+---
+<HandbookLayout current="" title="DevDooly Platform Lab 기술 문서" description="합성 센서 데이터가 처리되고 저장된 뒤 화면과 운영 기록으로 이어지는 과정을 설명합니다. 각 장에서 적용할 설계, 바꿀 파일, 확인할 결과를 찾을 수 있습니다." sections={overviewSections}>
+  <section id="architecture">
+    <h2>전체 흐름</h2>
+    <ol>
+      <li><a href={handbookHref(base, 'java')}>Java와 Spring Boot</a>가 입력과 작업을 받고, worker가 센서 판정 규칙을 실행합니다.</li>
+      <li><a href={handbookHref(base, 'kafka')}>Kafka</a>가 접수된 작업을 worker에 전달합니다. 중단 후 다시 전달될 때는 MariaDB에 남은 처리 상태를 확인합니다.</li>
+      <li><a href={handbookHref(base, 'storage')}>MariaDB와 Garage S3</a>는 처리 상태와 파일을 각각 관리합니다. 결과·실패 파일의 검증이 끝나면 내보내기를 완료합니다.</li>
+      <li><a href={handbookHref(base, 'web')}>Astro와 React</a>로 만든 공개 화면에서 API 결과, 관측 기록, 실제 검증 사례를 읽습니다.</li>
+      <li><a href={handbookHref(base, 'jenkins')}>Jenkins와 GitHub Actions</a>의 검증·이미지 게시를 <a href={handbookHref(base, 'kubernetes')}>K3s·Helm·Argo CD</a>의 배포 선언과 연결합니다.</li>
+    </ol>
+    <p><a href={handbookHref(base, 'lakehouse')}>Lakehouse 실험</a>은 파일을 테이블로 관리하고 조회하는 별도 경로입니다. <a href={handbookHref(base, 'ai')}>AI 활용과 검증</a>은 처리 알고리즘의 정확성과 성능을 비교한 사례입니다.</p>
+  </section>
+  <section id="start-local">
+    <h2>로컬에서 시작하기</h2>
+    <p>저장소를 복제한 뒤, 루트에서 터미널 두 개를 엽니다. Java 21과 저장소가 지원하는 Node 버전을 준비합니다. API의 <code>local-dev</code> 프로필은 H2를 사용합니다.</p>
+    <h3>터미널 A · API</h3>
+    <pre><code>{api}</code></pre>
+    <p>Windows PowerShell에서는 <code>.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=local-dev"</code>를 사용합니다.</p>
+    <h3>터미널 B · 웹 화면</h3>
+    <pre><code>{web}</code></pre>
+    <p>브라우저에서 <code>http://127.0.0.1:4321/</code>을 열고 실행 결과를 확인합니다. 로컬 웹 서버는 <code>/api</code> 요청을 <code>127.0.0.1:8080</code>의 API에 전달합니다. <a href={`${base}guides/rebuild/#local`}>준비 버전과 상세 실행 절차</a>를 참고하세요.</p>
+  </section>
+  <section id="adapt">
+    <h2>다른 프로젝트에 적용하기</h2>
+    <ol>
+      <li>옮길 동작 하나를 고릅니다. 예를 들어 같은 메시지가 두 번 도착해도 처리 결과가 중복 저장되지 않아야 하는 경우에는 Kafka 장에서 시작합니다.</li>
+      <li>각 장의 ‘어디를 어떻게 수정하나’에서 설정과 코드를 찾습니다. 별도 로컬 환경에서 샘플 입력을 사용해 변경합니다.</li>
+      <li>‘변경 후 검증’에서 결과를 확인합니다. 예를 들어 중단 뒤 재시도한 작업의 결과 행, 파일, 완료 상태를 각각 비교합니다.</li>
+    </ol>
+    <p><a href={`${base}guides/rebuild/#expand`}>DB·Kafka·S3까지 확장하기</a> · <a href={`${base}guides/rebuild/#migrate`}>새 환경으로 옮길 설정과 검증 순서</a> · <a href={repository}>저장소 복제 주소</a></p>
+  </section>
+</HandbookLayout>

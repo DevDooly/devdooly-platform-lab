@@ -6,6 +6,8 @@ Java 서비스 개발부터 데이터 처리, 배포와 운영까지의 이해�
 
 ## 기술을 이해하고 다시 구성하는 길잡이
 
+[기술 문서](https://devdooly.github.io/devdooly-platform-lab/handbook/)는 장·절 목차를 따라 전체 흐름, 각 기술의 역할과 적용 예, 바꿀 코드·설정과 검증 순서를 읽는 안내서입니다.
+
 먼저 [기술 목차](https://devdooly.github.io/devdooly-platform-lab/technologies/)에서 전체 구성을 보고 관심 기술을 고릅니다. 각 안내는 **해결할 문제 → 설계와 데이터 흐름 → 화면·검증 근거 → 설정과 이식 시 변경점** 순서로 읽습니다. 직접 학습하거나 새 프로젝트를 시작할 때는 [다른 환경에서 구성하기](https://devdooly.github.io/devdooly-platform-lab/guides/rebuild/)를 따릅니다.
 
 대표 사례 [메시지는 다시 와도, 결과는 지킨다](https://devdooly.github.io/devdooly-platform-lab/cases/kafka-redelivery/)에서는 Kafka·DB 사이의 세 중단 지점을 골라 남는 상태와 재개 동작을 비교합니다. 작업 재전달과 센서 중복 판정, offset commit과 파일 저장 완료의 차이도 설명합니다.

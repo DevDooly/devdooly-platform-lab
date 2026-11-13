@@ -1,0 +1,33 @@
+---
+import { handbookChapters, handbookGroups, handbookHref } from '../data/handbook';
+
+interface Props {
+  base: string;
+  current: string;
+  sections: { id: string; title: string }[];
+}
+const { base, current, sections } = Astro.props;
+---
+<nav class="book-contents" aria-label="기술 문서 목차">
+  <ul class="book-parts">
+    {handbookGroups.map(group => (
+      <li>
+        <p class="book-part">{group.title}</p>
+        <ul class="book-chapters">
+          {handbookChapters.filter(chapter => group.slugs.includes(chapter.slug)).map(chapter => (
+            <li>
+              <a href={handbookHref(base, chapter.slug)} aria-current={chapter.slug === current ? 'page' : undefined}>
+                {chapter.title}
+              </a>
+              {chapter.slug === current && (
+                <ul class="book-sections">
+                  {sections.map(section => <li><a href={`#${section.id}`}>{section.title}</a></li>)}
+                </ul>
+              )}
+            </li>
+          ))}
+        </ul>
+      </li>
+    ))}
+  </ul>
+</nav>

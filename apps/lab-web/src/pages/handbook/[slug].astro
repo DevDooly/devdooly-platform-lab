@@ -1,0 +1,70 @@
+---
+import HandbookLayout from '../../layouts/HandbookLayout.astro';
+import { handbookHref, technologySections } from '../../data/handbook';
+import { handbookPractice } from '../../data/handbookPractice';
+import { technologies, type TechnologyGuide } from '../../data/technologyGuides';
+
+export function getStaticPaths() {
+  return technologies.map(tech => ({ params: { slug: tech.slug }, props: { tech } }));
+}
+
+interface Props { tech: TechnologyGuide; }
+const { tech } = Astro.props;
+const practice = handbookPractice[tech.slug];
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const sourceHref = (path: string) => `https://github.com/DevDooly/devdooly-platform-lab/blob/main/${path}`;
+---
+<HandbookLayout current={tech.slug} title={tech.title} description={tech.summary} sections={technologySections}>
+  <section id="role">
+    <h2>역할과 선택 이유</h2>
+    <p>{tech.problem}</p>
+    <p>{tech.design}</p>
+  </section>
+  <section id="flow">
+    <h2>이 Lab의 동작 흐름</h2>
+    <ol>{tech.flow.map(step => <li>{step}</li>)}</ol>
+    <p>{tech.scope}</p>
+  </section>
+  <section id="apply">
+    <h2>다른 프로젝트에 적용하기</h2>
+    <p>{practice.application}</p>
+    <div class="book-example">
+      <strong>적용 예시</strong>
+      <p>{practice.example}</p>
+    </div>
+  </section>
+  <section id="changes">
+    <h2>어디를 어떻게 수정하나</h2>
+    {practice.changes.map(change => (
+      <div>
+        <h3>{change.label}</h3>
+        <p>{change.detail}
+          <a class="book-source" href={sourceHref(change.path)}><code>{change.path}</code></a>
+        </p>
+      </div>
+    ))}
+    <h3>환경을 옮길 때 확인할 설정</h3>
+    <ul>
+      {tech.settings.map(setting => (
+        <li><strong>{setting.name}</strong> · {setting.purpose} {setting.portability}</li>
+      ))}
+    </ul>
+  </section>
+  <section id="verify">
+    <h2>변경 후 검증</h2>
+    <ol>{practice.verify.map(step => <li>{step}</li>)}</ol>
+  </section>
+  <section id="evidence">
+    <h2>소스와 검증 근거</h2>
+    <ul>
+      {practice.caseLink && <li><a href={`${base}${practice.caseLink.path}`}>{practice.caseLink.label}</a></li>}
+      {tech.evidence.map(link => <li><a href={sourceHref(link.path)}>{link.label}</a></li>)}
+      <li><a href={`${base}technologies/${tech.slug}/`}>기술 안내에서 구성과 실제 화면 보기</a></li>
+    </ul>
+    <p>관련 장
+      {tech.related.map(slug => (
+        <Fragment> · <a href={handbookHref(base, slug)}>{technologies.find(guide => guide.slug === slug)?.title}</a></Fragment>
+      ))}
+    </p>
+  </section>
+</HandbookLayout>

@@ -23,6 +23,8 @@
 
 ## 최근 확인한 범위
 
+[기술 문서](https://devdooly.github.io/devdooly-platform-lab/handbook/)에서 전체 구성과 8개 기술을 장·절 목차로 읽을 수 있습니다. 각 장에는 적용 예시, 수정할 코드와 설정, 변경 후 확인할 결과를 담았습니다. 기존 사례와 실험 기록은 각 장의 근거로 연결합니다.
+
 | 항목 | 확인한 결과와 범위 |
 | --- | --- |
 | 첫 방문 관람 안내 | [사이트의 5단계 안내](https://devdooly.github.io/devdooly-platform-lab/#tour)에서 Java 처리 결과→Kafka 재개→CI/CD→AI 예제→Iceberg 보존 계획을 따라갈 수 있습니다. 각 화면의 다음 단계·목록 복귀와 개별 검증 근거를 연결하며, 새 서버 작업이나 기록 재검증을 실행하지 않습니다. [README 관람 순서](../README.md#처음-방문했다면) |
