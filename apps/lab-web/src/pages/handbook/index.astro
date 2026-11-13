@@ -1,5 +1,7 @@
 ---
 import HandbookLayout from '../../layouts/HandbookLayout.astro';
+import HandbookFigure from '../../components/HandbookFigure.astro';
+import { overviewFigures } from '../../data/handbookFigures';
 import { handbookHref, overviewSections } from '../../data/handbook';
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
@@ -10,6 +12,7 @@ const web = 'cd apps/lab-web\nnpm ci\nnpm run dev';
 <HandbookLayout current="" title="DevDooly Platform Lab 기술 문서" description="합성 센서 데이터가 처리되고 저장된 뒤 화면과 운영 기록으로 이어지는 과정을 설명합니다. 각 장에서 적용할 설계, 바꿀 파일, 확인할 결과를 찾을 수 있습니다." sections={overviewSections}>
   <section id="architecture">
     <h2>전체 흐름</h2>
+    <HandbookFigure figure={overviewFigures.architecture} />
     <ol>
       <li><a href={handbookHref(base, 'java')}>Java와 Spring Boot</a>가 입력과 작업을 받고, worker가 센서 판정 규칙을 실행합니다.</li>
       <li><a href={handbookHref(base, 'kafka')}>Kafka</a>가 접수된 작업을 worker에 전달합니다. 중단 후 다시 전달될 때는 MariaDB에 남은 처리 상태를 확인합니다.</li>
@@ -37,5 +40,6 @@ const web = 'cd apps/lab-web\nnpm ci\nnpm run dev';
       <li>‘변경 후 검증’에서 결과를 확인합니다. 예를 들어 중단 뒤 재시도한 작업의 결과 행, 파일, 완료 상태를 각각 비교합니다.</li>
     </ol>
     <p><a href={`${base}guides/rebuild/#expand`}>DB·Kafka·S3까지 확장하기</a> · <a href={`${base}guides/rebuild/#migrate`}>새 환경으로 옮길 설정과 검증 순서</a> · <a href={repository}>저장소 복제 주소</a></p>
+    <HandbookFigure figure={overviewFigures.guide} />
   </section>
 </HandbookLayout>
