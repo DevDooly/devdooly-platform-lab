@@ -41,7 +41,7 @@ sudo python3 infra/scripts/restore-lab-drill.py \
 
 매 실행은 새 restore namespace·Secret·PVC를 만듭니다. 별도 NetworkPolicy와 자원 quota를 적용하고 NodePort·Ingress를 추가하지 않습니다. DB 및 API의 이미지 digest는 백업과 현재 운영 선언이 같아야 합니다.
 
-검증 순서는 다음과 같습니다.
+아래 순서로 검증합니다.
 
 1. 운영 PVC UID와 PV mount 경로를 기록합니다.
 2. 시험 API를 0으로 유지하고 시험 DB만 실행합니다.
@@ -73,7 +73,7 @@ sudo python3 infra/scripts/restore-lab-drill.py \
 
 이후 Ubuntu에서 **공개 CLI 두 파일을 실제로 실행**했습니다. 새 논리 dump는 6,825바이트이며 백업에 0.529초가 걸렸고 SQLite online snapshot의 quick_check가 통과했습니다. 기존 소유 시험 namespace를 `--reuse-trial`로 명시해 복원했으며, import 0.268초·전체 61.046초가 걸렸습니다. SQL 전체·저장 시각·독립 기대 결과·중복 제약 오류 1062·API 재시작 후 데이터·운영 PVC/mount/data 유지·시험 Pod 0과 PV Retain을 모두 확인했습니다. 이는 작은 합성 샘플 한 번의 관측값이며 다른 크기의 복구 시간 보장이 아닙니다.
 
-공개 CLI의 **새 시험 namespace 생성 경로는 이 추가 회귀에서 실행하지 않았습니다.** 기존 원본 스크립트에서의 격리 환경 생성 결과와 공개 CLI의 명시 재사용 회귀를 구분합니다. K3s 전체 복원·Jenkins 복원·반복 예약 백업도 이 CLI 검증에 포함하지 않습니다. 실제 주소·trial 이름·백업 경로가 포함된 원본 보고서는 Git에서 제외한 비공개 경로에 보관합니다.
+공개 CLI의 **새 시험 namespace 생성 경로는 이 추가 회귀에서 실행하지 않았습니다.** 기존 원본 스크립트로 격리 환경을 생성한 결과와 공개 CLI의 명시 재사용 회귀를 구분합니다. K3s 전체 복원·Jenkins 복원·반복 예약 백업도 이 CLI 검증에 포함하지 않습니다. 실제 주소·trial 이름·백업 경로가 포함된 원본 보고서는 Git에서 제외한 비공개 경로에 보관합니다.
 
 공식 근거: [K3s datastore와 token 백업](https://docs.k3s.io/datastore/backup-restore), [MariaDB single-transaction dump](https://mariadb.com/docs/server/clients-and-utilities/backup-restore-and-import-clients/mariadb-dump).
 

@@ -12,7 +12,7 @@
 
 **Apache Kafka JVM 브로커 1개와 Garage 객체 저장소 1개를 우선 후보로 삼는다.** 기존 Java 처리 코드를 재사용하고, 합성 원본의 보관 → Kafka 작업 전달 → MariaDB 결과 저장 → 같은 원본 재처리까지 구현한다. Garage는 필요한 Java SDK 기능을 실제 검증한 뒤 ADR로 확정한다.
 
-새 목표는 기술 이름을 늘리는 일이 아니라 다음 질문에 근거로 답하는 것이다.
+새 목표는 아래 질문에 근거를 들어 답하는 일이다. 기술 이름을 늘리는 일은 이 목표의 범위에서 벗어난다.
 
 - 어떤 원본에서 이 결과가 나왔는가?
 - 업무상 중복 입력과 Kafka의 재전달을 어떻게 구분했는가?
@@ -84,7 +84,7 @@ SeaweedFS도 한 프로세스의 `weed mini` 구성이 있지만 내부에 maste
 
 새로 필요한 것은 작은 작업/outbox 테이블과 producer·consumer 코드다. outbox용 별도 제품은 없다. 최초 producer는 현재 Java image의 관리자 전용 일회 실행 기능으로, worker는 같은 처리 코드를 쓰는 별도 profile의 Pod 1개로 두면 조회 API와 장애 시험을 분리할 수 있다. API의 기존 자동 sample bootstrap을 worker profile에서 실행하지 않도록 구분한다. 기존 완료 샘플을 새 작업의 결과처럼 재사용하지 않는다.
 
-S3 object key 예시는 `raw/{runId}/{sha256}.ndjson`, `results/{runId}/{processorVersion}/{sha256}.json`이다. 이는 애플리케이션의 덮어쓰기 방지 규칙이며 S3 Object Lock/WORM 보장을 뜻하지 않는다. ETag를 SHA-256이나 항상 MD5라고 가정하지 않는다. 동시 writer는 최초 범위에서 허용하지 않으며, 자격증명도 단일 Lab bucket의 필요한 권한만 부여한다.
+S3 object key 예시는 `raw/{runId}/{sha256}.ndjson`, `results/{runId}/{processorVersion}/{sha256}.json`이다. 이는 애플리케이션의 덮어쓰기 방지 규칙이며 S3 Object Lock/WORM 보장을 뜻하지 않는다. ETag를 SHA-256이나 항상 MD5라고 가정하지 않는다. 최초 범위에서는 동시 writer를 허용하지 않는다. 자격증명에는 단일 Lab bucket에 필요한 권한만 부여한다.
 
 Kafka idempotent producer와 ACK 설정은 사용하되 **Kafka·MariaDB·S3 전체에 대한 exactly-once**라고 표현하지 않는다. 목표는 at-least-once 전달을 받아도 DB 효과가 한 번만 생기는 멱등 처리다. 장애 직후 S3와 DB 사이에 남은 미완료 작업은 STAGING 상태와 원본 hash로 복구하거나, 보존 정책에 따라 정리할 수 있어야 한다.
 

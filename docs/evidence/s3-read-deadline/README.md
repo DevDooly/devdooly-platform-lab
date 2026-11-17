@@ -13,7 +13,7 @@ AWS SDK의 동기 HTTP transport를 `UrlConnectionHttpClient`에서 `Apache5Http
 | `VerifiedResultExportIT`의 선택 사례 | 1개, 실패·오류·skip 0 | 실제 MariaDB와 실제 Garage |
 | 자체 시험 자원 종료 | 컨테이너 3개 종료, 두 relay 종료·join | 강제 kill과 자동 시험 재시도 없음 |
 
-원본 읽기 시험 네 개 모두가 실제 MariaDB를 사용한 것은 아니다. 이 네 사례는 실제 SDK의 PUT·GET·HEAD·LIST·DELETE와 전체 바이트 검증, DB 표시 실패 뒤 객체 재검증, 손상 객체 보존 및 dispatch 방지, 같은 작업의 재접수 보존을 다룬다. export 사례는 실제 MariaDB에서 결과·실패 파일의 저장 확인 뒤 슬롯을 해제하고, 반복 호출이 다음 작업의 슬롯을 해제하지 못하는지 검사한다. 다섯 시험은 운영 데이터 대신 새 schema·bucket·key와 합성 입력을 사용했다.
+원본 읽기 시험 네 개 모두가 실제 MariaDB를 사용한 것은 아니다. 이 네 사례는 실제 SDK의 PUT·GET·HEAD·LIST·DELETE와 전체 바이트 검증, DB 표시 실패 뒤 객체 재검증, 손상 객체 보존 및 dispatch 방지, 같은 작업의 재접수 보존을 다룬다. export 사례는 실제 MariaDB에서 결과·실패 파일의 저장 확인 뒤 슬롯을 해제하고 반복 호출이 다음 작업의 슬롯을 해제하지 못하는지 검사한다. 다섯 시험은 운영 데이터 대신 새 schema·bucket·key와 합성 입력을 사용했다.
 
 시험한 adapter class와 패키징된 API JAR 안의 class가 같음을 확인했다. JAR은 `92,724,910` bytes, SHA256은 `bae57d6556f93d52699ba687dc573e99986beffa012f902534a4c594e4e5dbad`다. 이는 OCI 이미지나 미니 PC에서 실행한 프로세스의 검증을 대신하지 않는다.
 
@@ -27,7 +27,7 @@ AWS SDK의 동기 HTTP transport를 `UrlConnectionHttpClient`에서 `Apache5Http
 
 ## 격리와 공개 자료
 
-GitHub runner의 새 internal Docker network를 사용하고 Docker port를 공개하지 않았다. host의 numeric loopback listener 두 개가 실제 소유 container·network endpoint에만 연결하며, 시험 전 TCP positive control과 실행 후 종료·join을 확인했다. relay는 payload를 해석하거나 기록하지 않았다. 미니 PC에는 연결하지 않았다. 앞선 port guard 실패의 원인은 이 성공으로 확정하지 않는다.
+GitHub runner의 새 internal Docker network를 사용하고 Docker port를 공개하지 않았다. host의 numeric loopback listener 두 개가 실제 소유 container·network endpoint에만 연결하며 시험 전 TCP positive control과 실행 후 종료·join을 확인했다. relay는 payload를 해석하거나 기록하지 않았다. 미니 PC에는 연결하지 않았다. 앞선 port guard 실패의 원인은 이 성공으로 확정하지 않는다.
 
 [summary.json](summary.json)은 실제 실행의 공개 summary `4,624` bytes를 수정 없이 복사한 파일이다. SHA256은 `5b3a6e9e17600112595942e94ea1c661af0a9cd0f1dd63bed932a800b02d50a0`이며 관측 시각은 `2026-10-15T21:39:06.044005Z`다. 기본 JUnit 211개 합계는 별도로 내려받은 30개 XML을 대조한 결과이고, 이 JSON의 `tests:5`와 합치거나 서로 바꾸어 표기하지 않는다. raw XML·로그·SQL·주소·port·credential 값은 공개하지 않는다.
 

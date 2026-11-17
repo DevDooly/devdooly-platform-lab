@@ -34,4 +34,4 @@ publisher는 실제 broker ACK 뒤에만 DB dispatch intent를 확인 처리한�
 - 원본 S3 Get 검증 뒤 같은 SHA의 DB 보관 원본을 독립 검증해 기존 처리기로 실행한다. S3 bytes를 직접 처리하는 범용 replay 엔진은 아니다.
 - fail-stop은 worker 메모리 상태다. 영속 운영자 정지·자동 DLQ·상시 worker Pod는 후속이다.
 - 새 시험 group은 `auto.offset.reset=earliest`로 시작한다. 실패 처리 코드가 offset을 건너뛰거나 reset하지 않는다는 뜻이며, retention 밖의 기존 commit 유실·자동 reset과 처리 중 동시 운영자 종료는 검증하지 않았다. 종료 요청과 offset commit의 원자적 보장을 제공하지 않는다.
-- DB `COMPLETED` 뒤 결과/실패 파일 export는 아직 구현하지 않았다. export intent와 실행 슬롯은 유지하며, fixture teardown을 export 완료로 세지 않는다. **다음 구현은 결과·실패 export와 export 확인 후 슬롯 해제 검증**이다.
+- DB `COMPLETED` 뒤 결과/실패 파일 export는 아직 구현하지 않았다. export intent와 실행 슬롯은 유지하며 fixture teardown을 export 완료로 세지 않는다. **다음 구현은 결과·실패 export와 export 확인 후 슬롯 해제 검증**이다.

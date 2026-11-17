@@ -25,7 +25,7 @@ const failureCases = [
     <h2 id="choices-title">DB 처리 성공만으로 파일 보관을 완료할 수 없었습니다.</h2>
     <p>DB commit 뒤 프로세스가 멈추거나 파일 하나만 남을 수 있습니다. 이 Lab은 <strong>업무 상태 COMPLETED</strong>와 <strong>파일 상태 EXPORTED</strong>를 나눕니다. 파일 확인이 끝날 때까지 export 요청과 점유 슬롯을 유지해 다음 작업이 완료되지 않은 저장을 지나치지 않도록 합니다.</p>
     <div class="storage-three">
-      <article class="guide-panel"><p class="eyebrow">STATE / MARIADB</p><h3>결과와 다음 할 일을 함께 저장합니다.</h3><p>작업·순번별 처리 결과·원본 bytes를 보관하고, 처리 완료와 EXPORT intent를 같은 DB 트랜잭션으로 남깁니다. export 완료·ACK·슬롯 해제도 함께 확정합니다.</p><p><strong>선택 이유:</strong> 부분 갱신을 막고 중단 뒤에도 재개할 근거를 DB에 두기 위해서입니다.</p></article>
+      <article class="guide-panel"><p class="eyebrow">STATE / MARIADB</p><h3>결과와 다음 할 일을 함께 저장합니다.</h3><p>작업·순번별 처리 결과·원본 bytes를 보관하고 처리 완료와 EXPORT intent를 같은 DB 트랜잭션으로 남깁니다. export 완료·ACK·슬롯 해제도 함께 확정합니다.</p><p><strong>선택 이유:</strong> 부분 갱신을 막고 중단 뒤에도 재개할 근거를 DB에 두기 위해서입니다.</p></article>
       <article class="guide-panel"><p class="eyebrow">DOCUMENT / GARAGE S3</p><h3>파일 보관을 별도 경계로 둡니다.</h3><p>Garage의 S3 호환 API와 AWS SDK로 원본·결과·실패 문서를 다룹니다. DB 상태와 파일 내용을 각각 확인할 수 있습니다. 이 Lab은 단일 노드·RF1 구성입니다.</p><p><strong>선택 이유:</strong> 직접 구성한 저장소에서 S3 연동과 오류 대응을 학습하기 위해서입니다. 성능 우위나 HA를 검증한 선택은 아닙니다.</p></article>
       <article class="guide-panel"><p class="eyebrow">PROOF / FULL GET</p><h3>있다는 응답보다 내용을 확인합니다.</h3><p>버전·run·원본 SHA·문서 SHA가 포함된 경로를 사용하고 전체 GET의 크기·bytes·SHA-256을 비교합니다. 같은 크기의 다른 내용도 거부합니다.</p><p><strong>선택 이유:</strong> 재시도가 같은 결과 파일을 식별하고 잘못된 기존 파일을 조용히 덮어쓰지 않게 하기 위해서입니다.</p></article>
     </div>
@@ -36,10 +36,10 @@ const failureCases = [
     <ol class="storage-flow">
       <li><span class="step-tag">01 / DB COMMIT</span><h3>처리 결과 + EXPORT intent</h3><p><code>COMPLETED / PENDING</code>. 결과·처리 시각은 확정하지만 슬롯은 계속 점유합니다.</p></li>
       <li><span class="step-tag">02 / DB SNAPSHOT</span><h3>저장된 결과에서 두 문서 생성</h3><p>짧은 트랜잭션으로 원본·작업·run·순번별 outcome을 읽고 버전이 고정된 문서를 만듭니다.</p></li>
-      <li><span class="step-tag">03 / S3 · DB TX 밖</span><h3>result → failures 전체 검증</h3><p>각 문서를 먼저 GET합니다. 정확한 404/NoSuchKey만 PUT 후 다시 GET하며, 충돌·권한 오류는 그대로 실패합니다.</p></li>
+      <li><span class="step-tag">03 / S3 · DB TX 밖</span><h3>result → failures 전체 검증</h3><p>각 문서를 먼저 GET합니다. 정확한 404/NoSuchKey만 PUT 후 다시 GET하며 충돌·권한 오류는 그대로 실패합니다.</p></li>
       <li><span class="step-tag">04 / DB COMMIT</span><h3>EXPORT ACK + EXPORTED + 슬롯 해제</h3><p>두 파일을 확인한 뒤 하나의 짧은 DB 트랜잭션으로 완료 시각과 슬롯 해제를 확정합니다.</p></li>
     </ol>
-    <p class="guide-callout"><strong>DB와 두 객체를 묶는 분산 트랜잭션은 아닙니다.</strong>파일이 남아도 DB 완료가 실패할 수 있습니다. export coordinator와 S3 adapter는 바깥 DB 트랜잭션 안에서의 호출을 거부합니다. 느린 외부 I/O 동안 DB 트랜잭션을 계속 열어 두지 않습니다.</p>
+    <p class="guide-callout"><strong>DB와 두 객체를 묶는 분산 트랜잭션은 아닙니다.</strong>파일이 남아도 DB 완료가 실패할 수 있습니다. 바깥 DB 트랜잭션 안에서 호출하면 export coordinator와 S3 adapter가 거부합니다. 느린 외부 I/O 동안 DB 트랜잭션을 계속 열어 두지 않습니다.</p>
     <div class="guide-links"><a href={`${repo}apps/api/src/main/java/io/github/devdooly/platformlab/jobs/LabJobService.java`}>process·exportSnapshot·completeExport 읽기 ↗</a><a href={`${repo}apps/api/src/main/java/io/github/devdooly/platformlab/jobs/exporting/ResultExportService.java`}>파일 확인 순서와 완료 호출 ↗</a></div>
   </section>
 

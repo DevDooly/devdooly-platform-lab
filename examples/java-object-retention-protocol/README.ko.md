@@ -6,7 +6,7 @@
 
 ## 설명하려는 문제
 
-무참조 계획을 만든 뒤 새 참조나 backup pin이 생길 수 있다. tombstone과 저장소 요청은 한 transaction으로 묶이지 않으며, timeout이면 실제 결과도 모를 수 있다. 부분 확인 뒤 run을 다시 열거나 같은 요청을 자동 재발행하면 이 경계를 숨기게 된다.
+무참조 계획을 만든 뒤 새 참조나 backup pin이 생길 수 있다. tombstone과 저장소 요청은 한 transaction으로 묶이지 않으며, timeout이면 실제 결과도 모를 수 있다. 부분 확인 뒤 run을 다시 열거나 같은 요청을 자동 재발행하면 이 경계를 숨긴다.
 
 모델은 다음 순서를 보여준다. `propose`의 plan은 허가가 아니다. `tombstone`이 실제 현재 상태의 revision·대상 세대·300초 기한·retention/replay horizon/outbox/reference coverage의 합성 안전성·현재 참조/pin을 다시 확인한다. 같은 RAM 전이에서 run을 닫고 intent와 객체별 action을 함께 만든다. 모든 참조 생성자와 backup 절차가 이 경계에 참여하고 backup pin을 먼저 확보한다는 모델 가정이다.
 

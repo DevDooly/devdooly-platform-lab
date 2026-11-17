@@ -29,7 +29,7 @@
 
 targetFingerprint는 UTF-8 canonical 문자열 `{"clusterId":"<private>","group":"<private>","partition":0,"schemaVersion":1,"topicUuid":"<private>"}`의 SHA-256이다. cluster-id와 topic UUID는 Kafka Uuid의 canonical 문자열, group은 검증한 ASCII 설정값이다. raw identity/주소/credentials/member/오류 원문을 공개하지 않는다. 지문은 대상 변경 감지용이며 인증/서명/비밀값 보호를 증명하지 않는다. 대상 지문 변경은 같은 시계열로 자동 병합하지 않는다.
 
-실패: HTTP 503/no-store, 정확히 세 필드 `schemaVersion:1`, `kind:kafka-observation-error`, `code:<아래 enum>`. query string/body로 대상 설정을 받지 않으며 해당 요청은 400/no-store `INVALID_CONFIGURATION`; POST는 405다. 미설정은 0 lag 성공 대신 NOT_CONFIGURED다.
+실패: HTTP 503/no-store, 정확히 세 필드 `schemaVersion:1`, `kind:kafka-observation-error`, `code:<아래 enum>`. query string/body로 대상 설정을 보내면 400/no-store `INVALID_CONFIGURATION`을 반환한다. POST는 405다. 미설정은 0 lag 성공 대신 NOT_CONFIGURED다.
 
 ```text
 NOT_CONFIGURED

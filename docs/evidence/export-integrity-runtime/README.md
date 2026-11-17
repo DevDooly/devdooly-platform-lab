@@ -1,6 +1,6 @@
 # 손상 export의 중지 유지와 명시 수리 후 복구
 
-2026-10-20 13:16:39 UTC, 새 GitHub hosted Linux 환경의 [실제 시험 39428536206](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39428536206)이 통과했습니다. 손상된 결과 객체를 발견한 worker가 영속 중지되고, 수리 없이 재개하면 다시 중지되며, 시험 소유 객체를 명시적으로 수리한 뒤 재개해야 완료되는 경계를 확인했습니다.
+2026-10-20 13:16:39 UTC, 새 GitHub hosted Linux 환경의 [실제 시험 39428536206](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39428536206)이 통과했습니다. 손상된 결과 객체를 발견한 worker가 영속 중지되고, 수리 없이 재개하면 다시 중지되며 시험 소유 객체를 명시적으로 수리한 뒤 재개해야 완료되는 경계를 확인했습니다.
 
 ## 확인한 동작
 
@@ -27,9 +27,9 @@ PR137의 [Linux CI 39428333375](https://github.com/DevDooly/devdooly-platform-la
 
 ## 실행 범위와 공개 화면
 
-새 Kafka·MariaDB·Garage·JVM 4개와 내부 네트워크만 사용했습니다. CPU·메모리·PID·단일 deadline을 제한했고, full ID·source/run/nonce·생성 시각·image·mount·network를 확인한 자원만 정리했습니다. 기존 API106개와 이전 시험·manifest, 미니 PC 운영 서비스·자료·PVC는 바꾸지 않았습니다.
+새 Kafka·MariaDB·Garage·JVM 4개와 내부 네트워크만 사용했습니다. CPU·메모리·PID·단일 deadline을 제한했고 full ID·source/run/nonce·생성 시각·image·mount·network를 확인한 자원만 정리했습니다. 기존 API106개와 이전 시험·manifest, 미니 PC 운영 서비스·자료·PVC는 바꾸지 않았습니다.
 
-명시 수리는 시험 코드가 소유한 손상 fixture 한 개의 삭제입니다. 운영 자동 수리·임의 자료 삭제·host/broker 재시작·HA·모든 장애에서의 exactly-once를 검증한 결과가 아닙니다. 토큰 교체·예산 정책·PR102는 계속 보류합니다.
+명시 수리는 시험 코드가 소유한 손상 fixture 한 개의 삭제입니다. 운영 자동 수리·임의 자료 삭제·host/broker 재시작·HA·모든 장애 상황의 exactly-once를 검증한 결과가 아닙니다. 토큰 교체·예산 정책·PR102는 계속 보류합니다.
 
 [단계별 화면](https://devdooly.github.io/devdooly-platform-lab/#export-integrity-runtime)을 실제 source·run·manifest·완료 시각·JUnit SHA에 연결했습니다. 로컬 웹 테스트 160개·skip 0, 타입 검사 41파일의 오류·경고 0과 정적 빌드를 통과했습니다. 1280px·390px에서 단계 선택·End/방향키·기본 닫힌 상세 근거와 job/runtime 상태 표를 확인했습니다. 본문 17px, 페이지 가로 넘침 부재와 모바일 표의 내부 스크롤도 확인했습니다.
 

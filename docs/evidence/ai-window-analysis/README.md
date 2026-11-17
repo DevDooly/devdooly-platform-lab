@@ -4,7 +4,7 @@
 
 [예제와 재현 명령](../../../examples/java-window-analysis/README.md), [계산 계약](../../../examples/java-window-analysis/DESIGN.md), [AI 활용·사람 검토 상태](../../../examples/java-window-analysis/PROVENANCE.md), [전체 공개 근거](summary.json), [페이지용 실제 관측 JSON](../../../apps/lab-web/public/observations/ai-window.latest.json)을 함께 제공합니다.
 
-2026-10-18에는 같은 공개 소스의 [별도 GitHub-hosted Linux 측정](hosted-linux-20261018/README.md)을 추가했습니다. 정확한 source commit에서 16조합·48 forks·240 intervals를 확인했으며, 2개 조합의 큰 오차와 공유 CPU의 한계를 함께 기록했습니다. 아래 Windows 수치·측정 당시 `sourceCommit:null`·사람 검토 `PENDING`은 그대로 유지합니다.
+2026-10-18에는 같은 공개 소스의 [별도 GitHub-hosted Linux 측정](hosted-linux-20261018/README.md)을 추가했습니다. 정확한 source commit에서 16조합·48 forks·240 intervals를 확인했으며 2개 조합의 큰 오차와 공유 CPU의 한계를 함께 기록했습니다. 아래 Windows 수치·측정 당시 `sourceCommit:null`·사람 검토 `PENDING`은 그대로 유지합니다.
 
 소유자가 확인할 계약·UTC 경계·알고리즘 비교·측정 오차와 주장 범위는 [검토 질문](../../reviews/ai-window-owner-review.md)에 정리했습니다. 판단란은 공란이며 검토 완료를 뜻하지 않습니다. 이 안내는 동결된 예제16파일 밖에 두어 기존 재현 소스 계약을 유지합니다.
 
@@ -12,7 +12,7 @@
 
 여러 관측 세션을 고정 UTC 시간창에 맞춰 **총 관측 시간과 최대 동시 세션 수**를 구합니다. 기준 구현은 모든 endpoint 사이 구간에서 모든 세션을 다시 검사합니다. 개선 구현은 같은 시점의 시작/종료 delta를 합친 뒤 시간 순으로 한 번 순회합니다. 정렬·TreeMap 갱신 비용을 포함하여 O(n log n)으로 표기합니다.
 
-구간은 `[시작, 종료)`이므로 `[0,10)`과 `[10,20)`은 겹치지 않습니다. 기록 시계 오차가 `기록-기준`이라면 그 값을 빼고, `+09:00` 같은 offset은 실제 UTC timeline 변환에 반영합니다. 의도적 오류 fixture는 `09:00:00+09:00`의 offset을 버려 관측 시간을 0초로 잘못 계산하며, 올바른 구현의 10초 결과와 별도 테스트에서 대조합니다. 잘못된 parser와 올바른 parser의 속도를 비교한 실험은 아닙니다.
+구간은 `[시작, 종료)`이므로 `[0,10)`과 `[10,20)`은 겹치지 않습니다. 기록 시계 오차가 `기록-기준`이라면 그 값을 빼고, `+09:00` 같은 offset은 실제 UTC timeline 변환에 반영합니다. 의도적 오류 fixture는 `09:00:00+09:00`의 offset을 버려 관측 시간을 0초로 잘못 계산하며 올바른 구현의 10초 결과와 별도 테스트에서 대조합니다. 잘못된 parser와 올바른 parser의 속도를 비교한 실험은 아닙니다.
 
 입력은 최대 4,096세션, 시간창은 최대 1시간, 알려진 시계 오차는 ±5분입니다. null·역전/동일 endpoint·offset 없는 timestamp·중복 ID·범위 초과 입력을 거부합니다. 큰 날짜 차이를 먼저 nanosecond로 바꾸지 않고 제한을 확인해 overflow를 피합니다.
 
@@ -56,6 +56,6 @@
 
 원본 JSON·stdout/stderr·실행 전후 metadata·실행 JAR·JUnit XML은 private 증거로 보존했고 공개 JSON에는 경로·환경 변수·인증 정보 없이 필요한 수치와 hash만 추출했습니다. runner는 전체 16조합·3 forks·5 interval·고정 옵션·finite 시간/할당량과 측정 전후 소스/JAR 불변을 검증했습니다.
 
-성공 전 실패 기록 3개도 보존했습니다. 첫 Maven 실행은 PowerShell 옵션 인용 오류로 빌드 전에 실패했고, 다음 실행은 20개 테스트 통과 후 상위 POM의 shade transformer 병합 때문에 packaging에서 실패했습니다. 첫 runner 실행은 metadata의 파일 크기 조회 오타로 **JMH fork 0개**에서 실패했습니다. 원인을 고치고 회귀를 추가한 새 디렉터리에서 첫 실제 JMH 전체 측정을 수행했으며 전체 benchmark를 반복하여 유리한 결과를 고르지 않았습니다.
+성공 전 실패 기록 3개도 보존했습니다. 첫 Maven 실행은 PowerShell 옵션 인용 오류로 빌드 전에 실패했고 다음 실행은 20개 테스트 통과 후 상위 POM의 shade transformer 병합 때문에 packaging에서 실패했습니다. 첫 runner 실행은 metadata의 파일 크기 조회 오타로 **JMH fork 0개**에서 실패했습니다. 원인을 고치고 회귀를 추가한 새 디렉터리에서 첫 실제 JMH 전체 측정을 수행했으며 전체 benchmark를 반복하여 유리한 결과를 고르지 않았습니다.
 
 공식 자료: [JMH 1.37](https://github.com/openjdk/jmh/tree/1.37), [반환값 소비](https://github.com/openjdk/jmh/blob/1.37/jmh-samples/src/main/java/org/openjdk/jmh/samples/JMHSample_08_DeadCode.java), [fork 분리](https://github.com/openjdk/jmh/blob/1.37/jmh-samples/src/main/java/org/openjdk/jmh/samples/JMHSample_12_Forking.java), [Java 21 OffsetDateTime](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/time/OffsetDateTime.html).

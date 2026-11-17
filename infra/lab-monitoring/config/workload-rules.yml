@@ -1,0 +1,24 @@
+groups:
+  - name: platform-lab-workload-state
+    rules:
+      - record: platform_lab:desired_replicas
+        expr: |
+          label_replace(label_replace(kube_deployment_spec_replicas,
+            "workload", "$1", "deployment", "(.+)"), "kind", "Deployment", "deployment", ".+")
+          or
+          label_replace(label_replace(kube_statefulset_replicas,
+            "workload", "$1", "statefulset", "(.+)"), "kind", "StatefulSet", "statefulset", ".+")
+      - record: platform_lab:ready_replicas
+        expr: |
+          label_replace(label_replace(kube_deployment_status_replicas_ready,
+            "workload", "$1", "deployment", "(.+)"), "kind", "Deployment", "deployment", ".+")
+          or
+          label_replace(label_replace(kube_statefulset_status_replicas_ready,
+            "workload", "$1", "statefulset", "(.+)"), "kind", "StatefulSet", "statefulset", ".+")
+      - record: platform_lab:workload_state
+        # 0 no ready replicas, 1 partial, 2 ready, 3 scaled to zero. Missing series are not 0.
+        expr: |
+          (platform_lab:desired_replicas > bool 0)
+          * ((platform_lab:ready_replicas > bool 0)
+              + (platform_lab:ready_replicas >= bool platform_lab:desired_replicas))
+          + 3 * (platform_lab:desired_replicas == bool 0)

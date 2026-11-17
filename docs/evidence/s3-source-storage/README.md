@@ -29,7 +29,7 @@ Garage 2.4.1 linux/amd64 manifest를 digest로 내려받아 image config ID를 �
 
 첫 실제 SDK 실패는 원본 로그와 함께 보존했으며 후속 성공으로 덮어쓰지 않았다. 동일 조합의 요청 checksum 설정을 바꾼 뒤 Put·전체 읽기 시험이 통과했다. 이 관측 범위를 다른 S3 기능이나 모든 SDK 버전에 일반화하지 않는다.
 
-Docker 내부 network에서 published port가 생성될 것이라고 가정한 첫 준비는 연결 정보 확인에서 중단됐다. 내부 컨테이너 주소로 향하는 SSH loopback 터널로 교정했으며 최종 구성에는 published port가 없었다. 재생성 확인 도구의 mount 배열 순서 비교도 값 비교와 분리했고, 실제 목적지별 metadata/data source 경로를 다시 대조한 뒤 Get-only 보존 시험을 통과했다.
+Docker 내부 network에서 published port가 생성될 것이라고 가정한 첫 준비는 연결 정보 확인에서 중단됐다. 내부 컨테이너 주소로 향하는 SSH loopback 터널로 교정했으며 최종 구성에는 published port가 없었다. 재생성 확인 도구의 mount 배열 순서 비교도 값 비교와 분리했고 실제 목적지별 metadata/data source 경로를 다시 대조한 뒤 Get-only 보존 시험을 통과했다.
 
 ## 남은 범위
 

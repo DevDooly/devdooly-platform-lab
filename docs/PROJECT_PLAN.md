@@ -2,9 +2,9 @@
 
 2026년 10월 11일 · 김선홍 DevDooly
 
-진행 현황: Java API 테스트 15개, Astro·React 테스트 13개와 Linux MariaDB 통합 검증을 통과했다. 미니 PC의 기존 Docker 서비스·방화벽을 보존하고 K3s·Jenkins·Argo CD를 설치했다. 앱의 실제 동기화·Pod·PVC·HTTP 결과는 [서버 근거](evidence/mini-pc/README.md), CI는 [Jenkins 근거](evidence/jenkins-ci/README.md)에 기록한다. 공개 Pages는 마지막 실제 관측 기록을 제공하며, 실시간 API·플랫폼 collector·외부 백업·복원은 후속 작업이다. 아래 설계의 미구현 범위는 [진행 목록](ROADMAP.md)을 따른다.
+진행 현황: Java API 테스트 15개, Astro·React 테스트 13개와 Linux MariaDB 통합 검증을 통과했다. 미니 PC의 기존 Docker 서비스·방화벽을 보존하고 K3s·Jenkins·Argo CD를 설치했다. 앱의 실제 동기화·Pod·PVC·HTTP 결과는 [서버 근거](evidence/mini-pc/README.md), CI는 [Jenkins 근거](evidence/jenkins-ci/README.md)에 기록한다. 공개 Pages는 마지막 실제 관측 기록을 제공하며 실시간 API·플랫폼 collector·외부 백업·복원은 후속 작업이다. 아래 설계의 미구현 범위는 [진행 목록](ROADMAP.md)을 따른다.
 
-Astro와 React로 별도 포트폴리오를 만들고, 소개 페이지는 GitHub Pages에 배포한다. 미니 PC에서는 K3s 위에 Java 서비스와 Jenkins CI, Argo CD CD를 구성한다. 방문자는 합성 데이터 처리 결과와 실제 배포 이력을 확인하고, 상세한 기술 설명은 기존 TIL로 이어서 읽는다.
+Astro와 React로 별도 포트폴리오를 만들고, 소개 페이지는 GitHub Pages에 배포한다. 미니 PC에서는 K3s 위에 Java 서비스와 Jenkins CI, Argo CD CD를 구성한다. 방문자는 합성 데이터 처리 결과와 실제 배포 이력을 확인하고 상세한 기술 설명은 기존 TIL로 이어서 읽는다.
 
 첫 공개 목표는 작은 서비스 하나가 개발, 테스트, 배포, 운영으로 이어지는 과정을 보여주는 것이다. Kafka와 객체 저장소를 다음 단계에 붙이고, Iceberg·Spark·Trino·Airflow는 필요한 시나리오부터 확장한다. 아래 항목은 구축 계획이며, 완료 조건을 충족한 기능부터 사이트에 구현 상태와 증거를 표시한다.
 
@@ -24,7 +24,7 @@ Astro와 React로 별도 포트폴리오를 만들고, 소개 페이지는 GitHu
 
 사이트에서 확인할 핵심은 다음과 같다.
 
-- Java·Spring Boot 서비스가 실제로 동작하고, 처리 결과를 API와 화면으로 확인할 수 있다.
+- Java·Spring Boot 서비스가 실제로 동작하고 처리 결과를 API와 화면으로 확인할 수 있다.
 - 소스 commit이 Jenkins 테스트와 이미지 빌드를 거쳐 Argo CD 배포 버전까지 연결된다.
 - Kafka 처리 지연, 중복 이벤트, 실패·재처리 과정이 보인다.
 - 코드 개선의 전후 결과와 테스트·측정 근거를 열어볼 수 있다.
@@ -54,9 +54,9 @@ Next.js도 정적 export가 가능하다. 다만 이 프로젝트는 백엔드�
 | 공개 Lab | 미니 PC K3s | 데모 UI와 Spring Boot API, 공개용 실행·배포 현황 |
 | 관리 도구 | 사설 접속 또는 별도 인증 | Jenkins, Argo CD, Grafana, DB·스토리지 관리 |
 
-기존 사용자 사이트 저장소와 TIL은 유지하고, 우선 `DevDooly/devdooly-platform-lab`의 프로젝트 Pages `https://devdooly.github.io/devdooly-platform-lab/`에 공개 홈과 샘플 Lab을 게시한다. GitHub Pages를 Actions source로 설정했고 실제 게시 결과는 workflow에서 확인한다. 미니 PC 공개 API가 연결되기 전에는 합성 샘플과 미관측 상태를 명시한다. 선택 근거는 [ADR 0002](adr/0002-initial-public-portfolio.md)에 기록했다. [GitHub Pages 사이트 유형](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages)
+기존 사용자 사이트 저장소와 TIL은 유지하고 우선 `DevDooly/devdooly-platform-lab`의 프로젝트 Pages `https://devdooly.github.io/devdooly-platform-lab/`에 공개 홈과 샘플 Lab을 게시한다. GitHub Pages를 Actions source로 설정했고 실제 게시 결과는 workflow에서 확인한다. 미니 PC 공개 API가 연결되기 전에는 합성 샘플과 미관측 상태를 명시한다. 선택 근거는 [ADR 0002](adr/0002-initial-public-portfolio.md)에 기록했다. [GitHub Pages 사이트 유형](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages)
 
-공개 홈은 GitHub Actions로 정적 빌드·게시하고, 미니 PC Lab의 CI와 CD는 Jenkins와 Argo CD로 보여준다. 공개 홈의 가용성과 개인 서버 운영 실험을 분리하는 선택이다. [Astro GitHub Pages 배포](https://docs.astro.build/en/guides/deploy/github/)
+공개 홈은 GitHub Actions로 정적 빌드·게시하고 미니 PC Lab의 CI와 CD는 Jenkins와 Argo CD로 보여준다. 공개 홈의 가용성과 개인 서버 운영 실험을 분리하는 선택이다. [Astro GitHub Pages 배포](https://docs.astro.build/en/guides/deploy/github/)
 
 ## 3 방문자가 확인할 화면과 시나리오
 
@@ -64,7 +64,7 @@ Next.js도 정적 export가 가능하다. 다만 이 프로젝트는 백엔드�
 
 **합성 제조 데이터 처리 플랫폼**을 만든다. 회사 코드·데이터·실제 수율 알고리즘을 사용하지 않고, 공개용 센서 이벤트와 가상의 업무 규칙을 직접 정의한다.
 
-첫 MVP는 Spring Boot API와 MariaDB로 처리 작업과 결과를 보여준다. 이후 Kafka로 비동기 처리 경로를 확장하고, 객체 저장소에 결과 파일을 보관한다. Kafka 도입 전후의 코드와 ADR을 남겨 구조를 바꾼 이유도 확인할 수 있게 한다.
+첫 MVP는 Spring Boot API와 MariaDB로 처리 작업과 결과를 보여준다. 이후 Kafka로 비동기 처리 경로를 확장하고 객체 저장소에 결과 파일을 보관한다. Kafka 도입 전후의 코드와 ADR을 남겨 구조를 바꾼 이유도 확인할 수 있게 한다.
 
 1. 방문자가 미리 준비된 합성 데이터의 마지막 실행 결과를 조회한다.
 2. 실행 기능을 공개한 뒤에는 작은 고정 샘플을 선택해 작업을 요청한다.
@@ -97,7 +97,7 @@ Hadoop 업그레이드, Bigtop 빌드, Tez·Trino 전환 경험은 설계 사례
 - 개선 사례: 시간 처리 오류 또는 알고리즘 개선의 전후 증거.
 - 기술 기록: 관련 TIL과 GitHub, ADR, 테스트·측정 원본.
 
-방문자는 처음 15초에 전문 분야를 파악하고, 다음 40초에 처리 과정을 본다. 이어서 배포 이력과 개선 사례를 확인한 뒤 GitHub·TIL로 이동할 수 있게 한다. 각 카드에는 실무 경험, 개인 구현, 학습 중인 기술을 구분해 표시한다.
+방문자는 처음 15초에 전문 분야를 파악하고 다음 40초에 처리 과정을 본다. 이어서 배포 이력과 개선 사례를 확인한 뒤 GitHub·TIL로 이동할 수 있게 한다. 각 카드에는 실무 경험, 개인 구현, 학습 중인 기술을 구분해 표시한다.
 
 ## 4 시스템과 저장소 구성
 
@@ -120,7 +120,7 @@ flowchart LR
   N --> M[Jenkins Argo CD Grafana]
 ```
 
-Ubuntu에 K3s 단일 노드를 구성한다. 기존 프록시를 보존하기 위해 기본 Traefik·ServiceLB는 끄고 전용 local-path PV를 활용하며, 플랫폼·애플리케이션·데이터·모니터링 영역을 namespace로 나눈다. namespace는 권한과 자원을 구분하는 수단이며 물리적인 장애 분리는 아니다.
+Ubuntu에 K3s 단일 노드를 구성한다. 기존 프록시를 보존하기 위해 기본 Traefik·ServiceLB는 끄고 전용 local-path PV를 활용하며 플랫폼·애플리케이션·데이터·모니터링 영역을 namespace로 나눈다. namespace는 권한과 자원을 구분하는 수단이며 물리적인 장애 분리는 아니다.
 
 K3s 공식 최소 자원은 클러스터 기반 요구량으로, Jenkins·Java·DB·Kafka 전체 요구량을 뜻하지 않는다. 실제 워크로드에 맞춰 별도의 자원 예산을 둔다. [K3s 요구사항](https://docs.k3s.io/installation/requirements)
 
@@ -147,7 +147,7 @@ TIL/                       기존 저장소와 주소 유지
 ```
 
 
-서드파티 chart도 버전을 고정하고 선택 이유를 기록한다. Git에는 코드와 선언 설정을 넣고 토큰·인증서 개인키·DB 비밀번호는 넣지 않는다. 초기에는 제한된 Kubernetes Secret과 별도 백업으로 시작하고, 이후 SOPS 같은 암호화된 선언 관리 방식을 추가할 수 있다.
+서드파티 chart도 버전을 고정하고 선택 이유를 기록한다. Git에는 코드와 선언 설정을 넣고 토큰·인증서 개인키·DB 비밀번호는 넣지 않는다. 초기에는 제한된 Kubernetes Secret과 별도 백업으로 시작하고 이후 SOPS 같은 암호화된 선언 관리 방식을 추가할 수 있다.
 
 ## 5 CI와 CD의 동작
 
@@ -169,7 +169,7 @@ Jenkins는 테스트, 이미지 생성, 레지스트리 전송, GitOps 변경 PR
 
 Jenkins controller의 executor는 0으로 두고 빌드는 agent에서 실행한다. Java 이미지는 Docker daemon 없이 만들 수 있는 Jib를 우선 검토한다. Lab UI 이미지는 rootless BuildKit을 검증한 뒤 별도 빌더에서 생성한다. 호스트 Docker socket을 Jenkins controller에 연결하는 구성을 기본값으로 사용하지 않는다. [Jenkins controller 분리](https://www.jenkins.io/doc/book/security/controller-isolation/), [Jib](https://github.com/GoogleContainerTools/jib)
 
-이미지는 commit SHA 태그와 digest를 기록한다. 공개 fork PR의 테스트에는 레지스트리·GitOps 쓰기 자격증명을 전달하지 않고, 본인이 승인한 브랜치의 릴리스 작업에만 사용한다. GitOps 변경 PR이 병합된 시점을 배포 시작으로 기록하고, 배포 성공 여부는 실제 서비스의 버전과 smoke test로 확인한다.
+이미지는 commit SHA 태그와 digest를 기록한다. 공개 fork PR의 테스트에는 레지스트리·GitOps 쓰기 자격증명을 전달하지 않고, 본인이 승인한 브랜치의 릴리스 작업에만 사용한다. GitOps 변경 PR이 병합된 시점을 배포 시작으로 기록하고 배포 성공 여부는 실제 서비스의 버전과 smoke test로 확인한다.
 
 ### 롤백과 첫 검증
 
@@ -177,7 +177,7 @@ Jenkins controller의 executor는 0으로 두고 빌드는 agent에서 실행한
 
 첫 배포 검증은 정상 commit 배포, 실패한 테스트의 이미지 게시 차단, 이전 digest로 복구의 세 시나리오로 구성한다. 각각 소스 commit, 테스트 결과, 이미지 digest, GitOps commit, 배포·검증 시각을 남긴다.
 
-공개 홈은 이 중 공개 가능한 요약만 읽는다. collector가 최소 조회 권한으로 내부 결과를 수집해 허용 필드를 저장하고, 방문자 API는 그 데이터만 반환한다. 브라우저에 Jenkins·Argo CD 토큰을 넣거나 원본 빌드 로그 전체를 전달하지 않는다.
+공개 홈은 이 중 공개 가능한 요약만 읽는다. collector가 최소 조회 권한으로 내부 결과를 수집해 허용 필드를 저장하고 방문자 API는 그 데이터만 반환한다. 브라우저에 Jenkins·Argo CD 토큰을 넣거나 원본 빌드 로그 전체를 전달하지 않는다.
 
 검토한 최근 실행·배포 snapshot과 영상은 GitHub Pages의 정적 자산에도 게시한다. 공개 홈의 실시간 요청이 실패하면 이 자료와 수집 시각을 보여주고, 현재 상태와 구분해 표시한다. Lab UI 자체는 미니 PC 중단 시 열리지 않으므로 대체 자료는 공개 홈에 둔다. 연결 실패 표시는 원인을 단정하지 않는 ‘실시간 Lab 연결 불가’로 한다.
 
@@ -195,7 +195,7 @@ Cloudflare Tunnel은 `cloudflared`의 outbound 연결로 내부 서비스를 연
 
 기존 DDNS를 사용하면 먼저 공인 IP·CGNAT 여부, 공유기 외부 접속 가능성, 이미 사용 중인 80·443 포트, 해당 호스트명의 TLS 발급·갱신 가능성을 확인한다. 가능한 경우 필요한 HTTPS 서비스만 Ingress 또는 프록시로 전달한다. DDNS 등록만으로 서비스 공개와 HTTPS가 완료되는 것은 아니다.
 
-Tailscale의 사설 접속은 본인의 관리 접근에 사용하고, Funnel은 인터넷 공개 기능으로 별도로 구분한다. Funnel의 `ts.net` 주소와 사용 제한은 적용 시점의 공식 문서로 확인한다. [Tailscale Funnel](https://tailscale.com/docs/features/tailscale-funnel)
+Tailscale의 사설 접속은 본인의 관리 접근에 사용하고 Funnel은 인터넷 공개 기능으로 별도로 구분한다. Funnel의 `ts.net` 주소와 사용 제한은 적용 시점의 공식 문서로 확인한다. [Tailscale Funnel](https://tailscale.com/docs/features/tailscale-funnel)
 
 ### 공개할 정보
 
@@ -231,7 +231,7 @@ Grafana의 Viewer 또는 anonymous 권한만으로 특정 패널에 대한 제�
 | S3 호환 저장소 | 2GiB | 4단계 이후, 선택 제품에 따라 조정 |
 | 합계 | 21GiB | 빌드 중 예상 예산 포함 |
 
-나머지 11GiB는 기존 서비스, page cache, JVM overhead와 순간 사용량을 고려해 남긴다. 이를 모두 추가 앱에 배정하지 않는다. Spark·Trino·Airflow 실습은 CI 빌드와 겹치지 않게 실행하고, 메모리와 I/O를 측정한 뒤 상시 범위를 늘린다.
+나머지 11GiB는 기존 서비스, page cache, JVM overhead와 순간 사용량을 고려해 남긴다. 이를 모두 추가 앱에 배정하지 않는다. Spark·Trino·Airflow 실습은 CI 빌드와 겹치지 않게 실행하고 메모리와 I/O를 측정한 뒤 상시 범위를 늘린다.
 
 남은 디스크 200GB의 시작 예산은 애플리케이션 데이터 60GB, 이미지·빌드 캐시 35GB, 로그·메트릭 10GB, 검증 자료·백업 임시 공간 15GB, 미할당 여유 80GB로 둔다. Kafka retention과 결과 파일 보존 기간, 빌드 캐시 정리 기준을 함께 설정한다. 원본 데이터는 작은 합성 샘플부터 시작한다.
 
@@ -243,7 +243,7 @@ MinIO 공식 Community 저장소는 2026년 4월 25일 archive되었고 유지�
 
 상시 저장소는 SeaweedFS를 S3 호환 후보로 검토한다. Spring SDK 업로드·다운로드·multipart·presigned URL과 필요한 삭제·버저닝 동작을 검증한 뒤 선정한다. S3 호환이라는 표현만으로 MinIO와 모든 기능이 같다고 간주하지 않는다. MinIO 제품 자체를 재현해야 하는 항목은 AIStor Free의 라이선스와 기능 범위를 확인해 별도 실습으로 구성한다. [SeaweedFS](https://github.com/seaweedfs/seaweedfs), [AIStor 라이선스와 제한](https://docs.min.io/aistor/operations/licenses/)
 
-Iceberg 확장에는 객체 저장소 외에 영속 catalog를 포함한다. Spark와 Trino가 동일 catalog·warehouse를 참조하고, 재시작 후 테이블 메타데이터를 다시 조회하는 것까지 검증한다. catalog 구현과 backing DB는 이 단계의 ADR에서 결정한다. Iceberg 자체를 별도 실행 서버처럼 설명하지 않는다. [Trino Iceberg connector](https://trino.io/docs/current/connector/iceberg.html)
+Iceberg 확장에는 객체 저장소 외에 영속 catalog를 포함한다. Spark와 Trino가 동일 catalog·warehouse를 참조하고 재시작 후 테이블 메타데이터를 다시 조회하는 것까지 검증한다. catalog 구현과 backing DB는 이 단계의 ADR에서 결정한다. Iceberg 자체를 별도 실행 서버처럼 설명하지 않는다. [Trino Iceberg connector](https://trino.io/docs/current/connector/iceberg.html)
 
 ### 백업과 복구
 
@@ -257,7 +257,7 @@ local-path PV는 노드에 저장되는 볼륨이며 분산 복제 저장소가 
 
 ### 단계 0 기존 환경 확인
 
-Ubuntu 지원 상태, 포트·서비스·컨테이너, 메모리·디스크, 네트워크·DDNS, 백업을 확인한다. SSD 여부와 현재 사용 중인 서비스도 이때 확인한다. 설치 디렉터리와 PV 경로를 정하고, 변경 전 상태와 복구 방법을 기록한다.
+Ubuntu 지원 상태, 포트·서비스·컨테이너, 메모리·디스크, 네트워크·DDNS, 백업을 확인한다. SSD 여부와 현재 사용 중인 서비스도 이때 확인한다. 설치 디렉터리와 PV 경로를 정하고 변경 전 상태와 복구 방법을 기록한다.
 
 완료 조건: 기존 서비스 목록, 새 프로젝트 자원 예산, 사용할 주소·접속 방식이 정리되어 있고 원래 서비스에 영향을 주지 않는 설치 범위가 정해져 있다.
 
@@ -271,7 +271,7 @@ Astro 소개 페이지와 TIL 연결을 만들고, Spring Boot의 샘플 작업�
 
 K3s, Jenkins controller·agent, Argo CD, GHCR을 연결한다. 애플리케이션 Helm chart와 GitOps values를 작성하고 정상 배포·실패 차단·Git revert 복구를 검증한다. 초기에는 수동 또는 Poll SCM으로 트리거한다. 외부 공개 전에 기본 DB, Jenkins 설정·credentials와 필요한 클러스터 설정의 외부 백업을 확보한다.
 
-완료 조건: 한 소스 commit과 실제 서비스 버전이 연결되며, 이전 digest로 돌아간 증거가 있다. 재부팅 뒤 필요한 서비스가 복구된다.
+완료 조건: 한 소스 commit과 실제 서비스 버전이 연결되며 이전 digest로 돌아간 증거가 있다. 재부팅 뒤 필요한 서비스가 복구된다.
 
 ### 단계 3 외부 공개와 운영 요약
 
@@ -293,7 +293,7 @@ Kafka producer·worker·멱등 키·재시도·실패 이벤트 보관을 구현
 
 ### 단계 6 데이터 플랫폼 확장
 
-Iceberg와 영속 catalog를 추가하고 Spark Job으로 적재·compaction을 실행한다. Trino 조회를 연결하고, 반복 실행 관리가 필요한 경우 Airflow DAG를 추가한다. 초기에는 실습 시간에만 기동한다.
+Iceberg와 영속 catalog를 추가하고 Spark Job으로 적재·compaction을 실행한다. Trino 조회를 연결하고 반복 실행 관리가 필요한 경우 Airflow DAG를 추가한다. 초기에는 실습 시간에만 기동한다.
 
 완료 조건: 동일 warehouse의 쓰기·조회·재시작·compaction 결과가 검증되어 있고, 실행 중 자원 측정과 종료·복구 절차가 있다.
 
@@ -311,7 +311,7 @@ Iceberg와 영속 catalog를 추가하고 Spark Job으로 적재·compaction을 
 | GET /api/platform/releases | 빌드·배포와 실제 버전 | 원본 관리 API를 프록시하지 않음 |
 | GET /api/platform/summary | 공개 지표와 관측 시각 | 미리 정한 지표만 조회 |
 
-공개 실행 결과에는 입력·성공·실패·중복·대기 건수와 소요시간을 포함한다. 배포 기록에는 source commit, image digest, GitOps commit, deploy time, 실제 서비스의 버전 확인 결과를 연결한다. 실행 시각과 관측 시각을 구분하고, 과거 snapshot을 실시간 결과처럼 표시하지 않는다.
+공개 실행 결과에는 입력·성공·실패·중복·대기 건수와 소요시간을 포함한다. 배포 기록에는 source commit, image digest, GitOps commit, deploy time, 실제 서비스의 버전 확인 결과를 연결한다. 실행 시각과 관측 시각을 구분하고 과거 snapshot을 실시간 결과처럼 표시하지 않는다.
 
 ### 테스트와 측정
 
@@ -329,7 +329,7 @@ Iceberg와 영속 catalog를 추가하고 Spark Job으로 적재·compaction을 
 
 첫 작업은 원격 설치보다 환경 조사다. Ubuntu에서 현재 실행 중인 서비스와 기존 데이터 사용량을 확인하고 이 계획의 자원 예산을 조정한다. 이후 공개 포트폴리오 뼈대와 최소 Java 서비스를 개발한 뒤 CI/CD를 붙인다.
 
-SSH 키는 문서 작성 단계에는 필요 없다. 실제 원격 작업을 시작할 때 전용 계정·접속 포트·기존 SSH 정책을 확인한다. 접속하는 클라이언트에서 전용 키를 만들고 공개키만 서버의 해당 사용자에 등록한다. 개인키는 클라이언트에 보관하고 채팅이나 Git에 넣지 않는다. 처음 접속할 때 서버 호스트 키 지문을 확인하고, 새 키 접속 검증 전에는 기존 접속 방식을 없애지 않는다.
+SSH 키는 문서 작성 단계에는 필요 없다. 실제 원격 작업을 시작할 때 전용 계정·접속 포트·기존 SSH 정책을 확인한다. 접속하는 클라이언트에서 전용 키를 만들고 공개키만 서버의 해당 사용자에 등록한다. 개인키는 클라이언트에 보관하고 채팅이나 Git에 넣지 않는다. 처음 접속할 때 서버 호스트 키 지문을 확인하고 새 키 접속 검증 전에는 기존 접속 방식을 없애지 않는다.
 
 다음 구현 요청은 이 저장소의 `AGENTS.md`와 `docs/START_HERE.md`를 읽는 것부터 시작한다. 요청 범위의 예시는 다음과 같다.
 

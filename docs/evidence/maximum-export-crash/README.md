@@ -1,6 +1,6 @@
 # 1,000건 작업의 부분 export 중단과 복구
 
-2026-10-15 UTC, 별도 Linux Docker worker의 **계산이 DB에 commit된 후 결과 파일 저장·확인을 마치고 실패 파일 PUT을 Garage에 전달하기 직전**에 SIGKILL 1회를 수행했습니다. 동일 JAR의 새 worker가 이미 완료된 계산을 반복하지 않고 남은 export를 완료했으며, 첫 결과 파일의 전체 bytes와 기존 4개 작업·12개 객체를 보존했습니다. 실제 검사 12/12와 후속 운영 보존 18/18을 통과했습니다. [기계 판독 요약](summary.json)을 제공합니다.
+2026-10-15 UTC, 별도 Linux Docker worker의 **계산이 DB에 commit된 후 결과 파일 저장·확인을 마치고 실패 파일 PUT을 Garage에 전달하기 직전**에 SIGKILL 1회를 수행했습니다. 동일 JAR의 새 worker가 이미 완료된 계산을 반복하지 않고 남은 export를 완료했으며 첫 결과 파일의 전체 bytes와 기존 4개 작업·12개 객체를 보존했습니다. 실제 검사 12/12와 후속 운영 보존 18/18을 통과했습니다. [기계 판독 요약](summary.json)을 제공합니다.
 
 이 기록은 [격리 최대 입력·동시성·부하 검사](../input-concurrency-load/README.md)의 후속입니다. 실제 운영 API·worker의 V2 배포·공개 7개 작업은 [별도 배포 근거](../input-v2-deployment/README.md)입니다. 이번 강제 종료는 운영 worker·K3s·호스트에 수행하지 않았습니다.
 
@@ -17,7 +17,7 @@
 | 실패 파일 | 원래 signed wire를 받은 뒤 hold, Garage에는 미전달 |
 | Kafka | partition 0, committed offset 1 / end 1 / lag 0 |
 
-실패 파일 전송을 hold한 뒤 checkpoint 저장까지 약 2.764초였습니다. 이는 강제 종료 시간이나 복구 지연이 아닙니다. 실제 종료 요청 직전에도 RUNNING/EXPORT·COMPLETED/PENDING·점유 슬롯·정확한 container ID·non-OOM을 다시 확인하고, SDK의 기존 8초 read timeout보다 짧은 **6초 이내** 경계에서만 KILL을 허용했습니다. 실제 종료는 exit 137, OOMKilled false였습니다. timeout 변경이나 앱 내부 테스트 hook은 추가하지 않았습니다.
+실패 파일 전송을 hold한 뒤 checkpoint 저장까지 약 2.764초였습니다. 이는 강제 종료 시간이나 복구 지연이 아닙니다. 실제 종료 요청 직전에도 RUNNING/EXPORT·COMPLETED/PENDING·점유 슬롯·정확한 container ID·non-OOM을 다시 확인하고 SDK의 기존 8초 read timeout보다 짧은 **6초 이내** 경계에서만 KILL을 허용했습니다. 실제 종료는 exit 137, OOMKilled false였습니다. timeout 변경이나 앱 내부 테스트 hook은 추가하지 않았습니다.
 
 ## 재시작 후 검증
 

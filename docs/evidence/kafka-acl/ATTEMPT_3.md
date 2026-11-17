@@ -11,7 +11,7 @@
 | 검증 완료 테스트 | 0 / 예정 1 |
 | 실행 소유 자원 정리 | 확인됨 (`ownedResourcesRemoved: true`) |
 
-[원본 유한 summary](attempt-3.summary.json)를 그대로 보존합니다. 현재 시험 순서에서는 primary group의 join·produce·commit과 다른 그룹의 초기 오프셋 기록가 describe보다 먼저 성공했고, 이후 `OTHER_GROUP_DESCRIBE`에서 timeout으로 중단됐습니다. 이는 준비 operation의 진행 범위이며 관측 principal의 전체 ACL 시험이 통과했다는 뜻은 아닙니다.
+[원본 유한 summary](attempt-3.summary.json)를 그대로 보존합니다. 현재 시험 순서에서는 primary group의 join·produce·commit과 다른 그룹의 초기 오프셋 기록가 describe보다 먼저 성공했고 이후 `OTHER_GROUP_DESCRIBE`에서 timeout으로 중단됐습니다. 이는 준비 operation의 진행 범위이며 관측 principal의 전체 ACL 시험이 통과했다는 뜻은 아닙니다.
 
 coordinator 준비 상태나 client fallback·retry budget의 영향은 추가 조사 대상입니다. 운영 Admin 설정의 retries=1과 격리 fixture의 retries=0 차이만으로 이번 원인을 확정하지 않으며, 첫째·둘째 실패의 원인도 소급해 확정하지 않습니다. 같은 실행을 재시도하거나 운영 권한을 확대해 우회하지 않았습니다.
 

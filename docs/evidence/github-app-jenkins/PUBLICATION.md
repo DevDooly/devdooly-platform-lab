@@ -4,7 +4,7 @@
 
 로컬 Node24.19.0의 웹229개 검사·생략0, Astro49파일 오류·경고·힌트0와 프로젝트 경로 두 페이지 빌드를 확인했습니다. 공개1280px·390px에서도 네 시각 `19:18:35 / 19:19:28 / 19:19:30 / 20:19:30`, 한 주기·접근 시 갱신이라는 범위, 근거 문서·공개 JSON 링크를 확인했습니다. 본문17px·링크44px, 문서 폭1265px/375px로 가로 넘침이 없었습니다. 기본 닫힘과 모바일 키보드 Enter로 펼치기·SUMMARY 초점도 확인했습니다. 새 직접 링크는 처음 연 탭에서 목표 위치를 확인했으며 reload의 기존 스크롤 복원과 구분합니다.
 
-Pages 성공과 컨테이너 검증은 별개입니다. 같은 main의 [CI39941853833](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39941853833)은 웹 이미지에 요약 JSON이 없어 `Build container images` 단계에서 실패했습니다. 실패를 성공으로 바꾸지 않았으며 [PR #196](https://github.com/DevDooly/devdooly-platform-lab/pull/196)에서 공개 JSON 한 파일을 컨테이너의 상대 import 위치에 포함하도록 수정했습니다. 수정 소스 `686a1d37ae0fc847182cdcbc454f032444bcecbd`의 [Linux CI39942791387](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39942791387)은 실제 이미지 빌드·통합 verify·public-read-gateway를 통과했고, 이후 main `af3ecd27fb8d4bd7e86e1d1b42e7bf77e2becc3b`에 병합했습니다. 선택적 격리 실험은 실행하지 않았고 새 운영 이미지 배포도 하지 않았습니다.
+Pages 성공과 컨테이너 검증은 별개입니다. 같은 main의 [CI39941853833](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39941853833)은 웹 이미지에 요약 JSON이 없어 `Build container images` 단계에서 실패했습니다. 실패를 성공으로 바꾸지 않았으며 [PR #196](https://github.com/DevDooly/devdooly-platform-lab/pull/196)에서 공개 JSON 한 파일을 컨테이너의 상대 import 위치에 포함하도록 수정했습니다. 수정 소스 `686a1d37ae0fc847182cdcbc454f032444bcecbd`의 [Linux CI39942791387](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39942791387)은 실제 이미지 빌드·통합 verify·public-read-gateway를 통과했고 이후 main `af3ecd27fb8d4bd7e86e1d1b42e7bf77e2becc3b`에 병합했습니다. 선택적 격리 실험은 실행하지 않았고 새 운영 이미지 배포도 하지 않았습니다.
 
 별도 Jenkins build153은 위 공개 카드 main `7fd71968…`의 pending→success를 App 작성자 `devdooly-platform-lab-ops[bot]`로 기록했습니다. 실제 만료 검증 뒤의 새 CI 기록이지만, 원래 자연 만료 시험 자체의 `build=false` 범위를 소급해 바꾸지 않습니다.
 

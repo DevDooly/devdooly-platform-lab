@@ -50,7 +50,7 @@ if (job.status() == Status.COMPLETED) { return job; }`}</code></pre>
 
   <section id="reuse" class="guide-section" aria-labelledby="reuse-title">
     <h2 id="reuse-title">다른 프로젝트에서는 이 조건부터 정합니다.</h2>
-    <ol class="guide-reading"><li><strong>동일 작업의 기준:</strong> 재시도해도 유지할 ID와 원본 버전·hash를 정합니다. 다른 입력이 같은 작업으로 합쳐지지 않도록 확인합니다.</li><li><strong>DB의 원자적 범위:</strong> 처리 결과·완료 상태·다음 단계 intent를 함께 저장하고, 완료 재호출이 결과를 다시 쓰지 않도록 합니다.</li><li><strong>확인 시점:</strong> broker ACK·DB commit·offset commit·파일 저장 확인을 별도 성공 조건으로 둡니다. 이 Lab의 단일 메시지·단일 partition 전제를 동시 처리에 그대로 적용하지 않습니다.</li></ol>
+    <ol class="guide-reading"><li><strong>동일 작업의 기준:</strong> 재시도해도 유지할 ID와 원본 버전·hash를 정합니다. 다른 입력이 같은 작업으로 합쳐지지 않도록 확인합니다.</li><li><strong>DB의 원자적 범위:</strong> 처리 결과·완료 상태·다음 단계 intent를 함께 저장하고 완료 재호출이 결과를 다시 쓰지 않도록 합니다.</li><li><strong>확인 시점:</strong> broker ACK·DB commit·offset commit·파일 저장 확인을 별도 성공 조건으로 둡니다. 이 Lab의 단일 메시지·단일 partition 전제를 동시 처리에 그대로 적용하지 않습니다.</li></ol>
     <div class="guide-links"><a href={`${base}technologies/kafka/#settings`}>Kafka 설정의 의미 →</a><a href={`${base}technologies/storage/`}>DB·파일 저장 설계 →</a><a href={`${base}guides/rebuild/#expand`}>내 환경에서 확장하는 순서 →</a></div>
   </section>
 

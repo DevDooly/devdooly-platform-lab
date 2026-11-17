@@ -37,7 +37,7 @@
 현재 상태는 이 안내와 연결된 최신 근거를 우선합니다. 아래 **이전 계획과 검증 기록**은 각 수집·작성 시점의 기록이며, 당시의 “미실행·미연결”과 미완료 체크를 최신 상태로 해석하지 않습니다. 한국 시각으로 10월 19일에 해당하는 후속 검증도 포함합니다.
 
 - **새 Cloud snapshot 만료:** [실행 39140688897의 근거](evidence/cloud-iceberg-expiration/README.md)에서 snapshot 1개 만료와 data·manifest·manifest list 각 1개 삭제, tag·공유 파일·current 18행·Silver 12행 보존을 확인했습니다. 미니 PC에 접속하지 않고 새 합성 warehouse만 사용했습니다.
-- **공개 HTTPS와 live 조회:** [외부 HTTPS·공개 화면 근거](evidence/public-read-https/README.md)에서 표준 TLS·허용 GET 6개·지정 거부 3개를 확인하고, Pages의 실시간 작업 8개·Kafka 조회 연결과 시계 경고 표시·해소를 대조했습니다. 공개 POST·관리 도구·실행 기능은 제공하지 않습니다.
+- **공개 HTTPS와 live 조회:** [외부 HTTPS·공개 화면 근거](evidence/public-read-https/README.md)에서 표준 TLS·허용 GET 6개·지정 거부 3개를 확인하고 Pages의 실시간 작업 8개·Kafka 조회 연결과 시계 경고 표시·해소를 대조했습니다. 공개 POST·관리 도구·실행 기능은 제공하지 않습니다.
 - **격리 Kafka ACL:** [실제 격리 시험](evidence/kafka-acl/README.md)에서 DESCRIBE 관측 profile의 조회와 선택 RPC 거부 5개·잘못된 비밀번호의 인증 실패 1개를 확인했습니다. 운영 Kafka 권한이나 TLS 기밀성 검증은 아닙니다.
 - **저장된 snapshot 관측 화면:** 저장된 만료 전 4/25·만료 후 3/23(snapshot/객체 수)의 [전후 비교 화면](https://devdooly.github.io/devdooly-platform-lab/#snapshot-expiration)을 공개하고 전후 전환을 확인했습니다([PR120](https://github.com/DevDooly/devdooly-platform-lab/pull/120), [Pages 39142668759](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39142668759)).
 
@@ -45,7 +45,7 @@
 
 ## 이전 계획과 검증 기록
 
-체크된 항목은 확인된 결과가 있는 작업입니다. 계획 단계의 기능에는 체크하지 않습니다. 현재 로컬·Linux runner 검증과 미니 PC의 K3s·Jenkins·Argo CD 실행을 확인했으며, 실제 근거와 남은 작업을 구분합니다. 각 항목은 실제 검증과 함께 갱신합니다. 우선순위와 구체적인 다음 결과물은 [다음 개발 계획](NEXT_STEPS.md)을 따릅니다.
+체크된 항목은 확인된 결과가 있는 작업입니다. 계획 단계의 기능에는 체크하지 않습니다. 현재 로컬·Linux runner 검증과 미니 PC의 K3s·Jenkins·Argo CD 실행을 확인했으며 실제 근거와 남은 작업을 구분합니다. 각 항목은 실제 검증과 함께 갱신합니다. 우선순위와 구체적인 다음 결과물은 [다음 개발 계획](NEXT_STEPS.md)을 따릅니다.
 
 최근 배포·보존 확인(2026-10-16 갱신): 소스 `74a8e988`의 [Actions](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38814779596)와 Jenkins 45에서 API 191개 + 독립 Java 예제 20개, 총 211개를 통과했습니다. 이어 PR #52의 API·웹과 PR #53의 worker를 실제 전환했습니다. 애플리케이션 소스는 `74a8e988`, 최종 GitOps revision은 `b63fedfa`입니다. 2026-10-15 23:12:57 UTC의 배포 후 검사에서 작업 8개·export 정보 16개, 기존 객체 24개 + native7 객체 12개의 전체 GET, PV·PVC 각 13개·Docker 60개와 Kafka offset/end 8·lag 0을 확인했습니다. [S3 전송 배포·보존 근거](evidence/s3-runtime-rollout/README.md)는 해당 시점의 기록이며 실시간 가용성을 뜻하지 않습니다.
 
@@ -68,7 +68,7 @@
 - [ ] 기존 DDNS·공인 IP·CGNAT 여부와 HTTPS 선택지 확인
 - [x] 설치 경로·PV 경로·자원 예산·원상 복구 범위 기록
 
-완료 조건: 기존 서비스에 미칠 영향을 설명하고, 보존할 데이터와 새로운 설치 범위를 정할 수 있습니다.
+완료 조건: 기존 서비스에 미칠 영향을 설명하고 보존할 데이터와 새로운 설치 범위를 정할 수 있습니다.
 
 ## 1 최소 서비스와 포트폴리오
 
@@ -133,7 +133,7 @@
 - [x] 실제 관측 snapshot·수집 시각·source SHA 표시 구현과 관측 계약 검증
 - [ ] 필요한 항목에 한해 Jenkins·Argo CD 실시간 요약과 배포 이력 연결
 
-완료 조건: 방문자가 합성 데이터 결과와 배포 요약을 볼 수 있고, Lab 중단 때도 공개 홈의 프로젝트와 이전 결과를 읽을 수 있습니다. 첫 공개 목표는 여기까지입니다. 실제 수집·인증 실패·회복·공개 게시·브라우저·게시 순서 보존과 API·웹 중단 후 같은 정상 B 복원을 확인했습니다. 수동 host cycle·실제 systemd service·timer 자동 실행과 반복 게시 11회의 Pages build·deploy success까지 검증했습니다. 첫 실행의 즉시 trigger와 후속 10개 실제 간격을 구분했고, 완료 간격은 1825.569287~1875.101367초였습니다. 만료·회전의 장기 운영과 선택적인 실시간 공개 API·inbound 연결은 별도 후속입니다.
+완료 조건: 방문자가 합성 데이터 결과와 배포 요약을 볼 수 있고, Lab 중단 때도 공개 홈의 프로젝트와 이전 결과를 읽을 수 있습니다. 첫 공개 목표는 여기까지입니다. 실제 수집·인증 실패·회복·공개 게시·브라우저·게시 순서 보존과 API·웹 중단 후 같은 정상 B 복원을 확인했습니다. 수동 host cycle·실제 systemd service·timer 자동 실행과 반복 게시 11회의 Pages build·deploy success까지 검증했습니다. 첫 실행의 즉시 trigger와 후속 10개 실제 간격을 구분했고 완료 간격은 1825.569287~1875.101367초였습니다. 만료·회전의 장기 운영과 선택적인 실시간 공개 API·inbound 연결은 별도 후속입니다.
 
 ## 4 Kafka와 객체 저장소
 
@@ -186,7 +186,7 @@
 
 완료 조건: 입력 건수가 성공·실패·중복·대기로 설명되고, 데이터 유실이나 무제한 실행 없이 결과를 확인할 수 있습니다.
 
-새 job의 원래 timer 자동 수집·게시 2회와 완료 간격 1개(1809.371239초)를 확인했습니다. [후속 검증 근거](evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다. 공개 페이지는 약 30분 주기로 수집하는 마지막 기록이며 heartbeat 5분 경고와 구분합니다. 현재 운영판은 단일 노드·partition 1/RF1이며 내부 stage 명령의 기본 12개 V1 fixture와 선택적 고정 1,000개 V2 fixture를 지원합니다. 실제 V2 한 작업의 처리·파일·공개 관측은 [후속 배포 근거](evidence/input-v2-deployment/README.md)에서 확인했고, 정확한 1MiB 경계·동시 접수·자원 수치는 아래 별도 격리 시험 조건입니다. 공개 POST는 제공하지 않습니다. 전용 PVC의 격리 복원은 [별도 근거](evidence/runtime-pvc-restore/README.md)로 확인했습니다. 운영 PVC 덮어쓰기·진행 중 crash·과부하 용량·장기간 운영은 검증하지 않았습니다.
+새 job의 원래 timer 자동 수집·게시 2회와 완료 간격 1개(1809.371239초)를 확인했습니다. [후속 검증 근거](evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다. 공개 페이지는 약 30분 주기로 수집하는 마지막 기록이며 heartbeat 5분 경고와 구분합니다. 현재 운영판은 단일 노드·partition 1/RF1이며 내부 stage 명령의 기본 12개 V1 fixture와 선택적 고정 1,000개 V2 fixture를 지원합니다. 실제 V2 한 작업의 처리·파일·공개 관측은 [후속 배포 근거](evidence/input-v2-deployment/README.md)에서 확인했고 정확한 1MiB 경계·동시 접수·자원 수치는 아래 별도 격리 시험 조건입니다. 공개 POST는 제공하지 않습니다. 전용 PVC의 격리 복원은 [별도 근거](evidence/runtime-pvc-restore/README.md)로 확인했습니다. 운영 PVC 덮어쓰기·진행 중 crash·과부하 용량·장기간 운영은 검증하지 않았습니다.
 
 보존 정책은 dry-run만 제공하며 실제 백업·기존 trial은 삭제하지 않았습니다. 별도 60초 validation TTL의 새 합성 PVC만 정리했고 기존 11PVC/PV를 보존했습니다. 약 63초의 작은 작업 관측에서는 기존 6개 container/image/source와 limit을 유지했고 총 6개 EXPORTED 작업·파일 12개 전체 Get·offset 6/lag 0을 확인했습니다. 최종 25개 검사에서 기존 11PVC/PV·6개 원본 Pod·Docker 38개/실행 26개·기존 업무 SQL/객체와 timer 설정·주기를 보존했습니다. 이 작은 작업 관측은 운영 처리 용량·SLA 검증이 아닙니다. [관측 방법과 한계](runbooks/retention-resource-budget.md)를 따릅니다.
 
@@ -230,6 +230,6 @@
 
 완료 조건: 동일 warehouse에서 쓰기·조회·재시작·compaction이 검증되고 실행 시 자원 사용량이 남습니다. 기존 native Trino·Cloud Spark8의 별도 시험에 이어 새 Cloud의 Spark→Trino 연결·작은 compaction을 추가 완료했습니다. 2026-10-15 19:05:20 UTC의 일곱 번째 실행에서 시점 조회·Trino 정상 재시작·종료·원본 보존을 확인했습니다. 이전 실패와 완료된 DDL의 채택 관계는 [근거](evidence/iceberg-jdbc/README.md)에 보존했습니다. 새 Cloud의 2026-10-16 03:12:33 UTC 기록은 같은 Cloud 환경의 재시작·지속 부하 검증을 포함하지 않습니다.
 
-새 Cloud의 연결·작은 compaction은 완료했고, 새 a7의 [현재 V1–V4 DB 논리 백업·격리 복원](evidence/current-db-restore/README.md)에서 8개 테이블 스키마·7개 비runtime 테이블 행·BLOB 대조와 원본 DB 보존을 확인했습니다. 원래 stop receipt는 실패로 유지하며 별도 읽기 진단의 DB 0·Pod 0·Bound/Retain 관측과 정상 exit UNOBSERVED를 구분합니다. snapshot 보존 정책·필요한 경우의 Airflow·전체 애플리케이션 복구는 남아 있습니다. 미니 PC native7의 중지된 시험 환경과 보관 자료는 유지합니다. 전체 6단계를 완료로 표시하지 않습니다. PostgreSQL 재시작·호스트 장애·HA·처리량 SLA·현재 가용성은 이번 검증 범위가 아닙니다. CI 유휴 관측은 각 확인 시점의 근거이며 전체 실행 동안의 비활성을 보장하는 잠금이 아닙니다.
+새 Cloud의 연결·작은 compaction은 완료했고 새 a7의 [현재 V1–V4 DB 논리 백업·격리 복원](evidence/current-db-restore/README.md)에서 8개 테이블 스키마·7개 비runtime 테이블 행·BLOB 대조와 원본 DB 보존을 확인했습니다. 원래 stop receipt는 실패로 유지하며 별도 읽기 진단의 DB 0·Pod 0·Bound/Retain 관측과 정상 exit UNOBSERVED를 구분합니다. snapshot 보존 정책·필요한 경우의 Airflow·전체 애플리케이션 복구는 남아 있습니다. 미니 PC native7의 중지된 시험 환경과 보관 자료는 유지합니다. 전체 6단계를 완료로 표시하지 않습니다. PostgreSQL 재시작·호스트 장애·HA·처리량 SLA·현재 가용성은 이번 검증 범위가 아닙니다. CI 유휴 관측은 각 확인 시점의 근거이며 전체 실행 동안의 비활성을 보장하는 잠금이 아닙니다.
 
 단계는 의존 순서이며 기간 약속이 아닙니다. 각 단계 완료 후 다음 확장의 필요성과 자원을 다시 판단합니다.

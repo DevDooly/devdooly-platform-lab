@@ -1,6 +1,6 @@
 # 현재 V1–V4 DB 백업·격리 복원 진행 기록
 
-**논리 dump 생성까지 완료했고, 격리 DB 복원과 내용 대조는 아직 실행하지 않았습니다.** [안전한 진행 요약](summary.json)은 스키마·행 수·단계별 결과와 증거 SHA만 담습니다. SQL, BLOB, 접속 정보, Secret, 자원 UID, 원문 dump와 비공개 실행 기록은 게시하지 않습니다.
+**논리 dump 생성까지 완료했고 격리 DB 복원과 내용 대조는 아직 실행하지 않았습니다.** [안전한 진행 요약](summary.json)은 스키마·행 수·단계별 결과와 증거 SHA만 담습니다. SQL, BLOB, 접속 정보, Secret, 자원 UID, 원문 dump와 비공개 실행 기록은 게시하지 않습니다.
 
 운영 애플리케이션 소스는 `74a8e98844a8fea0653951136ede0e7de0d7ac08`, 이번 실행에서 선택한 main은 `5c9b34d3b0a3508ebf6f78254e59a3f9131c71a2`입니다. 두 값의 역할은 다릅니다. 이 문서는 해당 시험의 시점 기록이며 현재 서비스 상태나 이후 실행 성공을 보장하지 않습니다.
 
@@ -19,9 +19,9 @@
 실패 기록은 그대로 보존합니다.
 
 - **a3:** 읽기 캡처 후 `MIGRATION_CHECK_CLAUSE_CHANGED`. CHECK 15개 중 13개는 기존 token과 같았고, 두 named CHECK만 AND 묶음의 불필요한 괄호가 제거된 관측형이었습니다. 이후 후보는 해당 두 exact 관측형만 허용합니다.
-- **a5:** `SAME_VERSION_DUMP_TOOL_REQUIRED`. 실제 도구는 MariaDB 11.8.9의 modern version line을 반환했습니다. 이후 후보가 그 exact line을 추가로 허용했으며, a5에서는 dump가 생성되지 않았습니다.
+- **a5:** `SAME_VERSION_DUMP_TOOL_REQUIRED`. 실제 도구는 MariaDB 11.8.9의 modern version line을 반환했습니다. 이후 후보가 그 exact line을 추가로 허용했으며 a5에서는 dump가 생성되지 않았습니다.
 - **a6:** `INVALID_KUBERNETES_RESPONSE`. 최초 create 명령은 종료 코드 0이었지만, 저장된 응답은 단일 List가 아닌 공백으로 구분된 JSON 문서 7개였습니다. 이후 별도 유한 단계 진단도 전체 성공은 아닙니다. 실제 Pod collection의 kind는 `List`였고, 진단 helper의 `PodList` 조건 때문에 `COLD_COMPARISON`에서 실패했습니다. 그 진단의 선행 응답·UID/spec 확인 결과와 전체 실패 결과를 함께 남깁니다.
 
-이 설명과 새 소스 후보가 이전 실패 receipt를 성공으로 바꾸지는 않습니다. 다음 단계는 정확한 소유 자원의 cold 상태와 저장된 응답 연결을 바탕으로 정리 조건을 검토하고, **새 operation**에서 격리 DB 복원·8개 테이블 스키마/내용 대조·명시적 종료를 수행하는 것입니다. fresh CI/preflight와 승인한 스키마 SHA가 다시 일치해야 하며, 예전 freshness receipt는 재사용하지 않습니다.
+이 설명과 새 소스 후보가 이전 실패 receipt를 성공으로 바꾸지는 않습니다. 다음 단계는 정확한 소유 자원의 cold 상태와 저장된 응답 연결을 바탕으로 정리 조건을 검토하고 **새 operation**에서 격리 DB 복원·8개 테이블 스키마/내용 대조·명시적 종료를 수행하는 것입니다. fresh CI/preflight와 승인한 스키마 SHA가 다시 일치해야 하며, 예전 freshness receipt는 재사용하지 않습니다.
 
 이 기록은 [복구 runbook](../../../../runbooks/lab-recovery.md)의 현재 DB 복원 과제 중간 결과입니다. 전체 archive, K3s, Jenkins 애플리케이션 복구의 완료 근거로 사용하지 않습니다.

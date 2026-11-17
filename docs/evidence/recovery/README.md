@@ -10,7 +10,7 @@
 - Jenkins Home 309,657,060바이트: 실행·대기 빌드가 없는 상태에서 controller만 중지해 생성, master.key는 일반 archive에서 제외
 - DB·K3s·Jenkins·Jenkins master.key의 새 외부 암호화 사본 각각 read-back 인증과 해시 확인
 
-외부 사본은 같은 사용자의 Windows PC이며 OneDrive 밖에 있습니다. 파일 접근은 본인·SYSTEM으로 제한하고, 암호화 복구 키와 Jenkins master.key는 일반 archive와 별도 위치에 보관합니다. 실제 주소·키·원문 로그·보관 경로는 Git에서 제외합니다. 다른 물리 장치의 추가 사본은 아직 검증하지 않았습니다.
+외부 사본은 같은 사용자의 Windows PC이며 OneDrive 밖에 있습니다. 파일 접근은 본인·SYSTEM으로 제한하고 암호화 복구 키와 Jenkins master.key는 일반 archive와 별도 위치에 보관합니다. 실제 주소·키·원문 로그·보관 경로는 Git에서 제외합니다. 다른 물리 장치의 추가 사본은 아직 검증하지 않았습니다.
 
 ## 격리 복원
 
@@ -32,9 +32,9 @@ HTTP의 observedAt은 조회 시각이므로 재시작 전후 동일성 비교�
 
 기존 Docker 서비스 23개가 함께 중단된다는 점과 자동 재시작 설정이 없는 1개의 수동 복구 계획을 설명한 뒤 사용자 허용을 받았습니다. 재부팅 전 boot ID·컨테이너·마운트·PVC·DB·방화벽을 기록했습니다.
 
-재부팅 후 boot ID 변경, Node 1·Pod 11 Ready, Argo CD Synced·Healthy를 확인했습니다. 기존 Docker 23개는 같은 ID와 마운트를 유지했고, 자동 재시작이 설정되지 않은 1개를 다시 시작했습니다. 기존 PVC UID, 전체 DB 행·처리 시각·Flyway history와 API 결과가 동일했습니다. 사용자 kubectl과 0600 설정, UFW 상태·설정도 유지했습니다.
+재부팅 후 boot ID 변경, Node 1·Pod 11 Ready, Argo CD Synced·Healthy를 확인했습니다. 기존 Docker 23개는 같은 ID와 마운트를 유지했고 자동 재시작이 설정되지 않은 1개를 다시 시작했습니다. 기존 PVC UID, 전체 DB 행·처리 시각·Flyway history와 API 결과가 동일했습니다. 사용자 kubectl과 0600 설정, UFW 상태·설정도 유지했습니다.
 
-Docker는 실행 상태와 마운트를 확인했습니다. 기존 각 서비스의 전체 업무 기능을 개별 검증했다는 뜻은 아닙니다. Jenkins·Argo CD 초기 관리자 비밀번호가 아직 유효함도 확인했으며, 이 기록은 비밀번호 교체 완료를 뜻하지 않습니다.
+Docker는 실행 상태와 마운트를 확인했습니다. 기존 각 서비스의 전체 업무 기능을 개별 검증했다는 뜻은 아닙니다. Jenkins·Argo CD 초기 관리자 비밀번호가 아직 유효함도 확인했으며 이 기록은 비밀번호 교체 완료를 뜻하지 않습니다.
 
 ## 복호화 도구 검증
 

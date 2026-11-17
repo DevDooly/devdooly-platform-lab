@@ -14,4 +14,4 @@
 
 gateway 실행기는 소유 internal network1개·컨테이너2개만 사용하고 host port·DB/Kafka·Spark/JVM·실제 API·미니 PC·공개 endpoint를 사용하지 않았다. 같은 workflow의 기존 `verify` job은 별도 실행 범위다. 응답 byte 상한·전체 응답 deadline·외부 TLS·신뢰할 client IP·실제 Kubernetes 정책·배포는 후속이다.
 
-[구현과 재현 절차](../../../infra/public-gateway/README.md)를 참고한다. 이후 문서가 바뀐 커밋은 당시 소스·manifest와 구분해 기록하며, 실제 검증한 조건만 완료로 표시한다.
+[구현과 재현 절차](../../../infra/public-gateway/README.md)를 참고한다. 이후 문서가 바뀐 커밋은 당시 소스·manifest와 구분해 기록하며 실제 검증한 조건만 완료로 표시한다.

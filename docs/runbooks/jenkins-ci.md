@@ -71,7 +71,7 @@ Maven Wrapper 3.3.4는 공식 bin 방식입니다. 저장소의 wrapper jar와 w
 
 chart 5.9.68의 apply_config.sh 동작을 확인했습니다. initializeOnce=true이고 initialization-completed가 있으면 플러그인 초기화를 건너뜁니다. 따라서 기존 PVC에 values의 플러그인 버전만 바꿔서는 교정되지 않을 수 있습니다.
 
-실제 수행한 교정 순서는 다음과 같습니다.
+아래 순서로 교정했습니다.
 
 1. 진행 중 작업이 없는지 확인하고 Helm values·manifest와 job XML을 root 전용으로 백업합니다.
 2. controller를 정지한 뒤 PVC의 Jenkins home 전체를 백업합니다. 백업 대상의 절대 경로, PVC UID와 claimRef를 확인합니다.

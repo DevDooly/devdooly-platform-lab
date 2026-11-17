@@ -1,14 +1,14 @@
 # PG/Garage 시작 명령만 분리하는 Cloud 진단 후보
 
-**현재 ref의 실행 경로는 종료했습니다.** 이 역사 source/test의 원래 `5f60` dependency pin은 변경하지 않습니다. full runner의 시작 경계를 수정한 현재 ref에서는 그 pin이 맞지 않으므로 이 driver를 실행하지 않습니다. 임시 workflow input/job도 제거했습니다. 역사 재현 검토에는 실제 두 번째 startup source `f3f5c52993ceb00fd70f73c17f0ec6d2d236b26e`의 checkout과 당시 검토된 source/manifest가 필요하며, 아래 이전 SOURCE_ONLY 작성 상태나 명령 안내는 현재 ref의 실행 승인이 아닙니다. 기존 두 실제 startup 실패는 그대로 보존하며 자동 재실행하지 않습니다.
+**현재 ref의 실행 경로는 종료했습니다.** 이 역사 source/test의 원래 `5f60` dependency pin은 변경하지 않습니다. full runner의 시작 경계를 수정한 현재 ref에서는 그 pin이 맞지 않으므로 이 driver를 실행하지 않습니다. 임시 workflow input/job도 제거했습니다. 역사 재현 검토에는 실제 두 번째 startup source `f3f5c52993ceb00fd70f73c17f0ec6d2d236b26e`의 checkout과 당시 검토된 source/manifest가 필요하며 아래 이전 SOURCE_ONLY 작성 상태나 명령 안내는 현재 ref의 실행 승인이 아닙니다. 기존 두 실제 startup 실패는 그대로 보존하며 자동 재실행하지 않습니다.
 
 **SOURCE_ONLY_NOT_RUN**. 이 새 후보는 아직 게시·dispatch·Docker 실행하지 않았습니다. 기존 Cloud9 runtime과 첫 두 실패 artifact를 바꾸거나 재실행하지 않습니다. 미니 PC·운영 namespace·운영 DB·원본 객체에 접근하지 않습니다.
 
 ## 별도 mount 진단 v2: 아직 실행하지 않은 후보
 
-첫 좁은 startup 시험은 Actions `38836760710`, job `116767520877`, source `98833225a62ca21660a94935ee0f1ab077f93be2`, 실제 요약 SHA `a3b24f385c812f5a404c012d81113a88e3b851fec53ffa51eb73a7f67a4d45da`입니다. Docker client/server 28.0.4·Compose 2.38.2에서 8개 준비 check는 모두 true였지만, PG의 실제 Compose start 요청 **이전** full-configuration guard가 실패했습니다. PG는 같은 ID/image/config/host/created와 created 상태를 유지했고 `mountsChanged:true`만 관측됐습니다. 명령 실패·State.Error는 없었고 initializer 정리는 확인, 전체 container 정리는 미확인이었습니다. 당시 요약에는 mount의 순서/내용 구분이 없어 **순서만 바뀌었다고 단정하지 않습니다**. Garage의 최신 진단은 아직 bound되지 않은 상태였습니다. 첫 두 Cloud9 rc1 실패의 원인으로도 확대하지 않습니다.
+첫 좁은 startup 시험은 Actions `38836760710`, job `116767520877`, source `98833225a62ca21660a94935ee0f1ab077f93be2`, 실제 요약 SHA `a3b24f385c812f5a404c012d81113a88e3b851fec53ffa51eb73a7f67a4d45da`입니다. Docker client/server 28.0.4·Compose 2.38.2에서 8개 준비 check는 모두 true였지만 PG의 실제 Compose start 요청 **이전** full-configuration guard가 실패했습니다. PG는 같은 ID/image/config/host/created와 created 상태를 유지했고 `mountsChanged:true`만 관측됐습니다. 명령 실패·State.Error는 없었고 initializer 정리는 확인, 전체 container 정리는 미확인이었습니다. 당시 요약에는 mount의 순서/내용 구분이 없어 **순서만 바뀌었다고 단정하지 않습니다**. Garage의 최신 진단은 아직 bound되지 않은 상태였습니다. 첫 두 Cloud9 rc1 실패의 원인으로도 확대하지 않습니다.
 
-새 schemaVersion 2는 각 base-container 진단에 두 필드만 더합니다. `mountOrderOnlyChanged`는 원래 mount list가 달라졌으나 전체 member의 canonical JSON을 정렬한 **중복 보존 목록**이 같을 때 true입니다. `mountContentChanged`는 그 목록의 내용이 다를 때 true입니다. baseline이 아직 없으면 둘 다 null입니다. member의 모든 알려지지 않은 field·중첩 값·JSON 타입도 비교하고, raw mount·path·값·member SHA는 공개하지 않습니다. Dictionary key 순서는 canonical JSON에서 정리하되 전체 필드 내용은 버리지 않습니다.
+새 schemaVersion 2는 각 base-container 진단에 두 필드만 더합니다. `mountOrderOnlyChanged`는 원래 mount list가 달라졌으나 전체 member의 canonical JSON을 정렬한 **중복 보존 목록**이 같을 때 true입니다. `mountContentChanged`는 그 목록의 내용이 다를 때 true입니다. baseline이 아직 없으면 둘 다 null입니다. member의 모든 알려지지 않은 field·중첩 값·JSON 타입도 비교하고 raw mount·path·값·member SHA는 공개하지 않습니다. Dictionary key 순서는 canonical JSON에서 정리하되 전체 필드 내용은 버리지 않습니다.
 
 이 비교는 **진단 전용**입니다. 원래 guard로 전달하는 raw mount, 전체 signature, 시작·정리 명령은 바꾸지 않습니다. order-only여도 원래 guard는 계속 실패합니다. mount를 정규화하거나 자동 복구하지 않고 Docker start로 바꾸지도 않습니다. 현재 원인을 좁히기 위한 별도 **새 1회 후보**이며, 이미 실행한 시험을 재시도하거나 같은 UUID를 재사용하는 코드가 아닙니다. 기존 startup/Cloud9 실패·원본 source는 그대로 유지하며 새 요약은 첫 좁은 startup의 source/SHA를 별도 lineage로 연결합니다.
 
@@ -20,7 +20,7 @@
 
 `ValueError`와 `RuntimeError`도 **정확한 type이고 pinned source의 literal require code와 문자열 전체가 같을 때만** 공개합니다. 대문자 형식이라는 이유만으로 exception message를 공개하지 않습니다. stderr signature는 원인 확정이 아니라 제한된 텍스트가 관측됐다는 뜻입니다. Docker state 원문은 RAM에서 검사하고 공개 값은 고정 enum·boolean·exit code로 제한합니다.
 
-optional 진단 projection의 오류가 원래 command 반환이나 guard를 덮지 않도록 따로 기록합니다. projection 오류가 있으면 새 진단 PASS는 불가하지만, 원래 cleanup guard를 완화하거나 우회하지 않습니다. 첫 primary failure와 cleanup failure는 별도 배열로 남깁니다. `check=False` readiness의 비정상 종료를 그 자체만으로 fatal command로 승격하지 않습니다.
+optional 진단 projection의 오류가 원래 command 반환이나 guard를 덮지 않도록 따로 기록합니다. projection 오류가 있으면 새 진단 PASS는 불가하지만 원래 cleanup guard를 완화하거나 우회하지 않습니다. 첫 primary failure와 cleanup failure는 별도 배열로 남깁니다. `check=False` readiness의 비정상 종료를 그 자체만으로 fatal command로 승격하지 않습니다.
 
 ## 그대로 유지하는 모델과 실제 실행 요청
 
@@ -45,9 +45,9 @@ cleanup은 clock 부족과 관계없이 원래 safety-stop 경계의 read 5초/�
 
 동봉 `lab-ci.yml`은 현재 feature의 전체 workflow bytes를 기반으로 한 **미적용 제안**입니다. `run_cloud_startup_probe`만 true로 선택합니다. 기존 `run_s3_trial`, `run_spark_trial`, `run_cloud_lakehouse_trial`은 모두 false여야 합니다.
 
-startup=true이면 일반 verify와 기존 세 heavy trial을 제외합니다. 새 job의 첫 step에서 조합을 검증하며 다른 true가 있으면 checkout·서비스 생성 전에 고정 코드로 실패합니다. startup=false 또는 입력이 없는 push/default dispatch/기존 trial 경로는 기존 job 본문과 조건을 그대로 유지합니다. 새 job은 11개 순수 검사 후 hash 고정된 driver 한 번만 호출하고, **새 공개 summary.json 한 파일만** upload합니다. private 폴더·dump·config·raw log는 upload하지 않습니다. 이번 workflow 변경은 기존 수동 input/job·조건을 모두 유지하고 새 driver self SHA 한 곳만 갱신합니다.
+startup=true이면 일반 verify와 기존 세 heavy trial을 제외합니다. 새 job의 첫 step에서 조합을 검증하며 다른 true가 있으면 checkout·서비스 생성 전에 고정 코드로 실패합니다. startup=false 또는 입력이 없는 push/default dispatch/기존 trial 경로는 기존 job 본문과 조건을 그대로 유지합니다. 새 job은 11개 순수 검사 후 hash 고정된 driver 한 번만 호출하고 **새 공개 summary.json 한 파일만** upload합니다. private 폴더·dump·config·raw log는 upload하지 않습니다. 이번 workflow 변경은 기존 수동 input/job·조건을 모두 유지하고 새 driver self SHA 한 곳만 갱신합니다.
 
-실행 후보 명령은 workflow 안에 실제 self SHA와 함께 고정됩니다. source commit은 실제 `GITHUB_SHA`와 checkout HEAD를 대조하며, 기존 runtime/helper 6개 파일의 전체 SHA를 검사합니다. 원본 helper의 `main`, vendor, heavy workload는 호출하지 않습니다.
+실행 후보 명령은 workflow 안에 실제 self SHA와 함께 고정됩니다. source commit은 실제 `GITHUB_SHA`와 checkout HEAD를 대조하며 기존 runtime/helper 6개 파일의 전체 SHA를 검사합니다. 원본 helper의 `main`, vendor, heavy workload는 호출하지 않습니다.
 
 ## 소스 검증
 

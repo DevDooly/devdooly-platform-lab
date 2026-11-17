@@ -35,6 +35,6 @@
 
 ## 한계와 다음 단계
 
-기본 API는 자동 worker/Kafka/S3 client를 만들지 않는다. 새 GET 계약과 정적 기록은 기존 두 관측 계약·collector 게시 자동화와 별개다. 오류는 영속 정지하며 명시적 resume이 필요하고, DB/lease 실패로 journal을 갱신하지 못하면 마지막 RUNNING이 남을 수 있다. named lock은 단계 소유 확인이며 외부 IO의 원자적인 fencing·HA가 아니다.
+기본 API는 자동 worker/Kafka/S3 client를 만들지 않는다. 새 GET 계약과 정적 기록은 기존 두 관측 계약·collector 게시 자동화와 별개다. 오류는 영속 정지하며 명시적 resume이 필요하고 DB/lease 실패로 journal을 갱신하지 못하면 마지막 RUNNING이 남을 수 있다. named lock은 단계 소유 확인이며 외부 IO의 원자적인 fencing·HA가 아니다.
 
 현재 숫자 loopback/SSH 시험 연결과 단일 partition/RF1·원본 12개 범위다. 다음은 운영용 접속·인증·worker/Kafka/Garage 배치와 자원/보존 조건을 확정하고 제한된 GitOps 배포를 검증하는 일이다. job 관측의 outbound 자동 수집·Pages 게시, OS 재시작 정책·자격증명 회전·최대 1,000개·다중 partition·공개 실행은 후속이다.

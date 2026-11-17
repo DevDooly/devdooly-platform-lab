@@ -16,7 +16,7 @@ CA·TLS 우회·proxy·debug·keylog 환경은 빈 값도 DNS 전에 거부한�
 
 Lab4개는 기존 golden12건(성공7·실패3·중복2·pending0)과 summary/release의 API source 일관성을 함께 대조한다. jobs는 `MINI_PC/DEPLOYED_RUNTIME`, Kafka는 엄격한 공개 관측 계약과 `MINI_PC/DEPLOYED_KAFKA`를 확인한다. 각 출처는40자리 SHA여야 하지만 운영 API·observer의 source가 검사기 checkout SHA와 같다고 가정하지 않는다.
 
-기존 최대5초 미래 시각 허용과 원시각 보존 정책을 유지한다. 오래된 정상 DTO나 저장된 runtime 상태도 계약에 맞으면 응답 검사에 통과할 수 있다. 따라서 PASS는 해당 시점의 지정6개 HTTPS 응답·공개 DTO 범위다. 현재 worker 프로세스 생존·장기간 가용성·SLA·쓰기 차단·POST 거부·전체 서비스 무변경·인증서 자연 갱신을 증명하지 않는다. 표준 TLS 속성은 응답을 받은 연결에 대해 확인하며 실패 결과의 일부 이전 검사 성공을 전체 성공으로 바꾸지 않는다.
+기존 최대5초 미래 시각 허용과 원시각 보존 정책을 유지한다. 오래된 정상 DTO나 저장된 runtime 상태도 계약에 맞으면 응답 검사에 통과할 수 있다. 따라서 PASS는 해당 시점의 지정6개 HTTPS 응답·공개 DTO 범위다. 현재 worker 프로세스 생존·장기간 가용성·SLA·쓰기 차단·POST 거부·전체 서비스 무변경·인증서 자연 갱신을 증명하지 않는다. 표준 TLS 속성은 응답을 받은 연결에서 확인하며 실패 결과의 일부 이전 검사 성공을 전체 성공으로 바꾸지 않는다.
 
 ## 결과와 검증
 

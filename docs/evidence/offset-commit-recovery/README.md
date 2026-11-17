@@ -1,6 +1,6 @@
 # 실제 offset commit 실패와 명시적 재개: 격리 시험 PASS
 
-2026-10-20 12:44:26 UTC에 완료한 [여섯 번째 실행39424186853](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39424186853)이 통과했습니다. 실제 DB commit 뒤 Kafka를 일시 정지해 commit 실패와 영속 pause를 확인했고, 명시적 resume 후 완료 메시지 재전달·export·슬롯 해제까지 검증했습니다. 앞선 실패5건도 아래에 별도로 보존합니다.
+2026-10-20 12:44:26 UTC에 완료한 [여섯 번째 실행39424186853](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39424186853)이 통과했습니다. 실제 DB commit 뒤 Kafka를 일시 정지해 commit 실패와 영속 pause를 확인했고 명시적 resume 후 완료 메시지 재전달·export·슬롯 해제까지 검증했습니다. 앞선 실패5건도 아래에 별도로 보존합니다.
 
 실제 summary를 [단계별 카드](https://devdooly.github.io/devdooly-platform-lab/#offset-commit-recovery)에 공개했고 로컬·공개 화면 검증을 아래 범위로 완료했습니다.
 
@@ -78,4 +78,4 @@ attempt-5-preparation.json  7af1b56db1f92e97bda7ee4719ec601514e4fc40d3f06a81d55b
 
 초기 group 조회의 timeout은 실제로 관측했지만 broker 내부 지연 원인까지 확정하지 않았습니다. 네 번째 reset helper와 다섯 번째 Maven 준비 실패도 외부 서비스·driver 문제를 근본 원인으로 단정하지 않습니다. 여섯 번째 통과는 검토한 새 source의 한 실행 결과이며 과거 실패의 원인을 소급해 입증하지 않습니다.
 
-시험은 새 컨테이너4개·internal network·전용 DB/S3/Kafka fixture에서 수행한 합성 사례입니다. summary의 `operatingServicesChanged=false`, `hostOrBrokerRestartVerified=false`, `publicExecutionEnabled=false`를 유지합니다. 이 결과가 운영 현재 상태·물리 host/broker 재시작 복구·다중 broker HA·SLA·모든 장애에서의 exactly-once를 증명하지는 않습니다. 공개 근거에는 유한 집계·고정 enum·검증 bool·source/XML 지문만 남기며 raw 로그·SQL·credential·실제 resource ID는 포함하지 않습니다.
+시험은 새 컨테이너4개·internal network·전용 DB/S3/Kafka fixture에서 수행한 합성 사례입니다. summary의 `operatingServicesChanged=false`, `hostOrBrokerRestartVerified=false`, `publicExecutionEnabled=false`를 유지합니다. 이 결과가 운영 현재 상태·물리 host/broker 재시작 복구·다중 broker HA·SLA·모든 장애 상황의 exactly-once를 증명하지는 않습니다. 공개 근거에는 유한 집계·고정 enum·검증 bool·source/XML 지문만 남기며 raw 로그·SQL·credential·실제 resource ID는 포함하지 않습니다.

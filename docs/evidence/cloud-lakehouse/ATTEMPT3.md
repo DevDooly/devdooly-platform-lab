@@ -2,7 +2,7 @@
 
 세 번째 full 실행도 **실패했다**. [실행 38839670201](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38839670201)의 소스는 `8e55f467faee38cee124690af1e80e65f69fc18c`다. 이전 [첫 실패](README.md), [두 번째 실패](ATTEMPT2.md), 두 별도 startup 진단은 그대로 보존했다. 기존 실행의 재실행이나 Mini PC/native7 재사용은 아니다.
 
-[원문 요약](attempt3.summary.json)은 2026-10-16 02:21:05 UTC에 기록됐다. 전체 SHA256은 `eebb19a8bed2a663d8216f3583d95e7d1a9956f6e5d4d279701a615bc441357b`, 크기는 1,926바이트다. 실제 dispatch와 artifact는 새 runner `bc5d6afb…`·runtime manifest `eb15f268…`·검토 packet `589c262a…`에 연결했다. v3 projector는 기존 schema2 데이터 검증을 유지하면서 새 producer 귀속을 검증했으며, 옛 `5f60/d649` 실행 결과로 표시하지 않는다.
+[원문 요약](attempt3.summary.json)은 2026-10-16 02:21:05 UTC에 기록됐다. 전체 SHA256은 `eebb19a8bed2a663d8216f3583d95e7d1a9956f6e5d4d279701a615bc441357b`, 크기는 1,926바이트다. 실제 dispatch와 artifact는 새 runner `bc5d6afb…`·runtime manifest `eb15f268…`·검토 packet `589c262a…`에 연결했다. v3 projector는 기존 schema2 데이터 검증을 유지하면서 새 producer 귀속을 검증했으며 옛 `5f60/d649` 실행 결과로 표시하지 않는다.
 
 | 실제 관측 | 확인 범위 |
 | --- | --- |

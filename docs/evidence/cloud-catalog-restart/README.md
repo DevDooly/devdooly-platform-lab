@@ -28,8 +28,8 @@ PG 실제 exit는 **0**, Trino의 별도 TERM 요청 뒤 실제 exit는 **143**�
 - runtime manifest SHA-256: `5d0bacc9bfc68814c83f08faee091cb8d05c94798e911ba5801284a7b83134aa`
 - [PR146 CI 39439437002](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39439437002): Linux의 순수 경계 검사22개·skip0을 먼저 통과했습니다. 실제 Docker/SQL 시험과 구분합니다.
 
-summary의 정확28필드, 검사18개, 결과7필드·catalog19필드·조회7필드와 metadata를 전체 대조했습니다. 실패·진단은 null, source/tool 불변·소유 자원 중지·단일 clock 조건이 모두 통과했습니다. 동결 소스의 README는 실행 전 상태를 그대로 보존하며, 실제 실행 결과는 이 문서를 따릅니다.
+summary의 정확28필드, 검사18개, 결과7필드·catalog19필드·조회7필드와 metadata를 전체 대조했습니다. 실패·진단은 null, source/tool 불변·소유 자원 중지·단일 clock 조건이 모두 통과했습니다. 동결 소스의 README는 실행 전 상태를 그대로 보존하며 실제 실행 결과는 이 문서를 따릅니다.
 
 개인 합성 데이터만 사용했습니다. raw inspect·SQL/proof·PID/CID·DB system identifier·volume명·credential·object full copies는 공개하지 않습니다. 기존 source/helper/manifest·과거 증거는 변경하지 않았습니다. 토큰 교체·예산 정책·PR102는 보류합니다.
 
-이 기록을 [공개 기술별 근거 목록](https://devdooly.github.io/devdooly-platform-lab/#evidence)에 연결했습니다. 같은 main `7a20aa28`의 [Pages](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39441997794)·[CI](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39441997832)를 통과했고, 2026-10-20 14:49–14:50 UTC에 공개1280px·390px에서 검색·필터·6개씩 표시·키보드 초점·실제 source/근거 링크와 가로 넘침 부재를 확인했습니다. 저장된 재시작 기록이며 현재 DB의 상태를 뜻하지 않습니다.
+이 기록을 [공개 기술별 근거 목록](https://devdooly.github.io/devdooly-platform-lab/#evidence)에 연결했습니다. 같은 main `7a20aa28`의 [Pages](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39441997794)·[CI](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39441997832)를 통과했고 2026-10-20 14:49–14:50 UTC에 공개1280px·390px에서 검색·필터·6개씩 표시·키보드 초점·실제 source/근거 링크와 가로 넘침 부재를 확인했습니다. 저장된 재시작 기록이며 현재 DB의 상태를 뜻하지 않습니다.

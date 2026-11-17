@@ -1,6 +1,6 @@
 # Trino·JDBC catalog의 작은 합성 실증
 
-**기록 기준: 2026-10-15 19:05:20 UTC.** 별도 실험에서 Trino 483·PostgreSQL 17.11 JDBC V1 catalog·Garage backing store를 연결했습니다. 고정 합성 원본을 두 번 추가하고, Trino 정상 재시작 뒤에도 같은 행·metadata pointer·객체 전체 bytes를 읽었습니다. 마지막에는 새 PostgreSQL·Trino workload를 모두 중지하고 PVC 두 개와 warehouse를 보관했습니다. 현재 가용성을 조회한 결과나 전체 Phase6 완료 표시는 아닙니다.
+**기록 기준: 2026-10-15 19:05:20 UTC.** 별도 실험에서 Trino 483·PostgreSQL 17.11 JDBC V1 catalog·Garage backing store를 연결했습니다. 고정 합성 원본을 두 번 추가하고 Trino 정상 재시작 뒤에도 같은 행·metadata pointer·객체 전체 bytes를 읽었습니다. 마지막에는 새 PostgreSQL·Trino workload를 모두 중지하고 PVC 두 개와 warehouse를 보관했습니다. 현재 가용성을 조회한 결과나 전체 Phase6 완료 표시는 아닙니다.
 
 이 기록의 정적 표시 데이터는 [iceberg.latest.json](https://devdooly.github.io/devdooly-platform-lab/observations/iceberg.latest.json), 공개 요약은 [summary.json](summary.json), 재실행 경계는 [runbook](../../runbooks/iceberg-jdbc-native.md)에 연결합니다. 이미 게시된 정적 검증 기록이며 현재 가용성이나 실시간 상태와 구분합니다. [초기 준비 당시 문서](PREPARED.md)는 원문 그대로 보존했으며 현재 완료 상태와 구분합니다.
 
@@ -23,11 +23,11 @@
 
 ## 실패와 후속 실행의 관계
 
-여섯 번째 실행에서는 CREATE SCHEMA·CREATE TABLE이 완료됐습니다. 이어진 초기 snapshot 조회가 없는 map key를 `summary['added-records']`로 읽어 실패했고, **INSERT는 아직 시도되지 않았습니다.** 당시 query·전체 supervisor 실패는 그대로 보존했습니다. PostgreSQL·Trino 중지는 통과했습니다.
+여섯 번째 실행에서는 CREATE SCHEMA·CREATE TABLE이 완료됐습니다. 이어진 초기 snapshot 조회가 없는 map key를 `summary['added-records']`로 읽어 실패했고 **INSERT는 아직 시도되지 않았습니다.** 당시 query·전체 supervisor 실패는 그대로 보존했습니다. PostgreSQL·Trino 중지는 통과했습니다.
 
 일곱 번째 실행은 완료된 DDL과 초기 객체를 채택했습니다. Current/초기 시점 0행·JDBC pointer·초기 warehouse 전체 bytes와 미시도 INSERT 흔적 부재를 확인한 뒤 고정 INSERT 두 개만 각각 한 번 실행했습니다. Snapshot inspection은 없는 key를 NULL로 읽는 `element_at`으로 교정했습니다. Frozen SQL plan 파일 자체는 바꾸지 않았으므로 **파일 보존과 실제 inspection SQL 교정**을 구분합니다. [Trino map 처리](https://trino.io/docs/current/functions/map.html#subscript-operator), [Iceberg 1.11의 양수 added-records만 기록하는 조건](https://github.com/apache/iceberg/blob/apache-iceberg-1.11.0/core/src/main/java/org/apache/iceberg/SnapshotSummary.java#L247-L260)을 근거로 삼았습니다.
 
-공개 projection 준비도 두 번 거절됐습니다. 첫 collector는 정렬해 저장한 dict를 원래 열 순서에 의존하는 해시로 다시 계산했고, 둘째는 실제 query receipt에 없는 `initialState` 필드를 가정했습니다. 두 소스·실패 기록은 남겼습니다. 셋째 collector는 이미 저장된 Trino 열·값 배열과 query identity, 별도 초기 SELECT·객체 파일을 읽어 계약을 검증했습니다. **SQL·native 작업·새 clock을 실행하지 않고** 실제 projection을 만들었습니다. 원본 행 값과 해시 상수는 바꾸지 않았습니다.
+공개 projection 준비도 두 번 거절됐습니다. 첫 collector는 정렬해 저장한 dict를 원래 열 순서에 의존하는 해시로 다시 계산했고 둘째는 실제 query receipt에 없는 `initialState` 필드를 가정했습니다. 두 소스·실패 기록은 남겼습니다. 셋째 collector는 이미 저장된 Trino 열·값 배열과 query identity, 별도 초기 SELECT·객체 파일을 읽어 계약을 검증했습니다. **SQL·native 작업·새 clock을 실행하지 않고** 실제 projection을 만들었습니다. 원본 행 값과 해시 상수는 바꾸지 않았습니다.
 
 ## 출처와 한계
 

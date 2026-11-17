@@ -17,9 +17,9 @@ DB 완료 작업의 결과 JSON 12개 outcome과 실패 JSON의 실패 입력 3�
 | 첫 객체 확인 후 JVM 종료 | atomic checkpoint·DB PENDING·점유 슬롯을 확인한 뒤 강제 종료. 새 exporter로 두 파일 확인·완료 |
 | 두 객체 확인 후 DB ACK 전 JVM 종료 | atomic checkpoint·DB PENDING·점유 슬롯을 확인한 뒤 강제 종료. 두 객체 재검증·완료 |
 
-각 최종 정상 상태는 run 1·outcome 12·서로 다른 문서 2개 확인·EXPORTED·빈 슬롯이다. 정상 시험은 이후 새 작업을 실제 접수하고 이전 작업을 다시 export해 새 슬롯 점유를 보존한 추가 관측도 남겼다. JSON의 추가 관측 1개를 일곱 번째 테스트로 세지 않는다. `objectsVerified=2`는 최종 문서 두 개이며 모든 시도에서의 Get 호출 총합이 아니다. `exportPuts`를 해석할 때도 SDK 메서드 호출과 wire-level retry를 구분한다.
+각 최종 정상 상태는 run 1·outcome 12·서로 다른 문서 2개 확인·EXPORTED·빈 슬롯이다. 정상 시험은 이후 새 작업을 실제 접수하고 이전 작업을 다시 export해 새 슬롯 점유를 보존한 추가 관측도 남겼다. JSON의 추가 관측 1개를 일곱 번째 테스트로 세지 않는다. `objectsVerified=2`는 최종 문서 두 개이며 모든 시도의 Get 호출 합계이 아니다. `exportPuts`를 해석할 때도 SDK 메서드 호출과 wire-level retry를 구분한다.
 
-강제 종료는 Windows child JVM을 두 경계에서 각각 한 번, 총 2회 수행했다. 실제 atomic checkpoint를 대조한 뒤 `destroyForcibly()`와 종료를 확인했으며, 고정 sleep·예외만 주입한 시험이 아니다. Garage·네트워크 중단이나 Linux Pod SIGKILL을 검증한 것은 아니다. 원문 log·checkpoint는 비공개 진단 자료에 남겼다.
+강제 종료는 Windows child JVM을 두 경계에서 각각 한 번, 총 2회 수행했다. 실제 atomic checkpoint를 대조한 뒤 `destroyForcibly()`와 종료를 확인했으며 고정 sleep·예외만 주입한 시험이 아니다. Garage·네트워크 중단이나 Linux Pod SIGKILL을 검증한 것은 아니다. 원문 log·checkpoint는 비공개 진단 자료에 남겼다.
 
 ## 정리와 기존 운영 보존
 
@@ -33,4 +33,4 @@ DB 완료 작업의 결과 JSON 12개 outcome과 실패 JSON의 실패 입력 3�
 
 한 문서의 Get·Put·Get 각각이 기존 SDK의 유한 대기/재시도 설정을 사용하며 전체 export를 30초로 보장하지 않는다. DB에 새 pair manifest·파일 영수증을 추가하지 않았고, 반복 시 불변 DB snapshot에서 같은 버전/key/bytes를 재생성해 재검증한다. 단일 신뢰 writer 정책이며 조건부 생성·WORM·객체의 이후 삭제 방지·호스트/디스크 장애·시스템 전체 exactly-once를 보장하지 않는다.
 
-다음은 상시 worker/export 실행기·운영자 정지/재개 정책과 job/export 관측 계약을 설계하고, 제한된 운영 배포를 별도로 검증하는 일이다. 자동 보존/삭제·최대 1,000개 입력·다중 worker·공개 실행은 미구현이다.
+다음은 상시 worker/export 실행기·운영자 정지/재개 정책과 job/export 관측 계약을 설계하고 제한된 운영 배포를 별도로 검증하는 일이다. 자동 보존/삭제·최대 1,000개 입력·다중 worker·공개 실행은 미구현이다.

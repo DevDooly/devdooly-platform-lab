@@ -1,6 +1,6 @@
 # 잘못된 Kafka 메시지 뒤의 정상 작업 보호
 
-2026-10-20 13:40:24 UTC, 새 hosted Linux의 [실제 시험 39432070400](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39432070400)이 통과했습니다. 첫 record가 잘못된 JSON일 때 런타임이 영속 중지하고, 뒤의 정상 작업을 처리·commit하지 않는 동작을 확인했습니다. 입력을 수리하지 않은 명시 resume 뒤에도 새 worker가 다시 중지됐습니다.
+2026-10-20 13:40:24 UTC, 새 hosted Linux의 [실제 시험 39432070400](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39432070400)이 통과했습니다. 첫 record가 잘못된 JSON일 때 런타임이 영속 중지하고 뒤의 정상 작업을 처리·commit하지 않는 동작을 확인했습니다. 입력을 수리하지 않은 명시 resume 뒤에도 새 worker가 다시 중지됐습니다.
 
 ## 실제 결과
 

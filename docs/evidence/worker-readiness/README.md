@@ -2,11 +2,11 @@
 
 이 문서는 첫 진단 당시 기록입니다. 이후 수정 이미지의 적용·교체·재시도는 [후속 검증](CORRECTED_IMAGE.md)에서 확인합니다.
 
-2026-10-15 14:10:59 UTC까지 확인한 기록입니다. **Linux CI는 API 180개·독립 Java 예제 20개, 총 200개를 skip 없이 통과했습니다. 첫 격리 canary는 0개 사례에서 실패했고, 같은 이전 이미지의 별도 진단에서 SGID 상속과 생성자 거부 경로를 직접 재현했습니다.** 수정 이미지의 canary·실제 GitOps Ready 전환·worker 재시작 검증은 아직 대기입니다. 운영 worker에 readiness를 적용한 결과로 표시하지 않습니다.
+2026-10-15 14:10:59 UTC까지 확인한 기록입니다. **Linux CI는 API 180개·독립 Java 예제 20개, 총 200개를 skip 없이 통과했습니다. 첫 격리 canary는 0개 사례에서 실패했고 같은 이전 이미지의 별도 진단에서 SGID 상속과 생성자 거부 경로를 직접 재현했습니다.** 수정 이미지의 canary·실제 GitOps Ready 전환·worker 재시작 검증은 아직 대기입니다. 운영 worker에 readiness를 적용한 결과로 표시하지 않습니다.
 
 ## 첫 canary와 이후 진단을 구분합니다
 
-첫 canary의 소스는 `8521d755be223f1f3114859d5f32578983bec98a`입니다. 익명 registry 조회와 K3s cache의 index→amd64 manifest→config→CRI 연결을 확인했고, 실제 OCI의 별도 probe class와 같은 OCI app.jar 내부 class가 바이트 단위로 일치했습니다. Java classfile major는 65, probe class SHA-256은 `868d5321ee3a451ecdc3bb9613d68e8803b0cfd82eeabb75a1834b271088cbe4`입니다. 이 단계의 검사 5/5와 전후 운영 보존 검사 각 21/21을 통과했습니다. CI JAR의 class와 같다고 가정하지 않았습니다.
+첫 canary의 소스는 `8521d755be223f1f3114859d5f32578983bec98a`입니다. 익명 registry 조회와 K3s cache의 index→amd64 manifest→config→CRI 연결을 확인했고 실제 OCI의 별도 probe class와 같은 OCI app.jar 내부 class가 바이트 단위로 일치했습니다. Java classfile major는 65, probe class SHA-256은 `868d5321ee3a451ecdc3bb9613d68e8803b0cfd82eeabb75a1834b271088cbe4`입니다. 이 단계의 검사 5/5와 전후 운영 보존 검사 각 21/21을 통과했습니다. CI JAR의 class와 같다고 가정하지 않았습니다.
 
 2026-10-15T13:41:00.748064Z에 저장된 첫 canary 결과는 **FAILED**입니다. 프로세스는 exit 1로 끝났고, 실제 사례 목록은 비어 있었습니다. 로그는 `CANARY_EXECUTION_FAILED`라는 일반 오류만 남겼으며 생성자 예외 class나 stack을 기록하지 않았습니다. probe class 해시는 실제 이미지와 로그에서 확인했지만, 실패한 canary 결과의 완료 필드는 null이었습니다. 이 실패 결과를 통과로 바꾸거나 10개 사례를 실행했다고 표시하지 않습니다.
 
@@ -23,7 +23,7 @@
 
 이 재현은 Linux에서 부모 SGID 비트가 새 디렉터리에도 상속된다는 [Linux man-pages의 mkdir(2) 설명](https://man7.org/linux/man-pages/man2/mkdir.2.html)과 일치합니다. 새 디렉터리의 SGID 상속과 엄격한 `0700` 검사의 충돌을 직접 확인한 결과입니다. 첫 실패 컨테이너에서 누락된 예외 stack을 복원한 기록은 아닙니다.
 
-진단 검사 3/3을 통과했고 기존 7개 작업·업무 SQL·객체 참조 21개와 전역 리소스 식별자를 보존했습니다. 14:08:37.134114Z의 후속 정리도 3/3을 통과했습니다. 종료한 자체 진단 Pod/Job/ConfigMap의 근거를 보관하고 UID로 정리했으며, 같은 namespace·quota·정책을 유지했습니다. 남은 Pod/Job/Secret/PVC/Service는 각각 0개입니다. 기존 **동일한 객체 21개**를 다시 전체 GET해 앞선 사본과 바이트 단위로 비교했습니다. 두 번의 조회를 42개 서로 다른 객체로 세지 않습니다.
+진단 검사 3/3을 통과했고 기존 7개 작업·업무 SQL·객체 참조 21개와 전역 리소스 식별자를 보존했습니다. 14:08:37.134114Z의 후속 정리도 3/3을 통과했습니다. 종료한 자체 진단 Pod/Job/ConfigMap의 근거를 보관하고 UID로 정리했으며 같은 namespace·quota·정책을 유지했습니다. 남은 Pod/Job/Secret/PVC/Service는 각각 0개입니다. 기존 **동일한 객체 21개**를 다시 전체 GET해 앞선 사본과 바이트 단위로 비교했습니다. 두 번의 조회를 42개 서로 다른 객체로 세지 않습니다.
 
 ## 수정 범위와 Linux CI
 

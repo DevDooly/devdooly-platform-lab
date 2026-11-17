@@ -2,7 +2,7 @@
 
 ## 최신 후속 관측 — 2026-10-23 UTC
 
-[수동 실행39940801991](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39940801991)의 첫 attempt에서 `offline`·`public_gets`가 성공했습니다. `10:41:16.550Z`–`10:41:26.508Z`에 고정 GET6개가 모두 HTTP200·공개 헤더·DTO 계약을 통과했고, 공개 IPv4·표준 TLS를 확인했습니다. 검사기 소스는 `285d148638ece7b085bf3726b3344271e6e1cd08`, 응답 소스는 기존 API `245d61a5749760a20918ab091d9410ce6735b1c0`이며 두 값을 구분합니다.
+[수동 실행39940801991](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39940801991)의 첫 attempt에서 `offline`·`public_gets`가 성공했습니다. `10:41:16.550Z`–`10:41:26.508Z`에 고정 GET6개가 모두 HTTP200·공개 헤더·DTO 계약을 통과했고 공개 IPv4·표준 TLS를 확인했습니다. 검사기 소스는 `285d148638ece7b085bf3726b3344271e6e1cd08`, 응답 소스는 기존 API `245d61a5749760a20918ab091d9410ce6735b1c0`이며 두 값을 구분합니다.
 
 [요약 원문](hosted-39940801991/summary.json) 1,635bytes와 [실행 결합 metadata](hosted-39940801991/run-metadata.json) 346bytes를 run·job·단일 artifact·ZIP entry와 대조했습니다. 요약 SHA-256은 `42f4b04ca2e77554e01494c66bbf607a65d5869924a80cbeddaf25f70e870841`, metadata SHA-256은 `93ad969da5de707f8a12a84151b8a831b4d6d8ff30504323954c7ad13aa2e669`입니다. 주소·IP·본문·자격증명은 포함하지 않습니다.
 
@@ -35,7 +35,7 @@
 | JOBS | `2026-10-20T19:23:42.437866782Z` |
 | KAFKA | `2026-10-20T19:23:44.280587950Z` |
 
-원문14필드와 고정6개 검사에는 주소·IP·본문·자격증명·예외 원문이 없습니다. `deniedRequestsTested=false`, `operatingConfigurationChanged=false`를 유지합니다. 단일 수집 창의 약9초는 순차 요청·대기·검증을 포함하며, 처리량·응답 지연 benchmark가 아닙니다.
+원문14필드와 고정6개 검사에는 주소·IP·본문·자격증명·예외 원문이 없습니다. `deniedRequestsTested=false`, `operatingConfigurationChanged=false`를 유지합니다. 단일 수집 창의 약9초는 순차 요청·대기·검증을 포함하며 처리량·응답 지연 benchmark가 아닙니다.
 
 ## 원문과 실행 결합
 
@@ -52,7 +52,7 @@ GitHub의 run·job·단일 artifact와 ZIP entry를 확인한 뒤 원문 bytes�
 
 기존 full9는 원문 뒤 helper export만 추가했으며 원래 route·POST 격리 ACK와 동작을 유지합니다. [GET-only 실행기](../../../infra/public-https-get/README.ko.md)는 기존 URL 설정·대상 소유·main/manual/첫 attempt를 확인한 뒤 한 공개 IPv4에 고정하고 재시도 없이6개만 읽습니다. 새 토큰·SSH·별도 VM·서비스 설정 변경 없이 수행했습니다.
 
-PASS는 당시 지정 HTTPS 응답과 DTO 계약 범위입니다. 현재 worker 프로세스의 생존·POST 차단·전체 서비스 무변경·장기간 가용성·SLA·인증서 자연 갱신을 증명하지 않습니다. 기동 복원·토큰 교체·자원 예산·PR102는 계속 보류하며, 이번 조회를 그 완료 근거로 쓰지 않습니다. 공개 화면 반영도 이 artifact만으로 완료 처리하지 않습니다.
+PASS는 당시 지정 HTTPS 응답과 DTO 계약 범위입니다. 현재 worker 프로세스의 생존·POST 차단·전체 서비스 무변경·장기간 가용성·SLA·인증서 자연 갱신을 증명하지 않습니다. 기동 복원·토큰 교체·자원 예산·PR102는 계속 보류하며 이번 조회를 그 완료 근거로 쓰지 않습니다. 공개 화면 반영도 이 artifact만으로 완료 처리하지 않습니다.
 
 ## 근거 목록 연결
 

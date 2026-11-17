@@ -2,7 +2,7 @@
 
 ## 두 번째 실제 관측 — 2026-10-20 18:42 UTC
 
-기존 수동 workflow를 main `6f551a16a8ed536bb126403234c41b9e9b266d43`에서 한 번 실행했습니다. [run39477022262](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39477022262)의 오프라인20검사·certificate 단계가 성공했습니다. 기존 공개 URL 변수의 HTTPS·443·사용자 호스트 일치를 확인했고, workflow가 기존 secret과 변수의 일치도 검사했습니다. 새 토큰·SSH·라우트 확인용 POST·운영 설정 변경은 사용하지 않았습니다.
+기존 수동 workflow를 main `6f551a16a8ed536bb126403234c41b9e9b266d43`에서 한 번 실행했습니다. [run39477022262](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39477022262)의 오프라인20검사·certificate 단계가 성공했습니다. 기존 공개 URL 변수의 HTTPS·443·사용자 호스트 일치를 확인했고 workflow가 기존 secret과 변수의 일치도 검사했습니다. 새 토큰·SSH·라우트 확인용 POST·운영 설정 변경은 사용하지 않았습니다.
 
 | 항목 | 두 번째 실제 결과 |
 | --- | --- |
@@ -41,7 +41,7 @@
 | 원문 SHA-256 | `72c806703547c2fb30a1e9a7e15b1baf41cddc88cc6318ef5589f7c24c69a157` |
 | 실행 metadata | [run-metadata.json](hosted-39452152238/run-metadata.json) |
 
-이 값은 **수집 당시의 저장 관측**입니다. 현재 접속 성공·현재 남은 일수·Traefik 갱신 예정일·장기 가용성을 표시하지 않습니다. 첫 leaf 지문 기록이므로 인증서 자연 갱신이나 교체 이력도 아직 검증하지 않았습니다. 기존10월20일 운영 요약의88일과 만료시각은 당시 원문 그대로 보존하며, leaf 지문이 없는 과거 요약을 이22키 이력으로 재작성하지 않습니다.
+이 값은 **수집 당시의 저장 관측**입니다. 현재 접속 성공·현재 남은 일수·Traefik 갱신 예정일·장기 가용성을 표시하지 않습니다. 첫 leaf 지문 기록이므로 인증서 자연 갱신이나 교체 이력도 아직 검증하지 않았습니다. 기존10월20일 운영 요약의88일과 만료시각은 당시 원문 그대로 보존하며 leaf 지문이 없는 과거 요약을 이22키 이력으로 재작성하지 않습니다.
 
 ## 첫 실행과 보존 범위
 
@@ -55,7 +55,7 @@
 
 실제 첫 원문의 UTF-8 bytes를 보존한 웹 데이터와 검토한 run/source/hash 목록을 대조합니다. 서버 빌드에서 SHA·22필드·metadata6·시간 순서·동일 대상·중복/충돌을 검사한 뒤 선택한 값만 정적 화면에 표시합니다. 새 실패와 편입하지 못한 입력을 알리면서 마지막 성공을 보존합니다. 서로 다른 leaf와 기간 연장도 자연 ACME 갱신의 원인·과정·무중단을 증명한다고 해석하지 않습니다.
 
-- 새 순수 검사19개·전체 웹207개, skip0을 통과했습니다. 실제 원문1건과 메모리 합성 반례를 구분하며, 수집 후 만료시점을 지난 시계에서도 당시87일을 유지합니다.
+- 새 순수 검사19개·전체 웹207개, skip0을 통과했습니다. 실제 원문1건과 메모리 합성 반례를 구분하며 수집 후 만료시점을 지난 시계에서도 당시87일을 유지합니다.
 - 최초 타입 검사에서 Node 해시 API 타입3건이 누락됐습니다. 빌드용 `@types/node=24.19.2`와 lock의 타입 전이 의존성을 추가한 뒤46파일 오류·경고0과 루트/프로젝트 경로 빌드를 통과했습니다. 기존 실행 의존성·스크립트와 관측 실행기 원문은 유지했습니다.
 - 2026-10-20 16:09–16:11 UTC에 로컬1280px·390px의 수집 시각·87일·만료·실행/소스/원문 링크, 기본 닫힘과 Enter 토글·3px 초점, 본문17px·최소48px 조작·긴 지문 줄바꿈·가로 넘침 부재를 확인했습니다.
 - 원문 링크는 근거 커밋 `391c58bf9ede2a018b56d10c4c3ddbe92d27e8c0`에 고정했습니다.
@@ -66,11 +66,11 @@
 
 2026-10-20 16:16–16:19 UTC에 공개1280px·390px의 수집 시각·87일·만료와 고정 원문 링크, 기본 닫힘·Enter 토글·새로고침 후 닫힘, 본문17px·summary54px·초점3px·긴 지문 줄바꿈·가로 넘침 부재를 확인했습니다. 실제 읽기 API의 카드가 로드된 뒤 모바일 증거 구도를 다시 확인했습니다. TLS 관측을 다시 실행한 결과나 실제 두 인증서의 비교가 아닙니다.
 
-이 화면 소스의 Jenkins commit status는 당시 미관측입니다. 후속 이미지 workflow는 gate 종료 뒤 publish·GitOps 제안을 생략했으며, Pages 게시와 실제 이미지 게시·운영 배포를 구분합니다.
+이 화면 소스의 Jenkins commit status는 당시 미관측입니다. 후속 이미지 workflow는 gate 종료 뒤 publish·GitOps 제안을 생략했으며 Pages 게시와 실제 이미지 게시·운영 배포를 구분합니다.
 
 ## 저장 이력의 완료 시각 표기 비교
 
-같은 run의 metadata.completedAt이 초 단위 Z와 .000Z로만 다를 때 정상 중복을 출처 경고로 격리하던 비교를 [PR221](https://github.com/DevDooly/devdooly-platform-lab/pull/221)에서 교정했습니다. 이미 검증된 완료 시각의 UTC 값만 비교하고 최초 metadata 표기·summary 원문 bytes·artifact hash·run/source·원 수집 시각은 유지합니다. 실제1ms 차이와 출처·원문 충돌은 계속 거부하며, 저장 summary·metadata·generated JSON 원문은 수정하지 않았습니다.
+같은 run의 metadata.completedAt이 초 단위 Z와 .000Z로만 다를 때 정상 중복을 출처 경고로 격리하던 비교를 [PR221](https://github.com/DevDooly/devdooly-platform-lab/pull/221)에서 교정했습니다. 이미 검증된 완료 시각의 UTC 값만 비교하고 최초 metadata 표기·summary 원문 bytes·artifact hash·run/source·원 수집 시각은 유지합니다. 실제1ms 차이와 출처·원문 충돌은 계속 거부하며 저장 summary·metadata·generated JSON 원문은 수정하지 않았습니다.
 
 새 합성 회귀3개 중 수정 전2개 실패를 확인했고 수정 후 TLS 이력22개가 통과했습니다. 로컬 전체 웹273개·생략/실패0, 타입50파일 오류·경고·힌트0·정적2페이지 빌드를 통과했습니다. 병합 main c27e4312474f449687957010393d59752ff8d538의 [CI39964710927](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39964710927) verify·public-read-gateway와 [Pages39964710609](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39964710609) build·deploy도 성공했습니다. 두 실행의 실제 로그에서도 웹273개·타입50파일 진단0·2페이지를 확인했으며 별도 격리 실증4개 job은 생략했습니다.
 

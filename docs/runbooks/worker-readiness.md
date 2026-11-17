@@ -39,4 +39,4 @@ readiness만 10초 주기·5초 timeout·실패 3회/성공 1회로 제안한다
 4. 실제 적용은 GitOps 값으로만 수행하고 새 Pod의 Ready 시점에 **그 새 process**의 source·startedAt·fresh heartbeat·OCI/CRI를 함께 확인한다. 가능한 경우 교체 전에 종료 watch를 시작하고 미관측을 정상 종료로 추정하지 않는다.
 5. 기존 SQL·작업/객체·Kafka·Pod/PVC/Docker·호스트·timer를 전후 대조한다. 이전 실패와 unknown write outcome을 보존하며 자동 접수/repair로 성공을 만들지 않는다.
 
-후보 코드·로컬 테스트와 실제 Linux/운영 증거를 구분하고, 실제 적용 뒤에만 별도 근거로 완료를 기록한다.
+후보 코드·로컬 테스트와 실제 Linux/운영 증거를 구분하고 실제 적용 뒤에만 별도 근거로 완료를 기록한다.

@@ -26,7 +26,7 @@ V2는 기존 V1·`demo_run`·`demo_outcome`을 수정하지 않고 `lab_job`, `l
 
 **최초 정책은 결과·실패 파일 export 완료까지 슬롯을 보유**한다. DB 연산이 완료되어도 export pending이면 다른 run을 받지 않는다. 이는 미완료 작업 누적을 억제하는 대신, 해당 작업이 막히면 다음 작업도 시작하지 못하는 제한이다. 완료 전 종료나 export 취소는 원본·결과를 보존한 명시적 운영자 종료로 처리한다.
 
-현재 `markSourceVerified()`·`acknowledgeDispatch()`·`completeExport()`는 **미래 adapter가 외부 성공을 검증한 뒤 호출할 신뢰 경계**다. DB 시험에서는 상태 전이를 검증하기 위해 호출하며, 이 호출로 S3 Put/Get·Kafka ACK·결과 파일의 실제 export를 검증했다고 주장하지 않는다. 외부 증거를 검증하는 adapter와 재시도·중단·복구는 후속 구현이다.
+현재 `markSourceVerified()`·`acknowledgeDispatch()`·`completeExport()`는 **미래 adapter가 외부 성공을 검증한 뒤 호출할 신뢰 경계**다. DB 시험에서는 상태 전이를 검증하려고 호출하며 이 호출로 S3 Put/Get·Kafka ACK·결과 파일의 실제 export를 검증했다고 주장하지 않는다. 외부 증거를 검증하는 adapter와 재시도·중단·복구는 후속 구현이다.
 
 ## 결과 저장과 기존 계약 보존
 
@@ -44,7 +44,7 @@ Java 21 환경에서 저장소의 `apps/api` 디렉터리에서 실행한다.
 ./mvnw -B -ntp verify
 ```
 
-Windows에서는 `mvnw.cmd`를 사용한다. 기존 API 검사는 기존 H2 DB를 사용하고, job 검사는 별도 `job_foundation_tests` H2 DB를 사용한다. 실제 MariaDB의 잠금·동시성·업그레이드 검증을 대신하지 않는다. `MariaDbLabJobIT`는 기본 실행에서 실제 DB에 접속하는 시험이 아니다.
+Windows에서는 `mvnw.cmd`를 사용한다. 기존 API 검사는 기존 H2 DB를 사용하고 job 검사는 별도 `job_foundation_tests` H2 DB를 사용한다. 실제 MariaDB의 잠금·동시성·업그레이드 검증을 대신하지 않는다. `MariaDbLabJobIT`는 기본 실행에서 실제 DB에 접속하는 시험이 아니다.
 
 ## 실제 MariaDB 격리 검증
 
@@ -82,7 +82,7 @@ set +x
 - 실제 MariaDB의 별도 connection·트랜잭션 두 개로 서로 다른 run의 동시 제출, 같은 run의 동시 재요청과 동시 완료를 확인한다. 전체 시험을 감싼 미커밋 트랜잭션으로 경쟁을 숨기지 않는다.
 - source verification과 dispatch intent의 원자성, 완료 트랜잭션 실패 시 JPA 결과·JDBC 상태·export intent의 동시 rollback, 재전달 시 전체 결과·시각 불변을 비교한다.
 - export pending에서 후속 작업 거부, 확인된 export 완료 또는 명시적 운영자 종료 뒤 슬롯 해제, 종료·취소가 export 성공으로 표시되지 않는지 확인한다.
-- 비UTC JVM 조건에서는 테스트 JVM의 실제 기본 시간대를 확인하고 job·result 완료 시각의 SQL 값과 Instant 일치를 검증한다. UTC 환경에서의 단독 성공으로 이 조건을 대체하지 않는다.
+- 비UTC JVM 조건에서는 테스트 JVM의 실제 기본 시간대를 확인하고 job·result 완료 시각의 SQL 값과 Instant 일치를 검증한다. UTC 환경에서만 성공한 시험으로 이 조건을 대체하지 않는다.
 - 기존 GET·404·POST 405·공개 실행 비활성, seed 전체 행·시각, 고정 관측 계약을 회귀 확인한다. 새 controller나 공개 job 실행 경로를 만들지 않는다.
 
 원문 SQL·접속정보·실행 환경 상세는 비공개 기록에 남기고 공개 근거에는 source·실행 조건·시각·판정·보존 비교의 허용 요약만 연결한다. 실제 통과 건수와 보존 비교는 연결한 근거에 기록하며, 성능 수치·외부 전달 성공으로 확대하지 않는다.

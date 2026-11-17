@@ -8,7 +8,7 @@
 
 ## 적용 범위
 
-head의 짧은 inline script가 새 문서 navigation의 초기 hash 한 개만 처리합니다. 유효하고 보이는 대상의 위치를 초기10초 동안 최대4회 정렬합니다. 첫 위치 확인 뒤에는 대상의 document 좌표가1px 넘게 바뀐 경우만 확인하며, CSS scroll padding·margin을 따르고 애니메이션·초점 이동은 추가하지 않습니다.
+head의 짧은 inline script가 새 문서 navigation의 초기 hash 한 개만 처리합니다. 유효하고 보이는 대상의 위치를 초기10초 동안 최대4회 정렬합니다. 첫 위치 확인 뒤에는 대상의 document 좌표가1px 넘게 바뀐 경우만 확인하며 CSS scroll padding·margin을 따르고 애니메이션·초점 이동은 추가하지 않습니다.
 
 사용자의 trusted wheel·touch·pointer·key 입력이나 resize·hash/history 변경·pagehide가 오면 즉시 종료합니다. 한 개의 ResizeObserver와 최대 한 개의 대기 frame을 사용하고 종료 시 timer·listener까지 정리합니다. hash 없는 진입·reload·뒤로/앞으로 복귀는 대상이 아닙니다. API 요청·관측 데이터·시각·출처는 바꾸지 않습니다.
 

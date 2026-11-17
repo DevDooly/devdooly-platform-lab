@@ -27,8 +27,8 @@ const settings: Setting[] = [
       ['API / 상시 worker', 'Flyway enabled / Flyway disabled·V4 필수'],
       ['Hibernate / JDBC 시각', 'ddl-auto: validate / UTC'],
     ],
-    meaning: 'MariaDB는 작업·outbox·처리 결과·실행 슬롯을 트랜잭션으로 묶습니다. API가 Flyway migration을 적용하고, 별도 CLI인 worker는 현재 V4 schema를 확인한 뒤 실행합니다. local-dev의 H2 결과는 MariaDB 호환성 증거와 구분합니다.',
-    move: 'DB 이름은 values의 독립 설정이 아닙니다. 바꾸려면 DB StatefulSet의 초기 schema·사용자와 API·worker의 JDBC URL·사용자를 함께 수정합니다. migration용 schema 권한과 앱 접근 범위를 정하고, 기존 DB에는 migration 이력·이전 이미지의 읽기 호환성을 먼저 확인합니다.',
+    meaning: 'MariaDB는 작업·outbox·처리 결과·실행 슬롯을 트랜잭션으로 묶습니다. API가 Flyway migration을 적용하고 별도 CLI인 worker는 현재 V4 schema를 확인한 뒤 실행합니다. local-dev의 H2 결과는 MariaDB 호환성 증거와 구분합니다.',
+    move: 'DB 이름은 values의 독립 설정이 아닙니다. 바꾸려면 DB StatefulSet의 초기 schema·사용자와 API·worker의 JDBC URL·사용자를 함께 수정합니다. migration용 schema 권한과 앱 접근 범위를 정하고 기존 DB에는 migration 이력·이전 이미지의 읽기 호환성을 먼저 확인합니다.',
     sources: [
       ['apps/api/src/main/resources/application.yml', 'DB·Flyway·시각 설정'],
       ['apps/api/src/main/resources/application-local-dev.yml', 'H2 profile의 범위'],
@@ -45,7 +45,7 @@ const settings: Setting[] = [
       ['runtime.worker.existingS3Secret', 'platform-lab-runtime-s3 → access-key-id·secret-access-key'],
     ],
     meaning: '위 이름은 설명 기준 환경의 참조이며 chart는 Secret을 만들지 않습니다. DB root 비밀번호는 DB 초기화에만 사용하고 API·worker에는 앱 계정만 전달합니다. Garage 전체 설정의 RPC secret과 S3 key도 별도로 관리하며 worker key는 해당 bucket의 read/write만 허용하고 owner 권한은 주지 않습니다.',
-    move: '클러스터 관리자는 같은 namespace에 Secret을 만들고, DB·Garage 관리자는 계정·bucket 권한과 비공개 원본을 관리합니다. 새 환경의 이름·key 참조를 맞추되 운영 자격증명을 복사하지 않습니다. 기존 DB PVC를 재사용할 때 Secret만 바꾸어도 DB 계정 비밀번호가 갱신되지는 않습니다.',
+    move: '클러스터 관리자는 같은 namespace에 Secret을 만들고 DB·Garage 관리자는 계정·bucket 권한과 비공개 원본을 관리합니다. 새 환경의 이름·key 참조를 맞추되 운영 자격증명을 복사하지 않습니다. 기존 DB PVC를 재사용할 때 Secret만 바꾸어도 DB 계정 비밀번호가 갱신되지는 않습니다.',
     sources: [
       ['infra/charts/platform-lab/README.md', 'Secret 계약·권한·bootstrap'],
       ['gitops/environments/home-lab/runtime.yaml', '환경별 runtime 참조'],
@@ -61,7 +61,7 @@ const settings: Setting[] = [
       ['pathStyleAccessEnabled / Garage 요청 checksum', 'true / WHEN_REQUIRED'],
       ['SDK 호출 / attempt / connect / read', '30초 / 10초 / 3초 / 8초·최대 3회 시도'],
     ],
-    meaning: 'RuntimeMain은 환경변수에서 endpoint·region·bucket과 명시적 credentials를 읽습니다. endpoint에는 사용자정보·query·fragment·하위 경로를 넣지 않습니다. createGarage()는 실제 PUT 호환 실패 후 선택한 요청 checksum 정책만 바꾸며, 응답 checksum과 TLS 검증은 기본값을 유지합니다. 시간 제한은 SDK 호출별이며 export 전체 제한과 다릅니다.',
+    meaning: 'RuntimeMain은 환경변수에서 endpoint·region·bucket과 명시적 credentials를 읽습니다. endpoint에는 사용자정보·query·fragment·하위 경로를 넣지 않습니다. createGarage()는 실제 PUT 호환 실패 후 선택한 요청 checksum 정책만 바꾸며 응답 checksum과 TLS 검증은 기본값을 유지합니다. 시간 제한은 SDK 호출별이며 export 전체 제한과 다릅니다.',
     move: '새 namespace의 Service DNS와 포트 또는 새 HTTPS origin을 정하고 Garage의 s3_region과 client region을 맞춥니다. 내부 HTTP는 service.namespace.svc.cluster.local만 허용하므로 임의 내부 DNS·다른 클러스터 도메인을 그대로 쓸 수 없습니다. chart는 내부 endpoint를 생성하고 region=garage를 강제합니다. 다른 region·S3 제품으로 바꾸려면 schema·template의 endpoint 생성·factory 선택과 실제 PUT/GET 호환성 검증을 함께 바꾸고 TLS 검증을 끄지 않습니다.',
     sources: [
       [`${java}S3ClientFactory.java`, 'endpoint·path style·checksum·timeout'],
@@ -78,7 +78,7 @@ const settings: Setting[] = [
       ['prefix 아래 파일', 'result-v1-{내용SHA256}.json / failures-v1-{내용SHA256}.json'],
       ['문서 상한', 'raw 1 MiB / export 파일 각각 4 MiB'],
     ],
-    meaning: 'raw는 worker가 다시 읽을 입력이고, result는 확정된 DB snapshot의 전체 판정입니다. failures 파일에는 실패 사유와 해당 원본 입력·rawLine을 남깁니다. 내용 hash가 들어간 버전별 key를 사용해 같은 확정 결과를 다시 확인할 수 있게 했습니다.',
+    meaning: 'raw는 worker가 다시 읽을 입력이고 result는 확정된 DB snapshot의 전체 판정입니다. failures 파일에는 실패 사유와 해당 원본 입력·rawLine을 남깁니다. 내용 hash가 들어간 버전별 key를 사용해 같은 확정 결과를 다시 확인할 수 있게 했습니다.',
     move: 'bucket은 환경값으로 바꿀 수 있지만 raw/·result/ prefix와 파일 형식은 Java 코드의 계약입니다. prefix 변경은 단순 values 수정으로 끝나지 않으며 읽기·쓰기 코드, 검증과 기존 객체 이식 계획을 함께 바꿉니다. bucket 정책이나 별도 writer가 이 경로를 수정·삭제하지 않도록 소유 범위를 정합니다.',
     sources: [
       [`${java}LabJobService.java`, '원본 key·DB snapshot'],
@@ -94,7 +94,7 @@ const settings: Setting[] = [
       ['새 PUT을 허용하는 부재 판정', '정확한 404 / NoSuchKey'],
     ],
     meaning: '짧은 DB snapshot 조회를 끝내고 트랜잭션 밖에서 결과·실패 파일을 각각 확인합니다. 두 확인이 끝나야 completeExport가 export·outbox·슬롯을 한 DB 트랜잭션으로 갱신합니다. ETag를 SHA-256으로 간주하지 않으며 S3 확인과 DB commit은 원자적 외부 트랜잭션이 아닙니다.',
-    move: '403·NoSuchBucket·알 수 없는 오류와 관측한 충돌 객체는 실패로 남깁니다. 자동 덮어쓰기·삭제로 복구하지 않고 PENDING·슬롯과 기존 결과를 보존한 뒤 원인을 확인합니다. 재시도는 기존 파일도 다시 읽으며, 정확히 없는 파일만 같은 DB bytes로 보관할 수 있습니다. 외부 writer·확인 이후 유실·WORM 보장은 별도입니다.',
+    move: '403·NoSuchBucket·알 수 없는 오류와 관측한 충돌 객체는 실패로 남깁니다. 자동 덮어쓰기·삭제로 복구하지 않고 PENDING·슬롯과 기존 결과를 보존한 뒤 원인을 확인합니다. 재시도는 기존 파일도 다시 읽으며 정확히 없는 파일만 같은 DB bytes로 보관할 수 있습니다. 외부 writer·확인 이후 유실·WORM 보장은 별도입니다.',
     sources: [
       [`${java}exporting/ResultExportService.java`, '확인 뒤 DB 완료 순서'],
       [`${java}exporting/S3ResultExportStore.java`, '전체 GET·오류 분류·충돌 보존'],

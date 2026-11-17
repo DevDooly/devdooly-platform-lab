@@ -13,7 +13,7 @@
 | 결과 | input12 · success7 · failure3 · duplicate2 · pending0 |
 | 최종 업무 상태 | `COMPLETED / EXPORTED` · 빈 슬롯 · pending outbox0 |
 
-스테이징은 기존 `--lab-runtime=stage` 분기를 한 번 사용했습니다. 이 분기는 DB 접수와 raw 객체 저장·재조회 확인만 수행하고, named lock이나 Kafka producer/consumer·export 실행기를 만들지 않습니다. 이후 기존 상시 worker가 처리해야 하므로 스테이징 Job의 성공만으로 worker 처리 완료를 인정하지 않았습니다.
+스테이징은 기존 `--lab-runtime=stage` 분기를 한 번 사용했습니다. 이 분기는 DB 접수와 raw 객체 저장·재조회 확인만 수행하고 named lock이나 Kafka producer/consumer·export 실행기를 만들지 않습니다. 이후 기존 상시 worker가 처리해야 하므로 스테이징 Job의 성공만으로 worker 처리 완료를 인정하지 않았습니다.
 
 검증 전후의 worker 관측 정체성과 runtime 시작 시각이 같았고, 두 시점의 현재 DB owner가 같은 worker에 연결되는 것을 확인했습니다. heartbeat는 전진했고 runtime은 `RUNNING`, 실패·중지 기록은 없었습니다. 이 관측과 아래 신규 결과를 결합해 해당 source의 처리 경로를 확인했습니다. 중간의 모든 순간에 같은 lease 연결이 끊김 없이 유지됐다는 증거는 아닙니다.
 
@@ -34,13 +34,13 @@ stage 구간은 JVM의 실제 처리 시간이나 성능 측정값이 아닙니�
 
 새 raw 객체는 전체 GET한 bytes를 같은 고정 작업의 DB BLOB 전체 bytes와 비교했습니다. 새 result·failures 두 객체도 전체 GET했고, DB에서 재구성한 기대 size·SHA와 일치했습니다. 문서의 run·scenario·source·시각·counts, 결과12개와 실패3개의 입력·결과 identity도 DB 및 원본과 대조했습니다.
 
-기대 export의 직렬화를 Python으로 새로 구현하지 않았습니다. 기존 읽기 전용 `/api/jobs/observation`이 일관된 DB snapshot에서 `ExportBundle.from`을 호출해 계산한 기대 size·SHA를 사용했습니다. API와 worker의 `ExportBundle`, `CanonicalSource`, `JobObservationService`, `SensorProcessor`, `SyntheticScenario` 생산 소스가 동일한 bytes임을 대조했고, 실제 API와 worker의 서로 다른 pin도 각각 확인했습니다. 기대 metadata만 확인한 결과와 실제 객체 전체를 읽어 대조한 결과를 구분합니다.
+기대 export의 직렬화를 Python으로 새로 구현하지 않았습니다. 기존 읽기 전용 `/api/jobs/observation`이 일관된 DB snapshot에서 `ExportBundle.from`을 호출해 계산한 기대 size·SHA를 사용했습니다. API와 worker의 `ExportBundle`, `CanonicalSource`, `JobObservationService`, `SensorProcessor`, `SyntheticScenario` 생산 소스가 동일한 bytes임을 대조했고 실제 API와 worker의 서로 다른 pin도 각각 확인했습니다. 기대 metadata만 확인한 결과와 실제 객체 전체를 읽어 대조한 결과를 구분합니다.
 
 [공개 작업 화면](https://devdooly.github.io/devdooly-platform-lab/#job-observation)에서도 새 작업의 기대 result2,380 bytes·failures1,439 bytes, counts12/7/3/2/0, 빈 슬롯을 확인했습니다. 화면의 파일 정보는 DB 기반 기대값이며 그 화면 자체가 새 S3 GET을 수행한 것은 아닙니다. API source245와 runtime source6f55는 구분해 표시됐습니다. UI의 기록만으로 현재 프로세스 생존을 증명하지 않습니다.
 
 ## 기존 자료 보존과 Kafka 관측
 
-새 작업을 기존 자료와 분리해, 선택한 기존 업무행·BLOB·시각의 지문과 기존8개 작업의 HTTP projection이 전후 같음을 확인했습니다. 기존24개 객체는 전후 각각 전체 GET하여 크기와 내용 해시를 비교했습니다. 신규 raw·export3개는 별도로 검증했으며, 새 작업이 추가된 전체 DB 지문이 이전과 같다고 주장하지 않습니다. admission 시각은 실제 접수 구간 안에서 전진했고 기존 cooldown30초를 유지했습니다.
+새 작업을 기존 자료와 분리해, 선택한 기존 업무행·BLOB·시각의 지문과 기존8개 작업의 HTTP projection이 전후 같음을 확인했습니다. 기존24개 객체는 전후 각각 전체 GET하여 크기와 내용 해시를 비교했습니다. 신규 raw·export3개는 별도로 검증했으며 새 작업이 추가된 전체 DB 지문이 이전과 같다고 주장하지 않습니다. admission 시각은 실제 접수 구간 안에서 전진했고 기존 cooldown30초를 유지했습니다.
 
 같은 Kafka target·partition의 consumer-group CLI 관측에서 committed/end는8/8에서9/9로 전진했고 lag는0이었습니다. 여기의 CLI log end는 READ_COMMITTED LSO로 바꾸어 부르지 않습니다. 별도 공개 Kafka snapshot은 위 수집 시각에 committed9·READ_COMMITTED LSO9·lag0을 표시했습니다. 서로 다른 시각·경로의 관측을 한 번의 원자적 측정으로 합치지 않습니다.
 

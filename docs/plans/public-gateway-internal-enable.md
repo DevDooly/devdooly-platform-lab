@@ -22,6 +22,6 @@ gateway는 내부 ClusterIP·replica 1·고정 Nginx 정책·UID 101·읽기 전
 2. 완료 — 별도의 C 실행기로 실제 현재 N의 `home-lab/values.yaml`과 활성화 후보 `runtime.yaml`을 사용해 한 번 렌더했습니다. 16개 resource·기존 12개 전체 객체/image/source/environment 보존과 전체 렌더 SHA `05f59ba6…`를 확인했습니다. [현재 값 결과](../evidence/public-read-gateway-internal/activation-render.current-values.json)를 K fixture와 구분합니다. source 51개·도구·원 기준 파일은 전후 동일했고 클러스터에 적용하지 않았습니다.
 3. Root 검토 후 활성화 PR을 준비합니다. 실제 전용 AppProject에 기존 6종·destination·빈 cluster whitelist를 조건으로 하는 원자적 NPK 1종 추가와 복원 방법을 먼저 준비합니다.
 4. 권한 추가·보존을 실제로 확인한 뒤 runtime 활성화 PR을 병합하고 Argo CD sync를 관측합니다. API·worker를 수동 Helm으로 중복 배포하지 않습니다.
-5. 지정 client selector를 쓰는 격리 검증으로 DNS·API·허용/거부 경로를 확인하고, 전후 jobs/export의 안정 필드·Pod/PVC metadata·Kafka 관측을 비교합니다. 이는 전체 DB 행·BLOB의 동등성 대조가 아닙니다. TCP probe Ready만으로 API·정책 성공을 판정하지 않습니다.
+5. 지정 client selector를 쓰는 격리 검증으로 DNS·API·허용/거부 경로를 확인한 뒤 전후 jobs/export의 안정 필드·Pod/PVC metadata·Kafka 관측을 비교합니다. 이는 전체 DB 행·BLOB의 동등성 대조가 아닙니다. TCP probe Ready만으로 API·정책 성공을 판정하지 않습니다.
 
-실제 적용 전에는 현재 source/image·namespace 자원·권한·기존 상태를 다시 확인합니다. 실패하면 단계를 멈추고 원본 결과를 보존하며, 기존 서비스에 영향을 주는 복원은 준비한 정확한 범위에서 수행합니다. 공개 사이트의 실시간 endpoint 연결과 외부 Traefik→K3s/TLS는 별도 후속입니다.
+실제 적용 전에는 현재 source/image·namespace 자원·권한·기존 상태를 다시 확인합니다. 실패하면 단계를 멈추고 원본 결과를 보존합니다. 기존 서비스에 영향을 주는 복원은 준비한 정확한 범위에서 수행합니다. 공개 사이트의 실시간 endpoint 연결과 외부 Traefik→K3s/TLS는 별도 후속입니다.

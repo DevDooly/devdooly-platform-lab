@@ -15,7 +15,7 @@
 
 ## API·웹 전환에서 확인한 범위
 
-[PR #34](https://github.com/DevDooly/devdooly-platform-lab/pull/34)를 `36f00136d9851e52502d9edca261c95e1c3c01cc`로 반영한 뒤 Argo CD와 실제 OCI/CRI·DB·HTTP를 대조해 **32/32**를 통과했습니다. V4 migration과 아직 사용하지 않은 30초 승인 정책 행만 추가됐고, 기존 V1~V3 history·업무 행·7개 작업·export 정보 14개·Kafka offset 7/lag 0을 보존했습니다. 이 중간 단계의 worker는 이전 source `6c5aff94`로 계속 실행했습니다.
+[PR #34](https://github.com/DevDooly/devdooly-platform-lab/pull/34)를 `36f00136d9851e52502d9edca261c95e1c3c01cc`로 반영한 뒤 Argo CD와 실제 OCI/CRI·DB·HTTP를 대조해 **32/32**를 통과했습니다. V4 migration과 아직 사용하지 않은 30초 승인 정책 행만 추가됐고 기존 V1~V3 history·업무 행·7개 작업·export 정보 14개·Kafka offset 7/lag 0을 보존했습니다. 이 중간 단계의 worker는 이전 source `6c5aff94`로 계속 실행했습니다.
 
 원본 Pod/PVC/Docker·방화벽·호스트·timer 설정과 기존 seed 결과도 검사했습니다. 이 observer는 새 작업을 접수하거나 객체에 쓰지 않았고, S3 전체 GET도 다시 수행하지 않았습니다. 앞선 21개 객체의 전체 GET·외부 암호화 checkpoint와 이번 OCI/DB/HTTP 보존 검증의 범위를 구분합니다.
 

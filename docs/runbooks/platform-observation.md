@@ -4,7 +4,7 @@
 
 ## 읽는 방법
 
-카드는 마지막 수집 시도와 마지막 성공 기록을 구분합니다. 실패한 새 시도가 들어와도 이전 정상 기록의 내용과 시각을 유지합니다. 2시간이 지난 정상 기록은 오래된 기록으로 표시하며, 파일 조회 실패를 서비스 중단으로 판단하지 않습니다.
+카드는 마지막 수집 시도와 마지막 성공 기록을 구분합니다. 실패한 새 시도가 들어와도 이전 정상 기록의 내용과 시각을 유지합니다. 2시간이 지난 정상 기록은 오래된 기록으로 표시하며 파일 조회 실패를 서비스 중단으로 판단하지 않습니다.
 
 - Jenkins는 **수집 당시 main SHA**에 연결된 가장 최근 `ci/jenkins-test` status를 확인합니다. 이전 SHA의 성공으로 대신 채우지 않습니다.
 - Argo GitOps revision과 API Deployment template의 소스 annotation을 별도로 표시합니다. 이전 이미지로 복구하면 main과 배포 소스가 달라도 정상입니다.
@@ -35,7 +35,7 @@ Ubuntu collector 41개·최종 자동화 35개 root·일반 사용자 검사를 
 
 2026년 10월 12일 KST에 Jenkins status 자격증명과 분리한 Pages 전용 자격증명을 등록하고 수동 host cycle → 실제 systemd service → timer 순서로 실행했습니다. 세 초기 실행 모두 Pages build·deploy success와 전체 공개 JSON 일치를 확인했습니다. 첫 timer 실행은 부팅 조건이 이미 지나 즉시 발생했고 당시에는 반복 간격 검증으로 세지 않았습니다. 이후 최초 자동 실행을 포함한 11회가 모두 Pages build·deploy success였고 10개 서비스 완료 간격은 1825.569287~1875.101367초였습니다. timer는 enabled·active입니다. [실행별 근거](../evidence/platform-observation/README.md), [자동화](../../infra/observation/AUTOMATION.md), [설치·운영 전환](../../infra/observation/INSTALL.md)을 따릅니다.
 
-새 환경의 전환 순서는 전용 자격증명·권한을 확인한 뒤 수동 host cycle의 실제 게시를 확인하고, 실제 `platform-observation.service`를 실행해 sandbox와 정리를 확인한 다음 timer를 활성화하는 것입니다. `DISPATCHED` 접수만으로 Pages 배포 완료를 판단하지 않습니다. 설치·설정 검증을 마친 환경에서 다음 순서로 실행합니다.
+새 환경의 전환 순서는 전용 자격증명·권한을 확인한 뒤 수동 host cycle의 실제 게시를 확인하고 실제 `platform-observation.service`를 실행해 sandbox와 정리를 확인한 다음 timer를 활성화하는 것입니다. `DISPATCHED` 접수만으로 Pages 배포 완료를 판단하지 않습니다. 설치·설정 검증을 마친 환경에서 다음 순서로 실행합니다.
 
 ```sh
 sudo /usr/bin/python3 -B /opt/devdooly-platform-lab/observation/host_cycle.py --config /etc/devdooly-platform-lab/observer.json

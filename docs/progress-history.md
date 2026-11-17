@@ -17,23 +17,23 @@
 | Iceberg 보존 계획 | 순수 계획기 공개 완료 | 삭제 없는 dry-run·maintenance 테스트 59개 통과, [실행 범위](runbooks/iceberg-retention-dry-run.md); 실제 snapshot 만료·객체 삭제는 미실행 |
 | Iceberg 실제 metadata capture | 새 Cloud 격리 검증 완료 | [아홉 번째 실행](evidence/iceberg-capture/ATTEMPT_9.md)의 Linux87·skip0과 필수 검증9개 통과. 스냅샷3·참조1·보호 항목1·객체20, 모두 KEEP인 보존 계획. 만료·삭제·미니 PC 접촉은 미실행 |
 
-**현재 진행(2026-10-18):** [PR #64](https://github.com/DevDooly/devdooly-platform-lab/pull/64)의 Kafka 관측 소스 `245d61a5`를 반영하고, 같은 소스의 [Actions](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39101005714)·Jenkins 54·[이미지 게시](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39101367277)를 확인했습니다. [이미지 전환 #66](https://github.com/DevDooly/devdooly-platform-lab/pull/66) 이후 미니 PC의 API·웹 OCI/CRI 연결·Pod 소유 관계, 기본 비활성 GET의 503과 기존 업무 데이터·worker·PVC·Docker·timer 보존을 실제 검증했습니다. 별도 [Kafka CI7](evidence/kafka-observation/CI_ATTEMPT_7.md)의 고정 IT1·skip0·소스 보존·자기 자원 정리 결과와 앞선 실패 기록은 유지합니다.
+**현재 진행(2026-10-18):** [PR #64](https://github.com/DevDooly/devdooly-platform-lab/pull/64)의 Kafka 관측 소스 `245d61a5`를 반영하고 같은 소스의 [Actions](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39101005714)·Jenkins 54·[이미지 게시](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39101367277)를 확인했습니다. [이미지 전환 #66](https://github.com/DevDooly/devdooly-platform-lab/pull/66) 이후 미니 PC의 API·웹 OCI/CRI 연결·Pod 소유 관계, 기본 비활성 GET의 503과 기존 업무 데이터·worker·PVC·Docker·timer 보존을 실제 검증했습니다. 별도 [Kafka CI7](evidence/kafka-observation/CI_ATTEMPT_7.md)의 고정 IT1·skip0·소스 보존·자기 자원 정리 결과와 앞선 실패 기록은 유지합니다.
 
-새 DB·K3s 로컬 백업과 전후 보존 점검을 마쳤습니다. Application generation 비교의 이전 실패를 보존하고, UID·이름·설정 전체가 같으며 generation만 증가한 읽기 결과에 따라 비교 조건을 보완했습니다. 순차 읽기이며 외부 백업 사본·복원·Kafka/Garage 동시점 백업의 검증은 아닙니다.
+새 DB·K3s 로컬 백업과 전후 보존 점검을 마쳤습니다. Application generation 비교의 이전 실패를 보존하고 UID·이름·설정 전체가 같으며 generation만 증가한 읽기 결과에 따라 비교 조건을 보완했습니다. 순차 읽기이며 외부 백업 사본·복원·Kafka/Garage 동시점 백업의 검증은 아닙니다.
 
 [Kafka 활성화 설정 #67](https://github.com/DevDooly/devdooly-platform-lab/pull/67)이 main `e94bc5b1`에 반영된 뒤, 06:20 UTC의 새 읽기 전용 점검에서 실제 API 활성화와 HTTP200·엄격한18필드 관측 계약을 확인했습니다. API·웹의 이미지·소유 관계와 기존 worker·업무 DB·PVC/PV·Docker·timer 보존을 함께 확인했습니다. 순차 읽기 결과이며 서비스 전체의 동시점 상태나 복원을 검증한 것은 아닙니다.
 
 다음은 host 수집·Pages 연결 → 원래30분 주기의 자연 실행2회 확인입니다. 기술별 근거 탐색과 [합성 보존 조건 예제](../examples/iceberg-retention-scenarios/README.md)는 로컬 결합 사본에서 웹112개·Astro31파일 진단0·정적 빌드와 desktop1280/mobile375 조작을 확인했습니다. 합성 예제의 후보0/1/0과 파일 KEEP 결과는 기존 Cloud 실측 기록과 구분합니다.
 
-**9차 capture 직후 기록(2026-10-18):** 소스 `5862ba0c`의 [9차 새 실행](evidence/iceberg-capture/ATTEMPT_9.md)에서 기본 CI·Linux87·UID0·skip0·source 전후 동일과 closed-copy capture를 통과했습니다. 같은 실행의 actors·clock·metadata graph·inventory를 순수 보존 계획에 연결해 객체20개를 모두 KEEP으로 남겼습니다. 다음은 이 실제 요약의 공개 화면·회귀 검사를 확인하고, 보존 정책·운영 규모 검증과 다른 장애 경계를 각각 검토하는 단계입니다. 스냅샷 만료·객체 삭제·Parquet 내용 해석·live 테이블 독립 검증은 수행하지 않았고 전체 6단계 완료로 표시하지 않습니다. 앞선1–8 실패·[별도 합성 검증](evidence/iceberg-capture/STDOUT_SYNTHETIC.md)·Cloud/DB 복원 기록을 보존하며 이번 PASS로 실제8의 원인을 확정하지 않습니다.
+**9차 capture 직후 기록(2026-10-18):** 소스 `5862ba0c`의 [9차 새 실행](evidence/iceberg-capture/ATTEMPT_9.md)에서 기본 CI·Linux87·UID0·skip0·source 전후 동일과 closed-copy capture를 통과했습니다. 같은 실행의 actors·clock·metadata graph·inventory를 순수 보존 계획에 연결해 객체20개를 모두 KEEP으로 남겼습니다. 다음은 이 실제 요약의 공개 화면·회귀 검사를 확인하고 보존 정책·운영 규모 검증과 다른 장애 경계를 각각 검토하는 단계입니다. 스냅샷 만료·객체 삭제·Parquet 내용 해석·live 테이블 독립 검증은 수행하지 않았고 전체 6단계 완료로 표시하지 않습니다. 앞선1–8 실패·[별도 합성 검증](evidence/iceberg-capture/STDOUT_SYNTHETIC.md)·Cloud/DB 복원 기록을 보존하며 이번 PASS로 실제8의 원인을 확정하지 않습니다.
 
-**8차 근거 반영 당시 로컬 검증(2026-10-18):** 웹89개·타입 검사26개 파일·Pages 빌드가 통과했고, 공개 원문은 1,791 bytes·SHA-256 `e96ca40d…`로 수집본과 같습니다. 이 로컬 결과는 실패 원인 수정이나 main 공개를 뜻하지 않습니다.
+**8차 근거 반영 당시 로컬 검증(2026-10-18):** 웹89개·타입 검사26개 파일·Pages 빌드가 통과했고 공개 원문은 1,791 bytes·SHA-256 `e96ca40d…`로 수집본과 같습니다. 이 로컬 결과는 실패 원인 수정이나 main 공개를 뜻하지 않습니다.
 
 이번 작업의 중단 기준은 **계정 잔여 한도 60%**입니다. 해당 기준에 도달하면 새 무거운 실행을 시작하지 않고, 이미 시작한 자기 자원의 종료·증거 보존을 마친 뒤 진행 상태를 남깁니다. 완료 시각은 실제 검사·CI 결과에 따라 정하며 고정 ETA를 약속하지 않습니다. Snapshot expiration·객체 GC·삭제, 미니 PC의 새 데이터 처리나 전체 6단계 완료는 이번 capture 범위에 포함하지 않습니다.
 
 **중단 기록(2026-10-16):** 계정 잔여 한도 60%에 도달해 자동 진행을 멈췄습니다. 커밋 f24ff21e의 decoder 검증 하위 단계 7개 진단은 Windows 집중 검사 19개 중 18개 통과·POSIX 전용 1개 제외, 웹 86개·타입 검사·Pages 빌드 통과까지 확인했습니다. 새 Linux 85개와 7차 capture는 시작하지 않았습니다. 재개 시 현재 ref의 전체 SHA 확인 → Linux 85개·UID0·skip0 검증 → 새 격리 capture 한 번 → 원문·화면·문서 반영 순서로 진행합니다. [PR #63](https://github.com/DevDooly/devdooly-platform-lab/pull/63)은 초안이며 main 병합·공개 Pages 반영은 미실행입니다. 6차 capture의 실패와 미관측 값은 그대로 보존하며 이 후속 작업에서 미니 PC에 접촉하지 않았습니다.
 
-**재개 직후 기록(2026-10-18·7차 당시):** 사용량 초기화 후 계정 잔여 99%에서 자동 진행을 재개했으며 중단 기준은 잔여 60%로 유지합니다. 위 2026-10-16 중단 문단은 당시 상태로 보존합니다. 재개 직후 Linux85 통과와 7차 capture 실패는 [새 근거](evidence/iceberg-capture/ATTEMPT_7.md)에 구분합니다. 이 후속 검증은 미니 PC에 접촉하지 않았고 PR #63은 초안입니다. 이번 근거 반영 후 웹 회귀 87개·Astro 타입 검사 26개 파일·Pages 빌드가 통과했고, 빌드된 공개 원문은 1,794 bytes·SHA-256 `70d95a4b…`로 수집본과 같습니다. 이 로컬 검증은 Cloud capture 성공이나 main 공개를 뜻하지 않습니다.
+**재개 직후 기록(2026-10-18·7차 당시):** 사용량 초기화 후 계정 잔여 99%에서 자동 진행을 재개했으며 중단 기준은 잔여 60%로 유지합니다. 위 2026-10-16 중단 문단은 당시 상태로 보존합니다. 재개 직후 Linux85 통과와 7차 capture 실패는 [새 근거](evidence/iceberg-capture/ATTEMPT_7.md)에 구분합니다. 이 후속 검증은 미니 PC에 접촉하지 않았고 PR #63은 초안입니다. 이번 근거 반영 후 웹 회귀 87개·Astro 타입 검사 26개 파일·Pages 빌드가 통과했고 빌드된 공개 원문은 1,794 bytes·SHA-256 `70d95a4b…`로 수집본과 같습니다. 이 로컬 검증은 Cloud capture 성공이나 main 공개를 뜻하지 않습니다.
 
 ## 2026-10-18 당시 구현·검증 기록
 
@@ -41,9 +41,9 @@
 
 후속 별도 JVM SDK 검증에서는 실제 배포 JAR의 factory와 Apache5로 알려진 객체 3개를 전체 GET했습니다. 3회 호출·3회 시도·추가 retry 0회, client 종료·정상 exit 0과 자기 Job·ConfigMap·Secret·읽기 전용 key의 정리·폐기를 확인했습니다. factory의 maxAttempts 3은 유지했습니다. 운영 API JVM 내부의 호출·장애 주입·PUT·SLA 검증과 구분합니다. 2026-10-16 00:02:58 UTC의 별도 읽기 검사에서 전체 객체 36개와 업무 SQL·기존 리소스 보존, 임시 SDK 자원·키 부재를 확인했습니다. [격리 Garage 검증](evidence/s3-read-deadline/README.md)은 별도 환경의 5개 통합 검사입니다.
 
-역사적 외부 백업의 파일 전용 후속 검증에서 네 구성요소 인증, tar member 2,688개·파일 1,907개의 전체 bytes·metadata, 빈 WAL 조건의 SQLite 무결성과 별도256바이트 키의 새 파일 조립을 확인했습니다. 첫 restore는 동반 파일 가정으로 실패한 기록을 유지합니다. [파일 전용 근거와 한계](evidence/historical-file-restore/README.md)에 결과를 분리했으며, K3s·Jenkins application 기동·자격증명 복호화·전체 archive 복원은 미완료입니다.
+역사적 외부 백업의 파일 전용 후속 검증에서 네 구성요소 인증, tar member 2,688개·파일 1,907개의 전체 bytes·metadata, 빈 WAL 조건의 SQLite 무결성과 별도256바이트 키의 새 파일 조립을 확인했습니다. 첫 restore는 동반 파일 가정으로 실패한 기록을 유지합니다. [파일 전용 근거와 한계](evidence/historical-file-restore/README.md)에 결과를 분리했으며 K3s·Jenkins application 기동·자격증명 복호화·전체 archive 복원은 미완료입니다.
 
-[미니 PC native7](evidence/iceberg-jdbc/README.md)은 Trino의 0→6→12행·총 snapshot 3개와 Trino 정상 재시작 뒤 보존을 확인했습니다. PostgreSQL은 같은 프로세스를 유지했습니다. 별도 [Cloud Spark 시험 8](evidence/spark-silver/README.md)은 Bronze 6+6행·snapshot 2개, Silver 성공 7·실패 3·중복 2와 같은 Spark application의 순차 replay를 검증했습니다. 두 정적 기록과 화면을 보존하고, 2026-10-16 03:12:33 UTC의 [새 Cloud 시험](evidence/cloud-lakehouse/FULL_SUCCESS.md)에서 Spark→같은 새 warehouse의 Trino 조회·현재 파일 2→1 compaction·자기 자원 종료를 추가 확인했습니다. 미니 PC native7의 중지된 환경과 보관 자료는 유지하며 snapshot 보존 정책·상시 운영·전체 6단계 완료는 별도입니다.
+[미니 PC native7](evidence/iceberg-jdbc/README.md)은 Trino의 0→6→12행·총 snapshot 3개와 Trino 정상 재시작 뒤 보존을 확인했습니다. PostgreSQL은 같은 프로세스를 유지했습니다. 별도 [Cloud Spark 시험 8](evidence/spark-silver/README.md)은 Bronze 6+6행·snapshot 2개, Silver 성공 7·실패 3·중복 2와 같은 Spark application의 순차 replay를 검증했습니다. 두 정적 기록과 화면을 보존하고 2026-10-16 03:12:33 UTC의 [새 Cloud 시험](evidence/cloud-lakehouse/FULL_SUCCESS.md)에서 Spark→같은 새 warehouse의 Trino 조회·현재 파일 2→1 compaction·자기 자원 종료를 추가 확인했습니다. 미니 PC native7의 중지된 환경과 보관 자료는 유지하며 snapshot 보존 정책·상시 운영·전체 6단계 완료는 별도입니다.
 
 | 영역 | 확인한 결과 | 근거 |
 | --- | --- | --- |
@@ -63,7 +63,7 @@
 
 새 Kafka 관측은 commit·READ_COMMITTED LSO·lag와 수집 구간을 구분하고 실패 때 마지막 유효 기록을 보존하도록 준비했습니다. 이전 Service19와 새 HTTP6, 기본 Helm17과 새 runtime30은 각각 다른 실행입니다. 로컬 미연결 화면까지 확인했으며 실제 Kafka·미니 PC 전환·공개 Pages 연결은 [후속 절차](runbooks/kafka-observation-rollout.md)로 남겨두었습니다.
 
-개인 합성 [Java 시간창 예제](../examples/java-window-analysis/README.md)에서 UTC offset 오류를 재현·수정하고, 같은 답을 내는 O(n²) 기준 구현과 O(n log n) sweep을 비교했습니다. Java 테스트 20개·runner 검사 3개와 Windows Java 21의 JMH 16조합·48 fork·240 interval 측정을 완료했습니다. [실제 근거](evidence/ai-window-analysis/README.md)와 [포트폴리오의 코드·기록 선택 화면](https://devdooly.github.io/devdooly-platform-lab/#ai-window)을 연결합니다. 일부 sparse 측정의 오차가 크며 회사 코드·수율 공식·운영 ETL 성능을 뜻하지 않습니다. 측정 당시 미커밋 소스 해시와 사람 검토 대기 상태를 유지합니다. [CI 연결의 검증 범위](evidence/ai-window-analysis/ci-validation.md)는 성능 측정과 구분합니다.
+개인 합성 [Java 시간창 예제](../examples/java-window-analysis/README.md)에서 UTC offset 오류를 재현·수정하고 같은 답을 내는 O(n²) 기준 구현과 O(n log n) sweep을 비교했습니다. Java 테스트 20개·runner 검사 3개와 Windows Java 21의 JMH 16조합·48 fork·240 interval 측정을 완료했습니다. [실제 근거](evidence/ai-window-analysis/README.md)와 [포트폴리오의 코드·기록 선택 화면](https://devdooly.github.io/devdooly-platform-lab/#ai-window)을 연결합니다. 일부 sparse 측정의 오차가 크며 회사 코드·수율 공식·운영 ETL 성능을 뜻하지 않습니다. 측정 당시 미커밋 소스 해시와 사람 검토 대기 상태를 유지합니다. [CI 연결의 검증 범위](evidence/ai-window-analysis/ci-validation.md)는 성능 측정과 구분합니다.
 
 이전 readiness 운영 검증(2026-10-15 14:54 UTC)의 애플리케이션 소스는 `3e0d85be2f529026cb44812602e31c0e18797b45`, GitOps revision은 `75eb569b016c38c9cc1b1f5819a611b830f2b83d`입니다. Linux API 180개와 독립 Java 예제 20개 검증에서 실패·오류·skip은 0개였습니다. 실제 8개 EXPORTED 작업·export 정보 16개·원본 포함 객체 24개, Kafka offset/end 8·lag 0과 빈 실행 슬롯을 확인했습니다. 30초 승인 간격이 기록된 상태의 idle worker 교체와 읽기 전용 저장소 권한의 같은 작업 ID 재시도를 검증했습니다. 이전 worker 종료 코드는 UNOBSERVED이며, HTTP PUT 시도 횟수·서로 다른 ID의 실제 cooldown 거부·처리 중 호스트 장애는 이 검증에 포함하지 않습니다. [readiness 배포·후속 검증](evidence/worker-readiness/CORRECTED_IMAGE.md)을 확인합니다. 이 시각의 검증 기록은 현재 서버의 실시간 가용성을 뜻하지 않습니다.
 
@@ -75,11 +75,11 @@
 
 API의 Jenkins·Argo CD·Kubernetes `NOT_CONFIGURED`는 **조회 API 내부의 상태 수집 연결 전**을 뜻합니다. 별도의 정적 플랫폼 collector는 실제 서버 수집과 인증 실패 후 이전 성공 기록·수집 시각 보존 및 회복을 확인했습니다. 이 결과로 API 값을 정상으로 바꾸지 않으며, releases는 현재 JVM 정보입니다.
 
-기존 플랫폼 관측의 2026-10-12 검증에서는 Jenkins 대상 SHA·Argo GitOps revision·API 배포 선언 소스와 image digest를 구분했습니다. 읽기 권한의 허용·거부와 출력 `0600`, 인증 실패 후 이전 성공 보존을 확인했습니다. 공개 화면은 1280px·390px에서 가로 넘침 없이 확인했습니다. 실제 게시 순서 역전에서 발견한 seed 회귀도 교정 후 재검증했습니다. **API·웹을 0개로 내린 동안에도 공개 홈·마지막 기록이 유지됐고 같은 정상 B로 복원했습니다. 전용 Pages 자격증명으로 수동 호스트 수집·실제 systemd service·timer 자동 실행과 Pages 게시를 확인했습니다. 최초 자동 실행을 포함한 11회의 Pages build·deploy가 모두 성공했고, 실제 서비스 완료 간격은 약 30분 26초~31분 15초였습니다.** timer는 enabled·active이며 자격증명 만료·회전과 장기간 운영은 아직 검증하지 않았습니다. [초기 공개 화면과 반복 실행의 근거](evidence/platform-observation/README.md)를 구분해 기록합니다.
+기존 플랫폼 관측의 2026-10-12 검증에서는 Jenkins 대상 SHA·Argo GitOps revision·API 배포 선언 소스와 image digest를 구분했습니다. 읽기 권한의 허용·거부와 출력 `0600`, 인증 실패 후 이전 성공 보존을 확인했습니다. 공개 화면은 1280px·390px에서 가로 넘침 없이 확인했습니다. 실제 게시 순서 역전에서 발견한 seed 회귀도 교정 후 재검증했습니다. **API·웹을 0개로 내린 동안에도 공개 홈·마지막 기록이 유지됐고 같은 정상 B로 복원했습니다. 전용 Pages 자격증명으로 수동 호스트 수집·실제 systemd service·timer 자동 실행과 Pages 게시를 확인했습니다. 최초 자동 실행을 포함한 11회의 Pages build·deploy가 모두 성공했고 실제 서비스 완료 간격은 약 30분 26초~31분 15초였습니다.** timer는 enabled·active이며 자격증명 만료·회전과 장기간 운영은 아직 검증하지 않았습니다. [초기 공개 화면과 반복 실행의 근거](evidence/platform-observation/README.md)를 구분해 기록합니다.
 
-4단계의 Kafka·Garage·상시 worker를 미니 PC K3s에 GitOps로 배포했습니다. 최초 배포 검증에서 내부 `--lab-runtime=stage` 명령으로 고정 합성 입력 12개를 두 번 접수했고, 각 작업이 성공 7·실패 3·업무상 중복 2·대기 0으로 완료됐습니다. 결과·실패 파일 총 4개의 전체 Get·크기·SHA-256을 확인한 뒤 실행 슬롯이 비었으며 Kafka offset 2·log end 2·lag 0을 확인했습니다. 기존 seed·V1 행과 처리 시각, 기존 PVC와 Docker 전체 38개·실행 중 26개의 상태를 보존했습니다. [실제 배포·게시 근거](evidence/runtime-deployment/README.md), [실행 절차](runbooks/continuous-runtime.md), [관측 계약](contracts/job-observation.md)을 연결합니다.
+4단계의 Kafka·Garage·상시 worker를 미니 PC K3s에 GitOps로 배포했습니다. 최초 배포 검증에서 내부 `--lab-runtime=stage` 명령으로 고정 합성 입력 12개를 두 번 접수했고 각 작업이 성공 7·실패 3·업무상 중복 2·대기 0으로 완료됐습니다. 결과·실패 파일 총 4개의 전체 Get·크기·SHA-256을 확인한 뒤 실행 슬롯이 비었으며 Kafka offset 2·log end 2·lag 0을 확인했습니다. 기존 seed·V1 행과 처리 시각, 기존 PVC와 Docker 전체 38개·실행 중 26개의 상태를 보존했습니다. [실제 배포·게시 근거](evidence/runtime-deployment/README.md), [실행 절차](runbooks/continuous-runtime.md), [관측 계약](contracts/job-observation.md)을 연결합니다.
 
-실제 미니 PC의 작업 관측과 플랫폼 관측을 Pages에 게시하고 공개 JSON 전체가 수집 원본과 일치함을 확인했습니다. 공개 화면은 실시간 API 대신 마지막 수집 기록을 읽으며, 약 30분 수집 주기·수집 시각과 5분 heartbeat 경고를 구분합니다. 새 job의 원래 timer 자동 수집·Pages 게시 2회와 공개 JSON 전체의 원본 일치를 확인했으며, 관측한 완료 간격은 1개·1809.371239초(30분 9.371초)입니다. [정기 실행 근거](evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다. 공개 POST는 제공하지 않고 고정 fixture 접수는 내부 명령으로만 수행합니다. 단일 노드·partition 1/RF1의 Lab이며 고가용성·장기간 운영은 검증하지 않았습니다.
+실제 미니 PC의 작업 관측과 플랫폼 관측을 Pages에 게시하고 공개 JSON 전체가 수집 원본과 일치함을 확인했습니다. 공개 화면은 실시간 API 대신 마지막 수집 기록을 읽으며, 약 30분 수집 주기·수집 시각과 5분 heartbeat 경고를 구분합니다. 새 job의 원래 timer 자동 수집·Pages 게시 2회와 공개 JSON 전체의 원본 일치를 확인했으며 관측한 완료 간격은 1개·1809.371239초(30분 9.371초)입니다. [정기 실행 근거](evidence/runtime-recovery/README.md)는 과거 플랫폼 collector 11회와 구분합니다. 공개 POST는 제공하지 않고 고정 fixture 접수는 내부 명령으로만 수행합니다. 단일 노드·partition 1/RF1의 Lab이며 고가용성·장기간 운영은 검증하지 않았습니다.
 
 작업이 없는 실제 worker Pod 하나를 UID 조건·300초 종료 유예로 교체했습니다. 종료 로그와 STOPPED → 새 RUNNING, 정상 TERM exit 143, 교체 Pod의 restartCount 0·heartbeat 전진을 확인했습니다. 관측 절차는 17.808초였으며 같은 image/source를 사용했습니다. 기존 두 작업의 전체 SQL·처리 시각, 파일 4개의 실제 Get 결과와 Kafka offset 2·lag 0이 유지됐고 다른 Pod·Docker·PVC·호스트도 보존됐습니다. [실제 worker 재시작·원래 주기 게시 근거](evidence/runtime-recovery/README.md)를 연결합니다. 진행 중 작업의 crash나 PVC 복원 시험과 구분합니다.
 
@@ -118,7 +118,7 @@ flowchart LR
   S -. outbound Pages 게시 .-> O
 ```
 
-GitHub Actions가 유일한 이미지 게시자입니다. 현재 main의 같은 source SHA에서 Jenkins 테스트·필수 산출물과 Actions 통합 검증이 모두 성공해야 게시합니다. Jenkins는 전용 credential로 commit status만 전달합니다. Actions의 draft GitOps PR 자동 제안을 활성화했으며, 검토 후 main에 반영하면 Argo CD가 배포합니다. 자동 승인·자동 병합과 Jenkins의 `helm upgrade`는 사용하지 않습니다.
+GitHub Actions가 유일한 이미지 게시자입니다. 현재 main의 같은 source SHA에서 Jenkins 테스트·필수 산출물과 Actions 통합 검증이 모두 성공해야 게시합니다. Jenkins는 전용 credential로 commit status만 전달합니다. Actions의 draft GitOps PR 자동 제안을 활성화했으며 검토 후 main에 반영하면 Argo CD가 배포합니다. 자동 승인·자동 병합과 Jenkins의 `helm upgrade`는 사용하지 않습니다.
 
 정상 B 배포에서 source SHA·image digest·GitOps commit·실행 이미지를 연결했습니다. 실제 JUnit 실패에서는 새 이미지·게시 artifact·GitOps PR이 생기지 않았고, 기존 B의 Deployment·Pod·전체 SQL·저장 시각·PVC와 기존 Docker 상태가 유지됐습니다. 이후 GitOps의 API/Web digest와 sourceCommit을 정상 A로 되돌려 Argo Synced·Healthy, 3개 Pod Ready와 기존 데이터·서비스 보존까지 검증했습니다. [정상·실패·복구 근거](evidence/cicd-gate/README.md)를 함께 확인합니다.
 
@@ -126,4 +126,4 @@ GitHub Actions가 유일한 이미지 게시자입니다. 현재 main의 같은 
 
 ## 2026-10-18 당시 객체 참조 보호·격리 GC
 
-운영 DB의 전체 7작업·14 outbox와 S3 LIST 21객체를 읽어 전부 보호 대상으로 확인했습니다(19/19, 삭제 후보 0). 별도 새 Garage의 합성 객체 두 개만 삭제한 자연 GC 검증은 11/11을 통과했고, 고유 블록 2개의 allocated 2,105,344B 회수와 공유·보호 객체 보존을 확인했습니다. [실제 근거](evidence/object-reference-gc/README.md), [순수 계획기](../infra/maintenance/OBJECT_REFERENCE_PLAN.md)를 연결합니다. 운영 삭제 실행기·metadata DB 축소를 구현한 결과는 아닙니다.
+운영 DB의 전체 7작업·14 outbox와 S3 LIST 21객체를 읽어 전부 보호 대상으로 확인했습니다(19/19, 삭제 후보 0). 별도 새 Garage의 합성 객체 두 개만 삭제한 자연 GC 검증은 11/11을 통과했고 고유 블록 2개의 allocated 2,105,344B 회수와 공유·보호 객체 보존을 확인했습니다. [실제 근거](evidence/object-reference-gc/README.md), [순수 계획기](../infra/maintenance/OBJECT_REFERENCE_PLAN.md)를 연결합니다. 운영 삭제 실행기·metadata DB 축소를 구현한 결과는 아닙니다.

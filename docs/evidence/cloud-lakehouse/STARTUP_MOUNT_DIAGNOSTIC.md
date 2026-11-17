@@ -2,7 +2,7 @@
 
 추가 진단도 **실패했다**. [실행 38837630164](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38837630164)의 소스는 `f3f5c52993ceb00fd70f73c17f0ec6d2d236b26e`다. [앞선 startup 진단](STARTUP_DIAGNOSTIC.md)과 이전 Cloud9 실패들을 재실행하거나 수정하지 않았다. 이번 기록은 새 격리 환경에서 PostgreSQL/Garage의 시작과 정리만 관측했다.
 
-[원문 요약](startup-mount.summary.json)은 2026-10-16 01:54:47 UTC에 기록됐다. 전체 SHA256은 `c41ce401a46e061bb829902de97b7399cbf20288ad274612d6f8703a4ae8b07d`, 크기는 4,259바이트다. 실제 run/job/source·producer를 묶은 strict schema2 validator 검증을 통과했으며, 이는 실패 자료 검증의 성공이다.
+[원문 요약](startup-mount.summary.json)은 2026-10-16 01:54:47 UTC에 기록됐다. 전체 SHA256은 `c41ce401a46e061bb829902de97b7399cbf20288ad274612d6f8703a4ae8b07d`, 크기는 4,259바이트다. 실제 run/job/source·producer를 묶은 strict schema2 validator 검증을 통과했으며 이는 실패 자료 검증의 성공이다.
 
 | 이번 실행의 실제 관측 | 해석 범위 |
 | --- | --- |
