@@ -10,6 +10,6 @@
 | 공개 화면 | 실시간 API 연결, 작업 8개·export 8개, Kafka committed offset 8·LSO 8·lag 0 |
 | 자격증명 | 각 역할의 지정 GitHub GET 2개가 각각 200 응답. 만료 시각은 UNKNOWN, 교체는 사용자 선택에 따라 보류 |
 
-[GitHub 외부 runner의 실행 39400253632](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39400253632)는 09:23:41 UTC에 완료된 검사에서 공개 IPv4·표준 TLS와 허용 GET 6개의 200 응답·공개 DTO 검증을 통과했습니다. 지정한 잘못된 경로·Origin·method는 각각 404·403·405를 확인했습니다. 선택한 Lab 라우트 선언의 충돌 전제도 읽기 전용으로 대조했으며, 전체 provider의 실시간 동작을 일반화한 증명은 아닙니다.
+[GitHub 외부 runner의 실행 39400253632](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39400253632)는 09:23:41 UTC에 완료된 검사에서 공개 IPv4·표준 TLS와 허용 GET 6개의 200 응답·공개 DTO 검증을 통과했습니다. 지정한 잘못된 경로·Origin·method는 각각 404·403·405를 확인했습니다. 선택한 Lab 라우트 선언의 충돌 전제도 읽기 전용으로 대조했으며 전체 provider의 실시간 동작을 일반화한 증명은 아닙니다.
 
 이번 기록은 현재 공개 경로의 재부팅 시험이 아닙니다. 인증서 자연 갱신은 미검증이고, 토큰 GET 200은 해당 요청의 정상 응답 범위이며 만료일이나 전체 권한을 확인한 결과가 아닙니다. 자격증명 회전과 자원 예산·접수 gate 활성화는 보류합니다. 주소·비밀값·진단 원문·무관한 앱의 상태는 공개 요약에 포함하지 않았습니다.

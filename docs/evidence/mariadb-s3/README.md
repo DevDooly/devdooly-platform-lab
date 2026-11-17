@@ -1,6 +1,6 @@
 # 실제 MariaDB·Garage 결합 검증
 
-2026-10-15 KST. 기존 DB 기반과 Garage SDK 시험을 같은 격리 환경에서 연결했다. 원본 저장·검증 이후 DB 작업과 dispatch intent를 함께 확정하고, 실제 DB 오류에서 원본 보존과 재시도를 확인했다. 운영 image pin·DB·GitOps values와 공개 실행은 갱신하지 않았다.
+2026-10-15 KST. 기존 DB 기반과 Garage SDK 시험을 같은 격리 환경에서 연결했다. 원본 저장·검증 이후 DB 작업과 dispatch intent를 함께 확정하고 실제 DB 오류에서 원본 보존과 재시도를 확인했다. 운영 image pin·DB·GitOps values와 공개 실행은 갱신하지 않았다.
 
 [허용 필드 요약](summary.json) · [검증 소스 fingerprint](source-fingerprint.json) · [실행 절차](../../runbooks/s3-source-storage.md#실제-mariadb와-garage의-결합-검증)
 
@@ -39,4 +39,4 @@ MariaDB 11.8.9와 Garage 2.4.1은 digest 고정 이미지를 사용했다. 메�
 
 이 기록은 실제 S3 성공 뒤 MariaDB statement 오류·rollback과 재시도 경계다. 실제 COMMIT ACK 유실, DB 서버·호스트 장애, 전체 exactly-once, wire 단위 Put 1회, 동시 writer·CAS·WORM·성능을 검증하지 않았다. SDK 자체 재시도는 기존 상한을 유지한다.
 
-Kafka 발행 ACK·worker·offset, 원본 replay·결과 export와 운영 배포는 후속이다. 신규 테스트는 명시적으로 선택해야 하며 Jenkins·Actions의 기본 verify가 이 외부 IT를 자동 수행한다고 표기하지 않는다. 새 API image는 기본 Flyway에 따라 V2를 적용할 수 있으므로 코드 검토와 운영 image pin 변경을 분리하고, 배포 전 백업·migration·이전 image 호환성과 복구 절차를 확인한다.
+Kafka 발행 ACK·worker·offset, 원본 replay·결과 export와 운영 배포는 후속이다. 신규 테스트는 명시적으로 선택해야 하며 Jenkins·Actions의 기본 verify가 이 외부 IT를 자동 수행한다고 표기하지 않는다. 새 API image는 기본 Flyway에 따라 V2를 적용할 수 있으므로 코드 검토와 운영 image pin 변경을 분리하고 배포 전 백업·migration·이전 image 호환성과 복구 절차를 확인한다.

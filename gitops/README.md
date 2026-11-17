@@ -8,6 +8,6 @@
 - [이미지 게시](../docs/runbooks/image-publication.md)
 - [배포 결정](../docs/adr/0003-gitops-in-existing-repository.md)
 
-namespace와 platform-lab-db Secret은 최초 배포 전에 서버에서 준비합니다. Secret의 app-password·root-password 값은 Git과 Helm values에 넣지 않습니다. bootstrap에는 Application finalizer를 넣지 않았고 자동 prune도 꺼두었습니다. 이 설정이 namespace/PVC의 수동 삭제를 막아주지는 않습니다.
+namespace와 platform-lab-db Secret은 최초 배포 전에 서버에서 준비합니다. Secret의 app-password·root-password 값은 Git과 Helm values에 넣지 않습니다. bootstrap에는 Application finalizer를 넣지 않았고 자동 prune도 꺼두었습니다. 이 설정은 namespace/PVC의 수동 삭제를 막지 않습니다.
 
 이미지 게시, Argo 동기화, Pod readiness와 실제 API 결과는 각각 확인해야 합니다. 현재 진행과 검증 결과는 저장소의 진행 목록과 근거 문서를 따릅니다.

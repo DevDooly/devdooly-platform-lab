@@ -42,7 +42,7 @@ PRIVATE_IPV4는 서버에 할당된 실제 내부 IPv4로 바꿉니다. --check 
 
 기존 시스템 Helm 3.17.3을 유지했습니다. 새 Helm을 /usr/local/bin이나 사용자 공용 bin에 덮어쓰거나 PATH 우선순위를 바꾸지 않습니다. 서버에서는 저장소의 .local/tools/helm-4.3.0/helm을 명시적으로 사용합니다. clone에는 이 바이너리·차트 원본이 포함되지 않습니다.
 
-새 환경에서는 [잠금 목록](../../infra/platform/versions.lock.json)의 linux/amd64 Helm URL과 SHA256으로 archive를 검증하고, 그 안의 linux-amd64/helm만 위 전용 경로에 준비합니다. 기존 전용 파일이 있다면 먼저 출처·버전·checksum을 확인합니다. 설치에 사용할 차트 archive도 잠금 목록의 SHA256과 비교해 .local/charts에 보관합니다. 다운로드·검증 실패 시 실행하지 않습니다.
+새 환경에서는 [잠금 목록](../../infra/platform/versions.lock.json)의 linux/amd64 Helm URL과 SHA256으로 archive를 검증하고 그 안의 linux-amd64/helm만 위 전용 경로에 준비합니다. 기존 전용 파일이 있다면 먼저 출처·버전·checksum을 확인합니다. 설치에 사용할 차트 archive도 잠금 목록의 SHA256과 비교해 .local/charts에 보관합니다. 다운로드·검증 실패 시 실행하지 않습니다.
 
     HELM="$PWD/.local/tools/helm-4.3.0/helm"
     "$HELM" version --short

@@ -1,6 +1,6 @@
 # Job 관측 JSON key 중복 거부
 
-Job 관측의 원문 JSON에 같은 object의 key가 반복되면 브라우저의 JSON.parse가 마지막 값만 남겨 모호한 입력을 정상 기록으로 채택할 수 있었습니다. 실제 loader의 합성 반례7개에서 이를 재현했고, 같은 원문을 실제 job collector의 collect_jobs와 Pages 준비의 parse_record는 이미 거부함을 확인했습니다. 저장된 합성 입력과 가짜 응답을 사용한 오프라인 비교이며 운영에서 발생한 사건을 확인한 결과가 아닙니다.
+Job 관측의 원문 JSON에 같은 object의 key가 반복되면 브라우저의 JSON.parse가 마지막 값만 남겨 모호한 입력을 정상 기록으로 채택할 수 있었습니다. 실제 loader의 합성 반례7개에서 이를 재현했고 같은 원문을 실제 job collector의 collect_jobs와 Pages 준비의 parse_record는 이미 거부함을 확인했습니다. 저장된 합성 입력과 가짜 응답을 사용한 오프라인 비교이며 운영에서 발생한 사건을 확인한 결과가 아닙니다.
 
 [PR226](https://github.com/DevDooly/devdooly-platform-lab/pull/226)은 Job 수신 경계에 object별 key 유일성 검사를 추가했습니다. helper는 native JSON.parse의 문법 판정과 반환값을 그대로 사용하고 JSON escape를 해제한 key의 중복만 추가로 거부합니다. 값이 같은 중복·충돌 중복·escaped 중복은 INVALID_RECORD로 처리하며 직전 검증된 객체 identity·원 시각을 보존합니다. 단독 escaped key와 서로 다른 object의 동일 key는 허용하고 기존 DTO 검증을 유지합니다. Kafka·Platform의 정책이나 운영 수집기는 변경하지 않았습니다.
 

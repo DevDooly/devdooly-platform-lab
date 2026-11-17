@@ -14,7 +14,7 @@ MariaDB 전용 비트랜잭션 connection의 schema별 named lock을 프로세�
 
 V3의 `lab_runtime` singleton은 status·stage·고정 failure code·실행/heartbeat/종료 시각·source commit만 기록한다. 원문 예외·호스트·credentials는 기록하지 않는다. 소유권과 DB 기록이 가능한 경우 오류를 `PAUSED_OPERATOR`로 보존하고 client를 닫는다. 새 프로세스의 run은 이 상태를 자동 해제하지 않는다. 원인을 확인한 뒤 별도 `--lab-runtime=resume` 명령이 같은 named lock을 확보해 정지를 해제하며, 처리를 다시 시작하려면 run을 실행한다. public HTTP의 재개·중지·실행 명령은 제공하지 않는다.
 
-강제 종료 때 남은 RUNNING 상태는 현재 named lock을 새로 확보한 프로세스가 다시 시작할 수 있다. 이는 미완료 export/outbox·offset을 기존 검증 경계로 회복하기 위한 것으로 PAUSED_OPERATOR의 재시작 정책과 다르다. DB에 남은 heartbeat는 마지막 실행 신호이며 현재 프로세스가 살아 있음을 직접 증명하지 않는다.
+강제 종료 때 남은 RUNNING 상태는 현재 named lock을 새로 확보한 프로세스가 다시 시작할 수 있다. 이 재시작은 기존 검증 경계에 따라 미완료 export/outbox·offset을 회복한다. PAUSED_OPERATOR에는 별도의 재시작 정책을 적용한다. DB에 남은 heartbeat는 마지막 실행 신호이며 현재 프로세스가 살아 있음을 직접 증명하지 않는다.
 
 ## 작업·export 관측
 

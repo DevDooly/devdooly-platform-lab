@@ -1,6 +1,6 @@
 # Kafka·Garage PVC 격리 복원
 
-이 절차는 원본 저장소를 덮어쓰지 않고 cold checkpoint를 새 namespace·새 PVC에서 검증하기 위한 것입니다. [2026-10-15 실제 결과](../evidence/runtime-pvc-restore/README.md), [기존 암호화 백업](encrypted-backup.md), [DB 복구 절차](lab-recovery.md)를 함께 봅니다. 고정된 private helper와 원문 결과는 Git 제외 경로에 보관하며, 이 문서는 비밀 없는 재현 순서입니다.
+이 절차는 원본 저장소를 덮어쓰지 않고 cold checkpoint를 새 namespace·새 PVC에서 검증하기 위한 것입니다. [2026-10-15 실제 결과](../evidence/runtime-pvc-restore/README.md), [기존 암호화 백업](encrypted-backup.md), [DB 복구 절차](lab-recovery.md)를 함께 봅니다. 고정된 private helper와 원문 결과는 Git 제외 경로에 보관하며 이 문서는 비밀 없는 재현 순서입니다.
 
 ## 준비
 

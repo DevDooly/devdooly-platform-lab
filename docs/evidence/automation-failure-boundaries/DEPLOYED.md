@@ -22,7 +22,7 @@
 
 ## DDNS의 교체 후 자연 실행 한 회
 
-교체 검증 기준점보다 뒤인 `2026-10-21T01:05:39Z`에 시작한 기존 service 회차를 확인했습니다. 선택한 systemd invocation과 unit·Python 프로세스 이름을 함께 필터링한 journal 한 건을 대조했고, 조회 전후 선택한 unit 상태도 같았습니다.
+교체 검증 기준점보다 뒤인 `2026-10-21T01:05:39Z`에 시작한 기존 service 회차를 확인했습니다. 선택한 systemd invocation과 unit·Python 프로세스 이름을 함께 필터링한 journal 한 건을 대조했고 조회 전후 선택한 unit 상태도 같았습니다.
 
 | 관측 항목 | 실제 값 |
 | --- | --- |

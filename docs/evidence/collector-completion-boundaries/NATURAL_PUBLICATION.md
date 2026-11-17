@@ -14,7 +14,7 @@
 | 같은 run의 deploy 완료 | 20:43:01 | 11:43:01 |
 | artifact·공개 JSON 대조 완료 | 20:48:01.007402 | 11:48:01.007402 |
 
-timer·service를 전후 두 번씩 조회해 같은 메타데이터임을 확인했습니다. 보고된 trigger와 시작 시각은 같았으며 허용한 0~5초 창 안이었습니다. 이는 **systemd가 보고한 정밀도에서의 시각 상관관계**입니다. 초보다 세밀한 실제 선후관계나 timer가 유일한 기동 원인이었다는 사실을 증명하지 않습니다. 검증 과정에서 수동 cycle 호출·timer 주기 변경은 하지 않았습니다.
+timer·service를 전후 두 번씩 조회해 같은 메타데이터임을 확인했습니다. 보고된 trigger와 시작 시각은 같았으며 허용한 0~5초 창 안이었습니다. 이는 **systemd가 보고한 정밀도를 기준으로 확인한 시각 상관관계**입니다. 초보다 세밀한 실제 선후관계나 timer가 유일한 기동 원인이었다는 사실을 증명하지 않습니다. 검증 과정에서 수동 cycle 호출·timer 주기 변경은 하지 않았습니다.
 
 같은 service invocation의 제한된 공개 보고가 가리킨 run ID를 Pages 검증 입력과 대조했습니다. run·attempt·head·main branch·workflow 경로·event·저장소 신원을 확인했고 다른 run으로 대체하지 않았습니다. 관측 main과 Pages head는 `af19b912523fe00f461f07f856d3aa504bec614f`입니다. 운영 API 소스 `245d61a5749760a20918ab091d9410ce6735b1c0`과 worker 소스 `6f551a16a8ed536bb126403234c41b9e9b266d43`은 이 main과 구분합니다.
 
@@ -22,7 +22,7 @@ timer·service를 전후 두 번씩 조회해 같은 메타데이터임을 확�
 
 읽기 전용 코드 점검에서 설치된 collector는 20,725바이트·SHA-256 `d87742d75e046a292615e078b279e01d22243c8d2b5d95f39258cd91945c05cf`로 유지됐습니다. service·timer 파일 pin과 root 소유·권한도 기대값과 일치했습니다.
 
-수집 뒤 child lock 파일은 남아 있었고 root 소유·0600·regular file·단일 링크 조건을 만족했습니다. 외부 cycle lock은 상태 점검 당시 미점유였습니다. child lock 자체의 OS 잠금 소유는 별도로 조회하지 않았습니다. 파일을 유지하는 새 구현의 정상 동작과 일치하며, **운영 프로세스를 SIGKILL한 뒤 복구시킨 시험은 아닙니다**. 실제 SIGKILL 회귀는 [격리 Linux 시험](README.md)의 별도 근거입니다.
+수집 뒤 child lock 파일은 남아 있었고 root 소유·0600·regular file·단일 링크 조건을 만족했습니다. 외부 cycle lock은 상태 점검 당시 미점유였습니다. child lock 자체의 OS 잠금 소유는 별도로 조회하지 않았습니다. 파일을 유지하는 새 구현의 정상 동작과 일치하며 **운영 프로세스를 SIGKILL한 뒤 복구시킨 시험은 아닙니다**. 실제 SIGKILL 회귀는 [격리 Linux 시험](README.md)의 별도 근거입니다.
 
 ## 공개 파일과 같은 run의 artifact 대조
 

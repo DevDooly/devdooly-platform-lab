@@ -21,6 +21,6 @@
 
 종료의 관측 범위는 복원 성공과 별개입니다. 원래 stop의 종료 전 target/source 데이터 재확인은 통과했지만 마지막 CRI inspect가 실패해 컨테이너 exit를 받지 못했습니다. 후속 진단은 저장된 stderr만 서버 RAM에서 읽어 NotFound code signature를 확인했으며 새 CRI/Kubernetes 명령을 실행하지 않았습니다. 이를 GC의 확정 원인이나 정상 exit의 증거로 바꾸지 않습니다. 다른 fresh 읽기 진단의 DB 0·Pod 0·Bound/Retain 확인도 원래 stop FALSE를 수정하지 않습니다. 복원 자료가 있는 새 볼륨은 보관하며 이전 13개 기준에 맞추려고 삭제하지 않습니다.
 
-이전 [a6 진행 문서와 요약](history/attempt6/README.md)은 별도 시점 기록으로 보존합니다. a3의 CHECK 표현 차이, a5의 도구 version line, a6의 JSON document stream 실패와 별도 진단 실패를 유지했습니다. a6의 데이터 없는 cold 자원은 별도 소유 조건의 정리 뒤 새 a7로 진행했으며, a7의 복원 통과를 예전 실패 receipt에 소급하지 않습니다.
+이전 [a6 진행 문서와 요약](history/attempt6/README.md)은 별도 시점 기록으로 보존합니다. a3의 CHECK 표현 차이, a5의 도구 version line, a6의 JSON document stream 실패와 별도 진단 실패를 유지했습니다. a6의 데이터 없는 cold 자원은 별도 소유 조건의 정리 뒤 새 a7로 진행했으며 a7의 복원 통과를 예전 실패 receipt에 소급하지 않습니다.
 
 다음 작업은 보관된 새 복원 볼륨을 이후 점검 기준에 명시적으로 등록하고 이 종료 관측의 한계를 포함해 근거를 연결하는 것입니다. [복구 runbook](../../runbooks/lab-recovery.md)의 현재 DB 논리 복원 범위는 추가 확인했지만, K3s·Jenkins application 기동·전체 archive 복원·재부팅·장애 중 복구·SLA는 여전히 별도입니다.

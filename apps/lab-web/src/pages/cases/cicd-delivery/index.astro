@@ -43,7 +43,7 @@ const counts = [['inputCount','입력'],['successCount','성공'],['failureCount
     <p class="section-lead">2026-10-11 UTC의 단일 미니 PC 시험 기록입니다. 아래의 정상·실패·복귀는 서로 다른 소스와 Git 변경을 사용했습니다. 현재 빌드 이력이나 오늘의 운영 상태로 바꾸어 읽지 않습니다.</p>
     <details class="delivery-record" open><summary><span>01 · 정상 배포</span><strong>같은 소스의 검증 → 새 이미지 B</strong></summary><div class="record-body">
       <p>소스 <code>{short(recorded.normal.sourceCommit)}</code>의 Jenkins Build {recorded.normal.jenkins.buildNumber}는 <strong>API JUnit {recorded.normal.jenkins.apiTests.totalCount}개·실패 {recorded.normal.jenkins.apiTests.failCount}개</strong>, 별도 웹 테스트 <strong>{recorded.normal.jenkins.webTestsPassed}개</strong>를 통과했습니다. 웹 테스트 수를 JUnit 합계로 표시하지 않습니다.</p>
-      <p>같은 소스의 Actions 검증과 게시 gate를 통과해 API·웹 이미지를 게시했습니다. draft PR #{recorded.normal.draftPr}의 변경 범위 검사에 더해 registry 내용·OCI 소스 label·Helm lint/render를 확인한 뒤 병합하고, Argo와 실제 실행 결과를 대조했습니다.</p>
+      <p>같은 소스의 Actions 검증과 게시 gate를 통과해 API·웹 이미지를 게시했습니다. draft PR #{recorded.normal.draftPr}의 변경 범위 검사에 더해 registry 내용·OCI 소스 label·Helm lint/render를 확인한 뒤 병합하고 Argo와 실제 실행 결과를 대조했습니다.</p>
       <div class="guide-links"><a href={`${github}/actions/runs/${recorded.normal.actionsValidationRunId}`}>당시 Actions 검증 ↗</a><a href={`${github}/actions/runs/${recorded.normal.publicationRunId}`}>당시 게시 실행 ↗</a><a href={`${github}/pull/${recorded.normal.draftPr}`}>배포 변경 PR #2 ↗</a></div>
     </div></details>
     <details class="delivery-record"><summary><span>02 · 실패 차단</span><strong>의도한 테스트 실패 → 게시·배포 변경 없음</strong></summary><div class="record-body">

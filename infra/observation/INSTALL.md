@@ -71,7 +71,7 @@ sudo /usr/bin/python3 -B /opt/devdooly-platform-lab/observation/host_cycle.py --
 3. 상태·journal·lock 파일은 root 0600, 상태·임시 디렉터리는 root 0700인지 확인하고 임시 `sa-*.token` 파일이 남지 않았는지 **내용 출력 없이** 확인합니다.
 4. 같은 마지막 intent의 불확실한 응답을 즉시 재전송하지 않는지 확인합니다. 응답을 못 받았다는 이유로 journal을 지워 재전송하지 않습니다. 마지막 intent guard는 전체 이력 deduplication이 아닙니다.
 5. `systemd-run`/unit 실행의 sandbox와 실제 Linux 권한을 검증합니다. `CAP_DAC_READ_SEARCH`는 root가 별도 사용자 소유 0600 PAT를 읽기 위해 유지한 권한입니다. root 서비스 자체는 kubeconfig로 SA를 발급할 수 있는 신뢰 경계이며 collector에 그 권한을 전달하지 않습니다.
-6. 수동 host cycle에 이어 실제 `platform-observation.service`를 한 번 실행해 sandbox 안에서의 자격증명 읽기·SA 발급·수집·게시 요청·정리를 검증합니다. 서비스의 `Result=success`·`ExecMainStatus=0`과 해당 Pages build·deploy 성공, 전체 공개 JSON 일치를 각각 확인한 뒤 timer를 활성화합니다. oneshot 서비스가 성공 후 inactive 상태인 것은 정상입니다. 초기 설치와 실제 운영 전환 결과는 실행 근거에 구분합니다.
+6. 수동 host cycle에 이어 실제 `platform-observation.service`를 한 번 실행해 sandbox 안에서 자격증명 읽기·SA 발급·수집·게시 요청·정리를 검증합니다. 서비스의 `Result=success`·`ExecMainStatus=0`과 해당 Pages build·deploy 성공, 전체 공개 JSON 일치를 각각 확인한 뒤 timer를 활성화합니다. oneshot 서비스가 성공 후 inactive 상태인 것은 정상입니다. 초기 설치와 실제 운영 전환 결과는 실행 근거에 구분합니다.
 
 수동 실행 결과를 확인한 뒤 실제 unit과 timer를 다음 순서로 실행합니다. 이미 활성화한 환경에 설치 명령을 반복하지 않습니다.
 

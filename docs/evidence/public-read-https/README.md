@@ -16,13 +16,13 @@
 
 검사는 소유한 전용 경로의 고정 조회 목록과 지정 거부 요청만 다룬다. 각 응답의 DTO·소스·수집 시각을 검사했으며 시각에는 최대 5초의 미래 clock skew 허용 정책을 적용했다. 서버 시계 정확도, 모든 경로·쓰기 요청 차단, 관리 기능, 장기간 가용성이나 성능을 증명하지 않는다. JSON에는 endpoint 주소·응답 본문·인증서·자격증명이 없다.
 
-이 hosted 검사는 기존 후보 URL secret만 사용했다. 후속 Pages 실시간 조회 설정과 공개 화면은 아래의 별도 브라우저 기록으로 대조했다. hosted JSON 자체가 후속 설정과 화면을 검증한 근거는 아니다. 이전 실패와 당시 CAA 결과는 아래와 원 JSON에 그대로 보존하며, 이번 성공의 구체적인 발급 원인을 그 과거 결과만으로 소급 확정하지 않는다.
+이 hosted 검사는 기존 후보 URL secret만 사용했다. 후속 Pages 실시간 조회 설정과 공개 화면은 아래의 별도 브라우저 기록으로 대조했다. hosted JSON 자체가 후속 설정과 화면을 검증한 근거는 아니다. 이전 실패와 당시 CAA 결과는 아래와 원 JSON에 그대로 보존하며 이번 성공의 구체적인 발급 원인을 그 과거 결과만으로 소급 확정하지 않는다.
 
 ## Pages 실시간 조회와 시계 경고 재확인
 
-[Pages 39136300104](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39136300104)의 공개 화면에서 live API 연결, 작업 8개·EXPORTED 8개, 조회 API 소스 `245d61a5749760a20918ab091d9410ce6735b1c0`, Kafka의 STABLE·partition 0·commit 8·LSO 8·lag 0과 fallback 안내가 없는 상태를 대조했다. [첫 공개 화면 기록](public-live-ui-before-clock-fix.json)은 이 시점의 실제 유한 JSON을 변경 없이 보존하며, 작업 카드의 시계 경고도 함께 기록한다.
+[Pages 39136300104](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39136300104)의 공개 화면에서 live API 연결, 작업 8개·EXPORTED 8개, 조회 API 소스 `245d61a5749760a20918ab091d9410ce6735b1c0`, Kafka의 STABLE·partition 0·commit 8·LSO 8·lag 0과 fallback 안내가 없는 상태를 대조했다. [첫 공개 화면 기록](public-live-ui-before-clock-fix.json)은 이 시점의 실제 유한 JSON을 변경 없이 보존하며 작업 카드의 시계 경고도 함께 기록한다.
 
-후속 [Pages 39137122814](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39137122814)는 프런트엔드 소스 `0602b8d57f591ee4496c92428ea82b5d8fbbca4c`의 시계 표시 갱신 간격 수정이다. [최종 공개 화면 기록](public-clock-ui-final.json)은 새 Job·Kafka 번들을 확인한 브라우저 대조다. 수정 후 첫 재확인에서 이전 번들을 참조한 기록과 구분하며, 이 최종 결과로 앞선 기록을 덮어쓰지 않는다.
+후속 [Pages 39137122814](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39137122814)는 프런트엔드 소스 `0602b8d57f591ee4496c92428ea82b5d8fbbca4c`의 시계 표시 갱신 간격 수정이다. [최종 공개 화면 기록](public-clock-ui-final.json)은 새 Job·Kafka 번들을 확인한 브라우저 대조다. 수정 후 첫 재확인에서 이전 번들을 참조한 기록과 구분하며 이 최종 결과로 앞선 기록을 덮어쓰지 않는다.
 
 | 최종 화면에서 확인한 범위 | 관측 결과 |
 | --- | --- |
@@ -41,7 +41,7 @@
 
 아래 원문은 이전 도메인과 각 검사 시점의 상태를 보존한 기록이다. 새 DDNS의 현재 CAA 정책이나 최신 연결 상태를 뜻하지 않는다.
 
-2026-10-18 [GitHub hosted 검사 39125726243](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39125726243)는 공개 IPv4를 선택했지만 표준 TLS를 확인하지 못해 `TLS_OR_NETWORK_UNVERIFIED`로 종료됐다. 첫 summary 요청에서 HTTP 응답을 확인하지 못했으며, 이후 GET과 거부 경로 검사는 진행하지 않았다.
+2026-10-18 [GitHub hosted 검사 39125726243](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39125726243)는 공개 IPv4를 선택했지만 표준 TLS를 확인하지 못해 `TLS_OR_NETWORK_UNVERIFIED`로 종료됐다. 첫 summary 요청에서 HTTP 응답을 확인하지 못했으며 이후 GET과 거부 경로 검사는 진행하지 않았다.
 
 | 항목 | 실제 결과 |
 | --- | --- |

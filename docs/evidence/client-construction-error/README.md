@@ -6,7 +6,7 @@
 
 실행 시작 전에 S3 client가 반환된 뒤 producer 생성에서 Error가 발생하거나, S3·producer가 반환된 뒤 consumer 생성에서 Error가 발생하면 이미 등록한 client가 닫히지 않았습니다. `openClients`의 RuntimeException 처리만으로 Error를 잡을 수 없고, 초기화가 실패한 try-with-resources도 아직 반환되지 않은 Clients를 닫아 주지 않습니다.
 
-부분 목록에 등록한 client를 역순으로 모두 정리한 뒤 최초 construction Error 객체를 그대로 전파합니다. 후속 종료 Error나 Exception을 원 오류의 cause·suppressed에 추가하지 않습니다. 일반 구성 실패는 고정 메시지·cause 없음으로 유지하고, 이 경우 종료에서 처음 발생한 Error가 있다면 그 Error를 전파합니다.
+부분 목록에 등록한 client를 역순으로 모두 정리한 뒤 최초 construction Error 객체를 그대로 전파합니다. 후속 종료 Error나 Exception을 원 오류의 cause·suppressed에 추가하지 않습니다. 일반 구성 실패는 고정 메시지·cause 없음으로 유지하고 이 경우 종료에서 처음 발생한 Error가 있다면 그 Error를 전파합니다.
 
 검사를 위한 package-private `Clients`·`openClients` 경계만 열었으며 public API·실행 인자·운영 선언을 추가하지 않았습니다. factory가 반환하기 전 내부에서 만든 자원이나 메모리 부족으로 목록 등록 자체가 실패한 경우까지 정리한다고 주장하지 않습니다. 바깥 CLI의 context 등 try-with-resources 전체에서 suppressed가 없다는 보장도 아닙니다.
 

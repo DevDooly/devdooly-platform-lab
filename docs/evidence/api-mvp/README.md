@@ -26,7 +26,7 @@ Windows에서는 `mvnw.cmd`를 사용합니다. 기본 MariaDB 실행은 [API �
 
 ## 범위와 한계
 
-이 기록의 DB는 H2의 test/local-dev profile입니다. MariaDB와 실제 Ubuntu·Kubernetes 배포 검증은 별도 기록으로 남깁니다. Spring Boot BOM의 H2 2.4.240에 대해 Flyway가 검증 기준 H2 2.3.232보다 새 버전이라는 경고를 출력했으며 migration과 schema validation은 통과했습니다.
+이 기록의 DB는 H2의 test/local-dev profile입니다. MariaDB와 실제 Ubuntu·Kubernetes 배포 검증은 별도 기록으로 남깁니다. Flyway는 Spring Boot BOM의 H2 2.4.240이 검증 기준 H2 2.3.232보다 새 버전이라고 경고했습니다. migration과 schema validation은 통과했습니다.
 
 동일 고정 run ID의 반복 bootstrap은 중복 데이터를 만들지 않습니다. 최초 bootstrap의 다중 인스턴스 동시 실행은 아직 지원하지 않으므로 replica 1로 시작합니다. 여러 replica로 전환하기 전 seed Job 또는 DB 잠금을 추가합니다.
 
@@ -36,4 +36,4 @@ Jenkins·Argo CD·Kubernetes는 연결 전이며 NOT_CONFIGURED로 반환합니�
 
 공식 Maven Wrapper 3.3.4를 bin 방식으로 전환했습니다. wrapper jar의 Maven Central SHA1을 대조하고 SHA256을 별도로 고정했으며 Maven ZIP은 공식 SHA512 대조 후 SHA256을 고정했습니다. 새 MAVEN_USER_HOME 캐시에서 Java wrapper가 Maven 3.10.0을 다운로드·압축 해제하고 실행하는 것을 확인했습니다.
 
-전환 후 전체 verify에서 15개 테스트가 통과했습니다. 첫 회귀 패키징은 실행 중이던 이 작업의 Windows local-dev jar 잠금으로 rename이 실패했으며, 해당 프로세스만 종료한 뒤 다시 실행해 jar 패키징까지 성공했습니다. 이는 Jenkins 실행 결과가 아니며 Jenkins agent 기동 검증은 별도 단계입니다.
+전환 후 전체 verify에서 15개 테스트가 통과했습니다. 첫 회귀 패키징은 실행 중이던 이 작업의 Windows local-dev jar 잠금으로 rename이 실패했으며 해당 프로세스만 종료한 뒤 다시 실행해 jar 패키징까지 성공했습니다. 이는 Jenkins 실행 결과가 아니며 Jenkins agent 기동 검증은 별도 단계입니다.

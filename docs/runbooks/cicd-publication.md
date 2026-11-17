@@ -34,8 +34,8 @@ node --test tests/ci/github-commit-status.test.mjs
 ## 운영 연결을 재검증하는 순서
 
 1. 전용 credential·issuer variable을 먼저 준비하고 상태 전달 권한을 확인한다. 기존 token의 원문을 출력하지 않는다.
-2. 변경한 코드·단위 검증·Jenkins 문법을 검토하고 main에 반영한다. 같은 main SHA에서 Jenkins를 한 번 실행한다. 현재 pollSCM이 main 변경을 확인하며, 수동 실행과 자동 감지를 중복 요청하지 않는다.
-3. 같은 main SHA의 Validate Lab containers를 실행한다. 관련 소스 변경은 자동 실행하며, 문서·GitOps-only commit은 경로 필터 때문에 필요할 때 수동 실행한다.
+2. 변경한 코드·단위 검증·Jenkins 문법을 검토하고 main에 반영한다. 같은 main SHA에서 Jenkins를 한 번 실행한다. 현재 pollSCM이 main 변경을 확인하며 수동 실행과 자동 감지를 중복 요청하지 않는다.
+3. 같은 main SHA의 Validate Lab containers를 실행한다. 관련 소스 변경은 자동 실행하며 문서·GitOps-only commit은 경로 필터 때문에 필요할 때 수동 실행한다.
 4. Jenkins pending → API·웹 테스트 → 필수 산출물 archive → success를 실제로 확인한다. JUnit만으로 웹 테스트 수치를 대신하지 않는다.
 5. Actions의 gate 출력이 Jenkins build/status와 같은 소스 SHA·validation run을 가리키는지 확인한다.
 6. 실제 GHCR digest와 게시 artifact를 확인한다. 반복 status/workflow_run 이벤트에서 기존 artifact를 확인해 중복 게시를 종료하는지도 확인한다.
@@ -63,7 +63,7 @@ main이 검증 중 바뀌면 이전 SHA는 게시하지 않는다. 새 main에�
 - GITHUB_TOKEN이 만든 PR의 check가 실행되지 않거나 승인이 요구되면 실제 check 상태를 확인하고 필요한 검증을 명시적으로 실행한다. PR 생성 허용 설정이 모든 check의 자동 실행·자동 승인을 보장하지는 않는다.
 - PR check는 **변경 범위**를 검사한다. 병합 전 두 registry digest의 실제 존재·OCI revision, Helm lint/render를 별도로 확인한다. 이 보완과 실제 PR 검증이 끝나기 전 자동 병합을 도입하지 않는다.
 
-단독 값 준비/검증은 다음처럼 실행할 수 있다. 먼저 `.local` 디렉터리를 생성하고, 실제 digest와 SHA만 입력한다.
+값 준비/검증을 단독으로 실행하려면 아래 명령을 쓴다. 먼저 `.local` 디렉터리를 생성하고 실제 digest와 SHA만 입력한다.
 
 ```sh
 python3 infra/scripts/gitops_values.py prepare \

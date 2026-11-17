@@ -1,6 +1,6 @@
 # 1,000건 시나리오 실제 배포와 공개 관측
 
-2026-10-15 UTC에 미니 PC의 API·웹·worker를 같은 검증 소스 `6c5aff948770982dd44c8d44547131b3ccf6ddd9`로 배포했습니다. 실제 worker가 고정 합성 입력 1,000건을 처리하고 원본·결과·실패 파일 3개를 저장했으며, 공개 Pages에도 전체 7개 작업·export 파일 정보 14개를 게시했습니다. [기계 판독 요약](summary.json), [공개 작업 화면](https://devdooly.github.io/devdooly-platform-lab/#job-observation)을 연결합니다.
+2026-10-15 UTC에 미니 PC의 API·웹·worker를 같은 검증 소스 `6c5aff948770982dd44c8d44547131b3ccf6ddd9`로 배포했습니다. 실제 worker가 고정 합성 입력 1,000건을 처리하고 원본·결과·실패 파일 3개를 저장했으며 공개 Pages에도 전체 7개 작업·export 파일 정보 14개를 게시했습니다. [기계 판독 요약](summary.json), [공개 작업 화면](https://devdooly.github.io/devdooly-platform-lab/#job-observation)을 연결합니다.
 
 이 기록은 [앞선 격리 입력·동시성·자원 시험](../input-concurrency-load/README.md) 이후의 실제 배포 검증입니다. 앞선 보고서의 당시 운영 소스·수치·판정은 그대로 보존했습니다.
 
@@ -20,7 +20,7 @@ Helm의 세 단계 render를 비교해 첫 배포는 API·웹 두 Deployment, �
 
 ## 기존 자료의 보존과 실제 결과
 
-배포 전에 기존 6개 작업의 원본 6개·export 12개를 전체 GET으로 확보하고, 업무 자료와 runtime journal의 InnoDB 7개 테이블을 transaction snapshot으로 보관했습니다. 외부 AES-256-GCM 사본의 인증·전체 bytes 일치도 확인했습니다. 이 배포 중 백업을 실제 복원했다는 뜻은 아닙니다.
+배포 전에 기존 6개 작업의 원본 6개·export 12개를 전체 GET으로 확보하고 업무 자료와 runtime journal의 InnoDB 7개 테이블을 transaction snapshot으로 보관했습니다. 외부 AES-256-GCM 사본의 인증·전체 bytes 일치도 확인했습니다. 이 배포 중 백업을 실제 복원했다는 뜻은 아닙니다.
 
 API와 worker 양쪽의 실제 새 버전을 확인한 뒤 `sensor-validation-v2` 고정 fixture를 한 번 접수했습니다. 접수 실패에 대한 자동 재시도는 없었습니다.
 
@@ -49,4 +49,4 @@ stage Job은 실패·미확정 상태의 증거가 자동 삭제되지 않도록
 
 이 배포의 실제 1,000건 작업은 한 번이며 원본 크기는 99,600 bytes입니다. 정확한 1MiB 경계와 동시 2·8개 접수 시험은 앞선 별도 격리 통합 검사입니다. 운영 처리량·p95·SLA·진행 중 crash·전체 호스트 복구·고가용성 검증으로 확장해 해석하지 않습니다.
 
-이전 `ed5815e7` worker는 V2 dispatch를 거부하고, 이전 작업 관측 API는 V2 export 문서를 재생성할 수 없어 새 작업의 관측에 실패합니다. 기존 demo GET 모델이 1,000행 조회 자체를 지원하지 않는다는 뜻은 아닙니다. V2 접수 이후에는 API와 worker 모두 V2 지원 소스를 유지해야 하며, 옛 digest만 단순 복구하는 절차를 사용하지 않습니다. 배포 전 checkpoint는 별도 복원 계획의 입력이며 현재 운영 자료 위에 자동으로 덮어쓰지 않습니다. 요청 빈도 제한과 공개 실행은 이 소스의 구현 범위에 없습니다.
+이전 `ed5815e7` worker는 V2 dispatch를 거부하고 이전 작업 관측 API는 V2 export 문서를 재생성할 수 없어 새 작업의 관측에 실패합니다. 기존 demo GET 모델이 1,000행 조회 자체를 지원하지 않는다는 뜻은 아닙니다. V2 접수 이후에는 API와 worker 모두 V2 지원 소스를 유지해야 하며, 옛 digest만 단순 복구하는 절차를 사용하지 않습니다. 배포 전 checkpoint는 별도 복원 계획의 입력이며 현재 운영 자료 위에 자동으로 덮어쓰지 않습니다. 요청 빈도 제한과 공개 실행은 이 소스의 구현 범위에 없습니다.

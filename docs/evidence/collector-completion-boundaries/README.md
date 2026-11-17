@@ -16,7 +16,7 @@ fake clock·response로 시한 직전 성공·정확한 경계와 초과 거부�
 
 새 구현은 파일 inode를 유지하고 POSIX `flock(LOCK_EX | LOCK_NB)`으로 활성 writer만 차단합니다. 프로세스가 종료되면 OS 잠금이 해제됩니다. 파일은 unlink하지 않으며 symlink·regular file·단일 hard link·POSIX 현재 소유자와0600 검사를 수행합니다. Windows 오프라인 검증에는 `msvcrt` 잠금을 사용하며 Linux의 `flock` 결과와 구분합니다.
 
-실제 Linux 시험 child가 수집 잠금을 획득한 뒤 fake transport 경계에서 대기하도록 했습니다. 이때 두 번째 수집은 transport0회로 거부되고 원 JSON bytes가 보존됐습니다. child를 SIGKILL로 종료한 뒤 종료 코드와 동일 lock inode를 확인했고, 다음 수집이 같은 inode를 재획득해 합성 인증 실패를 기록하면서 이전 `lastSuccess`를 보존했습니다. 실제 서버·서비스를 강제 종료한 시험이 아닙니다.
+실제 Linux 시험 child가 수집 잠금을 획득한 뒤 fake transport 경계에서 대기하도록 했습니다. 이때 두 번째 수집은 transport0회로 거부되고 원 JSON bytes가 보존됐습니다. child를 SIGKILL로 종료한 뒤 종료 코드와 동일 lock inode를 확인했고 다음 수집이 같은 inode를 재획득해 합성 인증 실패를 기록하면서 이전 `lastSuccess`를 보존했습니다. 실제 서버·서비스를 강제 종료한 시험이 아닙니다.
 
 ## 실제 검사 결과
 

@@ -43,7 +43,7 @@ const settings: Setting[] = [
       ['status client repository', 'DevDooly/devdooly-platform-lab'],
     ],
     meaning: '전용 App은 선택한 Lab 저장소 한 개의 Commit statuses 읽기·쓰기와 필수 Metadata 읽기 권한을 사용합니다. Jenkinsfile의 usernamePassword 바인딩이 필요한 단계에서만 설치 토큰을 꺼냅니다. issuer 값은 2026-10-23 App 연결 기록의 값이며 Actions는 같은 SHA의 최신 status 작성자까지 확인합니다.',
-    move: '새 저장소 소유자가 App ID·설치 대상·개인키와 Jenkins credential을 준비하고, 실제 status 작성자에 맞춰 저장소 변수 JENKINS_STATUS_ISSUER를 설정합니다. 공개 SCM은 credential 없이 clone합니다. 비공개 저장소에는 Jenkins SCM·Argo CD의 읽기 자격증명도 필요하지만 현재 게시 gate는 public 저장소만 허용합니다. 비공개 이식은 이 정책과 검증을 재설계하기 전에는 지원하지 않습니다. App의 상태 쓰기 권한을 registry·PR 권한으로 대신 쓰지 않습니다.',
+    move: '새 저장소 소유자가 App ID·설치 대상·개인키와 Jenkins credential을 준비하고 실제 status 작성자에 맞춰 저장소 변수 JENKINS_STATUS_ISSUER를 설정합니다. 공개 SCM은 credential 없이 clone합니다. 비공개 저장소에는 Jenkins SCM·Argo CD의 읽기 자격증명도 필요하지만 현재 게시 gate는 public 저장소만 허용합니다. 비공개 이식은 이 정책과 검증을 재설계하기 전에는 지원하지 않습니다. App의 상태 쓰기 권한을 registry·PR 권한으로 대신 쓰지 않습니다.',
     sources: [
       ['Jenkinsfile', 'credential 바인딩'],
       ['infra/scripts/github-commit-status.mjs', 'repository·context 상수'],
@@ -58,7 +58,7 @@ const settings: Setting[] = [
       ['SOURCE_COMMIT', 'checkout scm이 반환한 소문자 40자리 SHA'],
       ['Actions validation workflow', 'Validate Lab containers'],
     ],
-    meaning: 'Jenkins는 API·독립 Java 예제·웹을 검증하고 JUnit과 필수 jar·web dist·ci-build-info.txt·pending 기록을 보관한 뒤 success를 전달합니다. Actions 게시 gate는 현재 main의 같은 SHA에서 통합 검증 성공과 Jenkins의 최신 success·예상 issuer·산출물 확인 메타데이터를 함께 요구하며, 게시 직전에도 다시 확인합니다.',
+    meaning: 'Jenkins는 API·독립 Java 예제·웹을 검증하고 JUnit과 필수 jar·web dist·ci-build-info.txt·pending 기록을 보관한 뒤 success를 전달합니다. Actions 게시 gate는 현재 main의 같은 SHA에서 통합 검증 성공과 Jenkins의 최신 success·예상 issuer·산출물 확인 메타데이터를 함께 요구하며 게시 직전에도 다시 확인합니다.',
     move: 'SCM URL·branch·Script Path와 workflow 이름을 새 저장소에 맞춥니다. github-commit-status.mjs의 repository/context, ci_publication_gate.py의 저장소·main 제한을 함께 바꾸고 실패·다른 SHA·다른 작성자를 거부하는지 검증합니다. Argo repoURL만 바꿔서는 CI 연결이 이식되지 않습니다.',
     sources: [
       ['Jenkinsfile', '검증·산출물·SHA 계약'],
@@ -184,7 +184,7 @@ const migrationSteps: MigrationStep[] = [
   {
     title: '이전 정상 digest를 Git에 반영해 복귀한다',
     prepare: '배포 전 정상 이미지 repository·digest·대응 sourceCommit과 GitOps revision을 남깁니다. 문제가 있으면 검토한 Git 변경으로 이전 API·웹 pin과 sourceCommit을 복원하고 Argo가 반영하도록 합니다. worker를 변경한 배포라면 그 별도 pin도 검토합니다.',
-    check: '되돌린 GitOps revision·실제 실행 이미지·HTTP 결과·데이터 보존을 다시 확인합니다. DB migration을 이전 이미지가 읽을 수 있는지 먼저 판단하며, DB rollback이나 복원은 따로 검증합니다.',
+    check: '되돌린 GitOps revision·실제 실행 이미지·HTTP 결과·데이터 보존을 다시 확인합니다. DB migration을 이전 이미지가 읽을 수 있는지 먼저 판단하며 DB rollback이나 복원은 따로 검증합니다.',
     sources: [['gitops/environments/home-lab/values.yaml', 'API·웹 pin 형식'], ['gitops/environments/home-lab/runtime.yaml', '별도 worker pin'], ['docs/runbooks/platform-install.md', '데이터 백업·복원 범위']],
   },
 ];

@@ -15,8 +15,8 @@
 | 정상 종료·자원 | 두 차례 TERM 요청 후 실제 exit 143, PostgreSQL·Garage 프로세스와 중지된 Spark state 유지 |
 | 정리·시간 | 검증된 자체 컨테이너·initializer 중지, 단일 workload clock 164,141ms / 600초 |
 
-원 소스와 frozen 입력의 전후 동일, 고정 이미지, fresh volume, 재시도 없음도 확인했습니다. 이미지 pull·JAR 검증·build 준비 시간은 workload clock에서 제외되며, 위 시간은 성능 목표나 SLA가 아닙니다. 실제 신호 전달 자체를 직접 관측했다고 주장하지 않습니다.
+원 소스와 frozen 입력의 전후 동일, 고정 이미지, fresh volume, 재시도 없음도 확인했습니다. 이미지 pull·JAR 검증·build 준비 시간은 workload clock에서 제외되며 위 시간은 성능 목표나 SLA가 아닙니다. 실제 신호 전달 자체를 직접 관측했다고 주장하지 않습니다.
 
-이번 시험은 새 ephemeral Cloud 환경에서의 정상 종료와 새 Trino 컨테이너 교체입니다. 미니 PC 접속, 기존 Cloud 저장소 복구, 같은 CID의 Docker restart, 호스트 장애·HA·장기 가용성 검증은 포함하지 않습니다. volume 삭제·snapshot 만료·object GC를 수행하지 않았습니다. 이전 시험 기록도 변경하지 않았습니다.
+이번 시험은 새 ephemeral Cloud 환경에서 실행한 정상 종료와 새 Trino 컨테이너 교체입니다. 미니 PC 접속, 기존 Cloud 저장소 복구, 같은 CID의 Docker restart, 호스트 장애·HA·장기 가용성 검증은 포함하지 않습니다. volume 삭제·snapshot 만료·object GC를 수행하지 않았습니다. 이전 시험 기록도 변경하지 않았습니다.
 
 공개 요약에는 합성 데이터의 검사 결과만 포함합니다. 원 command/log, CID·PID, cgroup·volume 이름, credential과 전체 객체 사본은 게시하지 않습니다.

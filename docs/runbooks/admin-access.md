@@ -16,7 +16,7 @@
 
 ## 실행과 종료
 
-저장소 루트의 PowerShell에서 실제 값을 채워 실행합니다. 모든 파일 경로는 절대 경로입니다. 공백이 있는 경로는 지원하며, SSH가 별도로 해석하는 `%`·`$`와 따옴표·제어 문자가 있는 경로는 받지 않습니다.
+저장소 루트의 PowerShell에서 실제 값을 채워 실행합니다. 모든 파일 경로는 절대 경로입니다. 공백이 있는 경로는 지원하며 SSH가 별도로 해석하는 `%`·`$`와 따옴표·제어 문자가 있는 경로는 받지 않습니다.
 
 ```powershell
 .\infra\scripts\connect-admin.ps1 `
@@ -47,7 +47,7 @@
 
 Jenkins 사용자 이름은 `.local/admin/jenkins-username` 파일에 있고, Argo CD 초기 사용자 이름은 `admin`입니다. 초기 비밀번호는 사용자가 자신의 Ubuntu 비공개 터미널에서 프로젝트의 `.local/admin/jenkins-initial-password`, `.local/admin/argocd-initial-password` 파일을 직접 확인합니다. 디렉터리 권한은 700, 파일 권한은 600으로 제한합니다. 도우미는 파일을 읽거나 비밀번호·토큰을 출력하지 않습니다. 채팅·CI 로그·스크린샷·Git에 옮기지 말고 로그인 후 초기 비밀번호를 변경합니다.
 
-Argo CD의 자체 서명 TLS 인증서는 그대로 유지합니다. SSH 호스트 키를 확인한 Ubuntu 터미널에서 현재 `argocd-server`의 ClusterIP를 확인한 뒤, 그 주소의 인증서 SHA-256 지문·유효기간을 읽습니다. 아래 `<Argo ClusterIP>`는 직접 확인한 실제 주소로 바꿉니다.
+Argo CD의 자체 서명 TLS 인증서는 그대로 유지합니다. SSH 호스트 키를 확인한 Ubuntu 터미널에서 현재 `argocd-server`의 ClusterIP를 확인한 뒤 그 주소의 인증서 SHA-256 지문·유효기간을 읽습니다. 아래 `<Argo ClusterIP>`는 직접 확인한 실제 주소로 바꿉니다.
 
 ```sh
 sudo -n k3s kubectl get service argocd-server --namespace argocd -o json
@@ -62,7 +62,7 @@ Windows 브라우저의 `https://127.0.0.1:18443` 인증서 정보에서 같은 
 - 호스트 키가 없거나 달라지면 자동 승인하지 않습니다. 서버 콘솔 등으로 변경 사유와 새 지문을 대조해 전용 파일을 갱신합니다.
 - 인증 또는 `sudo -n` 조회가 실패하면 도우미는 터널을 열기 전에 중단합니다. 사용자·키 등록·권한과 K3s 상태를 확인합니다.
 - 로컬 포트가 사용 중이면 터널 실행이 실패합니다. 기존 프로세스를 임의로 종료하지 말고 다른 로컬 포트를 매개변수로 지정합니다.
-- `ExitOnForwardFailure=yes`는 로컬 포트 바인딩 실패를 잡지만, 원격 Service의 실제 응답을 보장하지 않습니다. 화면이 열리지 않으면 Pod readiness와 서버에서 ClusterIP로의 연결을 따로 확인합니다.
+- `ExitOnForwardFailure=yes`는 로컬 포트 바인딩 실패를 잡지만 원격 Service의 실제 응답을 보장하지 않습니다. 화면이 열리지 않으면 Pod readiness와 서버에서 ClusterIP로의 연결을 따로 확인합니다.
 - Service가 재생성되어 ClusterIP가 바뀌면 터널을 종료하고 도우미를 다시 실행해 현재 주소를 조회합니다. 기존 프록시·Docker·UFW를 우선 재시작하거나 변경하지 않습니다.
 
 2026-10-11에 비공개 실행 파일로 실제 SSH 터널을 열어 Jenkins `/login`의 HTTP 200과 로그인 폼을 확인했습니다. Argo CD는 인증된 SSH 경로에서 `argocd/argocd-secret`의 키 이름을 확인한 뒤 공개 `tls.crt`만 읽어, 터널의 인증서 SHA-256 지문과 유효기간을 대조했습니다. 지문은 일치했고 TLS 1.3으로 연결됐습니다. 전역 TLS 설정이나 브라우저 보안 설정을 변경하지 않았으며, 확인 후 생성한 터널 프로세스와 두 로컬 리스너를 모두 정리했습니다. 상세 측정은 Git에서 제외한 `.local/admin-access-validation.json`에 보관합니다.

@@ -4,7 +4,7 @@
 
 ## 화면에서 볼 것
 
-로그인 후 Kafka 화면에서 `platform-lab`을 선택합니다. Topics에서 토픽·파티션·offset을, Consumers에서 consumer group·committed offset·lag를 확인할 수 있습니다. Messages는 개인 Lab의 합성 데이터만 소량 조회합니다. 보존 기간 때문에 이미 사라진 메시지는 조회되지 않을 수 있고, 화면의 조회 자체가 새 작업 실행이나 복구 시험을 뜻하지 않습니다.
+로그인 후 Kafka 화면에서 `platform-lab`을 선택합니다. Topics에서 토픽·파티션·offset을, Consumers에서 consumer group·committed offset·lag를 확인할 수 있습니다. Messages는 개인 Lab의 합성 데이터만 소량 조회합니다. 보존 기간 때문에 이미 사라진 메시지는 조회되지 않을 수 있고 화면의 조회 자체가 새 작업 실행이나 복구 시험을 뜻하지 않습니다.
 
 토픽 생성·삭제, 메시지 발행, consumer offset 재설정, broker 설정 변경은 이 화면의 허용 범위에 포함하지 않습니다.
 
@@ -72,7 +72,7 @@ OCI index 응답의 `Docker-Content-Digest`와 실제 응답 bytes SHA256이 일
 
 ConfigMap만 바꾸면 실행 중인 Spring 설정이 자동 재로딩되지 않습니다. UI 설정 갱신은 새 설정 검토 후 **UI Deployment만** 다시 생성하거나 rollout restart해 적용합니다. 기존 broker나 worker를 재시작하지 않습니다.
 
-문제가 생기면 새 외부 라우트를 먼저 해제하고, 새 UI의 리소스만 제거할 수 있습니다. 아래 삭제 대상에 Kafka broker·PVC·namespace·기존 서비스는 포함하지 않습니다.
+문제가 생기면 새 외부 라우트를 먼저 해제하고 새 UI의 리소스만 제거할 수 있습니다. 아래 삭제 대상에 Kafka broker·PVC·namespace·기존 서비스는 포함하지 않습니다.
 
 ```sh
 kubectl delete -k infra/service-console/kafbat

@@ -22,7 +22,7 @@ checkpoint에는 세 PVC와 관련 Secret, 실제 Kafka 설정, DB checkpoint �
 
 새 namespace를 만든 뒤 Secret과 복원 데이터를 넣기 전에 자격증명 없는 probe로 원본 Kafka broker/controller·Garage·DB의 Pod IP와 Service IP 접속을 확인했습니다. default deny와 같은 namespace·DNS 허용 정책을 적용한 뒤 같은 probe의 원본 접속이 두 회차 모두 차단됐고 DNS는 동작했습니다. 원본 서버가 동시에 Ready이고 별도 경로의 접속도 되는지 확인해 장애에 따른 접속 실패와 구분했습니다. NetworkPolicy가 호스트 자체를 차단한다고 주장하지 않습니다.
 
-새 PVC 3개의 UID·PV·저장 경로가 원본과 다른 것을 확인하고 PV를 Retain으로 지정했습니다. 복원 후 프로세스 시작 전에 전체 파일 manifest를 비교했습니다. Kafka는 복원된 저장소를 재포맷하지 않고 직접 실행했으며, advertised listener와 controller 주소를 격리 환경으로 바꿨습니다. Garage RPC는 loopback을 유지하고 외부 peer discovery가 없는 설정을 확인했습니다. API·DB·worker는 복제 실행하지 않았습니다.
+새 PVC 3개의 UID·PV·저장 경로가 원본과 다른 것을 확인하고 PV를 Retain으로 지정했습니다. 복원 후 프로세스 시작 전에 전체 파일 manifest를 비교했습니다. Kafka는 복원된 저장소를 재포맷하지 않고 직접 실행했으며 advertised listener와 controller 주소를 격리 환경으로 바꿨습니다. Garage RPC는 loopback을 유지하고 외부 peer discovery가 없는 설정을 확인했습니다. API·DB·worker는 복제 실행하지 않았습니다.
 
 ## Kafka 데이터·offset·재시작
 

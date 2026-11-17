@@ -18,7 +18,7 @@
 | API 선언 이미지 | `ghcr.io/devdooly/devdooly-platform-lab-api@sha256:1c114976aeb32e3fa1c2dda84a0a27db0b390c38a6bb59e8c5ada771c340bcf4` |
 | 웹 선언 이미지 | `ghcr.io/devdooly/devdooly-platform-lab-web@sha256:e389ce9083b07c8b8fdeac334b13c1f1af9a0066fd541f46e7db78b5651b855a` |
 
-Jenkins는 수집 당시 main의 최신 `ci/jenkins-test` status를 검증합니다. GitHub의 issuer·고정 description을 확인한 뒤 build 번호를 사용하며, 다른 main의 과거 성공을 현재 검증으로 대체하지 않습니다. 해당 main의 status가 없으면 `jenkins: null`입니다.
+Jenkins는 수집 당시 main의 최신 `ci/jenkins-test` status를 검증합니다. GitHub의 issuer·고정 description을 확인한 뒤 build 번호를 사용하며 다른 main의 과거 성공을 현재 검증으로 대체하지 않습니다. 해당 main의 status가 없으면 `jenkins: null`입니다.
 
 main·Jenkins 대상·Argo GitOps revision·API 배포 선언은 서로 다른 근거입니다. 이 초기 관측에서는 main과 Argo revision이 같고, API는 [이전 정상 A로 복구한 소스·digest](../cicd-gate/README.md)를 유지합니다. SHA 차이를 수집 실패로 간주하거나 하나의 최신 SHA로 덮어쓰지 않았습니다.
 
@@ -58,7 +58,7 @@ HTTP 401 실패 게시에서는 마지막 성공 `capturedAt`이 `2026-10-11T15:
 
 앞선 정상 dispatch는 seed와 값이 같아 이 결함을 드러내지 못했습니다. 따라서 그 실행을 이전 artifact 복구나 시각 후퇴 방지의 통과 근거로 사용하지 않습니다.
 
-교정 commit [`e670837fc678e9d10ea5dec4560db644f33957ab`](https://github.com/DevDooly/devdooly-platform-lab/commit/e670837fc678e9d10ea5dec4560db644f33957ab)은 허용한 실행 이름과 고정 workflow 경로·저장소를 함께 확인하도록 수정했습니다. Pages 게시 검사 33개가 통과했고, collector·자동화·게시 검사를 합한 Windows 107개 중 105개 통과·POSIX 권한 2개 제외를 확인했습니다. 실제 GitHub API에서 이전 게시 artifact를 읽는 검증도 통과했습니다. 교정 소스의 [Lab CI 38154386379](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38154386379)와 [push Pages 38154386391](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38154386391)도 success였습니다. 이 검사 수치는 웹 UI의 26개 테스트와 별도입니다.
+교정 commit [`e670837fc678e9d10ea5dec4560db644f33957ab`](https://github.com/DevDooly/devdooly-platform-lab/commit/e670837fc678e9d10ea5dec4560db644f33957ab)은 허용한 실행 이름과 고정 workflow 경로·저장소를 함께 확인하도록 수정했습니다. Pages 게시 검사 33개가 통과했고 collector·자동화·게시 검사를 합한 Windows 107개 중 105개 통과·POSIX 권한 2개 제외를 확인했습니다. 실제 GitHub API에서 이전 게시 artifact를 읽는 검증도 통과했습니다. 교정 소스의 [Lab CI 38154386379](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38154386379)와 [push Pages 38154386391](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38154386391)도 success였습니다. 이 검사 수치는 웹 UI의 26개 테스트와 별도입니다.
 
 | 교정 후 실행 | 실제 결과 |
 | --- | --- |
@@ -143,7 +143,7 @@ timer 활성화는 `2026-10-12T01:38:36.685346Z`에 확인했습니다. timer는
 
 - 웹은 신규 관측 검사 13개를 포함한 전체 26개 테스트, Astro 타입 검사, Pages 경로 빌드를 로컬에서 통과했습니다. 이 수치는 합성 입력과 로컬 HTTP 검증 범위입니다. 별도의 공개 브라우저 확인 결과는 위 게시 기록에 연결했습니다.
 - 수집기의 Windows 오프라인 검사는 41개 중 40개 통과, POSIX 파일 권한 검사 1개 제외였습니다. 이어 Ubuntu의 격리된 임시 디렉터리에서 고정한 collector·contract와 41개 검사를 실행해 **41개 모두 통과·제외 0개**를 확인했습니다. 이 검사에는 POSIX `0600` 권한도 포함되며 실제 클러스터 수집 결과와는 별도 범위입니다.
-- 수집 실패와 브라우저 파일 조회 실패를 분리했습니다. 마지막 성공 후 2시간 초과는 오래된 기록으로 표시하고, 실패한 시도의 새 시각으로 이전 성공을 최신처럼 만들지 않습니다. 이 오래된 기록·조회 실패 처리는 오프라인 UI 테스트로 확인했습니다.
+- 수집 실패와 브라우저 파일 조회 실패를 분리했습니다. 마지막 성공 후 2시간 초과는 오래된 기록으로 표시하고 실패한 시도의 새 시각으로 이전 성공을 최신처럼 만들지 않습니다. 이 오래된 기록·조회 실패 처리는 오프라인 UI 테스트로 확인했습니다.
 - 기존 `lab-observation.json` v1과 조회 API의 플랫폼 `NOT_CONFIGURED`를 유지합니다. 현재 JVM 정보, 새 플랫폼 관측본과 CI/CD 근거를 합쳐 하나의 실시간 상태로 표시하지 않습니다.
 
 | 현재 완료 범위와 남은 항목 | 상태 |

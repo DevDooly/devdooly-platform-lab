@@ -36,5 +36,8 @@ Kafka·Garage·worker의 이전 실제 K3s 배포, 스토리지 복원, data exp
 | Linux Python과 Bash | 설치기의 구문, 실패 시 다음 단계 중단, 완료 단계 재개, 실패한 합성 Job 진단을 확인했습니다 |
 | Kubernetes·Grafana 선언 | Kustomize 결과는 리소스 21개입니다. 고정 이미지 5개, 내부 Service 4개, 상태·수집 상태·로그 패널 3개를 확인했습니다 |
 | Prometheus·Loki·Alloy 설정 | 고정 버전 도구로 설정 검사를 실행했습니다. Deployment·StatefulSet의 준비 완료·부분 준비·오프라인·기대 복제본 0을 Prometheus 규칙 시험에서 확인했습니다 |
+| Astro 문서 | 115개 파일의 진단은 오류·경고·힌트 0건이었습니다. Node 테스트 556건을 통과했고 28개 페이지를 빌드했습니다. 재구축 페이지의 두 설치 안내 링크도 빌드 결과에 들어갔습니다 |
+
+런타임 values만 넣은 첫 lint에서는 API·웹 이미지와 DB Secret이 비어 있었습니다. 기본 lint values와 함께 넣은 재검사에서 schema 검증을 통과했습니다.
 
 새 VM에서 한 번의 전체 설치와 로그인 후 Grafana 실측은 새 실행 기록이 필요합니다. 위의 기존 VM과 런타임 검증은 별도로 읽습니다.

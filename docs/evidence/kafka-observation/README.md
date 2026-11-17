@@ -4,7 +4,7 @@
 
 2026-10-18 소스 `245d61a5`의 [컨테이너 검증](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39101005714), 같은 SHA의 Jenkins 54, [Pages 배포](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39101005717), [이미지 게시](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39101367277)를 확인했다. [API·웹 이미지 #66](https://github.com/DevDooly/devdooly-platform-lab/pull/66)을 반영한 뒤 06:11 UTC의 새 읽기 점검에서 OCI index→amd64 manifest→config와 CRI·Pod imageID·소유 관계를 확인했다. 기본 비활성 GET은 고정 JSON의 503·NOT_CONFIGURED·no-store였다. worker의 기존 소스·이미지, 업무 DB·PVC/PV·Docker·timer는 보존됐다.
 
-새 로컬 DB·K3s 백업과 순차 보존 점검을 통과했다. 앞선 Application 비교 실패는 유지한다. 별도 읽기에서 UID·이름·spec 전체가 같고 generation만 증가했으며, 설치된 CRD의 served version에는 status subresource가 없었다. 해당 계약을 다시 확인하는 경우에만 Application generation을 비교 복사본에서 정규화하고 나머지 전체 비교를 유지했다. 각 generation 증가를 일으킨 개별 상태 쓰기나 원래 실패 당시의 정확한 원인은 소급 확정하지 않는다.
+새 로컬 DB·K3s 백업과 순차 보존 점검을 통과했다. 앞선 Application 비교 실패는 유지한다. 별도 읽기에서 UID·이름·spec 전체가 같고 generation만 증가했으며 설치된 CRD의 served version에는 status subresource가 없었다. 해당 계약을 다시 확인하는 경우에만 Application generation을 비교 복사본에서 정규화하고 나머지 전체 비교를 유지했다. 각 generation 증가를 일으킨 개별 상태 쓰기나 원래 실패 당시의 정확한 원인은 소급 확정하지 않는다.
 
 이후 [활성화 설정 #67](https://github.com/DevDooly/devdooly-platform-lab/pull/67)이 06:15 UTC에 main `e94bc5b1`로 반영됐다. 06:20 UTC의 새 읽기 전용 점검에서 애플리케이션 소스 `245d61a5`를 유지한 API의 활성화 설정과 HTTP200·엄격한18필드 관측 계약을 확인했다. 활성화 플래그와 Kafka 환경 설정4개만 바뀌는 경계, API·웹 Pod 소유 관계와 OCI→CRI·imageID 연결, 기존 worker 소스·이미지와 업무 DB·PVC/PV·Docker·timer 보존을 통과했다. API Pod는 활성화 설정 적용을 위해 새로 생성됐으며 다른 업무 workload·Pod 보존과 구분한다.
 
@@ -30,7 +30,7 @@
 
 각 실행에서 소스·설정·systemd unit·timer 보존과 platform·job·Kafka 세 관측의 원 계약 검사를 통과했다. 작업8개 모두 EXPORTED·파일 메타데이터16개, API 소스 `245d61a5`·worker 소스 `74a8e988`, Kafka 그룹 STABLE·commit8·READ_COMMITTED LSO8·lag0을 확인했다.
 
-두 실행 각각 호스트 수집본과 게시본의 canonical 전체 필드가 같았다. 게시 artifact와 공개 HTTP 응답은 각각 전체 raw bytes가 일치했다. 호스트 JSON의 공백·키 순서와 게시 JSON의 표현이 같다는 뜻으로 확대하지 않는다. systemd 실행은 서비스 기동·invocation을 확인했고, 수동 경로는 서비스 기동과 별개로 실행했다.
+두 실행 각각 호스트 수집본과 게시본의 canonical 전체 필드가 같았다. 게시 artifact와 공개 HTTP 응답은 각각 전체 raw bytes가 일치했다. 호스트 JSON의 공백·키 순서와 게시 JSON의 표현이 같다는 뜻으로 확대하지 않는다. systemd 실행은 서비스 기동·invocation을 확인했고 수동 경로는 서비스 기동과 별개로 실행했다.
 
 이 두 결과는 원래 30분 timer의 자연 회차가 아니다. 아래 자연 실행 2회 검증과 별개로 기록한다.
 
@@ -54,7 +54,7 @@
 
 아래는 2026-10-18 이전 로컬 검증 당시의 기록이다. 후속 [격리 CI7](CI_ATTEMPT_7.md)은 고정 IT1·skip0·source 불변·자기 자원 정리를 통과했다. 이 결과를 아래 합성/로컬 검사와 합치지 않는다. 해당 로컬 실행 당시에는 미니 PC 이미지 전환·활성화와 공개 Pages의 Kafka 기록 연결을 검증하지 않았으며, 이후의 실제 전환 결과는 위 절에 따로 기록했다. 기존 worker의 과거 Kafka 처리·lag 기록과도 구분한다.
 
-선택한 소스 묶음은 backend `d30e3713…`, web `0718624a…`, host `cbdbf149…`이다. 결합 웹/host 검증은 checkout `a234d405`를 기준으로 한 C overlay에서 수행했다. 이후 checkout `5862ba0c`의 Java stdout 개선·별도 Cloud capture와 범위를 구분한다. Kafka 후보를 그 checkout의 실행 코드 또는 배포 소스로 표시하지 않는다. [고정 계약](../../contracts/kafka-observation.md)은 원래52e6076e 본문을 그대로 보존하며, 그 계약 문서의 준비 당시 상태와 아래 실제 로컬 결과를 구분한다.
+선택한 소스 묶음은 backend `d30e3713…`, web `0718624a…`, host `cbdbf149…`이다. 결합 웹/host 검증은 checkout `a234d405`를 기준으로 한 C overlay에서 수행했다. 이후 checkout `5862ba0c`의 Java stdout 개선·별도 Cloud capture와 범위를 구분한다. Kafka 후보를 그 checkout의 실행 코드 또는 배포 소스로 표시하지 않는다. [고정 계약](../../contracts/kafka-observation.md)은 원래52e6076e 본문을 그대로 보존하며 그 계약 문서의 준비 당시 상태와 아래 실제 로컬 결과를 구분한다.
 
 ## 확인한 범위
 
@@ -73,7 +73,7 @@ Java21.0.9·Maven3.10.0·Node24.19.0·Helm4.3.0의 고정 로컬 도구를 사�
 
 ## 실패 기록도 유지
 
-첫 API 실행에서 Service19는 통과했지만 HTTP6은 통과2·실패1·오류3으로 실패했다. HTTP 시험 fixture를 보정한 뒤 새 HTTP6을 별도로 실행했으며 생산 Service 소스를 고친 성과로 바꾸지 않는다. 첫 runtime Helm 역시 음성검사 인자 구성 문제로 exit1이었다. 시험 인자를 보정한 새 runtime 검증만30개 통과로 기록하며, 기존 기본17개와 단일47개 성공으로 합치지 않는다.
+첫 API 실행에서 Service19는 통과했지만 HTTP6은 통과2·실패1·오류3으로 실패했다. HTTP 시험 fixture를 보정한 뒤 새 HTTP6을 별도로 실행했으며 생산 Service 소스를 고친 성과로 바꾸지 않는다. 첫 runtime Helm 역시 음성검사 인자 구성 문제로 exit1이었다. 시험 인자를 보정한 새 runtime 검증만30개 통과로 기록하며 기존 기본17개와 단일47개 성공으로 합치지 않는다.
 
 첫 결합 웹 실행은93 tests/91 pass/2 file failures/skip0이었다. 기존 api/observation 시험이 읽는 공개 scenario fixture가 overlay에서 빠져 있었고, tracked fixture1763bytes/b04b8ba9를 그대로 더한 뒤 전체104개를 새 실행에서 검증했다. Smoke를 포함한 소비 경로3개와 고정 file-URL·상대 import를 정적으로 확인했으며 다른 누락은 없었다. 이전 실패를 지우거나 최초 실행부터 통과한 것으로 표시하지 않는다.
 
@@ -85,4 +85,4 @@ Java21.0.9·Maven3.10.0·Node24.19.0·Helm4.3.0의 고정 로컬 도구를 사�
 
 ![로컬 Kafka 관측 미연결 카드 — mobile](screenshots/mobile.jpg)
 
-당시 [단계별 연결 절차](../../runbooks/kafka-observation-rollout.md)는 새 격리 broker 시험 → 검토한 API 배포 → host 수집 → 실제 Pages 기록 순서였다. 이후 이미지 전환·활성화 검증은 위 절에 따로 추가했으며, 이 로컬 화면 기록만으로 후속 연결의 성공을 주장하지 않는다.
+당시 [단계별 연결 절차](../../runbooks/kafka-observation-rollout.md)는 새 격리 broker 시험 → 검토한 API 배포 → host 수집 → 실제 Pages 기록 순서였다. 이후 이미지 전환·활성화 검증은 위 절에 따로 추가했으며 이 로컬 화면 기록만으로 후속 연결의 성공을 주장하지 않는다.

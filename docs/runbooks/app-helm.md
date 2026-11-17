@@ -7,7 +7,7 @@
 1. 사용자 확인을 마친 SSH 접속으로 호스트를 읽기 전용 점검합니다. 기존 서비스·데이터·포트·가용 자원과 백업 위치를 확인합니다.
 2. [Linux Compose CI](../evidence/compose-ci/README.md)의 빌드·MariaDB·Flyway·데이터 보존 결과를 확인합니다. [Compose](local-compose.md)는 별도 통합 검증 경로이며, 미니 PC에서는 K3s의 실제 image·PVC·API 동작을 따로 검증합니다.
 3. [신규 bootstrap](k3s-bootstrap.md)과 [플랫폼 설치](platform-install.md) 결과를 확인합니다. K3s와 local-path provisioner가 정상이어야 합니다. [Jenkins 실제 CI](jenkins-ci.md)는 독립된 완료 조건으로 확인합니다.
-4. CI에서 검증한 Dockerfile로 배포용 API·web 이미지를 빌드해 registry에 게시하고 앱의 commit·digest를 기록합니다. 현재 Jenkinsfile은 검사·패키징까지만 하며 Jenkins에서의 이미지 게시·GitOps 값 갱신은 후속 작업입니다.
+4. CI에서 검증한 Dockerfile로 배포용 API·web 이미지를 빌드해 registry에 게시하고 앱의 commit·digest를 기록합니다. 현재 Jenkinsfile은 검사·패키징까지만 합니다. Jenkins로 이미지를 게시하고 GitOps 값을 갱신하는 일은 후속 작업입니다.
 5. [ADR 0003](../adr/0003-gitops-in-existing-repository.md)에 따라 같은 저장소의 [gitops](../../gitops/README.md)를 사용합니다. namespace platform-lab과 고정 release lab을 유지하고 앱 배포는 Argo CD가 소유합니다.
 
 이 단계의 chart에는 public ingress, 인증 게이트웨이와 HTTPS가 없습니다. ClusterIP는 외부 노출 설정을 만들지 않는다는 뜻이며 클러스터 내부의 다른 Pod까지 격리하는 NetworkPolicy는 아직 포함하지 않습니다.
@@ -55,7 +55,7 @@ DB 이름과 앱 계정은 platform_lab로 고정했습니다. chart는 DB 비�
 
 [AppProject](../../gitops/bootstrap/project.yaml)와 [Application](../../gitops/bootstrap/application.yaml)은 같은 저장소 main의 chart·환경 values를 단일 source로 읽습니다. AppProject는 전용 namespace와 필요한 리소스 종류만 허용하고 자동 prune과 Application finalizer는 사용하지 않습니다. namespace와 DB Secret은 관리자가 별도로 준비하며 이 문서는 같은 앱의 helm upgrade를 별도 실행하지 않습니다.
 
-1. Argo CD의 대상 namespace와 release 이름을 고정하고, 실제 환경 values와 이 chart 버전을 연결합니다.
+1. Argo CD의 대상 namespace와 release 이름을 고정하고 실제 환경 values와 이 chart 버전을 연결합니다.
 2. Sync 후 DB PVC Bound, DB Ready, API Ready, 화면 Ready 순서로 확인합니다. 이번 배포에서 해당 상태와 Argo Synced/Healthy를 확인했습니다. 첫 DB 초기화 전에 API가 시작되면 재시도할 수 있으며 API의 초기 재시작은 그 원인과 이후 안정 여부를 따로 확인합니다.
 3. 관리자 접근 경로는 SSH 터널을 사용합니다. 서버의 임시 포트 전달은 loopback에만 바인딩합니다.
 

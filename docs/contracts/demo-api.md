@@ -18,7 +18,7 @@
 {"id":"synthetic-v1-seed-42","name":"합성 센서 품질 검증","status":"COMPLETED","synthetic":true,"seed":42,"inputCount":12,"successCount":7,"failureCount":3,"duplicateCount":2,"pendingCount":0,"startedAt":"2026-10-11T00:00:00Z","completedAt":"2026-10-11T00:00:00Z","observedAt":"2026-10-11T00:01:00Z","scenario":"sensor-validation-v1","description":"회사 데이터와 무관한 고정 seed 합성 데이터. 중복 ID, 잘못된 시간, 시간 역순, 범위 오류를 검증합니다.","outcomes":[{"sequence":1,"eventId":"evt-001","sensorId":"sensor-a","eventTime":"2026-01-01T00:00:00Z","value":21.0,"status":"SUCCESS","reason":"ACCEPTED"}],"series":[{"eventTime":"2026-01-01T00:00:00Z","sensorId":"sensor-a","value":21.0}],"failureReasons":[{"reason":"INVALID_TIMESTAMP","count":1},{"reason":"OUT_OF_ORDER","count":1},{"reason":"OUT_OF_RANGE","count":1}]}
 ```
 
-outcomes는 입력 순서 12건, series는 성공한 7건의 차트 입력이다. 실패 eventTime에는 원본 문자열이 보존될 수 있으므로 파싱 전에 status를 확인한다. 잘못된 value는 null일 수 있다. reason은 ACCEPTED / DUPLICATE_EVENT_ID / INVALID_TIMESTAMP / OUT_OF_ORDER / OUT_OF_RANGE / INVALID_INPUT. 빈 eventId·sensorId, 누락 value는 INVALID_INPUT. 중복 판정은 구조 검증 후, 시간·범위 검증 전에 수행하며 최초 등장 ID를 처리 시도한 이후 동일 ID를 중복으로 간주한다. 센서별 마지막 성공 시각보다 과거인 입력은 OUT_OF_ORDER. 동일 시각은 허용한다.
+outcomes는 입력 순서 12건, series는 성공한 7건의 차트 입력이다. 실패 eventTime에는 원본 문자열이 보존될 수 있으므로 파싱 전에 status를 확인한다. 잘못된 value는 null일 수 있다. reason은 ACCEPTED / DUPLICATE_EVENT_ID / INVALID_TIMESTAMP / OUT_OF_ORDER / OUT_OF_RANGE / INVALID_INPUT. 빈 eventId·sensorId, 누락 value는 INVALID_INPUT. 구조 검증을 마치고 중복을 판정한 뒤 시간·범위를 검증한다. 처음 등장한 ID의 처리를 시도한 뒤에는 같은 ID를 중복으로 간주한다. 센서별 마지막 성공 시각보다 과거인 입력은 OUT_OF_ORDER. 동일 시각은 허용한다.
 
 ## GET /api/platform/summary
 

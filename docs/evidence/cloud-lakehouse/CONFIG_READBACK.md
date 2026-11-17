@@ -21,6 +21,6 @@ Garage는 `created` 상태였습니다. 전체 canonical signature는 모두 동
 
 PG 변화는 Garage 시작 직전의 전체 동일성 검사를 통과하지 못했고 정리 단계에서도 같은 guard가 거부했습니다. 마지막 inspect command는 종료 코드 0이었지만 전체 정리가 확인됐다는 뜻은 아닙니다. PG의 정상 종료, Garage readiness, 전체 Cloud9 성공, 이전 실패들의 유일한 원인을 주장하지 않습니다.
 
-[공개 summary](config-readback.summary.json)는 root가 받은 8,155바이트 원문 그대로입니다. 전체 SHA-256은 `bf8c9057968497bb113314dfba9bfa1ec9d4079714af16595f3d98939941299a`입니다. root의 별도 retrieval receipt와 strict validator가 실제 source·run·job 및 producer `2870124c…` 연결을 확인했으며, 검증된 record의 상태도 FAILED입니다. 검증기 통과는 산출물의 형식·연결 확인이며 진단 실행의 성공을 뜻하지 않습니다.
+[공개 summary](config-readback.summary.json)는 root가 받은 8,155바이트 원문 그대로입니다. 전체 SHA-256은 `bf8c9057968497bb113314dfba9bfa1ec9d4079714af16595f3d98939941299a`입니다. root의 별도 retrieval receipt와 strict validator가 실제 source·run·job 및 producer `2870124c…` 연결을 확인했으며 검증된 record의 상태도 FAILED입니다. 검증기 통과는 산출물의 형식·연결 확인이며 진단 실행의 성공을 뜻하지 않습니다.
 
 앞선 [세 번째 전체 실패](ATTEMPT3.md), [Mounts 진단](STARTUP_MOUNT_DIAGNOSTIC.md)과 그 이전 원문은 보존했습니다. 다음 진단은 고정 HostConfig 이름 목록을 확장해 변화를 더 좁히는 별도 후보입니다. 이번 기록을 소급해서 다른 필드의 실제 변화나 원인 증명으로 바꾸지 않습니다.

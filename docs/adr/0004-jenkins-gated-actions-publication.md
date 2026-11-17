@@ -35,7 +35,7 @@ Actions repository variable `JENKINS_STATUS_ISSUER=DevDooly`로 예상 발행 �
 - 동일 SHA에 대기·실행 중인 관련 검증이 하나라도 있으면 게시하지 않는다. 완료된 실행은 attempt 시작 시각을 우선 비교하므로 이전 run ID의 나중 재실행 실패도 차단한다.
 - Jenkins의 해당 context 중 최신 status를 먼저 고른 뒤 success·예상 issuer·검증 메타데이터를 확인한다. 더 오래된 성공으로 fallback하지 않는다.
 - gate job에는 contents: read만 부여한다. 게시 job에서 registry 인증 전 다시 확인한다.
-- 오래 걸리는 Dockerfile 작업은 cache-only로 먼저 완료하고, 게시 직전 다시 gate를 확인한 뒤 같은 Buildx cache에서 이미지를 게시한다. Docker 공식 문서의 `cacheonly` exporter를 사용하며, 실제 Actions 실행에서의 cache 재사용은 별도 확인한다. [Docker cache-only exporter](https://docs.docker.com/build/exporters/#cache-only-export)
+- 오래 걸리는 Dockerfile 작업은 cache-only로 먼저 완료한다. 게시 직전 다시 gate를 확인한 뒤 같은 Buildx cache에서 이미지를 게시한다. Docker 공식 문서의 `cacheonly` exporter를 사용한다. 실제 Actions 실행에서 cache를 재사용하는지는 별도로 확인한다. [Docker cache-only exporter](https://docs.docker.com/build/exporters/#cache-only-export)
 - 성공한 같은 SHA의 게시 workflow와 만료되지 않은 게시 artifact가 있으면 중복 이벤트를 종료한다. artifact 보존 기간 이후의 영구 중복 제거는 제공하지 않는다.
 
 GitHub와 registry를 하나의 트랜잭션으로 묶지는 않는다. 최종 확인 직후에도 상태가 바뀔 수 있고 두 이미지 중 하나만 게시되는 실패도 가능하다. 두 이미지가 검증돼야 게시 artifact를 만들며, GitOps PR 직전에도 gate를 다시 확인한다. 부분 게시를 배포 성공으로 인정하지 않는다.

@@ -32,7 +32,7 @@ worker의 Recreate, 종료 유예300초, exec readiness의 주기10초·timeout5
 
 ## 보존 점검과 공개 요약의 범위
 
-별도로 허용받은 기존 DB·객체·Kafka의 선택 항목을 교체 전후 읽어 대조하고, 새 실행의 시작·heartbeat 전진과 현재 잠금 소유를 확인했습니다. 자료 불일치 없이 전환을 마쳤고 원복은 사용하지 않았습니다. 새 업무 작업을 넣거나 기존 자료·슬롯을 수정하지 않았습니다. 그 과정의 행 지문·객체 키/본문 지문·소유 세션 값과 원문은 공개 요약에 포함하지 않습니다. `summary.json`은 클러스터 메타데이터와 이미 공개된 GitOps 변경을 요약하며, 비공개 보존 점검을 독립적으로 재검증할 수 있는 자료는 아닙니다.
+별도로 허용받은 기존 DB·객체·Kafka의 선택 항목을 교체 전후 읽어 대조하고 새 실행의 시작·heartbeat 전진과 현재 잠금 소유를 확인했습니다. 자료 불일치 없이 전환을 마쳤고 원복은 사용하지 않았습니다. 새 업무 작업을 넣거나 기존 자료·슬롯을 수정하지 않았습니다. 그 과정의 행 지문·객체 키/본문 지문·소유 세션 값과 원문은 공개 요약에 포함하지 않습니다. `summary.json`은 클러스터 메타데이터와 이미 공개된 GitOps 변경을 요약하며 비공개 보존 점검을 독립적으로 재검증할 수 있는 자료는 아닙니다.
 
 이전 프로세스의 종료 코드와 잠금 해제 순간은 직접 포착하지 못했습니다. 이전 Pod의 부재와 새 Pod의 Ready를 그 이벤트의 관측으로 바꾸어 적지 않습니다. [Error 처리](../runtime-error-cleanup/README.md)와 [일부 client 구성 실패 정리](../client-construction-error/README.md)가 포함된 소스의 배포를 확인한 것이며, 실제 OOM·Error 주입 후 운영 복구·HA·전체 백업 복원·SLA를 검증한 결과는 아닙니다.
 
@@ -40,7 +40,7 @@ worker의 Recreate, 종료 유예300초, exec readiness의 주기10초·timeout5
 
 교체 후 [수동 GET39521322979](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39521322979)의 고정6개 조회가 HTTP200·공개 DTO 검증을 통과했습니다. 응답 source는 관측 API245이며 worker6f55와 구분합니다. [원문과 별도 공개 화면 관측](../public-get/README.md#후속-실제-관측--2026-10-21-utc)에서 GET 결과와 브라우저의 새 실행 표시를 각각 설명합니다. GET artifact 자체는 worker의 source·시작 시각·heartbeat를 담지 않습니다.
 
-기존30분 주기의 [새 worker 자동 수집·Pages 게시](NATURAL_PUBLICATION.md)를 확인했습니다. main6b62821의 Pages39523423769 build·deploy가 성공했고, 공개 플랫폼·작업·Kafka JSON3개가 대응 artifact 원문과 전체 bytes가 같았습니다. 저장된 runtime6f551a1·API245d61a와 새 시작·heartbeat를 구분해 보존했습니다. 같은 unit의 DISPATCHED 결과를 해당 run과 연결했으며 수동 Pages dispatch·timer 강제 실행·주기 단축은 하지 않았습니다. 이는 해당 회차의 게시 확인이며 모든 회차 성공이나 현재 프로세스 생존의 증명은 아닙니다.
+기존30분 주기의 [새 worker 자동 수집·Pages 게시](NATURAL_PUBLICATION.md)를 확인했습니다. main6b62821의 Pages39523423769 build·deploy가 성공했고 공개 플랫폼·작업·Kafka JSON3개가 대응 artifact 원문과 전체 bytes가 같았습니다. 저장된 runtime6f551a1·API245d61a와 새 시작·heartbeat를 구분해 보존했습니다. 같은 unit의 DISPATCHED 결과를 해당 run과 연결했으며 수동 Pages dispatch·timer 강제 실행·주기 단축은 하지 않았습니다. 이는 해당 회차의 게시 확인이며 모든 회차 성공이나 현재 프로세스 생존의 증명은 아닙니다.
 
 이후 [관측·DDNS 코드 두 개](../automation-failure-boundaries/DEPLOYED.md)를 반영하고 DDNS 새 자연 회차와 새 관측 코드의 Pages·공개 결과 연결을 확인했습니다. 그 뒤 [새 worker의 고정 입력 한 건](../current-worker-fixture/README.md)에서12/7/3/2/0·COMPLETED/EXPORTED, 새 객체3개 전체 bytes와 기존8작업·24객체 보존을 확인했고 완료된 임시 Job도 선택 정리했습니다. 원래 자연 주기의 [Pages39532314754](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39532314754) build·deploy·공개 JSON3개와 artifact 원문 일치, 새9작업 반영도 확인했습니다. 다음은 현재 HTTPS 재관측과 장기 운영 후속의 범위를 확인하는 것입니다.
 

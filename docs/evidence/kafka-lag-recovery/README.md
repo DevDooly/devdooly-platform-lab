@@ -13,7 +13,7 @@
 
 첫 client는 `max.poll.records=4`로 실제 record 4개를 읽고 position 4를 commit했습니다. 새 client는 `auto.offset.reset=none`으로 시작하고 seek·reset·수동 assignment 없이 offset 4–17의 14개를 정확히 읽었습니다. record별 offset·key·value와 각각의 유일성, 최종 position 18을 검사했습니다. 숫자는 작은 합성 fixture의 결과이며 지속 처리량이나 처리 시간의 보장이 아닙니다.
 
-같은 관측 service의 네 capture에서 target fingerprint가 같았고, 각 capture 앞뒤의 선택한 cluster·topic·group member·assignment·start/LSO/committed 상태가 같았습니다. observer owner thread 1개·비 poison과 offset을 바꾸지 않는 읽기를 확인했습니다. 처리·관측 assertions가 성공하고 consumer들이 닫힌 뒤에만 자기 topic/group을 정리했으며, runner는 소유 broker·JVM·network의 제거와 source·staging·도구·dependency 불변을 확인했습니다.
+같은 관측 service의 네 capture에서 target fingerprint가 같았고, 각 capture 앞뒤의 선택한 cluster·topic·group member·assignment·start/LSO/committed 상태가 같았습니다. observer owner thread 1개·비 poison과 offset을 바꾸지 않는 읽기를 확인했습니다. 처리·관측 assertions가 성공하고 consumer들이 닫힌 뒤에만 자기 topic/group을 정리했으며 runner는 소유 broker·JVM·network의 제거와 source·staging·도구·dependency 불변을 확인했습니다.
 
 ## 실행과 소스 연결
 

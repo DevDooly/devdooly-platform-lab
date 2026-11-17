@@ -22,7 +22,7 @@
 
 ## 실제 Linux CI: 소스 501e127
 
-[CI run 39111594589](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39111594589)은 정확한 head `501e127a7bd23f551110f3d32e2ba438fe0b3139`의 PR 자동 실행이며 2026-10-18 08:29:11 UTC에 통과했습니다. checkout도 이 head를 명시했습니다. 이번 문서 갱신 전 소스의 성공 기록으로 보존하며, 이후 문서 commit의 CI 결과와 구분합니다.
+[CI run 39111594589](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/39111594589)은 정확한 head `501e127a7bd23f551110f3d32e2ba438fe0b3139`의 PR 자동 실행이며 2026-10-18 08:29:11 UTC에 통과했습니다. checkout도 이 head를 명시했습니다. 이번 문서 갱신 전 소스의 성공 기록으로 보존하며 이후 문서 commit의 CI 결과와 구분합니다.
 
 - [공개 입력 준비 결과](ci-501e127-preparation-summary.json): 정확한 main K 공개 Git blob 23개, 기존 Linux Helm archive pin 검증·단일 실행 파일 추출과 기존 chart 기준 렌더 1회가 통과했습니다.
 - [기준 렌더 receipt](ci-501e127-baseline-receipt.json): 12개 resource·25,810B의 SHA가 기존 Windows 기준 `1862ec4a…`와 같습니다.

@@ -20,4 +20,4 @@
 
 새 broker의 bounded tmpfs 보완 뒤 CI3의 최초 실패 위치372 대신 이번549가 선택됐다는 차이를 기록한다. 이 결과로 전체 Kafka 관측이나 IT1 통과를 선언하지 않는다. ownedResourcesRemoved:true와 별도 cleanup success는 이 실행기의 소유·identity gate를 만족한 자기 자원 정리 결과다. 다른 서비스·자원 전체의 부재, ACL·HTTP·미니 PC 또는 전체 JVM thread 종료 검증으로 확대하지 않는다. sourceBytesUnchanged:false는 후속 불변 gate 성공 미확인이며 source 변경 확정이 아니다. XML null/verified0도 IT 미실행을 뜻하지 않는다.
 
-다음은 공개 source의 종료 predicate와 Java/Maven 실행 경계를 읽어 새 후보를 검토하는 단계다. 새 후보의 Linux 검사·IT·cleanup 성공은 아직 없다. CI4 collector·run·부분 자원을 재실행하지 않는다. main63의 Iceberg9 공개 성공과 현재 서버의 이전 기록을 보존하고, main 반영 전 fresh 데이터 보존 점검·현재 backup·rollback 준비와 [rollout 절차](../../runbooks/kafka-observation-rollout.md)를 유지한다.
+다음은 공개 source의 종료 predicate와 Java/Maven 실행 경계를 읽어 새 후보를 검토하는 단계다. 새 후보의 Linux 검사·IT·cleanup 성공은 아직 없다. CI4 collector·run·부분 자원을 재실행하지 않는다. main63의 Iceberg9 공개 성공과 현재 서버의 이전 기록을 보존하고 main 반영 전 fresh 데이터 보존 점검·현재 backup·rollback 준비와 [rollout 절차](../../runbooks/kafka-observation-rollout.md)를 유지한다.

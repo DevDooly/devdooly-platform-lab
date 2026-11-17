@@ -2,7 +2,7 @@
 
 현재 연결 근거(2026-10-19 정리): [내부 조회·접근 진단과 보존 검증](../evidence/public-read-gateway-internal/README.md)에 이어 DuckDNS 도메인의 표준 CA·SNI TLS, GitHub 외부 runner의 허용 GET 6개·지정 거부 3개와 Pages 실시간 조회를 확인했습니다. [실제 HTTPS·공개 화면·자연 DDNS timer 기록](../evidence/public-read-https/README.md)은 각각의 확인 시점과 범위를 구분합니다. 아래 초기 활성화 조건과 이전 도메인의 실패는 당시 기록으로 보존하며 현재 연결 상태를 뜻하지 않습니다.
 
-공개 live GET은 기존 Traefik에 추가한 전용 `/platform-lab/api` 경로를 사용합니다. Pages의 `LAB_PUBLIC_API_URL` 설정과 실제 Job·Kafka 화면은 위 브라우저 근거에서 확인했습니다. 프런트엔드 설정은 HTTPS base의 `/api` 또는 `/platform-lab/api`를 허용하며, 조회 실패 시 마지막 게시본으로 전환하는 동작은 유지합니다. 설정값만으로 연결 성공을 판정하지 않습니다.
+공개 live GET은 기존 Traefik에 추가한 전용 `/platform-lab/api` 경로를 사용합니다. Pages의 `LAB_PUBLIC_API_URL` 설정과 실제 Job·Kafka 화면은 위 브라우저 근거에서 확인했습니다. 프런트엔드 설정은 HTTPS base의 `/api` 또는 `/platform-lab/api`를 허용하며 조회 실패 시 마지막 게시본으로 전환하는 동작은 유지합니다. 설정값만으로 연결 성공을 판정하지 않습니다.
 
 ## DDNS부터 조회 gateway까지
 
@@ -22,7 +22,7 @@ DDNS updater의 파일·단일 요청·timer 계약은 [구현 안내](../../inf
 
 기존 [호스트 재부팅 검증](lab-operations.md#호스트-재부팅)은 새 공개 HTTPS 경로를 추가하기 전의 별도 기록입니다. 재부팅은 다른 Docker 서비스에도 영향을 주므로 기존 운영 절차를 따르며, 이 문서는 새 재부팅·재시작을 실행한 결과가 아닙니다.
 
-1. 재부팅 이후 DDNS timer의 enabled·active·다음 예정 시각과 최근 요청 수락 기록을 확인합니다. DNS A와 현재 WAN IPv4의 일치는 별도로 대조하며, updater는 기존 AAAA를 검증하지 않습니다. 불명확한 timeout을 즉시 중복 요청으로 바꾸지 않습니다.
+1. 재부팅 이후 DDNS timer의 enabled·active·다음 예정 시각과 최근 요청 수락 기록을 확인합니다. DNS A와 현재 WAN IPv4의 일치는 별도로 대조하며 updater는 기존 AAAA를 검증하지 않습니다. 불명확한 timeout을 즉시 중복 요청으로 바꾸지 않습니다.
 2. 기존 Traefik의 identity·주소와 gateway의 private `/32` parameter가 여전히 일치하는지 확인합니다. 주소가 바뀌면 과거 값을 성공 근거로 쓰지 않으며 허용 subnet을 자동 확대하지 않습니다. `/32`는 NAT·node 예외와 주소 재사용까지 배제하는 영구 identity 증명이 아닙니다.
 3. 표준 CA·SNI TLS와 고정 조회·거부 경로를 같은 시점에 다시 확인한 기록으로 연결 상태를 판정합니다. Pages의 성공 표시나 지난 hosted 결과만으로 재부팅 후 경로를 통과 처리하지 않습니다.
 4. 인증서의 자연 갱신은 기존 Traefik resolver가 담당하며, DDNS timer와 별도입니다. 갱신 시점의 표준 TLS·인증서 유효기간과 필요한 웹 경로를 확인하는 후속 관측이 필요합니다. 새 공개 경로를 포함한 재부팅 후 복구와 인증서 자연 갱신 완료는 아직 실증하지 않았습니다.
@@ -57,7 +57,7 @@ chart의 `files/public-gateway/nginx.conf`와 `proxy.inc`는 해당 정책 파�
 
 `publicReadGateway.trustedProxyCidr`의 기본값은 빈 문자열입니다. 비어 있으면 기존 NetworkPolicy 선언을 유지합니다. 선택할 때는 canonical RFC1918 IPv4 주소 한 개의 `/32`만 허용하며, 기존 client Pod 규칙 뒤에 해당 source의 TCP 8080 ingress 규칙 하나만 추가합니다. 기존 selector·API/DNS egress·다른 resource는 유지합니다. 예시 `10.23.45.67/32`는 합성 값이며 실제 운영 주소가 아닙니다. 넓은 subnet·IPv6·public/loopback 주소·잘못된 octet·선행 0·문자열 이외의 값은 거부합니다. 이 값만 설정해 gateway를 활성화하지는 않습니다.
 
-실제 주소는 Git values나 공개 문서에 넣지 않습니다. 필요한 경우 현재 Application의 소유권·source·기존 Helm parameter를 확인한 뒤 비공개 운영 변경으로 parameter 한 개만 전달합니다. [Argo CD의 Helm parameter](https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#helm-value-precedence)는 valueFiles보다 우선하므로 기존 parameter와 관리 주체를 먼저 확인해야 합니다. 이 override의 실제 적용·주소와 정책 유지·namespace에서의 GET·원복 검증은 별도 운영 단계이며, 현재 후보 작성만으로 완료하지 않습니다.
+실제 주소는 Git values나 공개 문서에 넣지 않습니다. 필요한 경우 현재 Application의 소유권·source·기존 Helm parameter를 확인한 뒤 비공개 운영 변경으로 parameter 한 개만 전달합니다. [Argo CD의 Helm parameter](https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#helm-value-precedence)는 valueFiles보다 우선하므로 기존 parameter와 관리 주체를 먼저 확인해야 합니다. 이 override의 실제 적용·주소와 정책 유지·namespace에서 실행하는 GET·원복 검증은 별도 운영 단계이며, 현재 후보 작성만으로 완료하지 않습니다.
 
 Docker 주소가 바뀌면 예전 `/32`는 새 주소를 허용하지 않습니다. 다만 주소 재사용, node 접근 예외와 NAT 때문에 이를 proxy의 영구 identity나 완전한 격리 보장으로 해석할 수 없습니다. 주소 변경 시 기존 값을 제거하고 새 identity·주소·경로를 다시 확인합니다. 과거 namespace GET의 연결 거부도 NetworkPolicy 단독 원인으로 확정하지 않았습니다. 실제 소스 주소와 정책의 적용 관계는 새 통합 검증이 필요하며, 실패하면 subnet이나 node 범위를 자동으로 넓히지 않습니다. Traefik 재시작·Docker 네트워크 변경·NodePort·추가 Ingress controller·직접 API 공개는 이 변경에 포함하지 않습니다.
 
@@ -77,7 +77,7 @@ Docker 주소가 바뀌면 예전 `/32`는 새 주소를 허용하지 않습니�
 
 2026-10-18 08:34:31 UTC의 실제 AppProject 관측에는 NetworkPolicy 권한이 없었습니다. 내부 활성화 후보의 소스 선언은 기존 6종에 `networking.k8s.io/NetworkPolicy` 1종만 추가합니다. 오프라인 검사기는 정확한 7종·전용 namespace 목적지·빈 cluster whitelist를 확인하며 실제 권한을 적용하지 않습니다. 실제 AppProject에 이 권한을 먼저 추가하고 기존 조건 보존을 확인한 뒤 runtime의 활성화 값을 반영해야 합니다. 권한 적용 전 runtime enabled true를 main에 병합하면 Argo CD의 자동 sync가 먼저 시도될 수 있으므로 두 실행 순서를 분리합니다. [내부 활성화 계획](../plans/public-gateway-internal-enable.md)을 따릅니다.
 
-2026-10-18 08:07:23 UTC의 읽기 전용 preflight는 대상 namespace에서 ResourceQuota·LimitRange·NetworkPolicy가 각각 0개이고 API label이 예상과 일치하며, 나열한 정책에 의한 API ingress 격리는 없음을 확인했습니다. DNS Pod 1개와 고정 kube-dns label은 관측했지만 namespace identity는 확인하지 않았습니다. 따라서 후보 DNS egress의 적합성은 UNKNOWN이며 DNS·네트워크 연결·scheduler admission·배포 통과를 확인한 결과가 아닙니다. 후속 08:34:31 UTC 관측에서는 kube-system namespace identity·해당 label과 API instance label의 일치를 확인했습니다. 실제 DNS/API 연결·NetworkPolicy 강제·scheduler admission은 아직 확인하지 않았습니다.
+2026-10-18 08:07:23 UTC의 읽기 전용 preflight는 대상 namespace에서 ResourceQuota·LimitRange·NetworkPolicy가 각각 0개이고 API label이 예상과 일치하며, 나열한 정책에 따른 API ingress 격리는 없음을 확인했습니다. DNS Pod 1개와 고정 kube-dns label은 관측했지만 namespace identity는 확인하지 않았습니다. 따라서 후보 DNS egress의 적합성은 UNKNOWN이며 DNS·네트워크 연결·scheduler admission·배포 통과를 확인한 결과가 아닙니다. 후속 08:34:31 UTC 관측에서는 kube-system namespace identity·해당 label과 API instance label의 일치를 확인했습니다. 실제 DNS/API 연결·NetworkPolicy 강제·scheduler admission은 아직 확인하지 않았습니다.
 
 외부 연결은 기존 HTTPS proxy의 identity·provider·route·인증서·도달 경로와 클라이언트 식별을 확인한 뒤 별도 결정합니다. 현재 chart의 제한은 기본 Nginx peer 기준이며 여러 외부 peer가 있는 전역 제한의 독립 검증은 기존 CI에서 수행하지 않았습니다.
 

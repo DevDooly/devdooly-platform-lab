@@ -22,7 +22,7 @@ index는 `sha256:77e3df9054047a88b520d0cc46e16696d3b22022e1d580aeccd2632df653283
 
 broker는 combined KRaft 1개이며 topic은 시험마다 UUID 이름으로 partition 1·RF1을 명시 생성한다. 자동 topic 생성을 끈다. metadata와 log는 같은 전용 volume에 각각 `/var/lib/kafka/data/metadata`, `/var/lib/kafka/data/logs`로 둔다. 공식 이미지 기본 소유권으로 새 named volume을 초기화하고 default `appuser`로 기동했다. 이번 실행에서는 수동 chown이나 root helper로 소유권을 변경하지 않았다. [공식 Dockerfile](https://github.com/apache/kafka/blob/4.3.1/docker/jvm/Dockerfile)
 
-host published port는 없으며 내부 Docker network에서만 listener를 연다. 예시 구조는 다음과 같다. 실제 cluster ID와 주소·포트는 비공개 환경 자료에 기록한다.
+host published port는 없으며 내부 Docker network에서만 listener를 연다. 실제 cluster ID와 주소·포트는 비공개 환경 자료에 기록한다. 아래는 구조 예시다.
 
 ```text
 KAFKA_PROCESS_ROLES=broker,controller
@@ -104,7 +104,7 @@ JVM과 child는 Java 21·Asia/Seoul을 요구한다. 시험은 H2가 아닌 실�
 
 ## 2026-10-15 실제 시험 수치
 
-최초 실행과 최종 실행은 각각 4개 모두 통과했고 failure·error·skip은 0이었다. 최종 실행의 수치는 다음과 같다. 공개 JSON 필드는 이름만 보고 전체 시도 수로 읽지 않도록 범위를 명시한다.
+최초 실행과 최종 실행은 각각 4개 모두 통과했고 failure·error·skip은 0이었다. 표에는 최종 실행의 수치를 담았다. 공개 JSON 필드는 이름만 보고 전체 시도 수로 읽지 않도록 범위를 명시한다.
 
 | case | forcedKills | successfulParentDeliveries | completedReplaysObserved | logEnd / committedOffset | lag | run / outcome |
 | --- | --- | --- | --- | --- | --- | --- |

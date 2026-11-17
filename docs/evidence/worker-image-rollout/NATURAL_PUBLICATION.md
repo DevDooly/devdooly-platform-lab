@@ -30,6 +30,6 @@
 
 수동 Pages dispatch·timer 시작·주기 단축은 하지 않았습니다. systemd 메타데이터에서 timer의 `09:47:18 KST` trigger와 service의 `00:47:18`–`00:47:22 UTC`, success·exit0을 확인했습니다. unit 표시 시각은 초 단위이며 더 세밀한 시각으로 해석하지 않습니다.
 
-별도 읽기 전용 확인에서는 전후 같은 unit invocation을 대조하고, 그 invocation·unit·Python 프로세스의 고정 결과 한 건만 검증했습니다. `2026-10-21T00:47:22.176386Z`의 결과는 `DISPATCHED`와 run `39523423769`를 가리켰습니다. 따라서 시각 일치뿐 아니라 실행기가 반환한 번호를 위 Pages 실행과 연결했습니다. systemd invocation ID·커서·원문 journal은 공개하지 않습니다.
+별도 읽기 전용 확인에서는 전후 같은 unit invocation을 대조하고 그 invocation·unit·Python 프로세스의 고정 결과 한 건만 검증했습니다. `2026-10-21T00:47:22.176386Z`의 결과는 `DISPATCHED`와 run `39523423769`를 가리켰습니다. 따라서 시각 일치뿐 아니라 실행기가 반환한 번호를 위 Pages 실행과 연결했습니다. systemd invocation ID·커서·원문 journal은 공개하지 않습니다.
 
 반복 실행의 모든 회차 성공·정확히30분 간격·장기 가용성·인증서 자연 갱신·새 관측 실행기 코드의 설치를 검증한 결과는 아닙니다. 기동 복원·토큰 교체·자원 예산 정책·PR102 보류는 유지합니다.

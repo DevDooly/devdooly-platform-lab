@@ -18,6 +18,6 @@
 
 원래 strict guard를 완화하거나 다른 자원을 정지해 성공으로 만들지 않았다. 공개 자료는 고정 change bit와 code만 제공하며 실제 mount 경로·container identity·환경값·원문 로그는 포함하지 않는다. 전체 mounts 배열의 비교 차이를 관측했지만 그 차이가 무엇인지, 왜 생겼는지는 이 자료만으로 확정하지 않는다.
 
-이 진단의 guard 실패를 앞선 두 Cloud9 실행의 유일한 원인으로 소급하지 않는다. 앞선 두 번째 실행은 Compose PostgreSQL 시작 명령 rc1을 관측했고, 이번 실행은 그 명령에 도달하기 전 guard에서 거부됐다. 서로 다른 새 실행의 관측을 합쳐 하나의 원인 증명으로 만들지 않는다.
+이 진단의 guard 실패를 앞선 두 Cloud9 실행의 유일한 원인으로 소급하지 않는다. 앞선 두 번째 실행은 Compose PostgreSQL 시작 명령 rc1을 관측했고 이번 실행은 그 명령에 도달하기 전 guard에서 거부됐다. 서로 다른 새 실행의 관측을 합쳐 하나의 원인 증명으로 만들지 않는다.
 
 전체 다섯 서비스 Compose 모델과 의도적인 Trino env 파일 부재를 유지했지만 실제 create/start 요청은 PostgreSQL/Garage로 제한했다. JAR 읽기·bucket/key 생성·업무 입력·Mini PC 접촉은 없었다. 이 기록은 Spark/Trino 계산·compaction·현재 가용성·성능·SLA 또는 전체 Cloud9 성공을 뜻하지 않는다. 기존 Cloud Spark8과 native7의 별도 성공·보존 범위도 변경하지 않는다.

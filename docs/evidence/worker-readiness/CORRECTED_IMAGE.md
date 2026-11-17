@@ -1,16 +1,16 @@
 # 수정 이미지의 canary와 배포 진행
 
-2026-10-15 14:54:11 UTC까지의 후속 기록입니다. [첫 실패와 SGID 진단](README.md)은 당시 결과 그대로 보존합니다. 이번에는 **수정 이미지의 격리 canary 10개 사례, 실제 Ready 전환·owning process 준비 상태와 배포 후 보존을 확인했습니다. 고정 12개 입력을 접수한 뒤 grace 300초를 지정해 유휴 worker를 교체하고, 같은 ID의 읽기 전용 재시도와 임시 credential 회수까지 통과했습니다.** 이전 worker의 exit는 관측하지 못했으며 정상 종료를 추정하지 않습니다.
+2026-10-15 14:54:11 UTC까지의 후속 기록입니다. [첫 실패와 SGID 진단](README.md)은 당시 결과 그대로 보존합니다. 이번에는 **수정 이미지의 격리 canary 10개 사례, 실제 Ready 전환·owning process 준비 상태와 배포 후 보존을 확인했습니다. 고정 12개 입력을 접수한 뒤 grace 300초를 지정해 유휴 worker를 교체하고 같은 ID의 읽기 전용 재시도와 임시 credential 회수까지 통과했습니다.** 이전 worker의 exit는 관측하지 못했으며 정상 종료를 추정하지 않습니다.
 
 ## 수정 소스를 실제 이미지에 연결했습니다
 
 [PR #43](https://github.com/DevDooly/devdooly-platform-lab/pull/43)의 Linux CI는 API 180개·독립 예제 20개, 총 200개를 실패·오류·skip 없이 실행했습니다. 같은 변경을 포함한 main 소스 `3e0d85be`의 Jenkins build 39도 JUnit 합계 200개와 필수 산출물·소스 정보를 확인해 성공했습니다. [실제 Linux CI](https://github.com/DevDooly/devdooly-platform-lab/actions/runs/38746521878)와 운영 이미지 소스는 공개 요약에서 구분합니다.
 
-새 이미지의 익명 registry 조회·K3s cache·실제 OCI class 검사는 5/5를 통과했습니다. 별도 probe class와 같은 이미지의 app.jar 내부 class 바이트가 같고 Java classfile major가 65임을 확인했습니다. CI JAR의 class와 동일하다고 추정하지 않았습니다. API·웹 모두 같은 소스의 digest로 고정했으며, 이 prefetch 단계는 Pod나 운영 데이터를 변경하지 않았습니다.
+새 이미지의 익명 registry 조회·K3s cache·실제 OCI class 검사는 5/5를 통과했습니다. 별도 probe class와 같은 이미지의 app.jar 내부 class 바이트가 같고 Java classfile major가 65임을 확인했습니다. CI JAR의 class와 동일하다고 추정하지 않았습니다. API·웹 모두 같은 소스의 digest로 고정했으며 이 prefetch 단계는 Pod나 운영 데이터를 변경하지 않았습니다.
 
 ## 열 개 사례는 파일 프로토콜을 검증했습니다
 
-14:22:40 UTC에 수정 이미지의 별도 canary가 10개 사례를 모두 통과했습니다. 첫 실패와 이후 진단 근거를 보존한 같은 격리 namespace에서 새 Job만 만들었습니다. 테스트는 PID 1·UID 10001과 fsGroup/emptyDir 조건을 사용하고, 이미지에 실제 포함된 probe class를 별도 JVM으로 실행했습니다.
+14:22:40 UTC에 수정 이미지의 별도 canary가 10개 사례를 모두 통과했습니다. 첫 실패와 이후 진단 근거를 보존한 같은 격리 namespace에서 새 Job만 만들었습니다. 테스트는 PID 1·UID 10001과 fsGroup/emptyDir 조건을 사용하고 이미지에 실제 포함된 probe class를 별도 JVM으로 실행했습니다.
 
 | 사례 | 기대한 결과 |
 | --- | --- |
@@ -41,7 +41,7 @@ worker를 바꾸기 전에는 읽기 전용 watch를 먼저 시작했습니다. 
 
 14:46:33 UTC에 실제 watch도 2/2를 통과했고 NotReady→Ready를 관측했습니다. 이 watch는 전체 객체 GET이나 전체 자료 보존 검사를 하지 않았습니다. 같은 process의 owning-stage commit·RUNNING·fresh heartbeat와 기존 SQL·객체·리소스 보존은 이어지는 after 검사로 확인합니다.
 
-14:48:08 UTC의 after 검사는 단계 검사 2/2·보존 검사 23/23과 기존 객체 21개의 전체 GET·바이트 비교를 통과했습니다. source·실제 OCI/CRI·process 식별자·owning journal의 RUNNING과 신선한 heartbeat를 함께 확인했고, 기존 7개 작업·업무 SQL·원본 리소스를 보존했습니다. after 결과의 `readyTransitionObserved:false`는 그 단계에서 새 전환을 다시 관측하지 않았다는 뜻입니다. 앞선 watch에서 관측한 전환과 구분하며, Ready 실패로 해석하지 않습니다.
+14:48:08 UTC의 after 검사는 단계 검사 2/2·보존 검사 23/23과 기존 객체 21개의 전체 GET·바이트 비교를 통과했습니다. source·실제 OCI/CRI·process 식별자·owning journal의 RUNNING과 신선한 heartbeat를 함께 확인했고 기존 7개 작업·업무 SQL·원본 리소스를 보존했습니다. after 결과의 `readyTransitionObserved:false`는 그 단계에서 새 전환을 다시 관측하지 않았다는 뜻입니다. 앞선 watch에서 관측한 전환과 구분하며 Ready 실패로 해석하지 않습니다.
 
 ## 유휴 worker 교체와 같은 ID의 읽기 전용 재시도
 
@@ -49,7 +49,7 @@ worker를 바꾸기 전에는 읽기 전용 watch를 먼저 시작했습니다. 
 
 작업이 끝나 슬롯이 빈 상태에서 이전 worker의 UID를 지정하고 grace 300초를 요청해 한 번 교체했습니다. 새 Pod의 NotReady→Ready와 같은 이미지의 준비 상태 복구를 관측했습니다. 이전 컨테이너 exit는 `UNOBSERVED`이며 exit 0/143이나 SIGTERM 정상 종료의 근거가 없습니다. 작업이 진행 중인 worker나 호스트를 중단한 실험도 아닙니다.
 
-이어서 실제 Garage ACL을 읽어 확인한 단일 버킷 RO credential로 같은 ID를 다시 제출했습니다. read만 허용하고 write·owner·createBucket은 허용하지 않은 조건에서 재시도가 성공했고, 받아들여진 새 S3 write나 승인 정책의 재부과는 없었습니다. 이 검증은 HTTP PUT 시도 횟수를 직접 계측하지 않았습니다. 다른 새 ID를 실제 운영 승인 간격 안에 제출해 거부시키는 실험도 수행하지 않았습니다.
+이어서 실제 Garage ACL을 읽어 확인한 단일 버킷 RO credential로 같은 ID를 다시 제출했습니다. read만 허용하고 write·owner·createBucket은 허용하지 않은 조건에서 재시도가 성공했고 받아들여진 새 S3 write나 승인 정책의 재부과는 없었습니다. 이 검증은 HTTP PUT 시도 횟수를 직접 계측하지 않았습니다. 다른 새 ID를 실제 운영 승인 간격 안에 제출해 거부시키는 실험도 수행하지 않았습니다.
 
 후속 파일 검증은 접수 전 기존 21개, 접수 후 24개, RO 재시도 후 같은 24개를 각각 전체 GET했습니다. 서로 다른 객체는 최종 24개이며 각 단계의 조회 수를 더해 객체 수로 표시하지 않습니다. 기존 업무 자료와 첫 결과를 보존했고 두 개의 완료한 자체 stage Job만 정리했습니다. 최종 Kafka는 committed offset 8·log end 8·lag 0이며 실행 슬롯은 비었습니다. 전체 8개 작업이 COMPLETED·EXPORTED였고 부과된 30초 정책 값도 유지됐습니다.
 

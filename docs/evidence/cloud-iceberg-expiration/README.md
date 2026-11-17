@@ -4,7 +4,7 @@
 
 ## 네 snapshot과 공유 파일
 
-다음 이름은 실제 key·UUID 대신 사용한 **합성 별칭**입니다. 그림은 만료 전 snapshot의 **live data 참조**와 만료 후 판정을 함께 표시합니다. S2를 만료해도 S1 tag가 참조하는 a1과 S3/S4가 공유하는 b1은 보존하며, 남은 snapshot이 참조하지 않는 a2 하나만 삭제합니다.
+다음 이름은 실제 key·UUID 대신 사용한 **합성 별칭**입니다. 그림은 만료 전 snapshot의 **live data 참조**와 만료 후 판정을 함께 표시합니다. S2를 만료해도 S1 tag가 참조하는 a1과 S3/S4가 공유하는 b1은 보존하며 남은 snapshot이 참조하지 않는 a2 하나만 삭제합니다.
 
 ```mermaid
 flowchart LR
