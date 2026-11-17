@@ -1,0 +1,244 @@
+{
+  "id": null,
+  "title": "Platform Lab 서비스 상태와 로그",
+  "uid": "platform-lab-services",
+  "tags": [
+    "platform-lab",
+    "k3s"
+  ],
+  "editable": false,
+  "schemaVersion": 41,
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "refresh": "30s",
+  "templating": {
+    "list": [
+      {
+        "type": "custom",
+        "name": "namespace",
+        "label": "서비스 그룹",
+        "query": "platform-lab,jenkins,argocd,platform-lab-monitoring",
+        "includeAll": true,
+        "allValue": "(platform-lab|jenkins|argocd|platform-lab-monitoring)",
+        "multi": false,
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "pod",
+        "label": "로그 Pod (정규식)",
+        "type": "textbox",
+        "query": ".*",
+        "current": {
+          "selected": false,
+          "text": ".*",
+          "value": ".*"
+        }
+      },
+      {
+        "name": "container",
+        "label": "로그 컨테이너 (정규식)",
+        "type": "textbox",
+        "query": ".*",
+        "current": {
+          "selected": false,
+          "text": ".*",
+          "value": ".*"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "서비스 준비 상태",
+      "description": "Kubernetes Deployment·StatefulSet의 준비 복제본과 목표 복제본 비교. 수집기가 끊기거나 워크로드가 없으면 지표가 나타나지 않습니다.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "platform-lab-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 18,
+        "h": 10
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "color": "red",
+                  "index": 0,
+                  "text": "준비 복제본 없음"
+                },
+                "1": {
+                  "color": "yellow",
+                  "index": 1,
+                  "text": "부분 준비"
+                },
+                "2": {
+                  "color": "green",
+                  "index": 2,
+                  "text": "정상"
+                },
+                "3": {
+                  "color": "blue",
+                  "index": 3,
+                  "text": "복제본 0으로 설정"
+                }
+              }
+            }
+          ],
+          "noValue": "수집 값 없음"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value_and_name",
+        "wideLayout": false
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "platform-lab-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "platform_lab:workload_state{namespace=~\"${namespace:regex}\"}",
+          "legendFormat": "{{namespace}} / {{workload}}",
+          "instant": true,
+          "range": false
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Kubernetes 지표 수집",
+      "description": "Prometheus의 kube-state-metrics 최근 scrape 상태입니다.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "platform-lab-prometheus"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 10
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "color": "red",
+                  "index": 0,
+                  "text": "스크레이프 실패"
+                },
+                "1": {
+                  "color": "green",
+                  "index": 1,
+                  "text": "수집 중"
+                }
+              }
+            }
+          ],
+          "noValue": "Prometheus 응답 없음"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": false
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "platform-lab-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "up{job=\"kube-state-metrics\"} or on() vector(0)",
+          "instant": true,
+          "range": false
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "logs",
+      "title": "서비스 컨테이너 로그",
+      "description": "네임스페이스, Pod, 컨테이너 필터로 표준 출력·표준 오류를 조회합니다. 시간 범위는 화면 상단에서 변경합니다.",
+      "datasource": {
+        "type": "loki",
+        "uid": "platform-lab-loki"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 24,
+        "h": 17
+      },
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "platform-lab-loki"
+          },
+          "editorMode": "code",
+          "expr": "{namespace=~\"${namespace:regex}\",pod=~\"${pod:raw}\",container=~\"${container:raw}\"}",
+          "queryType": "range",
+          "direction": "backward",
+          "maxLines": 200
+        }
+      ]
+    }
+  ]
+}

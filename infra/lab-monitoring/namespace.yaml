@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: platform-lab-monitoring
+  labels:
+    app.kubernetes.io/part-of: platform-lab-monitoring
+    pod-security.kubernetes.io/enforce: restricted

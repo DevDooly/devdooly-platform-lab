@@ -1,0 +1,44 @@
+discovery.kubernetes "lab_pods" {
+  role = "pod"
+
+  namespaces {
+    names = ["platform-lab", "jenkins", "argocd", "platform-lab-monitoring"]
+  }
+}
+
+discovery.relabel "lab_logs" {
+  targets = discovery.kubernetes.lab_pods.targets
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_phase"]
+    regex         = "Pending|Unknown"
+    action        = "drop"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "pod"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_name"]
+    target_label  = "container"
+  }
+}
+
+loki.source.kubernetes "lab_logs" {
+  targets    = discovery.relabel.lab_logs.output
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url        = "http://loki:3100/loki/api/v1/push"
+    batch_size = "256KiB"
+  }
+}
